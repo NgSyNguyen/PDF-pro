@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- PDF operations (IPdfOperation implementations). PDF libraries are added from Phase 3. -->
+  <PropertyGroup>
+    <RootNamespace>PdfPro.Operations</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PdfPro.Core\PdfPro.Core.csproj" />
+    <ProjectReference Include="..\PdfPro.Pdfium\PdfPro.Pdfium.csproj" />
+  </ItemGroup>
+
+</Project>

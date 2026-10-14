@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Pure domain layer: no WPF, no PDF libraries, no third-party packages. -->
+  <PropertyGroup>
+    <RootNamespace>PdfPro.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PdfPro.Core.Tests" />
+  </ItemGroup>
+
+</Project>

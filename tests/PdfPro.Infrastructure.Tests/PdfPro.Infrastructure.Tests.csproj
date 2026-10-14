@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
+    <!-- Fake external tool used to test IExternalToolRunner (arguments, exit codes, timeouts, process trees). -->
+    <ProjectReference Include="..\PdfPro.TestTools.FakeTool\PdfPro.TestTools.FakeTool.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,30 @@
+<Project>
+
+  <!-- Shared build settings for every project in the repository. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <SatelliteResourceLanguages>en;vi</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <!-- Product metadata. -->
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Product>PDF_Pro</Product>
+    <Company>PDF_Pro</Company>
+    <Authors>Nguyen</Authors>
+    <Copyright>Copyright © 2026 PDF_Pro</Copyright>
+    <NeutralLanguage>vi</NeutralLanguage>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,104 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.SettingsWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
+  Title="{loc:Tr Settings_Title}"
+  Width="600"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr Settings_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,8,24,24">
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon DarkTheme24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_Theme}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_ThemeDescription}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ComboBox
+          MinWidth="200"
+          AutomationProperties.AutomationId="SettingsTheme"
+          AutomationProperties.Name="{loc:Tr Settings_Theme}"
+          DisplayMemberPath="Label"
+          ItemsSource="{Binding ThemeOptions}"
+          SelectedValue="{Binding SelectedTheme}"
+          SelectedValuePath="Value" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon LocalLanguage24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_Language}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_LanguageDescription}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ComboBox
+          MinWidth="200"
+          AutomationProperties.AutomationId="SettingsLanguage"
+          AutomationProperties.Name="{loc:Tr Settings_Language}"
+          DisplayMemberPath="Label"
+          ItemsSource="{Binding LanguageOptions}"
+          SelectedValue="{Binding SelectedLanguage}"
+          SelectedValuePath="Value" />
+      </ui:CardControl>
+
+      <ui:InfoBar
+        Title="{loc:Tr Settings_RestartRequired_Title}"
+        Margin="0,8,0,0"
+        IsClosable="False"
+        IsOpen="{Binding IsRestartRequired}"
+        Message="{loc:Tr Settings_RestartRequired_Message}"
+        Severity="Informational" />
+      <ui:Button
+        Margin="0,8,0,0"
+        HorizontalAlignment="Left"
+        Appearance="Primary"
+        AutomationProperties.AutomationId="SettingsRestartNow"
+        Command="{Binding RestartNowCommand}"
+        Content="{loc:Tr Settings_RestartNow}"
+        Icon="{ui:SymbolIcon ArrowClockwise24}"
+        Visibility="{Binding IsRestartRequired, Converter={StaticResource BoolToVisibility}}" />
+
+      <ui:InfoBar
+        Title="{loc:Tr Settings_SaveFailed_Title}"
+        Margin="0,8,0,0"
+        IsClosable="False"
+        IsOpen="{Binding HasSaveError}"
+        Message="{loc:Tr Settings_SaveFailed_Message}"
+        Severity="Error" />
+
+      <ui:Button
+        MinWidth="96"
+        Margin="0,16,0,0"
+        HorizontalAlignment="Right"
+        AutomationProperties.AutomationId="SettingsClose"
+        Click="OnCloseClick"
+        Content="{loc:Tr Common_Close}"
+        IsCancel="True" />
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

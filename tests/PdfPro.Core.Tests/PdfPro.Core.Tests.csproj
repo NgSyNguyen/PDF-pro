@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PdfPro.Core\PdfPro.Core.csproj" />
+  </ItemGroup>
+
+</Project>

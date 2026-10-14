@@ -1,0 +1,10 @@
+# Normalize text files; Windows checkouts get CRLF.
+* text=auto
+
+*.pdf binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.traineddata binary

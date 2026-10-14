@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- OCR engine (Tesseract CLI) and image pre-processing. Implemented in Phase 10. -->
+  <PropertyGroup>
+    <RootNamespace>PdfPro.Ocr</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PdfPro.Core\PdfPro.Core.csproj" />
+    <ProjectReference Include="..\PdfPro.Pdfium\PdfPro.Pdfium.csproj" />
+  </ItemGroup>
+
+</Project>

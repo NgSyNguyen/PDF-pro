@@ -1,0 +1,31 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="AGENTS.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="THIRD_PARTY_NOTICES.md" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs/PROMPTS.md" />
+    <File Path="docs/SPEC.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/PdfPro.App/PdfPro.App.csproj" />
+    <Project Path="src/PdfPro.Cli/PdfPro.Cli.csproj" />
+    <Project Path="src/PdfPro.Core/PdfPro.Core.csproj" />
+    <Project Path="src/PdfPro.Infrastructure/PdfPro.Infrastructure.csproj" />
+    <Project Path="src/PdfPro.Ocr/PdfPro.Ocr.csproj" />
+    <Project Path="src/PdfPro.Operations/PdfPro.Operations.csproj" />
+    <Project Path="src/PdfPro.Pdfium/PdfPro.Pdfium.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <File Path="tests/Directory.Build.props" />
+    <Project Path="tests/PdfPro.App.Tests/PdfPro.App.Tests.csproj" />
+    <Project Path="tests/PdfPro.Core.Tests/PdfPro.Core.Tests.csproj" />
+    <Project Path="tests/PdfPro.Infrastructure.Tests/PdfPro.Infrastructure.Tests.csproj" />
+    <Project Path="tests/PdfPro.Operations.Tests/PdfPro.Operations.Tests.csproj" />
+    <Project Path="tests/PdfPro.TestTools.FakeTool/PdfPro.TestTools.FakeTool.csproj" />
+  </Folder>
+</Solution>

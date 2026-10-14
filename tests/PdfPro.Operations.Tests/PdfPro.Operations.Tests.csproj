@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Golden-file tests on samples/ start in Phase 2. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PdfPro.Operations\PdfPro.Operations.csproj" />
+    <ProjectReference Include="..\..\src\PdfPro.Ocr\PdfPro.Ocr.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,92 @@
+<UserControl
+  x:Class="PdfPro.App.Views.HomeView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:HomeTabViewModel}"
+  d:DesignHeight="600"
+  d:DesignWidth="800">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel
+      MaxWidth="640"
+      Margin="32"
+      HorizontalAlignment="Center">
+      <ui:SymbolIcon
+        HorizontalAlignment="Center"
+        FontSize="56"
+        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+        Symbol="DocumentPdf24" />
+      <ui:TextBlock
+        Margin="0,12,0,4"
+        HorizontalAlignment="Center"
+        FontTypography="Title"
+        Text="{loc:Tr Welcome_Title}"
+        TextWrapping="Wrap" />
+      <TextBlock
+        HorizontalAlignment="Center"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr Welcome_Subtitle}"
+        TextAlignment="Center"
+        TextWrapping="Wrap" />
+
+      <ui:Button
+        Margin="0,24,0,0"
+        Padding="20,8"
+        HorizontalAlignment="Center"
+        Appearance="Primary"
+        AutomationProperties.AutomationId="WelcomeOpenFile"
+        Command="{Binding OpenFileCommand}"
+        Content="{loc:Tr Welcome_OpenFile}"
+        Icon="{ui:SymbolIcon FolderOpen24}"
+        ToolTip="{loc:Tr Cmd_NotAvailableYet}"
+        ToolTipService.ShowOnDisabled="True" />
+
+      <!-- Drop zone: accepting files arrives with document opening in Phase 2. -->
+      <Grid Height="160" Margin="0,24,0,0">
+        <Rectangle
+          Fill="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+          RadiusX="8"
+          RadiusY="8"
+          Stroke="{DynamicResource ControlStrokeColorDefaultBrush}"
+          StrokeDashArray="4 3"
+          StrokeThickness="2" />
+        <StackPanel
+          Margin="16"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center">
+          <ui:SymbolIcon
+            HorizontalAlignment="Center"
+            FontSize="32"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Symbol="ArrowUpload24" />
+          <TextBlock
+            Margin="0,8,0,4"
+            HorizontalAlignment="Center"
+            FontSize="16"
+            Text="{loc:Tr Welcome_DropZone}" />
+          <TextBlock
+            HorizontalAlignment="Center"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr Welcome_DropZoneHint}"
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </Grid>
+
+      <TextBlock
+        Margin="0,32,0,8"
+        FontWeight="SemiBold"
+        Text="{loc:Tr Welcome_RecentFiles}" />
+      <ItemsControl ItemsSource="{Binding RecentFiles}" />
+      <TextBlock
+        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+        Text="{loc:Tr Welcome_NoRecentFiles}"
+        Visibility="{Binding HasNoRecentFiles, Converter={StaticResource BoolToVisibility}}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

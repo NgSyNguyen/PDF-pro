@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Vietnamese UI strings (neutral/default culture). Every key must also exist in Strings.en.resx. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Application -->
+  <data name="App_Title" xml:space="preserve"><value>PDF_Pro</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Đóng</value></data>
+
+  <!-- Ribbon tabs -->
+  <data name="Ribbon_Tab_File" xml:space="preserve"><value>Tệp</value></data>
+  <data name="Ribbon_Tab_Page" xml:space="preserve"><value>Trang</value></data>
+  <data name="Ribbon_Tab_Edit" xml:space="preserve"><value>Chỉnh sửa</value></data>
+  <data name="Ribbon_Tab_Annotate" xml:space="preserve"><value>Chú thích</value></data>
+  <data name="Ribbon_Tab_Security" xml:space="preserve"><value>Bảo mật</value></data>
+  <data name="Ribbon_Tab_Convert" xml:space="preserve"><value>Chuyển đổi</value></data>
+  <data name="Ribbon_Tab_Tools" xml:space="preserve"><value>Công cụ</value></data>
+
+  <!-- Ribbon groups -->
+  <data name="Ribbon_Group_Document" xml:space="preserve"><value>Tài liệu</value></data>
+  <data name="Ribbon_Group_App" xml:space="preserve"><value>Ứng dụng</value></data>
+  <data name="Ribbon_Group_Arrange" xml:space="preserve"><value>Sắp xếp</value></data>
+  <data name="Ribbon_Group_Insert" xml:space="preserve"><value>Chèn</value></data>
+  <data name="Ribbon_Group_Layout" xml:space="preserve"><value>Bố cục</value></data>
+  <data name="Ribbon_Group_MergeSplit" xml:space="preserve"><value>Gộp &amp; tách</value></data>
+  <data name="Ribbon_Group_History" xml:space="preserve"><value>Lịch sử</value></data>
+  <data name="Ribbon_Group_Add" xml:space="preserve"><value>Thêm</value></data>
+  <data name="Ribbon_Group_Stamp" xml:space="preserve"><value>Đóng dấu</value></data>
+  <data name="Ribbon_Group_Content" xml:space="preserve"><value>Nội dung</value></data>
+  <data name="Ribbon_Group_Markup" xml:space="preserve"><value>Đánh dấu</value></data>
+  <data name="Ribbon_Group_Notes" xml:space="preserve"><value>Ghi chú</value></data>
+  <data name="Ribbon_Group_Draw" xml:space="preserve"><value>Vẽ</value></data>
+  <data name="Ribbon_Group_Search" xml:space="preserve"><value>Tìm kiếm</value></data>
+  <data name="Ribbon_Group_Protect" xml:space="preserve"><value>Bảo vệ</value></data>
+  <data name="Ribbon_Group_Signature" xml:space="preserve"><value>Chữ ký số</value></data>
+  <data name="Ribbon_Group_Export" xml:space="preserve"><value>Xuất</value></data>
+  <data name="Ribbon_Group_Import" xml:space="preserve"><value>Tạo PDF</value></data>
+  <data name="Ribbon_Group_Optimize" xml:space="preserve"><value>Tối ưu</value></data>
+  <data name="Ribbon_Group_Tools" xml:space="preserve"><value>Công cụ</value></data>
+  <data name="Ribbon_Group_Automation" xml:space="preserve"><value>Tự động hóa</value></data>
+  <data name="Ribbon_Group_Diagnostics" xml:space="preserve"><value>Chẩn đoán</value></data>
+
+  <!-- Ribbon commands -->
+  <data name="Cmd_Open" xml:space="preserve"><value>Mở</value></data>
+  <data name="Cmd_Save" xml:space="preserve"><value>Lưu</value></data>
+  <data name="Cmd_SaveAs" xml:space="preserve"><value>Lưu thành</value></data>
+  <data name="Cmd_Print" xml:space="preserve"><value>In</value></data>
+  <data name="Cmd_Close" xml:space="preserve"><value>Đóng</value></data>
+  <data name="Cmd_Settings" xml:space="preserve"><value>Cài đặt</value></data>
+  <data name="Cmd_Exit" xml:space="preserve"><value>Thoát</value></data>
+  <data name="Cmd_RotateLeft" xml:space="preserve"><value>Xoay trái</value></data>
+  <data name="Cmd_RotateRight" xml:space="preserve"><value>Xoay phải</value></data>
+  <data name="Cmd_DeletePages" xml:space="preserve"><value>Xóa trang</value></data>
+  <data name="Cmd_DuplicatePages" xml:space="preserve"><value>Nhân bản</value></data>
+  <data name="Cmd_InsertBlank" xml:space="preserve"><value>Trang trắng</value></data>
+  <data name="Cmd_InsertFromFile" xml:space="preserve"><value>Từ tệp</value></data>
+  <data name="Cmd_ExtractPages" xml:space="preserve"><value>Trích trang</value></data>
+  <data name="Cmd_Crop" xml:space="preserve"><value>Cắt lề</value></data>
+  <data name="Cmd_PageSize" xml:space="preserve"><value>Khổ giấy</value></data>
+  <data name="Cmd_Merge" xml:space="preserve"><value>Gộp tệp</value></data>
+  <data name="Cmd_Split" xml:space="preserve"><value>Tách tệp</value></data>
+  <data name="Cmd_Undo" xml:space="preserve"><value>Hoàn tác</value></data>
+  <data name="Cmd_Redo" xml:space="preserve"><value>Làm lại</value></data>
+  <data name="Cmd_AddText" xml:space="preserve"><value>Chữ</value></data>
+  <data name="Cmd_AddImage" xml:space="preserve"><value>Ảnh</value></data>
+  <data name="Cmd_AddShape" xml:space="preserve"><value>Hình</value></data>
+  <data name="Cmd_HandSignature" xml:space="preserve"><value>Chữ ký tay</value></data>
+  <data name="Cmd_Watermark" xml:space="preserve"><value>Hình mờ</value></data>
+  <data name="Cmd_HeaderFooter" xml:space="preserve"><value>Đầu &amp; chân trang</value></data>
+  <data name="Cmd_PageNumbers" xml:space="preserve"><value>Đánh số trang</value></data>
+  <data name="Cmd_EditContent" xml:space="preserve"><value>Sửa nội dung</value></data>
+  <data name="Cmd_Highlight" xml:space="preserve"><value>Tô sáng</value></data>
+  <data name="Cmd_Underline" xml:space="preserve"><value>Gạch chân</value></data>
+  <data name="Cmd_Strikeout" xml:space="preserve"><value>Gạch ngang</value></data>
+  <data name="Cmd_StickyNote" xml:space="preserve"><value>Ghi chú</value></data>
+  <data name="Cmd_TextBox" xml:space="preserve"><value>Hộp chữ</value></data>
+  <data name="Cmd_Ink" xml:space="preserve"><value>Vẽ tay</value></data>
+  <data name="Cmd_Shapes" xml:space="preserve"><value>Hình học</value></data>
+  <data name="Cmd_StampAnnotation" xml:space="preserve"><value>Con dấu</value></data>
+  <data name="Cmd_Find" xml:space="preserve"><value>Tìm</value></data>
+  <data name="Cmd_Password" xml:space="preserve"><value>Mật khẩu</value></data>
+  <data name="Cmd_Redact" xml:space="preserve"><value>Xóa vĩnh viễn</value></data>
+  <data name="Cmd_Sanitize" xml:space="preserve"><value>Làm sạch</value></data>
+  <data name="Cmd_Sign" xml:space="preserve"><value>Ký số</value></data>
+  <data name="Cmd_VerifySignatures" xml:space="preserve"><value>Xác minh</value></data>
+  <data name="Cmd_ToImages" xml:space="preserve"><value>Sang ảnh</value></data>
+  <data name="Cmd_ToText" xml:space="preserve"><value>Sang văn bản</value></data>
+  <data name="Cmd_FromImages" xml:space="preserve"><value>Từ ảnh</value></data>
+  <data name="Cmd_FromOffice" xml:space="preserve"><value>Từ Office</value></data>
+  <data name="Cmd_Compress" xml:space="preserve"><value>Nén</value></data>
+  <data name="Cmd_PdfA" xml:space="preserve"><value>PDF/A</value></data>
+  <data name="Cmd_Ocr" xml:space="preserve"><value>OCR</value></data>
+  <data name="Cmd_Compare" xml:space="preserve"><value>So sánh</value></data>
+  <data name="Cmd_Workflow" xml:space="preserve"><value>Quy trình</value></data>
+  <data name="Cmd_Batch" xml:space="preserve"><value>Chạy lô</value></data>
+  <data name="Cmd_OpenLogFolder" xml:space="preserve"><value>Thư mục nhật ký</value></data>
+  <data name="Cmd_ThrowTestException" xml:space="preserve"><value>Ném lỗi thử</value></data>
+  <data name="Cmd_NotAvailableYet" xml:space="preserve"><value>Tính năng này sẽ có trong bản cập nhật sau.</value></data>
+
+  <!-- Workspace -->
+  <data name="Tab_Home" xml:space="preserve"><value>Trang chủ</value></data>
+  <data name="Sidebar_Thumbnails" xml:space="preserve"><value>Hình thu nhỏ</value></data>
+  <data name="Sidebar_Bookmarks" xml:space="preserve"><value>Dấu trang</value></data>
+  <data name="Sidebar_ThumbnailsEmpty" xml:space="preserve"><value>Mở một tài liệu để xem các trang.</value></data>
+  <data name="Sidebar_BookmarksEmpty" xml:space="preserve"><value>Mở một tài liệu để xem dấu trang.</value></data>
+  <data name="Properties_Title" xml:space="preserve"><value>Thuộc tính</value></data>
+  <data name="Properties_Empty" xml:space="preserve"><value>Chọn một trang hoặc đối tượng để xem thuộc tính.</value></data>
+
+  <!-- Welcome screen -->
+  <data name="Welcome_Title" xml:space="preserve"><value>Chào mừng đến với PDF_Pro</value></data>
+  <data name="Welcome_Subtitle" xml:space="preserve"><value>Xem, sắp xếp, chỉnh sửa và bảo vệ tài liệu PDF.</value></data>
+  <data name="Welcome_OpenFile" xml:space="preserve"><value>Mở tệp…</value></data>
+  <data name="Welcome_DropZone" xml:space="preserve"><value>Kéo và thả tệp PDF vào đây</value></data>
+  <data name="Welcome_DropZoneHint" xml:space="preserve"><value>Có thể thả nhiều tệp cùng lúc, mỗi tệp mở trong một thẻ riêng.</value></data>
+  <data name="Welcome_RecentFiles" xml:space="preserve"><value>Tệp gần đây</value></data>
+  <data name="Welcome_NoRecentFiles" xml:space="preserve"><value>Chưa có tệp nào được mở gần đây.</value></data>
+
+  <!-- Status bar -->
+  <data name="Status_Page" xml:space="preserve"><value>Trang: {0}</value></data>
+  <data name="Status_Zoom" xml:space="preserve"><value>Thu phóng: {0}</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>Sẵn sàng</value></data>
+
+  <!-- Settings -->
+  <data name="Settings_Title" xml:space="preserve"><value>Cài đặt</value></data>
+  <data name="Settings_Theme" xml:space="preserve"><value>Chủ đề</value></data>
+  <data name="Settings_ThemeDescription" xml:space="preserve"><value>Chọn giao diện sáng, tối hoặc theo cài đặt của Windows.</value></data>
+  <data name="Settings_Theme_System" xml:space="preserve"><value>Theo hệ thống</value></data>
+  <data name="Settings_Theme_Light" xml:space="preserve"><value>Sáng</value></data>
+  <data name="Settings_Theme_Dark" xml:space="preserve"><value>Tối</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>Ngôn ngữ</value></data>
+  <data name="Settings_LanguageDescription" xml:space="preserve"><value>Ngôn ngữ hiển thị của ứng dụng.</value></data>
+  <data name="Settings_Language_Vietnamese" xml:space="preserve"><value>Tiếng Việt</value></data>
+  <data name="Settings_Language_English" xml:space="preserve"><value>English</value></data>
+  <data name="Settings_RestartRequired_Title" xml:space="preserve"><value>Cần khởi động lại</value></data>
+  <data name="Settings_RestartRequired_Message" xml:space="preserve"><value>Ngôn ngữ mới sẽ được áp dụng sau khi khởi động lại ứng dụng.</value></data>
+  <data name="Settings_RestartNow" xml:space="preserve"><value>Khởi động lại ngay</value></data>
+  <data name="Settings_SaveFailed_Title" xml:space="preserve"><value>Không lưu được cài đặt</value></data>
+  <data name="Settings_SaveFailed_Message" xml:space="preserve"><value>Thay đổi vẫn có hiệu lực đến khi đóng ứng dụng. Kiểm tra quyền ghi vào thư mục dữ liệu của PDF_Pro.</value></data>
+
+  <!-- Errors -->
+  <data name="Error_Unexpected_Title" xml:space="preserve"><value>Đã xảy ra lỗi</value></data>
+  <data name="Error_Unexpected_Message" xml:space="preserve"><value>PDF_Pro gặp một lỗi không mong muốn. Ứng dụng vẫn tiếp tục chạy; nếu thấy hoạt động bất thường, hãy lưu công việc và khởi động lại.
+
+Chi tiết đã được ghi vào nhật ký (mã sự cố: {0}).</value></data>
+  <data name="Error_Fatal_Message" xml:space="preserve"><value>PDF_Pro gặp lỗi nghiêm trọng và phải đóng lại.
+
+Chi tiết đã được ghi vào nhật ký (mã sự cố: {0}).</value></data>
+  <data name="Error_Startup_Message" xml:space="preserve"><value>PDF_Pro không khởi động được.
+
+Chi tiết đã được ghi vào nhật ký tại:
+{0}</value></data>
+  <data name="Error_OpenLogFolder" xml:space="preserve"><value>Mở thư mục nhật ký</value></data>
+</root>
