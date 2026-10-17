@@ -1,49 +1,189 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using PdfPro.App.Hosting;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.Infrastructure;
+using PdfPro.Infrastructure.Settings;
 using Wpf.Ui.Controls;
 
 namespace PdfPro.App.ViewModels;
 
+/// <summary>Main window: ribbon, workspace tabs (home + documents), sidebar and status bar.</summary>
 public sealed partial class MainWindowViewModel : ObservableObject
 {
     private readonly IDialogService _dialogs;
     private readonly IAppLifetime _lifetime;
     private readonly IShellLauncher _shell;
     private readonly AppPaths _paths;
+    private readonly IDocumentOpener _opener;
+    private readonly IDocumentTabFactory _tabFactory;
+    private readonly ISettingsService _settings;
+    private readonly IFileDialogService _fileDialogs;
+    private readonly IMessageService _messages;
+    private readonly ILogger<MainWindowViewModel> _logger;
 
     public MainWindowViewModel(
         IDialogService dialogs,
         IAppLifetime lifetime,
         IShellLauncher shell,
         AppPaths paths,
-        AppBuildInfo buildInfo)
+        AppBuildInfo buildInfo,
+        IDocumentOpener opener,
+        IDocumentTabFactory tabFactory,
+        ISettingsService settings,
+        IFileDialogService fileDialogs,
+        IMessageService messages,
+        ILogger<MainWindowViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _dialogs = dialogs;
         _lifetime = lifetime;
         _shell = shell;
         _paths = paths;
+        _opener = opener;
+        _tabFactory = tabFactory;
+        _settings = settings;
+        _fileDialogs = fileDialogs;
+        _messages = messages;
+        _logger = logger;
 
+        Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand);
+        ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
-        Tabs = [new HomeTabViewModel()];
-        SelectedTab = Tabs[0];
+        Tabs = [Home];
+        SelectedTab = Home;
     }
 
     public IReadOnlyList<RibbonTabViewModel> RibbonTabs { get; }
 
     public ObservableCollection<WorkspaceTabViewModel> Tabs { get; }
 
+    public HomeTabViewModel Home { get; }
+
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
+
+    /// <summary>The selected document tab, or null when the home tab is selected.</summary>
+    public DocumentTabViewModel? ActiveDocument => SelectedTab as DocumentTabViewModel;
+
+    public bool HasActiveDocument => ActiveDocument is not null;
+
+    public IEnumerable<DocumentTabViewModel> Documents => Tabs.OfType<DocumentTabViewModel>();
 
     public SidebarViewModel Sidebar { get; } = new();
 
     public StatusBarViewModel StatusBar { get; } = new();
+
+    /// <summary>
+    /// Opens files one after the other (each in its own tab). A file that is already open is just selected.
+    /// With <paramref name="pdfOnly"/>, files without the .pdf extension are skipped and the user is told.
+    /// </summary>
+    public async Task OpenFilesAsync(IEnumerable<string> paths, bool pdfOnly = false)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        var candidates = paths.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+        var files = pdfOnly
+            ? candidates.Where(p => string.Equals(Path.GetExtension(p), ".pdf", StringComparison.OrdinalIgnoreCase)).ToList()
+            : candidates;
+        if (files.Count < candidates.Count)
+        {
+            await _messages.ShowInfoAsync(Strings.Open_Error_Title, Strings.Open_NotPdf);
+        }
+
+        foreach (var path in files)
+        {
+            var fullPath = Path.GetFullPath(path);
+            if (Documents.FirstOrDefault(d => d.IsSameFile(fullPath)) is { } open)
+            {
+                SelectedTab = open;
+                continue;
+            }
+
+            var document = await _opener.OpenAsync(fullPath);
+            if (document is null)
+            {
+                if (!File.Exists(fullPath))
+                {
+                    await UpdateRecentFilesAsync(list => RecentFileList.Remove(list, fullPath));
+                }
+
+                continue;
+            }
+
+            var tab = _tabFactory.Create(document, fullPath);
+            Tabs.Add(tab);
+            SelectedTab = tab;
+            await UpdateRecentFilesAsync(list => RecentFileList.Add(list, fullPath));
+        }
+    }
+
+    /// <summary>Drops recent files that no longer exist (runs the file checks off the UI thread).</summary>
+    public async Task RemoveMissingRecentFilesAsync()
+    {
+        var current = _settings.Current.RecentFiles;
+        var existing = await Task.Run(() => RecentFileList.RemoveMissing(current, File.Exists));
+        if (existing.Count != current.Count)
+        {
+            await UpdateRecentFilesAsync(list => RecentFileList.RemoveMissing(list, existing.Contains));
+        }
+    }
+
+    /// <summary>Closes every document at application exit (synchronously, the UI is going away).</summary>
+    public void CloseAllDocuments()
+    {
+        var documents = Documents.ToList();
+        foreach (var document in documents)
+        {
+            Tabs.Remove(document);
+        }
+
+        var closing = documents.Select(d => d.DisposeAsync().AsTask()).ToArray();
+        if (!Task.WaitAll(closing, TimeSpan.FromSeconds(5)))
+        {
+            _logger.LogWarning("Some documents did not close within 5 seconds");
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenAsync()
+    {
+        var files = _fileDialogs.PickPdfFiles();
+        if (files.Count > 0)
+        {
+            await OpenFilesAsync(files);
+        }
+    }
+
+    [RelayCommand]
+    private Task OpenRecentFileAsync(string? path)
+        => string.IsNullOrWhiteSpace(path) ? Task.CompletedTask : OpenFilesAsync([path]);
+
+    [RelayCommand]
+    private async Task CloseTabAsync(WorkspaceTabViewModel? tab)
+    {
+        if (tab is not DocumentTabViewModel document || !Tabs.Contains(document))
+        {
+            return;
+        }
+
+        var index = Tabs.IndexOf(document);
+        Tabs.Remove(document);
+        if (SelectedTab is null || ReferenceEquals(SelectedTab, document))
+        {
+            SelectedTab = Tabs[Math.Min(index, Tabs.Count - 1)];
+        }
+
+        await document.DisposeAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private Task CloseActiveDocumentAsync() => CloseTabAsync(ActiveDocument);
 
     [RelayCommand]
     private void OpenSettings() => _dialogs.ShowSettings();
@@ -61,6 +201,29 @@ public sealed partial class MainWindowViewModel : ObservableObject
 #pragma warning restore CA1822
         => throw new InvalidOperationException("Test exception requested from the Diagnostics ribbon group.");
 
+    private async Task UpdateRecentFilesAsync(Func<IReadOnlyList<string>, IReadOnlyList<string>> change)
+    {
+        try
+        {
+            await _settings.UpdateAsync(s => s with { RecentFiles = change(s.RecentFiles) });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning(ex, "The recent files list could not be saved");
+        }
+
+        ShowRecentFiles(_settings.Current.RecentFiles);
+    }
+
+    private void ShowRecentFiles(IReadOnlyList<string> paths)
+    {
+        Home.RecentFiles.Clear();
+        foreach (var path in paths)
+        {
+            Home.RecentFiles.Add(new RecentFileViewModel(path));
+        }
+    }
+
     private List<RibbonTabViewModel> BuildRibbon(bool isDebugBuild)
     {
         List<RibbonCommandViewModel> diagnostics = [new("tools.openLogFolder", Strings.Cmd_OpenLogFolder, SymbolRegular.DocumentBulletList24, OpenLogFolderCommand)];
@@ -75,11 +238,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
             [
                 new(Strings.Ribbon_Group_Document,
                 [
-                    new("file.open", Strings.Cmd_Open, SymbolRegular.FolderOpen24),
+                    new("file.open", Strings.Cmd_Open, SymbolRegular.FolderOpen24, OpenCommand),
                     new("file.save", Strings.Cmd_Save, SymbolRegular.Save24),
                     new("file.saveAs", Strings.Cmd_SaveAs, SymbolRegular.SaveEdit24),
                     new("file.print", Strings.Cmd_Print, SymbolRegular.Print24),
-                    new("file.close", Strings.Cmd_Close, SymbolRegular.Dismiss24),
+                    new("file.close", Strings.Cmd_Close, SymbolRegular.Dismiss24, CloseActiveDocumentCommand),
                 ]),
                 new(Strings.Ribbon_Group_App,
                 [

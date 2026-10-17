@@ -1,39 +1,58 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Globalization;
+using System.IO;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PdfPro.App.Resources;
+using Wpf.Ui.Controls;
 
 namespace PdfPro.App.ViewModels;
 
-/// <summary>A tab in the central workspace: the home tab now, document tabs from Phase 2.</summary>
+/// <summary>A tab in the central workspace: the home tab or an open document.</summary>
 public abstract class WorkspaceTabViewModel : ObservableObject
 {
     public abstract string Title { get; }
 
+    public virtual string ToolTip => Title;
+
+    public abstract SymbolRegular Icon { get; }
+
     public virtual bool CanClose => false;
 }
 
-/// <summary>Start page shown when no document is open: open button, drop zone, recent files.</summary>
+/// <summary>Start page: open button, drop zone, recent files.</summary>
 public sealed class HomeTabViewModel : WorkspaceTabViewModel
 {
-    public HomeTabViewModel()
+    public HomeTabViewModel(ICommand openFileCommand, ICommand openRecentFileCommand)
     {
+        OpenFileCommand = openFileCommand;
+        OpenRecentFileCommand = openRecentFileCommand;
         RecentFiles.CollectionChanged += OnRecentFilesChanged;
     }
 
     public override string Title => Strings.Tab_Home;
 
-    /// <summary>Opening documents arrives with the PDFium engine in Phase 2.</summary>
-    public ICommand OpenFileCommand { get; } = UnavailableCommand.Instance;
+    public override SymbolRegular Icon => SymbolRegular.Home24;
 
-    public ObservableCollection<string> RecentFiles { get; } = [];
+    public ICommand OpenFileCommand { get; }
+
+    /// <summary>Takes the full path of a recent file as parameter.</summary>
+    public ICommand OpenRecentFileCommand { get; }
+
+    public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = [];
 
     public bool HasNoRecentFiles => RecentFiles.Count == 0;
 
     private void OnRecentFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
         => OnPropertyChanged(nameof(HasNoRecentFiles));
+}
+
+/// <summary>An entry of the recent files list.</summary>
+public sealed record RecentFileViewModel(string Path)
+{
+    public string FileName => System.IO.Path.GetFileName(Path);
+
+    public string Folder => System.IO.Path.GetDirectoryName(Path) ?? string.Empty;
 }
 
 public enum SidebarPanel
@@ -74,23 +93,13 @@ public sealed partial class SidebarViewModel : ObservableObject
     }
 }
 
-/// <summary>Bottom status bar: current page, zoom and background task progress.</summary>
+/// <summary>Bottom status bar: background task progress (page and zoom controls belong to the active document).</summary>
 public sealed partial class StatusBarViewModel : ObservableObject
 {
-    private const string NoValue = "—";
-
     public StatusBarViewModel()
     {
-        PageText = Format(Strings.Status_Page, NoValue);
-        ZoomText = Format(Strings.Status_Zoom, NoValue);
         TaskText = Strings.Status_Ready;
     }
-
-    [ObservableProperty]
-    public partial string PageText { get; set; }
-
-    [ObservableProperty]
-    public partial string ZoomText { get; set; }
 
     [ObservableProperty]
     public partial string TaskText { get; set; }
@@ -101,6 +110,4 @@ public sealed partial class StatusBarViewModel : ObservableObject
     /// <summary>Progress of the running task in [0, 1].</summary>
     [ObservableProperty]
     public partial double TaskProgress { get; set; }
-
-    private static string Format(string template, string value) => string.Format(CultureInfo.CurrentCulture, template, value);
 }

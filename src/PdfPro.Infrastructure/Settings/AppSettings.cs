@@ -31,6 +31,10 @@ public sealed record AppSettings
 {
     public const int CurrentSchemaVersion = 1;
 
+    public const int DefaultRenderCacheMegabytes = 512;
+    public const int MinRenderCacheMegabytes = 128;
+    public const int MaxRenderCacheMegabytes = 4096;
+
     public static AppSettings Default { get; } = new();
 
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
@@ -38,4 +42,45 @@ public sealed record AppSettings
     public AppThemeMode Theme { get; init; } = AppThemeMode.System;
 
     public string Language { get; init; } = AppLanguages.Vietnamese;
+
+    /// <summary>
+    /// Recently opened documents, newest first (full paths). Personal data: it stays in the user profile and is
+    /// never written to the log.
+    /// </summary>
+    public IReadOnlyList<string> RecentFiles { get; init; } = [];
+
+    /// <summary>Memory budget for rendered pages, in megabytes.</summary>
+    public int RenderCacheMegabytes { get; init; } = DefaultRenderCacheMegabytes;
+}
+
+/// <summary>Most-recently-used list of documents (pure list operations; no file system access).</summary>
+public static class RecentFileList
+{
+    public const int Capacity = 10;
+
+    /// <summary>Puts <paramref name="path"/> first, removing an older entry for the same file.</summary>
+    public static IReadOnlyList<string> Add(IReadOnlyList<string>? current, string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var fullPath = Path.GetFullPath(path);
+        return Normalize([fullPath, .. current ?? []]);
+    }
+
+    public static IReadOnlyList<string> Remove(IReadOnlyList<string>? current, string path)
+        => (current ?? []).Where(p => !string.Equals(p, path, StringComparison.OrdinalIgnoreCase)).ToArray();
+
+    /// <summary>Drops entries for which <paramref name="exists"/> is false (moved or deleted files).</summary>
+    public static IReadOnlyList<string> RemoveMissing(IReadOnlyList<string>? current, Func<string, bool> exists)
+    {
+        ArgumentNullException.ThrowIfNull(exists);
+        return (current ?? []).Where(exists).ToArray();
+    }
+
+    /// <summary>No blanks, no duplicates (Windows paths are case-insensitive), at most <see cref="Capacity"/>.</summary>
+    public static IReadOnlyList<string> Normalize(IReadOnlyList<string>? current)
+        => (current ?? [])
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(Capacity)
+            .ToArray();
 }

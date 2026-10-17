@@ -133,6 +133,11 @@ public sealed class SettingsService : ISettingsService
         SchemaVersion = AppSettings.CurrentSchemaVersion,
         Theme = Enum.IsDefined(settings.Theme) ? settings.Theme : AppThemeMode.System,
         Language = AppLanguages.Normalize(settings.Language),
+        RecentFiles = RecentFileList.Normalize(settings.RecentFiles),
+        RenderCacheMegabytes = Math.Clamp(
+            settings.RenderCacheMegabytes,
+            AppSettings.MinRenderCacheMegabytes,
+            AppSettings.MaxRenderCacheMegabytes),
     };
 
     private void MoveAside(string reason)

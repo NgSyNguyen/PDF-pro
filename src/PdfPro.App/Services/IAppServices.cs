@@ -40,3 +40,35 @@ public interface IShellLauncher
 {
     void OpenFolder(string path);
 }
+
+/// <summary>Opens PDF files for the UI: asks for passwords and explains failures to the user.</summary>
+public interface IDocumentOpener
+{
+    /// <summary>
+    /// Returns the opened document, or null when the user cancelled the password prompt or the file could not
+    /// be opened (the user has already been told why).
+    /// </summary>
+    Task<Pdfium.IPdfDocument?> OpenAsync(string path, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Asks the user for a document password. Never stores it.</summary>
+public interface IPasswordPrompt
+{
+    /// <returns>The password, or null when the user cancelled.</returns>
+    string? RequestPassword(string fileName, bool isRetry);
+}
+
+/// <summary>Modal messages for the user.</summary>
+public interface IMessageService
+{
+    Task ShowErrorAsync(string title, string message);
+
+    Task ShowInfoAsync(string title, string message);
+}
+
+/// <summary>Standard file dialogs.</summary>
+public interface IFileDialogService
+{
+    /// <returns>Selected PDF files, empty when cancelled.</returns>
+    IReadOnlyList<string> PickPdfFiles();
+}

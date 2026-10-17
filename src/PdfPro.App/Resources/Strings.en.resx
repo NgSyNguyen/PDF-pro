@@ -127,9 +127,45 @@
   <data name="Welcome_NoRecentFiles" xml:space="preserve"><value>No recently opened files yet.</value></data>
 
   <!-- Status bar -->
-  <data name="Status_Page" xml:space="preserve"><value>Page: {0}</value></data>
-  <data name="Status_Zoom" xml:space="preserve"><value>Zoom: {0}</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Ready</value></data>
+  <data name="Status_PageLabel" xml:space="preserve"><value>Page</value></data>
+  <data name="Status_PageCount" xml:space="preserve"><value>/ {0}</value></data>
+  <data name="Status_PageInput_ToolTip" xml:space="preserve"><value>Type a page number and press Enter (Ctrl+G)</value></data>
+
+  <!-- Viewer -->
+  <data name="Page_AutomationName" xml:space="preserve"><value>Page {0}</value></data>
+  <data name="Viewer_PageRenderFailed" xml:space="preserve"><value>This page could not be displayed.</value></data>
+  <data name="Zoom_FitWidth" xml:space="preserve"><value>Fit width (Ctrl+2)</value></data>
+  <data name="Zoom_FitPage" xml:space="preserve"><value>Fit page (Ctrl+0)</value></data>
+  <data name="Zoom_ActualSize" xml:space="preserve"><value>Actual size (Ctrl+1)</value></data>
+  <data name="Zoom_In_ToolTip" xml:space="preserve"><value>Zoom in (Ctrl+=)</value></data>
+  <data name="Zoom_Out_ToolTip" xml:space="preserve"><value>Zoom out (Ctrl+−)</value></data>
+  <data name="Zoom_Menu_ToolTip" xml:space="preserve"><value>Zoom level</value></data>
+  <data name="Layout_Single" xml:space="preserve"><value>Single page</value></data>
+  <data name="Layout_Facing" xml:space="preserve"><value>Two pages facing</value></data>
+  <data name="Layout_FacingWithCover" xml:space="preserve"><value>Two pages with cover</value></data>
+  <data name="Tab_Close_ToolTip" xml:space="preserve"><value>Close (Ctrl+W)</value></data>
+
+  <!-- Opening documents -->
+  <data name="Welcome_OpenFile_ToolTip" xml:space="preserve"><value>Open a PDF file (Ctrl+O)</value></data>
+  <data name="Open_Dialog_Title" xml:space="preserve"><value>Open PDF files</value></data>
+  <data name="Open_Dialog_Filter" xml:space="preserve"><value>PDF files (*.pdf)|*.pdf|All files (*.*)|*.*</value></data>
+  <data name="Open_Error_Title" xml:space="preserve"><value>Could not open the file</value></data>
+  <data name="Open_Error_FileNotFound" xml:space="preserve"><value>“{0}” was not found. It may have been moved or deleted.</value></data>
+  <data name="Open_Error_AccessDenied" xml:space="preserve"><value>You do not have permission to read “{0}”.</value></data>
+  <data name="Open_Error_FileInUse" xml:space="preserve"><value>“{0}” is being written by another application. Close it and try again.</value></data>
+  <data name="Open_Error_FileTooLarge" xml:space="preserve"><value>“{0}” is larger than 4 GB, which PDF_Pro does not support yet.</value></data>
+  <data name="Open_Error_ReadFailed" xml:space="preserve"><value>Reading “{0}” failed. Check the drive or network connection and try again.</value></data>
+  <data name="Open_Error_Corrupted" xml:space="preserve"><value>“{0}” is damaged or is not a PDF document.</value></data>
+  <data name="Open_Error_UnsupportedSecurity" xml:space="preserve"><value>“{0}” uses a security handler that PDF_Pro does not support yet.</value></data>
+  <data name="Open_Error_Unknown" xml:space="preserve"><value>An error occurred while opening “{0}”. Details were written to the log.</value></data>
+  <data name="Open_NotPdf" xml:space="preserve"><value>Only PDF files can be opened; other files were skipped.</value></data>
+  <data name="Password_Title" xml:space="preserve"><value>Protected document</value></data>
+  <data name="Password_Message" xml:space="preserve"><value>“{0}” is password protected. Enter the password to open it.</value></data>
+  <data name="Password_Label" xml:space="preserve"><value>Password</value></data>
+  <data name="Password_Wrong" xml:space="preserve"><value>The password is incorrect. Please try again.</value></data>
+  <data name="Password_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
 
   <!-- Settings -->
   <data name="Settings_Title" xml:space="preserve"><value>Settings</value></data>

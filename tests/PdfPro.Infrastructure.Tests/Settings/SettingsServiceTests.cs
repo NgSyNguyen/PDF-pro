@@ -114,6 +114,33 @@ public sealed class SettingsServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RecentFilesAndCacheBudget_PersistNormalized()
+    {
+        var service = new SettingsService(_paths, _logger);
+
+        await service.UpdateAsync(
+            s => s with { RecentFiles = [@"C:\a.pdf", @"c:\A.pdf", @"C:\b.pdf"], RenderCacheMegabytes = 100_000 },
+            TestToken);
+        var reloaded = new SettingsService(_paths, _logger);
+
+        reloaded.Current.RecentFiles.ShouldBe([@"C:\a.pdf", @"C:\b.pdf"]);
+        reloaded.Current.RenderCacheMegabytes.ShouldBe(AppSettings.MaxRenderCacheMegabytes);
+    }
+
+    [Fact]
+    public void OlderFileWithoutNewFields_GetsDefaults()
+    {
+        WriteSettingsFile("{\"schemaVersion\": 1, \"theme\": \"dark\", \"recentFiles\": null, \"renderCacheMegabytes\": 5}");
+
+        var service = new SettingsService(_paths, _logger);
+
+        service.Current.RecentFiles.ShouldBeEmpty();
+        service.Current.RenderCacheMegabytes.ShouldBe(AppSettings.MinRenderCacheMegabytes);
+        new SettingsService(new AppPaths(_temp.Combine("other"), _temp.Combine("tools")), _logger).Current.RenderCacheMegabytes
+            .ShouldBe(AppSettings.DefaultRenderCacheMegabytes);
+    }
+
+    [Fact]
     public void UnknownProperties_AreIgnored()
     {
         WriteSettingsFile("{\"schemaVersion\": 1, \"theme\": \"dark\", \"futureOption\": 42}");

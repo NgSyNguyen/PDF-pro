@@ -1,0 +1,86 @@
+<UserControl
+  x:Class="PdfPro.App.Views.DocumentView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:controls="clr-namespace:PdfPro.App.Controls"
+  xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
+  xmlns:viewer="clr-namespace:PdfPro.App.ViewModels.Viewer"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:DocumentTabViewModel}"
+  d:DesignHeight="600"
+  d:DesignWidth="800">
+  <UserControl.Resources>
+    <DropShadowEffect
+      x:Key="PageShadow"
+      BlurRadius="10"
+      Direction="270"
+      Opacity="0.25"
+      RenderingBias="Performance"
+      ShadowDepth="1" />
+
+    <DataTemplate x:Key="PageTemplate" DataType="{x:Type viewer:PageViewModel}">
+      <Grid AutomationProperties.Name="{Binding AutomationName}">
+        <Border Background="White" Effect="{StaticResource PageShadow}" />
+        <Image
+          RenderOptions.BitmapScalingMode="HighQuality"
+          Source="{Binding Image}"
+          Stretch="Fill" />
+        <Canvas ClipToBounds="True">
+          <Image
+            Canvas.Left="{Binding DetailBounds.X}"
+            Canvas.Top="{Binding DetailBounds.Y}"
+            Width="{Binding DetailBounds.Width}"
+            Height="{Binding DetailBounds.Height}"
+            Source="{Binding DetailImage}"
+            Stretch="Fill" />
+        </Canvas>
+        <StackPanel
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Visibility="{Binding RenderFailed, Converter={StaticResource BoolToVisibility}}">
+          <ui:SymbolIcon
+            HorizontalAlignment="Center"
+            FontSize="32"
+            Foreground="Gray"
+            Symbol="DocumentError24" />
+          <TextBlock
+            Margin="0,6,0,0"
+            Foreground="Gray"
+            Text="{loc:Tr Viewer_PageRenderFailed}"
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </Grid>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <ScrollViewer
+    x:Name="Scroller"
+    AutomationProperties.AutomationId="DocumentScroller"
+    AutomationProperties.Name="{Binding Title}"
+    Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+    CanContentScroll="True"
+    DataContext="{Binding Viewer}"
+    Focusable="True"
+    FocusVisualStyle="{x:Null}"
+    HorizontalScrollBarVisibility="Auto"
+    PreviewKeyDown="OnPreviewKeyDown"
+    PreviewMouseDown="OnPreviewMouseDown"
+    PreviewMouseWheel="OnPreviewMouseWheel"
+    VerticalScrollBarVisibility="Visible">
+    <controls:DocumentViewPanel
+      x:Name="Surface"
+      AutomationProperties.AutomationId="DocumentSurface"
+      Background="Transparent"
+      DpiScale="{Binding DpiScale, Mode=TwoWay}"
+      Offset="{Binding ScrollOffset, Mode=TwoWay}"
+      PageLayout="{Binding Layout}"
+      PageTemplate="{StaticResource PageTemplate}"
+      Pages="{Binding Pages}"
+      ViewportSize="{Binding ViewportSize, Mode=TwoWay}" />
+  </ScrollViewer>
+</UserControl>

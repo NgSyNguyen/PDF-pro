@@ -18,7 +18,31 @@
   WindowStartupLocation="CenterScreen"
   ExtendsContentIntoTitleBar="True"
   WindowBackdropType="Mica"
-  WindowCornerPreference="Round">
+  WindowCornerPreference="Round"
+  AllowDrop="True"
+  DragOver="OnDragOver"
+  Drop="OnDrop">
+
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="O" Command="{Binding OpenCommand}" Modifiers="Control" />
+    <KeyBinding Key="W" Command="{Binding CloseActiveDocumentCommand}" Modifiers="Control" />
+    <KeyBinding Key="F4" Command="{Binding CloseActiveDocumentCommand}" Modifiers="Control" />
+    <KeyBinding Key="OemPlus" Command="{Binding ActiveDocument.Viewer.ZoomInCommand}" Modifiers="Control" />
+    <KeyBinding Key="Add" Command="{Binding ActiveDocument.Viewer.ZoomInCommand}" Modifiers="Control" />
+    <KeyBinding Key="OemMinus" Command="{Binding ActiveDocument.Viewer.ZoomOutCommand}" Modifiers="Control" />
+    <KeyBinding Key="Subtract" Command="{Binding ActiveDocument.Viewer.ZoomOutCommand}" Modifiers="Control" />
+    <KeyBinding Key="D0" Command="{Binding ActiveDocument.Viewer.FitPageCommand}" Modifiers="Control" />
+    <KeyBinding Key="NumPad0" Command="{Binding ActiveDocument.Viewer.FitPageCommand}" Modifiers="Control" />
+    <KeyBinding Key="D1" Command="{Binding ActiveDocument.Viewer.ActualSizeCommand}" Modifiers="Control" />
+    <KeyBinding Key="NumPad1" Command="{Binding ActiveDocument.Viewer.ActualSizeCommand}" Modifiers="Control" />
+    <KeyBinding Key="D2" Command="{Binding ActiveDocument.Viewer.FitWidthCommand}" Modifiers="Control" />
+    <KeyBinding Key="NumPad2" Command="{Binding ActiveDocument.Viewer.FitWidthCommand}" Modifiers="Control" />
+    <KeyBinding Key="G" Command="{x:Static views:MainWindow.GoToPageCommand}" Modifiers="Control" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.CommandBindings>
+    <CommandBinding Command="{x:Static views:MainWindow.GoToPageCommand}" Executed="OnGoToPage" />
+  </ui:FluentWindow.CommandBindings>
 
   <ui:FluentWindow.Resources>
     <!--
@@ -68,6 +92,24 @@
     <DataTemplate DataType="{x:Type vm:HomeTabViewModel}">
       <views:HomeView />
     </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:DocumentTabViewModel}">
+      <views:DocumentView />
+    </DataTemplate>
+
+    <Style x:Key="StatusIconButton" BasedOn="{StaticResource {x:Type ui:Button}}" TargetType="ui:Button">
+      <Setter Property="Appearance" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="6,2" />
+      <Setter Property="Margin" Value="1,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="StatusToggle" BasedOn="{StaticResource {x:Type ToggleButton}}" TargetType="RadioButton">
+      <Setter Property="Padding" Value="6,2" />
+      <Setter Property="Margin" Value="1,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
   </ui:FluentWindow.Resources>
 
   <Grid>
@@ -252,9 +294,26 @@
         SelectedItem="{Binding SelectedTab}">
         <TabControl.ItemTemplate>
           <DataTemplate DataType="{x:Type vm:WorkspaceTabViewModel}">
-            <StackPanel Orientation="Horizontal">
-              <ui:SymbolIcon Margin="0,0,6,0" Symbol="Home24" />
-              <TextBlock Text="{Binding Title}" />
+            <StackPanel Orientation="Horizontal" ToolTip="{Binding ToolTip}">
+              <ui:SymbolIcon Margin="0,0,6,0" Symbol="{Binding Icon}" />
+              <TextBlock
+                MaxWidth="220"
+                VerticalAlignment="Center"
+                Text="{Binding Title}"
+                TextTrimming="CharacterEllipsis" />
+              <ui:Button
+                Margin="6,0,-4,0"
+                Padding="3"
+                VerticalAlignment="Center"
+                Appearance="Transparent"
+                AutomationProperties.AutomationId="CloseTab"
+                AutomationProperties.Name="{loc:Tr Tab_Close_ToolTip}"
+                BorderThickness="0"
+                Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                CommandParameter="{Binding}"
+                Icon="{ui:SymbolIcon Dismiss12}"
+                ToolTip="{loc:Tr Tab_Close_ToolTip}"
+                Visibility="{Binding CanClose, Converter={StaticResource BoolToVisibility}}" />
             </StackPanel>
           </DataTemplate>
         </TabControl.ItemTemplate>
@@ -292,24 +351,117 @@
       </Border>
     </Grid>
 
-    <!-- Status bar -->
+    <!-- Status bar: page navigation (left), zoom and layout (right) for the active document; task progress -->
     <Border
       Grid.Row="3"
-      Padding="16,4"
+      Padding="12,2"
       BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
-      BorderThickness="0,1,0,0"
-      DataContext="{Binding StatusBar}">
+      BorderThickness="0,1,0,0">
       <DockPanel LastChildFill="False">
-        <TextBlock
-          AutomationProperties.AutomationId="StatusPage"
+        <StackPanel
+          DataContext="{Binding ActiveDocument.Viewer}"
           DockPanel.Dock="Left"
-          Text="{Binding PageText}" />
-        <TextBlock
-          Margin="24,0,0,0"
-          AutomationProperties.AutomationId="StatusZoom"
-          DockPanel.Dock="Left"
-          Text="{Binding ZoomText}" />
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          Orientation="Horizontal"
+          Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock VerticalAlignment="Center" Text="{loc:Tr Status_PageLabel}" />
+          <TextBox
+            x:Name="PageNumberBox"
+            Width="64"
+            Margin="6,0"
+            Padding="6,2"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="PageNumberBox"
+            AutomationProperties.Name="{loc:Tr Status_PageLabel}"
+            HorizontalContentAlignment="Center"
+            Text="{Binding CurrentPageNumber, Mode=OneWay}"
+            ToolTip="{loc:Tr Status_PageInput_ToolTip}">
+            <TextBox.InputBindings>
+              <KeyBinding
+                Key="Enter"
+                Command="{Binding GoToPageNumberCommand}"
+                CommandParameter="{Binding Text, ElementName=PageNumberBox}" />
+            </TextBox.InputBindings>
+          </TextBox>
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="PageCountText"
+            Text="{Binding PageCount, StringFormat={loc:Tr Status_PageCount}}" />
+        </StackPanel>
+
+        <StackPanel
+          DataContext="{Binding ActiveDocument.Viewer}"
+          DockPanel.Dock="Right"
+          Orientation="Horizontal"
+          Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
+          <RadioButton
+            AutomationProperties.AutomationId="LayoutSingle"
+            AutomationProperties.Name="{loc:Tr Layout_Single}"
+            GroupName="PageLayout"
+            IsChecked="{Binding IsSingleLayout}"
+            Style="{StaticResource StatusToggle}"
+            ToolTip="{loc:Tr Layout_Single}">
+            <ui:SymbolIcon Symbol="DocumentOnePage24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="LayoutFacing"
+            AutomationProperties.Name="{loc:Tr Layout_Facing}"
+            GroupName="PageLayout"
+            IsChecked="{Binding IsFacingLayout}"
+            Style="{StaticResource StatusToggle}"
+            ToolTip="{loc:Tr Layout_Facing}">
+            <ui:SymbolIcon Symbol="BookOpen24" />
+          </RadioButton>
+          <RadioButton
+            Margin="1,0,12,0"
+            AutomationProperties.AutomationId="LayoutFacingWithCover"
+            AutomationProperties.Name="{loc:Tr Layout_FacingWithCover}"
+            GroupName="PageLayout"
+            IsChecked="{Binding IsFacingWithCoverLayout}"
+            Style="{StaticResource StatusToggle}"
+            ToolTip="{loc:Tr Layout_FacingWithCover}">
+            <ui:SymbolIcon Symbol="Book24" />
+          </RadioButton>
+          <ui:Button
+            AutomationProperties.AutomationId="ZoomOut"
+            AutomationProperties.Name="{loc:Tr Zoom_Out_ToolTip}"
+            Command="{Binding ZoomOutCommand}"
+            Icon="{ui:SymbolIcon ZoomOut24}"
+            Style="{StaticResource StatusIconButton}"
+            ToolTip="{loc:Tr Zoom_Out_ToolTip}" />
+          <ui:DropDownButton
+            MinWidth="84"
+            Padding="8,2"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="ZoomMenu"
+            AutomationProperties.Name="{loc:Tr Zoom_Menu_ToolTip}"
+            Content="{Binding ZoomText}"
+            ToolTip="{loc:Tr Zoom_Menu_ToolTip}">
+            <ui:DropDownButton.Flyout>
+              <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}" ItemsSource="{Binding ZoomMenu}">
+                <ContextMenu.ItemContainerStyle>
+                  <Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="MenuItem">
+                    <Setter Property="Header" Value="{Binding Label}" />
+                    <Setter Property="Command" Value="{Binding Command}" />
+                    <Setter Property="CommandParameter" Value="{Binding Parameter}" />
+                  </Style>
+                </ContextMenu.ItemContainerStyle>
+              </ContextMenu>
+            </ui:DropDownButton.Flyout>
+          </ui:DropDownButton>
+          <ui:Button
+            AutomationProperties.AutomationId="ZoomIn"
+            AutomationProperties.Name="{loc:Tr Zoom_In_ToolTip}"
+            Command="{Binding ZoomInCommand}"
+            Icon="{ui:SymbolIcon ZoomIn24}"
+            Style="{StaticResource StatusIconButton}"
+            ToolTip="{loc:Tr Zoom_In_ToolTip}" />
+        </StackPanel>
+
+        <StackPanel
+          Margin="0,0,24,0"
+          DataContext="{Binding StatusBar}"
+          DockPanel.Dock="Right"
+          Orientation="Horizontal">
           <ProgressBar
             Width="160"
             Margin="0,0,8,0"
@@ -317,7 +469,10 @@
             Maximum="1"
             Visibility="{Binding IsTaskRunning, Converter={StaticResource BoolToVisibility}}"
             Value="{Binding TaskProgress}" />
-          <TextBlock AutomationProperties.AutomationId="StatusTask" Text="{Binding TaskText}" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="StatusTask"
+            Text="{Binding TaskText}" />
         </StackPanel>
       </DockPanel>
     </Border>

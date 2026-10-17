@@ -6,7 +6,7 @@ namespace PdfPro.Pdfium;
 /// Thread-safe, async facade over an open <see cref="PdfiumDocument"/>: every call is scheduled on the
 /// <see cref="PdfiumGate"/>. Page sizes and document features are read once when opening.
 /// </summary>
-public sealed class PdfDocumentHandle : IAsyncDisposable
+public sealed class PdfDocumentHandle : IPdfDocument
 {
     private readonly PdfiumGate _gate;
     private readonly PdfiumDocument _document;

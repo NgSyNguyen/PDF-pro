@@ -280,19 +280,26 @@ public sealed class DocumentLayout
 
     /// <summary>
     /// Scroll offset that shows <paramref name="pointInPage"/> (view units from the page's top-left) at the top
-    /// of the viewport, a gap below the top edge; the horizontal offset keeps <paramref name="currentOffsetX"/>
-    /// unless the page would be off screen.
+    /// of the viewport, a gap below the top edge. Horizontally it keeps <paramref name="currentOffsetX"/> while the
+    /// page stays on screen; with null (or when the page would be off screen) the page's row is centred.
     /// </summary>
-    public ViewPoint OffsetToShow(int pageIndex, ViewPoint pointInPage, double currentOffsetX, ViewSize viewport)
+    public ViewPoint OffsetToShow(int pageIndex, ViewPoint pointInPage, double? currentOffsetX, ViewSize viewport)
     {
         var page = GetPageBounds(pageIndex);
 
         // Going to the top of a first-row page shows the whole document top margin.
         var y = _rowOfPage[pageIndex] == 0 && pointInPage.Y <= 0 ? 0 : page.Y + pointInPage.Y - (Spacing.RowGap / 2);
-        var x = currentOffsetX;
-        if (page.Right < x || page.X > x + viewport.Width)
+        double x;
+        if (currentOffsetX is { } current && page.Right >= current && page.X <= current + viewport.Width)
         {
-            x = page.X + (page.Width / 2) - (viewport.Width / 2);
+            x = current;
+        }
+        else
+        {
+            var row = _rows[_rowOfPage[pageIndex]];
+            var left = _pages[row.FirstPage].X;
+            var right = _pages[row.LastPage].Right;
+            x = (left + right - viewport.Width) / 2;
         }
 
         return ClampOffset(new ViewPoint(x, y), viewport);

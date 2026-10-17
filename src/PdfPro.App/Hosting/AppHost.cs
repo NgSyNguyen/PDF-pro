@@ -3,9 +3,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Localization;
 using PdfPro.App.Services;
+using PdfPro.App.Services.Rendering;
 using PdfPro.App.ViewModels;
 using PdfPro.App.Views;
 using PdfPro.Infrastructure;
+using PdfPro.Pdfium;
 using Serilog;
 
 namespace PdfPro.App.Hosting;
@@ -42,6 +44,20 @@ internal static class AppHost
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IAppLifetime, AppLifetime>();
         services.AddSingleton<IShellLauncher, ShellLauncher>();
+        services.AddSingleton<IMessageService, MessageService>();
+        services.AddSingleton<IFileDialogService, FileDialogService>();
+        services.AddSingleton<IPasswordPrompt, PasswordPrompt>();
+        services.AddSingleton<IUiDispatcher, WpfUiDispatcher>();
+        services.AddSingleton<IDebouncerFactory, DispatcherDebouncerFactory>();
+
+        // PDF engine and viewing
+        services.AddSingleton<PdfiumGate>();
+        services.AddHostedService<PdfiumGateLifetime>();
+        services.AddSingleton<IPdfDocumentLoader, PdfDocumentLoader>();
+        services.AddSingleton<IDocumentOpener, DocumentOpener>();
+        services.AddSingleton<RenderCache>();
+        services.AddSingleton<IPageImageRenderer, PageImageRenderer>();
+        services.AddSingleton<IDocumentTabFactory, DocumentTabFactory>();
 
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();

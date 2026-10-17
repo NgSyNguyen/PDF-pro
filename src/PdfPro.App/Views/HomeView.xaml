@@ -43,10 +43,9 @@
         Command="{Binding OpenFileCommand}"
         Content="{loc:Tr Welcome_OpenFile}"
         Icon="{ui:SymbolIcon FolderOpen24}"
-        ToolTip="{loc:Tr Cmd_NotAvailableYet}"
-        ToolTipService.ShowOnDisabled="True" />
+        ToolTip="{loc:Tr Welcome_OpenFile_ToolTip}" />
 
-      <!-- Drop zone: accepting files arrives with document opening in Phase 2. -->
+      <!-- Drop zone: the whole window accepts dropped files; this area just invites the gesture. -->
       <Grid Height="160" Margin="0,24,0,0">
         <Rectangle
           Fill="{DynamicResource CardBackgroundFillColorDefaultBrush}"
@@ -82,7 +81,37 @@
         Margin="0,32,0,8"
         FontWeight="SemiBold"
         Text="{loc:Tr Welcome_RecentFiles}" />
-      <ItemsControl ItemsSource="{Binding RecentFiles}" />
+      <ItemsControl AutomationProperties.AutomationId="RecentFiles" ItemsSource="{Binding RecentFiles}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:RecentFileViewModel}">
+            <ui:Button
+              Margin="0,0,0,4"
+              Padding="10,6"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Left"
+              Appearance="Transparent"
+              AutomationProperties.Name="{Binding FileName}"
+              Command="{Binding DataContext.OpenRecentFileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+              CommandParameter="{Binding Path}"
+              ToolTip="{Binding Path}">
+              <StackPanel Orientation="Horizontal">
+                <ui:SymbolIcon
+                  Margin="0,0,10,0"
+                  FontSize="20"
+                  Symbol="DocumentPdf24" />
+                <StackPanel>
+                  <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                    Text="{Binding Folder}"
+                    TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </StackPanel>
+            </ui:Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
       <TextBlock
         Foreground="{DynamicResource TextFillColorTertiaryBrush}"
         Text="{loc:Tr Welcome_NoRecentFiles}"

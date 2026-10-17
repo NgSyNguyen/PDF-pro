@@ -127,9 +127,45 @@
   <data name="Welcome_NoRecentFiles" xml:space="preserve"><value>Chưa có tệp nào được mở gần đây.</value></data>
 
   <!-- Status bar -->
-  <data name="Status_Page" xml:space="preserve"><value>Trang: {0}</value></data>
-  <data name="Status_Zoom" xml:space="preserve"><value>Thu phóng: {0}</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Sẵn sàng</value></data>
+  <data name="Status_PageLabel" xml:space="preserve"><value>Trang</value></data>
+  <data name="Status_PageCount" xml:space="preserve"><value>/ {0}</value></data>
+  <data name="Status_PageInput_ToolTip" xml:space="preserve"><value>Nhập số trang rồi nhấn Enter (Ctrl+G)</value></data>
+
+  <!-- Viewer -->
+  <data name="Page_AutomationName" xml:space="preserve"><value>Trang {0}</value></data>
+  <data name="Viewer_PageRenderFailed" xml:space="preserve"><value>Không hiển thị được trang này.</value></data>
+  <data name="Zoom_FitWidth" xml:space="preserve"><value>Vừa chiều rộng (Ctrl+2)</value></data>
+  <data name="Zoom_FitPage" xml:space="preserve"><value>Vừa trang (Ctrl+0)</value></data>
+  <data name="Zoom_ActualSize" xml:space="preserve"><value>Kích thước thật (Ctrl+1)</value></data>
+  <data name="Zoom_In_ToolTip" xml:space="preserve"><value>Phóng to (Ctrl+=)</value></data>
+  <data name="Zoom_Out_ToolTip" xml:space="preserve"><value>Thu nhỏ (Ctrl+−)</value></data>
+  <data name="Zoom_Menu_ToolTip" xml:space="preserve"><value>Mức thu phóng</value></data>
+  <data name="Layout_Single" xml:space="preserve"><value>Một trang</value></data>
+  <data name="Layout_Facing" xml:space="preserve"><value>Hai trang đối diện</value></data>
+  <data name="Layout_FacingWithCover" xml:space="preserve"><value>Hai trang, có trang bìa</value></data>
+  <data name="Tab_Close_ToolTip" xml:space="preserve"><value>Đóng (Ctrl+W)</value></data>
+
+  <!-- Opening documents -->
+  <data name="Welcome_OpenFile_ToolTip" xml:space="preserve"><value>Mở tệp PDF (Ctrl+O)</value></data>
+  <data name="Open_Dialog_Title" xml:space="preserve"><value>Mở tệp PDF</value></data>
+  <data name="Open_Dialog_Filter" xml:space="preserve"><value>Tệp PDF (*.pdf)|*.pdf|Tất cả tệp (*.*)|*.*</value></data>
+  <data name="Open_Error_Title" xml:space="preserve"><value>Không mở được tệp</value></data>
+  <data name="Open_Error_FileNotFound" xml:space="preserve"><value>Không tìm thấy tệp “{0}”. Tệp có thể đã bị di chuyển hoặc xóa.</value></data>
+  <data name="Open_Error_AccessDenied" xml:space="preserve"><value>Bạn không có quyền đọc tệp “{0}”.</value></data>
+  <data name="Open_Error_FileInUse" xml:space="preserve"><value>Tệp “{0}” đang được một ứng dụng khác ghi. Hãy đóng ứng dụng đó rồi thử lại.</value></data>
+  <data name="Open_Error_FileTooLarge" xml:space="preserve"><value>Tệp “{0}” lớn hơn 4 GB, PDF_Pro chưa hỗ trợ kích thước này.</value></data>
+  <data name="Open_Error_ReadFailed" xml:space="preserve"><value>Đọc tệp “{0}” thất bại. Hãy kiểm tra ổ đĩa hoặc kết nối mạng rồi thử lại.</value></data>
+  <data name="Open_Error_Corrupted" xml:space="preserve"><value>Tệp “{0}” bị hỏng hoặc không phải tài liệu PDF.</value></data>
+  <data name="Open_Error_UnsupportedSecurity" xml:space="preserve"><value>Tệp “{0}” dùng kiểu bảo mật mà PDF_Pro chưa hỗ trợ.</value></data>
+  <data name="Open_Error_Unknown" xml:space="preserve"><value>Đã xảy ra lỗi khi mở tệp “{0}”. Chi tiết đã được ghi vào nhật ký.</value></data>
+  <data name="Open_NotPdf" xml:space="preserve"><value>Chỉ mở được tệp PDF; các tệp khác đã được bỏ qua.</value></data>
+  <data name="Password_Title" xml:space="preserve"><value>Tài liệu được bảo vệ</value></data>
+  <data name="Password_Message" xml:space="preserve"><value>Tài liệu “{0}” được bảo vệ bằng mật khẩu. Nhập mật khẩu để mở.</value></data>
+  <data name="Password_Label" xml:space="preserve"><value>Mật khẩu</value></data>
+  <data name="Password_Wrong" xml:space="preserve"><value>Mật khẩu không đúng. Vui lòng thử lại.</value></data>
+  <data name="Password_Open" xml:space="preserve"><value>Mở</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Hủy</value></data>
 
   <!-- Settings -->
   <data name="Settings_Title" xml:space="preserve"><value>Cài đặt</value></data>
