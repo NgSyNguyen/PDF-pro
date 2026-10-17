@@ -1,12 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Safe PDFium wrapper (PdfiumGate, SafeHandles). PDFiumCore is added in Phase 2. -->
+  <!--
+    Safe PDFium wrapper: one dedicated thread (PdfiumGate), SafeHandles for every native object.
+    No WPF here (SPEC: Core/Pdfium/Operations/Ocr stay UI-independent).
+  -->
   <PropertyGroup>
     <RootNamespace>PdfPro.Pdfium</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="PDFiumCore" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PdfPro.Core\PdfPro.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PdfPro.Pdfium.Tests" />
   </ItemGroup>
 
 </Project>

@@ -20,6 +20,23 @@
     <PackageVersion Include="System.CommandLine" Version="2.0.13" />
   </ItemGroup>
 
+  <!-- PDF engines -->
+  <ItemGroup>
+    <!-- PDFium bindings + native binaries (bblanchon/pdfium-binaries). Apache-2.0. -->
+    <PackageVersion Include="PDFiumCore" Version="157.0.8100" />
+    <!--
+      PDFsharp: 6.2.4 is the LAST MIT-licensed release. 6.5.0 and later are AGPL-3.0, which AGENTS.md forbids.
+      Never upgrade beyond 6.2.x (a test in PdfPro.Operations.Tests guards this).
+    -->
+    <PackageVersion Include="PDFsharp" Version="6.2.4" />
+  </ItemGroup>
+
+  <!-- Transitive pins (security fixes for dependencies of the packages above) -->
+  <ItemGroup>
+    <!-- PDFsharp 6.2.4 brings 8.0.1, which has known vulnerabilities (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7). -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+  </ItemGroup>
+
   <!-- Tests -->
   <ItemGroup>
     <!-- xUnit v3 runs on Microsoft.Testing.Platform (opted in via global.json); no VSTest packages needed. -->

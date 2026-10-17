@@ -19,6 +19,24 @@ Before adding a package: state its name, license and reason, and add it below.
 | [Serilog.Sinks.File](https://github.com/serilog/serilog-sinks-file) | 7.0.0 | Apache-2.0 | Rolling log files |
 | [Serilog.Sinks.Debug](https://github.com/serilog/serilog-sinks-debug) | 3.0.0 | Apache-2.0 | Debugger output |
 | [System.CommandLine](https://github.com/dotnet/command-line-api) | 2.0.13 | MIT | `pdfpro` command-line parsing |
+| [PDFiumCore](https://github.com/Dtronix/PDFiumCore) | 157.0.8100 | Apache-2.0 | .NET bindings for PDFium |
+| [bblanchon.PDFium.Win32](https://github.com/bblanchon/pdfium-binaries) (native `pdfium.dll`) | 157.0.8100 | Apache-2.0 (packaging) | Pre-built PDFium binaries (win-x64, win-arm64) |
+| [PDFium](https://pdfium.googlesource.com/pdfium/) | chromium/8100 | BSD-3-Clause, Apache-2.0 | PDF rendering, text, document structure |
+| [System.Security.Cryptography.Pkcs](https://github.com/dotnet/runtime) | 10.0.13 | MIT | Pinned transitive dependency of PDFsharp (security fixes) |
+
+### Libraries bundled inside PDFium
+
+| Component | License |
+|---|---|
+| FreeType | FreeType License (FTL) — *Portions of this software are copyright © The FreeType Project (www.freetype.org). All rights reserved.* |
+| libjpeg-turbo | IJG License, BSD-3-Clause, zlib |
+| libpng | libpng License |
+| zlib | zlib License |
+| Little CMS (lcms2) | MIT |
+| OpenJPEG | BSD-2-Clause |
+| Abseil | Apache-2.0 |
+
+The complete license texts will be collected in this file before the first release (Phase 13).
 
 ## Development and test only (not shipped)
 
@@ -27,9 +45,11 @@ Before adding a package: state its name, license and reason, and add it below.
 | [xunit.v3](https://github.com/xunit/xunit) | 4.0.2 | Apache-2.0 | Unit tests (Microsoft.Testing.Platform runner) |
 | [Shouldly](https://github.com/shouldly/shouldly) | 4.3.0 | BSD-3-Clause | Test assertions |
 | [NSubstitute](https://github.com/nsubstitute/NSubstitute) | 6.2.0 | BSD-3-Clause | Test doubles |
+| [PDFsharp](https://github.com/empira/PDFsharp) | 6.2.4 | MIT | Generates the sample documents in `samples/` (shipped from Phase 3). **6.5.0+ is AGPL-3.0 — never upgrade beyond 6.2.x.** |
+| Arial, Times New Roman (Windows fonts) | — | Monotype (embedding allowed) | Subsets embedded in the generated sample PDFs only |
 
 ## Planned (added in later phases, listed here once added)
 
-PDFiumCore + pdfium-binaries, PDFsharp, PdfPig, SkiaSharp, OpenCvSharp4, Tesseract + tessdata, qpdf,
+PdfPig, SkiaSharp, OpenCvSharp4, Tesseract + tessdata, qpdf,
 DiffPlex, tabula-sharp, ClosedXML, gong-wpf-dragdrop, Velopack, BenchmarkDotNet, FlaUI,
 fonts Noto Sans / Noto Serif / Be Vietnam Pro (SIL OFL 1.1).

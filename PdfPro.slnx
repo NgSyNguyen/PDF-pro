@@ -26,6 +26,8 @@
     <Project Path="tests/PdfPro.Core.Tests/PdfPro.Core.Tests.csproj" />
     <Project Path="tests/PdfPro.Infrastructure.Tests/PdfPro.Infrastructure.Tests.csproj" />
     <Project Path="tests/PdfPro.Operations.Tests/PdfPro.Operations.Tests.csproj" />
+    <Project Path="tests/PdfPro.Pdfium.Tests/PdfPro.Pdfium.Tests.csproj" />
+    <Project Path="tests/PdfPro.SampleGenerator/PdfPro.SampleGenerator.csproj" />
     <Project Path="tests/PdfPro.TestTools.FakeTool/PdfPro.TestTools.FakeTool.csproj" />
   </Folder>
 </Solution>

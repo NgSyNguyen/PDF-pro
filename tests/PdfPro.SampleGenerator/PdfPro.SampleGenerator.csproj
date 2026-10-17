@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Generates the test documents in samples/ (fake data only). Run this project after changing a generator;
+    see samples/README.md. The generated files are committed, so tests and CI never need to run this tool.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>PdfPro.SampleGenerator</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PDFsharp" />
+  </ItemGroup>
+
+</Project>

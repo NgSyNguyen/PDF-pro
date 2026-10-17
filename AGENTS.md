@@ -12,7 +12,7 @@ PDF_Pro là ứng dụng desktop Windows xử lý PDF chuyên nghiệp (tầm Ac
 - .NET 10 (LTS), C# mới nhất. Nullable enable, TreatWarningsAsErrors, ImplicitUsings. Version NuGet quản lý ở Directory.Packages.props.
 - UI: WPF + CommunityToolkit.Mvvm + WPF-UI (Fluent). Code-behind chỉ cho việc thuần hiển thị.
 - Hosting/DI: Microsoft.Extensions.Hosting. Log: Serilog, file rolling tại %LOCALAPPDATA%\PdfPro\logs.
-- PDF: PDFiumCore (render, text theo ký tự, annotation, form, page object), PDFsharp 6.2+ và PDFsharp.Cryptography (cấu trúc, overlay, mã hóa, ký số, PDF/A), PdfPig (text có tọa độ).
+- PDF: PDFiumCore (render, text theo ký tự, annotation, form, page object), PDFsharp 6.2.x (≤ 6.2.4, MIT; CẤM nâng lên 6.5+ vì là AGPL) (cấu trúc, overlay, mã hóa, ký số, PDF/A), PdfPig (text có tọa độ).
 - Ảnh: SkiaSharp, OpenCvSharp4. OCR: Tesseract 5 CLI trong tools/. Tối ưu: qpdf CLI trong tools/.
 - Test: xUnit + Shouldly + NSubstitute; BenchmarkDotNet; FlaUI cho UI.
 
