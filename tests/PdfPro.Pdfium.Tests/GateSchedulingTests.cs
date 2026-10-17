@@ -34,9 +34,9 @@ public sealed class GateSchedulingTests : IDisposable
     [Fact]
     public async Task HigherPriorityWork_RunsFirst_EqualPriorityRunsInOrder()
     {
-        using var blocker = new ManualResetEventSlim();
+        var (blocked, blocker) = BlockGate();
+        using var _ = blocker;
         var order = new List<string>();
-        var blocked = _gate.RunAsync(() => blocker.Wait(TestToken), cancellationToken: TestToken);
 
         var tasks = new[]
         {
@@ -55,10 +55,10 @@ public sealed class GateSchedulingTests : IDisposable
     [Fact]
     public async Task CancelledWhileQueued_NeverRuns()
     {
-        using var blocker = new ManualResetEventSlim();
+        var (blocked, blocker) = BlockGate();
+        using var _ = blocker;
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestToken);
         var ran = false;
-        var blocked = _gate.RunAsync(() => blocker.Wait(TestToken), cancellationToken: TestToken);
         var queued = _gate.RunAsync(() => ran = true, PdfiumPriority.Normal, cts.Token);
 
         await cts.CancelAsync();
@@ -127,9 +127,9 @@ public sealed class GateSchedulingTests : IDisposable
     [Fact]
     public async Task Post_RunsBeforeQueuedWork()
     {
-        using var blocker = new ManualResetEventSlim();
+        var (blocked, blocker) = BlockGate();
+        using var _ = blocker;
         var order = new List<string>();
-        var blocked = _gate.RunAsync(() => blocker.Wait(TestToken), cancellationToken: TestToken);
         var work = _gate.RunAsync(() => order.Add("work"), PdfiumPriority.High, TestToken);
         _gate.Post(() => order.Add("release"));
 
@@ -167,6 +167,25 @@ public sealed class GateSchedulingTests : IDisposable
         await Should.ThrowAsync<OperationCanceledException>(() => pending);
         released.ShouldBeTrue();
         Should.Throw<ObjectDisposedException>(() => gate.RunAsync(() => 1, cancellationToken: TestToken));
+    }
+
+    /// <summary>
+    /// Occupies the gate thread until the returned event is set. Returns only once the blocking item runs:
+    /// otherwise higher-priority items queued afterwards could legitimately run before it and race the test.
+    /// </summary>
+    private (Task Blocked, ManualResetEventSlim Release) BlockGate()
+    {
+        using var started = new ManualResetEventSlim();
+        var release = new ManualResetEventSlim();
+        var blocked = _gate.RunAsync(
+            () =>
+            {
+                started.Set();
+                release.Wait(TestToken);
+            },
+            cancellationToken: TestToken);
+        started.Wait(TestToken);
+        return (blocked, release);
     }
 
     [Fact]
