@@ -66,7 +66,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -185,6 +185,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
     private Task CloseActiveDocumentAsync() => CloseTabAsync(ActiveDocument);
 
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowProperties()
+    {
+        if (ActiveDocument is { } document)
+        {
+            _dialogs.ShowDocumentProperties(document);
+        }
+    }
+
     [RelayCommand]
     private void OpenSettings() => _dialogs.ShowSettings();
 
@@ -242,6 +251,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("file.save", Strings.Cmd_Save, SymbolRegular.Save24),
                     new("file.saveAs", Strings.Cmd_SaveAs, SymbolRegular.SaveEdit24),
                     new("file.print", Strings.Cmd_Print, SymbolRegular.Print24),
+                    new("file.properties", Strings.Cmd_Properties, SymbolRegular.DocumentData24, ShowPropertiesCommand),
                     new("file.close", Strings.Cmd_Close, SymbolRegular.Dismiss24, CloseActiveDocumentCommand),
                 ]),
                 new(Strings.Ribbon_Group_App,

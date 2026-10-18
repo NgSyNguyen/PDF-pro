@@ -31,6 +31,10 @@ internal sealed class FakePdfDocument(IReadOnlyList<PdfSize> pageSizes) : IPdfDo
 
     public Exception? BookmarksError { get; set; }
 
+    public PdfDocumentMetadata Metadata { get; set; } = new(null, null, null, null, null, null, null, null);
+
+    public Exception? MetadataError { get; set; }
+
     /// <summary>Page geometry override; by default pages are upright with their box at the origin.</summary>
     public Func<int, PageGeometry>? Geometry { get; set; }
 
@@ -60,7 +64,7 @@ internal sealed class FakePdfDocument(IReadOnlyList<PdfSize> pageSizes) : IPdfDo
     }
 
     public Task<PdfDocumentMetadata> GetMetadataAsync(CancellationToken cancellationToken = default)
-        => Task.FromResult(new PdfDocumentMetadata(null, null, null, null, null, null, null, null));
+        => MetadataError is { } error ? Task.FromException<PdfDocumentMetadata>(error) : Task.FromResult(Metadata);
 
     public Task<string> GetPageTextAsync(int pageIndex, CancellationToken cancellationToken = default) => Task.FromResult(string.Empty);
 }

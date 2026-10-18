@@ -1,0 +1,126 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.DocumentPropertiesWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:DocumentPropertiesViewModel}"
+  Title="{loc:Tr DocProps_Title}"
+  Width="600"
+  MaxHeight="760"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.Resources>
+    <!-- Values are read-only text boxes so they can be selected and copied, drawn like plain text. -->
+    <Style x:Key="PropertyValue" TargetType="TextBox">
+      <Setter Property="IsReadOnly" Value="True" />
+      <Setter Property="IsTabStop" Value="False" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+      <Setter Property="SelectionBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="TextBox">
+            <ScrollViewer
+              x:Name="PART_ContentHost"
+              Focusable="False"
+              HorizontalScrollBarVisibility="Hidden"
+              VerticalScrollBarVisibility="Hidden" />
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <DockPanel>
+    <ui:TitleBar
+      Title="{loc:Tr DocProps_Title}"
+      DockPanel.Dock="Top"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <Border
+      Padding="24,12"
+      BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+      BorderThickness="0,1,0,0"
+      DockPanel.Dock="Bottom">
+      <ui:Button
+        MinWidth="96"
+        HorizontalAlignment="Right"
+        AutomationProperties.AutomationId="PropertiesClose"
+        Click="OnCloseClick"
+        Content="{loc:Tr Common_Close}"
+        IsCancel="True"
+        IsDefault="True" />
+    </Border>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="24,4,24,16">
+        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+          <ui:SymbolIcon
+            Margin="0,0,12,0"
+            FontSize="28"
+            Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+            Symbol="DocumentPdf24" />
+          <TextBlock
+            MaxWidth="480"
+            VerticalAlignment="Center"
+            FontSize="16"
+            FontWeight="SemiBold"
+            Text="{Binding FileName}"
+            TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+
+        <ItemsControl
+          AutomationProperties.AutomationId="PropertySections"
+          Focusable="False"
+          Grid.IsSharedSizeScope="True"
+          ItemsSource="{Binding Sections}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:PropertySection}">
+              <StackPanel Margin="0,12,0,0">
+                <TextBlock
+                  Margin="0,0,0,6"
+                  FontWeight="SemiBold"
+                  Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                  Text="{Binding Header}" />
+                <ItemsControl Focusable="False" ItemsSource="{Binding Rows}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:PropertyRow}">
+                      <Grid Margin="0,2">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                          Margin="0,0,16,0"
+                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                          Text="{Binding Label}" />
+                        <TextBox
+                          Grid.Column="1"
+                          AutomationProperties.Name="{Binding Label}"
+                          Style="{StaticResource PropertyValue}"
+                          Text="{Binding Value, Mode=OneWay}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</ui:FluentWindow>

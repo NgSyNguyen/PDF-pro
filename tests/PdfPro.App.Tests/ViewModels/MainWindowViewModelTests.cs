@@ -65,7 +65,7 @@ public sealed class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException"],
+            ["file.open", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -175,6 +175,21 @@ public sealed class MainWindowViewModelTests : IDisposable
 
         viewModel.Documents.Select(d => d.Title).ShouldBe(["scan.PDF"]);
         await _messages.Received(1).ShowInfoAsync(Strings.Open_Error_Title, Strings.Open_NotPdf);
+    }
+
+    [Fact]
+    public async Task PropertiesCommand_ShowsTheActiveDocumentsProperties()
+    {
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(2));
+        var viewModel = Create(isDebugBuild: false);
+        var properties = Command(viewModel, "file.properties").Command;
+        properties.CanExecute(null).ShouldBeFalse("the home tab has no properties");
+
+        await viewModel.OpenFilesAsync([@"C:\docs\a.pdf"]);
+        properties.CanExecute(null).ShouldBeTrue();
+        properties.Execute(null);
+
+        _dialogs.Received(1).ShowDocumentProperties(viewModel.ActiveDocument!);
     }
 
     [Fact]

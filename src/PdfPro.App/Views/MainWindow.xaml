@@ -27,6 +27,7 @@
     <KeyBinding Key="O" Command="{Binding OpenCommand}" Modifiers="Control" />
     <KeyBinding Key="W" Command="{Binding CloseActiveDocumentCommand}" Modifiers="Control" />
     <KeyBinding Key="F4" Command="{Binding CloseActiveDocumentCommand}" Modifiers="Control" />
+    <KeyBinding Key="D" Command="{Binding ShowPropertiesCommand}" Modifiers="Control" />
     <KeyBinding Key="OemPlus" Command="{Binding ActiveDocument.Viewer.ZoomInCommand}" Modifiers="Control" />
     <KeyBinding Key="Add" Command="{Binding ActiveDocument.Viewer.ZoomInCommand}" Modifiers="Control" />
     <KeyBinding Key="OemMinus" Command="{Binding ActiveDocument.Viewer.ZoomOutCommand}" Modifiers="Control" />

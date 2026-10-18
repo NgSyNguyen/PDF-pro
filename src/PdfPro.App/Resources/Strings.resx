@@ -56,6 +56,7 @@
   <data name="Cmd_Save" xml:space="preserve"><value>Lưu</value></data>
   <data name="Cmd_SaveAs" xml:space="preserve"><value>Lưu thành</value></data>
   <data name="Cmd_Print" xml:space="preserve"><value>In</value></data>
+  <data name="Cmd_Properties" xml:space="preserve"><value>Thuộc tính</value></data>
   <data name="Cmd_Close" xml:space="preserve"><value>Đóng</value></data>
   <data name="Cmd_Settings" xml:space="preserve"><value>Cài đặt</value></data>
   <data name="Cmd_Exit" xml:space="preserve"><value>Thoát</value></data>
@@ -171,6 +172,48 @@
   <data name="Password_Wrong" xml:space="preserve"><value>Mật khẩu không đúng. Vui lòng thử lại.</value></data>
   <data name="Password_Open" xml:space="preserve"><value>Mở</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Hủy</value></data>
+
+  <!-- Document properties -->
+  <data name="DocProps_Title" xml:space="preserve"><value>Thuộc tính tài liệu</value></data>
+  <data name="DocProps_SectionDescription" xml:space="preserve"><value>Mô tả</value></data>
+  <data name="DocProps_SectionFile" xml:space="preserve"><value>Tệp</value></data>
+  <data name="DocProps_SectionDocument" xml:space="preserve"><value>Tài liệu</value></data>
+  <data name="DocProps_SectionSecurity" xml:space="preserve"><value>Bảo mật và nội dung</value></data>
+  <data name="DocProps_DocTitle" xml:space="preserve"><value>Tiêu đề</value></data>
+  <data name="DocProps_Author" xml:space="preserve"><value>Tác giả</value></data>
+  <data name="DocProps_Subject" xml:space="preserve"><value>Chủ đề</value></data>
+  <data name="DocProps_Keywords" xml:space="preserve"><value>Từ khóa</value></data>
+  <data name="DocProps_FileName" xml:space="preserve"><value>Tên tệp</value></data>
+  <data name="DocProps_Location" xml:space="preserve"><value>Thư mục</value></data>
+  <data name="DocProps_FileSize" xml:space="preserve"><value>Kích thước tệp</value></data>
+  <data name="DocProps_FileSizeValue" xml:space="preserve"><value>{0} ({1} byte)</value></data>
+  <data name="DocProps_FileSizeBytes" xml:space="preserve"><value>{0} byte</value></data>
+  <data name="DocProps_PdfVersion" xml:space="preserve"><value>Phiên bản PDF</value></data>
+  <data name="DocProps_PageCount" xml:space="preserve"><value>Số trang</value></data>
+  <data name="DocProps_PaperSize" xml:space="preserve"><value>Khổ giấy</value></data>
+  <data name="DocProps_PaperSizeNamed" xml:space="preserve"><value>{0} ({1} × {2} mm)</value></data>
+  <data name="DocProps_PaperSizeLandscape" xml:space="preserve"><value>{0} ngang ({1} × {2} mm)</value></data>
+  <data name="DocProps_PaperSizeCustom" xml:space="preserve"><value>{0} × {1} mm</value></data>
+  <data name="DocProps_PaperSizeMixed" xml:space="preserve"><value>Nhiều khổ giấy (trang 1: {0})</value></data>
+  <data name="DocProps_Creator" xml:space="preserve"><value>Ứng dụng tạo</value></data>
+  <data name="DocProps_Producer" xml:space="preserve"><value>Trình tạo PDF</value></data>
+  <data name="DocProps_Created" xml:space="preserve"><value>Ngày tạo</value></data>
+  <data name="DocProps_Modified" xml:space="preserve"><value>Ngày sửa đổi</value></data>
+  <data name="DocProps_Encryption" xml:space="preserve"><value>Mã hóa</value></data>
+  <data name="DocProps_EncryptedDetails" xml:space="preserve"><value>Có — in: {0}, sao chép nội dung: {1}</value></data>
+  <data name="DocProps_Allowed" xml:space="preserve"><value>được phép</value></data>
+  <data name="DocProps_NotAllowed" xml:space="preserve"><value>bị cấm</value></data>
+  <data name="DocProps_Signatures" xml:space="preserve"><value>Chữ ký số</value></data>
+  <data name="DocProps_SignatureCount" xml:space="preserve"><value>Có ({0})</value></data>
+  <data name="DocProps_Form" xml:space="preserve"><value>Biểu mẫu</value></data>
+  <data name="DocProps_FormAcroForm" xml:space="preserve"><value>Có (AcroForm)</value></data>
+  <data name="DocProps_FormXfa" xml:space="preserve"><value>Có (XFA)</value></data>
+  <data name="DocProps_JavaScript" xml:space="preserve"><value>JavaScript</value></data>
+  <data name="DocProps_Yes" xml:space="preserve"><value>Có</value></data>
+  <data name="DocProps_No" xml:space="preserve"><value>Không</value></data>
+  <data name="DocProps_NotSet" xml:space="preserve"><value>—</value></data>
+  <data name="DocProps_Loading" xml:space="preserve"><value>Đang đọc…</value></data>
+  <data name="DocProps_ReadFailed" xml:space="preserve"><value>Không đọc được</value></data>
 
   <!-- Settings -->
   <data name="Settings_Title" xml:space="preserve"><value>Cài đặt</value></data>

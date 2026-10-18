@@ -14,6 +14,9 @@ public interface IAppThemeService
 public interface IDialogService
 {
     void ShowSettings();
+
+    /// <summary>The properties dialog of an open document (Ctrl+D).</summary>
+    void ShowDocumentProperties(ViewModels.DocumentTabViewModel document);
 }
 
 /// <summary>Friendly error messages for unhandled exceptions.</summary>
