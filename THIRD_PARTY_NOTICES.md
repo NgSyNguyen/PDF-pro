@@ -16,6 +16,7 @@ Before adding a package: state its name, license and reason, and add it below.
 | [Microsoft.Extensions.DependencyInjection.Abstractions](https://github.com/dotnet/runtime) | 10.0.13 | MIT | DI abstractions |
 | [Serilog](https://github.com/serilog/serilog) | 4.4.0 | Apache-2.0 | Structured logging |
 | [Serilog.Extensions.Hosting](https://github.com/serilog/serilog-extensions-hosting) | 10.0.0 | Apache-2.0 | Serilog integration with the generic host |
+| [Serilog.Extensions.Logging](https://github.com/serilog/serilog-extensions-logging) | 10.0.0 | Apache-2.0 | `ILogger` bridge (dependency of Serilog.Extensions.Hosting; used directly before the host starts, for the single-instance channel) |
 | [Serilog.Sinks.File](https://github.com/serilog/serilog-sinks-file) | 7.0.0 | Apache-2.0 | Rolling log files |
 | [Serilog.Sinks.Debug](https://github.com/serilog/serilog-sinks-debug) | 3.0.0 | Apache-2.0 | Debugger output |
 | [System.CommandLine](https://github.com/dotnet/command-line-api) | 2.0.13 | MIT | `pdfpro` command-line parsing |

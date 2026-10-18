@@ -45,7 +45,7 @@ Mức: **MVP** = bản dùng được đầu tiên · **Pro** = ngang app trả 
 | Giao diện | WPF + CommunityToolkit.Mvvm + WPF-UI (Fluent) | MIT | MVVM, giao diện Windows 11, sáng/tối |
 | Hạ tầng app | Microsoft.Extensions.Hosting, Serilog | MIT / Apache-2.0 | DI, cấu hình, log |
 | Render & sửa cấp thấp | PDFium qua PDFiumCore (binary từ pdfium-binaries) | Apache-2.0 / BSD | Render, text theo ký tự, annotation, form, page object, lưu incremental |
-| Cấu trúc & overlay | PDFsharp 6.2+ và PDFsharp.Cryptography | MIT | Ghép/tách, vẽ lên trang, AES-256, ký số CMS, PDF/A |
+| Cấu trúc & overlay | PDFsharp **6.2.4 (ghim cứng)** và PDFsharp.Cryptography | MIT | Ghép/tách, vẽ lên trang, AES-256, ký số CMS, PDF/A. Bản 6.5+ đổi sang AGPL nên cấm nâng cấp (test trong Operations.Tests canh chừng); `System.Security.Cryptography.Pkcs` được ghim 10.0.x để vá lỗ hổng của bản 8.0.1 mà PDFsharp kéo theo |
 | Đọc text có tọa độ | PdfPig | Apache-2.0 | Trích từ + hộp bao: tìm kiếm, redaction, so sánh |
 | Xử lý ảnh | SkiaSharp, OpenCvSharp4 | MIT / Apache-2.0 | Nén lại ảnh, deskew, phát hiện trang trắng |
 | OCR | Tesseract 5 (CLI đóng gói, tessdata vie + eng) | Apache-2.0 | Lớp chữ ẩn cho file scan |
@@ -93,7 +93,9 @@ PdfPro/
    ├─ PdfPro.Core.Tests/
    ├─ PdfPro.Operations.Tests/   // golden-file trên samples/ + test chiều phụ thuộc
    ├─ PdfPro.Infrastructure.Tests/ // tiến trình ngoài, settings, ghi file nguyên tử
-   ├─ PdfPro.App.Tests/          // test ViewModel, bảng chuỗi vi/en
+   ├─ PdfPro.Pdfium.Tests/       // wrapper PDFium: gate, handle, render so ảnh tham chiếu (Golden/)
+   ├─ PdfPro.App.Tests/          // test ViewModel, trình xem, in (ghi XPS), bảng chuỗi vi/en
+   ├─ PdfPro.SampleGenerator/    // sinh lại samples/ (PDFsharp), không phải project test
    ├─ PdfPro.TestTools.FakeTool/ // exe giả lập công cụ ngoài, chỉ dùng cho test
    └─ PdfPro.Benchmarks/
 ```
@@ -139,7 +141,7 @@ public interface IUndoableCommand<in TContext>
 
 - UI thread chỉ hiển thị. Mọi thao tác trên 100 ms chạy nền với `IProgress` + `CancellationToken`; panel Tác vụ hiển thị tiến độ và nút Hủy.
 - **PDFium không thread-safe**: mọi lời gọi đi qua `PdfiumGate` — một luồng chuyên dụng. Bitmap render xong được `Freeze()` để chuyển sang UI thread an toàn.
-- Cache render LRU theo ngân sách byte (mặc định 512 MB) + cache thumbnail trên đĩa theo (revision, trang, kích thước).
+- Cache render LRU theo ngân sách byte (mặc định 512 MB, chỉnh 128–4096 MB trong Cài đặt) dùng chung cho mọi tab + cache thumbnail trên đĩa (chi tiết ở mục Trình xem).
 - Render 2 nấc: ảnh mờ khi đang zoom/cuộn, ảnh nét sau khi dừng; hủy render các trang đã cuộn qua.
 - Lưu an toàn: ghi file tạm cùng thư mục → flush → `File.Replace` (nguyên tử). Mất điện giữa chừng cũng không hỏng file gốc.
 - Tiến trình ngoài (qpdf, tesseract, soffice) chạy qua `IExternalToolRunner`: timeout, hủy được, không dùng shell, tham số qua `ArgumentList`; stdin đóng ngay; stdout/stderr có giới hạn dung lượng; hết giờ hoặc hủy thì kill cả cây tiến trình; mặc định không log tham số (có thể chứa mật khẩu). Ngoại lệ duy nhất: mở thư mục bằng Explorer (`IShellLauncher`) là thao tác giao diện "bắn rồi quên", vẫn không dùng shell.
@@ -153,6 +155,42 @@ public interface IUndoableCommand<in TContext>
 - Chuỗi giao diện: `src/PdfPro.App/Resources/Strings.resx` (vi, mặc định) + `Strings.en.resx`. XAML dùng `{loc:Tr Key}`, C# dùng lớp sinh tự động `Strings`. Đổi ngôn ngữ áp dụng sau khi khởi động lại. Test bắt buộc hai bảng có cùng key, cùng placeholder, và mọi key dùng trong XAML đều tồn tại.
 - WPF biên dịch assembly tạm (markup pass 1) trước bước sinh resource, nên `PdfPro.App.csproj` có target `PdfProGenerateStringsBeforeMarkupCompile` sinh lớp `Strings` trước.
 
+### Engine PDFium & trình xem (Phase 2)
+
+**PDFium (`PdfPro.Pdfium`)**
+- `PdfiumGate`: một luồng riêng chạy mọi lời gọi PDFium, hàng đợi theo ưu tiên `Release` (giải phóng handle) < `High` (trang đang thấy, đo hình học trang) < `Normal` (trang đệm, bookmark, metadata, in) < `Low` (thumbnail); cùng mức thì FIFO. Hủy chỉ bỏ được việc chưa bắt đầu.
+- Mọi handle (document, page, text page, bitmap) là `SafeHandle`; lệnh đóng native luôn chạy trên luồng PDFium. Tài liệu giữ tối đa 6 trang đã load (LRU).
+- Mở file qua `FPDF_LoadCustomDocument` với `FileStream` của .NET, mở bằng `FileShare.Read | Delete`: tệp không bị ghi đè khi đang xem (nên dấu vân tay nội dung luôn khớp). PDFiumCore khai báo `unsigned long` là 64-bit nhưng trên Windows là 32-bit → phải che nửa trên; tệp tối đa 4 GB.
+- Lỗi mở tệp đọc `FPDF_GetLastError` → `PdfDocumentException` có loại: không tìm thấy, không có quyền, đang bị ghi, quá lớn, lỗi đọc, hỏng, cần mật khẩu, sai mật khẩu, kiểu bảo mật không hỗ trợ.
+- Render ra BGRx (bố cục của WPF `Bgr32`) trên nền trắng; một lần render tối đa 100 triệu pixel. Cờ: annotation, LCD text, grayscale, printing; xoay thêm theo phần tư vòng (`ExtraQuarterTurns`) cho page plan và in.
+- Bookmark đọc cả đích trực tiếp lẫn action GoTo, chống vòng lặp, tối đa 50.000 mục / 64 cấp. `SecurityHandlerRevision = -1` nghĩa là không mã hóa.
+
+**Trình xem (`PdfPro.App`)**
+- `DocumentViewPanel` (panel tự viết, `IScrollInfo`) đặt trang theo `DocumentLayout` (Core); chỉ trang đang thấy + 1 trang đệm mỗi phía có element. Chế độ 1 trang / 2 trang đối diện / 2 trang có bìa; zoom 10–800 %, Ctrl + lăn chuột giữ điểm dưới con trỏ.
+- `PageRenderScheduler`: trang thấy được render ưu tiên `High`, trang đệm `Normal`; trong khi zoom/cuộn giữ ảnh cũ phóng tạm, render nét sau 150 ms (zoom) / 120 ms (cuộn) không đổi; trang rất lớn (trên 16 triệu pixel) có ảnh nền giới hạn + ô chi tiết nét cho phần đang thấy; trang trắng tạm hiện thumbnail (mờ) nếu có trong cache.
+- `RenderCache` (LRU theo byte, dùng chung mọi tab, khóa = tài liệu, trang, scale, vùng). **Ảnh trong cache không bao giờ được vẽ trực tiếp**: WPF (render phần cứng) giữ thêm một bản texture cho mỗi bitmap đã vẽ chừng nào bitmap còn sống, độn theo kích thước texture GPU muốn, nên trang hiển thị một view nhẹ `DisplayImage` (CroppedBitmap đóng băng, không sao chép điểm ảnh); bản texture đi theo view và mất khi trang rời màn hình. Kết quả đo trên `big-1000.pdf` (ngân sách 512 MB): cuộn hết xuống rồi lên, RAM ổn định ~730 MB; mở 5 bản cùng lúc và chuyển tab, ổn định ~810 MB.
+- Đo được: trang đầu của `big-1000.pdf` hiện sau ~1,45 s tính từ lúc khởi động tiến trình.
+
+**Sidebar**
+- Thumbnail: trang được co vào khung 160 × 226 DIP, số pixel theo DPI màn hình. Danh sách ảo hóa + tái chế; chỉ ô đang hiện giữ ảnh (behavior `Realization`, phải nhớ item đã realize vì khi tái chế container WPF đổi DataContext sang `{DisconnectedItem}` mà **không** phát `DataContextChanged`). Chọn theo trang hiện tại; click/Enter/mũi tên → nhảy trang.
+- Thứ tự lấy thumbnail: `RenderCache` → cache đĩa → render `Low` rồi ghi đĩa (nền). Cache đĩa: `%LOCALAPPDATA%\PdfPro\cache\thumbnails\{dấu vân tay}\{trang}_{rộng px}.png`; dấu vân tay = SHA-256 của (độ dài tệp + 1 MB đầu + 1 MB cuối), 32 ký tự hex; ghi nguyên tử. Thời điểm dùng gần nhất = LastWriteTime của thư mục (cập nhật ở lần đọc đầu mỗi phiên). Dọn 30 s sau khi khởi động: bỏ thư mục không dùng quá 30 ngày, rồi bỏ cũ nhất cho tới dưới 500 MB. **Tài liệu có mã hóa không bao giờ được ghi/đọc cache đĩa** (ảnh trang không được nằm trên đĩa khi thiếu mật khẩu). PNG đọc từ đĩa được chép sang bitmap không gắn luồng (bộ giải mã PNG gắn với luồng nền đã giải mã).
+- Bookmark: đọc nền khi mở tab; tiêu đề chuẩn hóa NFC, bỏ ký tự điều khiển (`TextNormalizer`); một gốc duy nhất thì tự mở; click/Enter → trang đích, cuộn tới tọa độ `/XYZ` qua `DestinationPlacement` (dùng `PageCoordinateMapper`), giữ mức zoom hiện tại.
+
+**Thuộc tính tài liệu (Ctrl+D)**: Info dictionary (đọc nền), tên/thư mục/kích thước tệp, phiên bản PDF, số trang, khổ giấy (`PaperSizes`: ISO A0–A6, B4–B5, Letter, Legal, Tabloid, Executive, sai số 3 pt; dọc/ngang; "nhiều khổ giấy"), mã hóa + quyền in/sao chép, chữ ký số, form (AcroForm/XFA), JavaScript.
+
+**Một phiên bản (single-instance)**: lần mở đầu tiên của phiên đăng nhập giữ named mutex `Local\PdfPro-{băm người dùng}-{session}` và lắng nghe named pipe cùng tên (`PipeOptions.CurrentUserOnly` ở cả hai đầu). Lần mở sau gửi đường dẫn tuyệt đối (tính theo thư mục làm việc của nó) — thông điệp: 1 byte phiên bản + độ dài 4 byte + UTF-8 ngăn bởi NUL, tối đa 1 MB — gọi `AllowSetForegroundWindow` cho tiến trình chính rồi thoát; cửa sổ chính được đưa lên trước và mở các tệp (danh sách rỗng = chỉ đưa lên trước). Thông điệp hỏng hoặc client treo quá 5 s bị bỏ. Không được trả lời trong 5 s thì lần mở này tự mở cửa sổ riêng. Khởi động lại truyền `--wait-for-pid` để phiên mới chờ phiên cũ thoát hẳn.
+
+**In (Ctrl+P)**
+- Hộp thoại in của Windows (trên Windows 11 có thể là hộp thoại kiểu mới chạy ở tiến trình riêng): máy in, số bản, hướng giấy, tất cả / trang hiện tại / từ–đến. Tài liệu cấm in (bit quyền 3) bị từ chối kèm giải thích.
+- Từng trang render bằng PDFium với cờ `Printing | Annotations` ở độ phân giải máy in (tối đa 300 DPI), co vừa vùng in được, căn giữa, tự xoay khi hướng trang khác hướng giấy (`PrintLayout`, Core). Trang render lỗi in trắng và được báo.
+- Đường in XPS chạy trên **một luồng STA riêng có dispatcher riêng** (`XpsPrintRunner`), không chặn UI. `PrintQueue` gắn với luồng đã mở nó, nên trên luồng in mở lại queue theo tên (`PrintServer(host).GetPrintQueue(name)`) và dựng lại ticket từ XML. Kết quả chỉ báo về sau khi đã giải phóng queue/gói XPS. Hủy qua `XpsDocumentWriter.CancelAsync` để spooler bỏ job sạch sẽ; đóng tab đang in thì hủy và chờ job dừng rồi mới đóng tài liệu.
+- Thanh trạng thái hiện tác vụ nền (chữ, thanh tiến độ, nút Hủy); mỗi lúc một tác vụ.
+- Lưu ý kiểm thử: in tới "Microsoft Print to PDF" chạy được từ app WPF (kể cả luồng nền) nhưng thất bại (E_FAIL) từ tiến trình console như test host; test tự động dùng gói XPS trên đĩa thay cho máy in.
+
+**Cài đặt bổ sung (`settings.json`)**: `renderCacheMegabytes` (128–4096, mặc định 512) — áp dụng ngay; thẻ "Bộ nhớ đệm" hiện dung lượng thumbnail trên đĩa và nút xóa cả cache bộ nhớ lẫn đĩa.
+
+**Quyền riêng tư trong log**: log không bao giờ chứa đường dẫn, tên tệp, mật khẩu hay nội dung tài liệu — chỉ số trang, số lượng, phiên bản PDF, cờ mã hóa, mã lỗi. Danh sách tệp gần đây chỉ nằm trong `settings.json`.
+
 ### Hệ tọa độ — nguồn bug số một
 
 PDF dùng đơn vị point (1/72 inch), gốc ở góc **dưới-trái**, trang có thể có `/Rotate` 90/180/270 và CropBox không bắt đầu từ (0,0). WPF dùng DIP (1/96 inch), gốc ở góc **trên-trái**. Mọi chuyển đổi bắt buộc đi qua một lớp duy nhất, có unit test cho cả 4 góc xoay × CropBox lệch gốc × nhiều mức zoom.
@@ -160,11 +198,11 @@ PDF dùng đơn vị point (1/72 inch), gốc ở góc **dưới-trái**, trang 
 ```csharp
 public sealed class PageCoordinateMapper
 {
-    public PageCoordinateMapper(PdfRect cropBox, int rotationDegrees, double zoom) { /* ... */ }
-    public Point    PdfToScreen(PdfPoint p);     // vẽ highlight, kết quả tìm kiếm
-    public PdfPoint ScreenToPdf(Point p);        // người dùng click/kéo để thêm đối tượng
-    public Rect     PdfRectToScreen(PdfRect r);
-    public PdfRect  ScreenRectToPdf(Rect r);
+    public PageCoordinateMapper(PdfRect box, int rotationDegrees, double scale) { /* ... */ } // scale = view units per point
+    public ViewPoint PdfToScreen(PdfPoint p);    // vẽ highlight, kết quả tìm kiếm, đích bookmark
+    public PdfPoint  ScreenToPdf(ViewPoint p);   // người dùng click/kéo để thêm đối tượng
+    public ViewRect  PdfRectToScreen(PdfRect r);
+    public PdfRect   ScreenRectToPdf(ViewRect r);
 }
 ```
 
@@ -208,7 +246,7 @@ Bộ "đề thi" để agent tự kiểm tra. Có thể nhờ agent viết proje
 4. **"Redact" bằng cách vẽ ô đen đè lên** → chữ vẫn nằm nguyên bên dưới, copy ra được — lỗi kinh điển từng làm lộ nhiều tài liệu mật. Phải xóa thật và hậu kiểm.
 5. **Lưu không incremental file đã ký** → chữ ký số mất hiệu lực mà người dùng không biết.
 6. **Nén lại JPEG nhiều lần** → ảnh xấu dần sau mỗi lần lưu. Luôn nén từ dữ liệu gốc, JPEG không cần thì giữ nguyên.
-7. **Cache bitmap không giới hạn** → file lớn ngốn vài GB RAM rồi crash.
+7. **Cache bitmap không giới hạn** → file lớn ngốn vài GB RAM rồi crash. Với WPF còn phải tính bản texture mà render phần cứng giữ cho mỗi bitmap đã vẽ (xem mục Trình xem).
 8. **So sánh/tìm kiếm không chuẩn hóa Unicode** → hai chuỗi trông giống hệt bị coi là khác nhau (NFC và NFD).
 
 ### Phụ lục C — Nguồn tham khảo chính thức
