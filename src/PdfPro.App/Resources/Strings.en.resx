@@ -215,6 +215,18 @@
   <data name="DocProps_Loading" xml:space="preserve"><value>Reading…</value></data>
   <data name="DocProps_ReadFailed" xml:space="preserve"><value>Could not be read</value></data>
 
+  <!-- Printing -->
+  <data name="Print_Error_Title" xml:space="preserve"><value>Cannot print</value></data>
+  <data name="Print_NotAllowed" xml:space="preserve"><value>The author of this document does not allow printing.</value></data>
+  <data name="Print_Progress" xml:space="preserve"><value>Printing page {0} of {1}…</value></data>
+  <data name="Print_Done" xml:space="preserve"><value>Sent {0} page(s) to the printer.</value></data>
+  <data name="Print_DoneWithFailures" xml:space="preserve"><value>Sent {0} page(s) to the printer; {1} page(s) could not be rendered and were printed blank.</value></data>
+  <data name="Print_Cancelled" xml:space="preserve"><value>Printing cancelled.</value></data>
+  <data name="Print_FailedStatus" xml:space="preserve"><value>Printing failed.</value></data>
+  <data name="Print_FailedMessage" xml:space="preserve"><value>The document could not be sent to the printer. Check that the printer is on and connected, then try again. Details were written to the log.</value></data>
+  <data name="Status_CancelTask" xml:space="preserve"><value>Cancel task</value></data>
+  <data name="Status_Cancelling" xml:space="preserve"><value>Cancelling…</value></data>
+
   <!-- Settings -->
   <data name="Settings_Title" xml:space="preserve"><value>Settings</value></data>
   <data name="Settings_Theme" xml:space="preserve"><value>Theme</value></data>

@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -6,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using PdfPro.App.Hosting;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
+using PdfPro.App.Services.Printing;
 using PdfPro.Infrastructure;
 using PdfPro.Infrastructure.Settings;
 using Wpf.Ui.Controls;
@@ -24,7 +27,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly ISettingsService _settings;
     private readonly IFileDialogService _fileDialogs;
     private readonly IMessageService _messages;
+    private readonly IPrintDialogService _printDialogs;
+    private readonly IDocumentPrinter _printer;
     private readonly ILogger<MainWindowViewModel> _logger;
+    private ActivePrint? _activePrint;
 
     public MainWindowViewModel(
         IDialogService dialogs,
@@ -37,6 +43,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ISettingsService settings,
         IFileDialogService fileDialogs,
         IMessageService messages,
+        IPrintDialogService printDialogs,
+        IDocumentPrinter printer,
         ILogger<MainWindowViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
@@ -49,6 +57,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _settings = settings;
         _fileDialogs = fileDialogs;
         _messages = messages;
+        _printDialogs = printDialogs;
+        _printer = printer;
         _logger = logger;
 
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand);
@@ -56,6 +66,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
         Tabs = [Home];
         SelectedTab = Home;
+        StatusBar.PropertyChanged += OnStatusBarPropertyChanged;
     }
 
     public IReadOnlyList<RibbonTabViewModel> RibbonTabs { get; }
@@ -66,7 +77,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -137,6 +148,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// <summary>Closes every document at application exit (synchronously, the UI is going away).</summary>
     public void CloseAllDocuments()
     {
+        _activePrint?.Status.Cancel();
         var documents = Documents.ToList();
         foreach (var document in documents)
         {
@@ -179,7 +191,78 @@ public sealed partial class MainWindowViewModel : ObservableObject
             SelectedTab = Tabs[Math.Min(index, Tabs.Count - 1)];
         }
 
+        // A document being printed is closed only after its print job has stopped using it.
+        if (_activePrint is { } print && ReferenceEquals(print.Document, document))
+        {
+            print.Status.Cancel();
+            await Task.WhenAny(print.Completion);
+        }
+
         await document.DisposeAsync();
+    }
+
+    /// <summary>
+    /// Ctrl+P: the system print dialog, then printing in the background with progress and cancel in the status bar.
+    /// Documents whose permissions forbid printing are refused with an explanation.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanPrint))]
+    private async Task PrintAsync()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (!document.Document.Features.CanPrint)
+        {
+            await _messages.ShowInfoAsync(Strings.Print_Error_Title, Strings.Print_NotAllowed);
+            return;
+        }
+
+        var job = _printDialogs.ShowPrintDialog(document.Document.PageCount, document.Viewer.CurrentPageIndex);
+        if (job is null || job.PageIndices.Count == 0)
+        {
+            return;
+        }
+
+        var total = job.PageIndices.Count;
+        var task = StatusBar.StartTask(PrintProgressText(0, total));
+        var progress = new Progress<int>(done => task.Report((double)done / total, PrintProgressText(done, total)));
+        var printing = _printer.PrintAsync(document.Document, job, document.Title, progress, task.Token);
+        _activePrint = new ActivePrint(document, task, printing);
+        try
+        {
+            var outcome = await printing;
+            task.Complete(outcome switch
+            {
+                { Cancelled: true } => Strings.Print_Cancelled,
+                { FailedPages: > 0 } => string.Format(CultureInfo.CurrentCulture, Strings.Print_DoneWithFailures, total, outcome.FailedPages),
+                _ => string.Format(CultureInfo.CurrentCulture, Strings.Print_Done, total),
+            });
+        }
+        catch (PrintFailedException ex)
+        {
+            _logger.LogError(ex, "Printing failed");
+            task.Complete(Strings.Print_FailedStatus);
+            await _messages.ShowErrorAsync(Strings.Print_Error_Title, Strings.Print_FailedMessage);
+        }
+        finally
+        {
+            _activePrint = null;
+        }
+    }
+
+    private bool CanPrint() => HasActiveDocument && !StatusBar.IsTaskRunning;
+
+    private static string PrintProgressText(int done, int total)
+        => string.Format(CultureInfo.CurrentCulture, Strings.Print_Progress, Math.Min(done + 1, total), total);
+
+    private void OnStatusBarPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(StatusBarViewModel.IsTaskRunning))
+        {
+            PrintCommand.NotifyCanExecuteChanged();
+        }
     }
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
@@ -250,7 +333,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("file.open", Strings.Cmd_Open, SymbolRegular.FolderOpen24, OpenCommand),
                     new("file.save", Strings.Cmd_Save, SymbolRegular.Save24),
                     new("file.saveAs", Strings.Cmd_SaveAs, SymbolRegular.SaveEdit24),
-                    new("file.print", Strings.Cmd_Print, SymbolRegular.Print24),
+                    new("file.print", Strings.Cmd_Print, SymbolRegular.Print24, PrintCommand),
                     new("file.properties", Strings.Cmd_Properties, SymbolRegular.DocumentData24, ShowPropertiesCommand),
                     new("file.close", Strings.Cmd_Close, SymbolRegular.Dismiss24, CloseActiveDocumentCommand),
                 ]),
@@ -387,4 +470,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             ]),
         ];
     }
+
+    /// <summary>The print job running in the background, so closing its document can wait for it.</summary>
+    private sealed record ActivePrint(DocumentTabViewModel Document, BackgroundTask Status, Task<PrintOutcome> Completion);
 }

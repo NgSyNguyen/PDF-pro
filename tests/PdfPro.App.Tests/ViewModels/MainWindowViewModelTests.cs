@@ -1,11 +1,14 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using PdfPro.App.Hosting;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
+using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels;
+using PdfPro.Core.Geometry;
 using PdfPro.Infrastructure;
 using PdfPro.Infrastructure.Settings;
 using PdfPro.Pdfium;
@@ -20,6 +23,8 @@ public sealed class MainWindowViewModelTests : IDisposable
     private readonly IDocumentOpener _opener = Substitute.For<IDocumentOpener>();
     private readonly IFileDialogService _fileDialogs = Substitute.For<IFileDialogService>();
     private readonly IMessageService _messages = Substitute.For<IMessageService>();
+    private readonly IPrintDialogService _printDialogs = Substitute.For<IPrintDialogService>();
+    private readonly IDocumentPrinter _printer = Substitute.For<IDocumentPrinter>();
     private readonly FakeSettingsService _settings = new(AppSettings.Default);
     private readonly AppPaths _paths = new(@"C:\data\PdfPro", @"C:\app\tools");
     private readonly RenderCache _cache;
@@ -65,7 +70,7 @@ public sealed class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException"],
+            ["file.open", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -178,6 +183,135 @@ public sealed class MainWindowViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Print_SendsTheChosenPagesAndReportsTheResult()
+    {
+        var viewModel = await CreateWithDocumentAsync(FakePdfDocument.WithPages(5));
+        var job = Job([1, 2, 3]);
+        _printDialogs.ShowPrintDialog(5, 0).Returns(job);
+        var printing = new TaskCompletionSource<PrintOutcome>();
+        _printer.PrintAsync(Arg.Any<IPdfDocument>(), job, "a.pdf", Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>()).Returns(printing.Task);
+
+        var command = viewModel.PrintCommand.ExecuteAsync(null);
+
+        viewModel.StatusBar.IsTaskRunning.ShouldBeTrue();
+        viewModel.PrintCommand.CanExecute(null).ShouldBeFalse("one print job at a time");
+        printing.SetResult(new PrintOutcome(Cancelled: false, FailedPages: 0));
+        await command;
+
+        viewModel.StatusBar.IsTaskRunning.ShouldBeFalse();
+        viewModel.StatusBar.TaskText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Print_Done, 3));
+        viewModel.PrintCommand.CanExecute(null).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Print_ReportsCancelledAndBlankPages()
+    {
+        var viewModel = await CreateWithDocumentAsync(FakePdfDocument.WithPages(5));
+        _printDialogs.ShowPrintDialog(5, 0).Returns(Job([0, 1]));
+        AnyPrint().Returns(
+            Task.FromResult(new PrintOutcome(false, 1)),
+            Task.FromResult(new PrintOutcome(true, 0)));
+
+        await viewModel.PrintCommand.ExecuteAsync(null);
+        viewModel.StatusBar.TaskText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Print_DoneWithFailures, 2, 1));
+
+        await viewModel.PrintCommand.ExecuteAsync(null);
+        viewModel.StatusBar.TaskText.ShouldBe(Strings.Print_Cancelled);
+    }
+
+    [Fact]
+    public async Task Print_CancelButton_CancelsTheJob()
+    {
+        var viewModel = await CreateWithDocumentAsync(FakePdfDocument.WithPages(2));
+        _printDialogs.ShowPrintDialog(2, 0).Returns(Job([0, 1]));
+        var token = CancellationToken.None;
+        var printing = new TaskCompletionSource<PrintOutcome>();
+        AnyPrint().Returns(call =>
+        {
+            token = call.ArgAt<CancellationToken>(4);
+            return printing.Task;
+        });
+
+        var command = viewModel.PrintCommand.ExecuteAsync(null);
+        viewModel.StatusBar.CancelTaskCommand.Execute(null);
+
+        token.IsCancellationRequested.ShouldBeTrue();
+        viewModel.StatusBar.TaskText.ShouldBe(Strings.Status_Cancelling);
+        printing.SetResult(new PrintOutcome(Cancelled: true, FailedPages: 0));
+        await command;
+        viewModel.StatusBar.TaskText.ShouldBe(Strings.Print_Cancelled);
+    }
+
+    [Fact]
+    public async Task Print_Failure_IsExplained()
+    {
+        var viewModel = await CreateWithDocumentAsync(FakePdfDocument.WithPages(2));
+        _printDialogs.ShowPrintDialog(2, 0).Returns(Job([0]));
+        AnyPrint()
+            .Returns(Task.FromException<PrintOutcome>(new PrintFailedException("offline")));
+
+        await viewModel.PrintCommand.ExecuteAsync(null);
+
+        viewModel.StatusBar.TaskText.ShouldBe(Strings.Print_FailedStatus);
+        viewModel.StatusBar.IsTaskRunning.ShouldBeFalse();
+        await _messages.Received(1).ShowErrorAsync(Strings.Print_Error_Title, Strings.Print_FailedMessage);
+    }
+
+    [Fact]
+    public async Task Print_CancelledDialog_PrintsNothing()
+    {
+        var viewModel = await CreateWithDocumentAsync(FakePdfDocument.WithPages(2));
+        _printDialogs.ShowPrintDialog(2, 0).Returns((PrintJob?)null);
+
+        await viewModel.PrintCommand.ExecuteAsync(null);
+
+        await _printer.DidNotReceive().PrintAsync(Arg.Any<IPdfDocument>(), Arg.Any<PrintJob>(), Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>());
+        viewModel.StatusBar.TaskText.ShouldBe(Strings.Status_Ready);
+    }
+
+    [Fact]
+    public async Task Print_DocumentThatForbidsPrinting_IsRefused()
+    {
+        var document = FakePdfDocument.WithPages(2);
+        document.Features = FakePdfDocument.PlainFeatures with { SecurityHandlerRevision = 4, Permissions = 0xFFFFFFFB }; // bit 3 cleared
+        var viewModel = await CreateWithDocumentAsync(document);
+
+        await viewModel.PrintCommand.ExecuteAsync(null);
+
+        _printDialogs.DidNotReceiveWithAnyArgs().ShowPrintDialog(default, default);
+        await _messages.Received(1).ShowInfoAsync(Strings.Print_Error_Title, Strings.Print_NotAllowed);
+    }
+
+    [Fact]
+    public async Task ClosingTheDocumentBeingPrinted_CancelsAndWaitsForTheJob()
+    {
+        var document = FakePdfDocument.WithPages(3);
+        var viewModel = await CreateWithDocumentAsync(document);
+        _printDialogs.ShowPrintDialog(3, 0).Returns(Job([0, 1, 2]));
+        var printing = new TaskCompletionSource<PrintOutcome>();
+        var token = CancellationToken.None;
+        AnyPrint().Returns(call =>
+        {
+            token = call.ArgAt<CancellationToken>(4);
+            return printing.Task;
+        });
+        var command = viewModel.PrintCommand.ExecuteAsync(null);
+
+        var closing = viewModel.CloseTabCommand.ExecuteAsync(viewModel.ActiveDocument);
+
+        token.IsCancellationRequested.ShouldBeTrue();
+        document.IsDisposed.ShouldBeFalse("the print job still uses the document");
+        printing.SetResult(new PrintOutcome(Cancelled: true, FailedPages: 0));
+        await closing;
+        await command;
+        document.IsDisposed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Print_WithoutADocument_IsDisabled()
+        => Create(isDebugBuild: false).PrintCommand.CanExecute(null).ShouldBeFalse();
+
+    [Fact]
     public async Task PropertiesCommand_ShowsTheActiveDocumentsProperties()
     {
         _opener.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(2));
@@ -278,6 +412,21 @@ public sealed class MainWindowViewModelTests : IDisposable
     private static RibbonCommandViewModel Command(MainWindowViewModel viewModel, string id)
         => AllCommands(viewModel).Single(c => c.Id == id);
 
+    /// <summary>Any call to the printer, for setting up its result.</summary>
+    private Task<PrintOutcome> AnyPrint()
+        => _printer.PrintAsync(Arg.Any<IPdfDocument>(), Arg.Any<PrintJob>(), Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>());
+
+    private static PrintJob Job(IReadOnlyList<int> pages)
+        => new(string.Empty, "Test printer", [], new PrintSheet(new ViewSize(816, 1056), new ViewRect(0, 0, 816, 1056), 300), pages);
+
+    private async Task<MainWindowViewModel> CreateWithDocumentAsync(FakePdfDocument document)
+    {
+        _opener.OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>()).Returns(document);
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([@"C:\docs\a.pdf"]);
+        return viewModel;
+    }
+
     private MainWindowViewModel Create(bool isDebugBuild)
         => new(
             _dialogs,
@@ -290,5 +439,7 @@ public sealed class MainWindowViewModelTests : IDisposable
             _settings,
             _fileDialogs,
             _messages,
+            _printDialogs,
+            _printer,
             NullLogger<MainWindowViewModel>.Instance);
 }

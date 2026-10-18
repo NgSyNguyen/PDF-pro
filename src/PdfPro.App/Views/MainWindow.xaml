@@ -28,6 +28,7 @@
     <KeyBinding Key="W" Command="{Binding CloseActiveDocumentCommand}" Modifiers="Control" />
     <KeyBinding Key="F4" Command="{Binding CloseActiveDocumentCommand}" Modifiers="Control" />
     <KeyBinding Key="D" Command="{Binding ShowPropertiesCommand}" Modifiers="Control" />
+    <KeyBinding Key="P" Command="{Binding PrintCommand}" Modifiers="Control" />
     <KeyBinding Key="OemPlus" Command="{Binding ActiveDocument.Viewer.ZoomInCommand}" Modifiers="Control" />
     <KeyBinding Key="Add" Command="{Binding ActiveDocument.Viewer.ZoomInCommand}" Modifiers="Control" />
     <KeyBinding Key="OemMinus" Command="{Binding ActiveDocument.Viewer.ZoomOutCommand}" Modifiers="Control" />
@@ -405,6 +406,7 @@
             Width="160"
             Margin="0,0,8,0"
             VerticalAlignment="Center"
+            AutomationProperties.AutomationId="StatusTaskProgress"
             Maximum="1"
             Visibility="{Binding IsTaskRunning, Converter={StaticResource BoolToVisibility}}"
             Value="{Binding TaskProgress}" />
@@ -412,6 +414,15 @@
             VerticalAlignment="Center"
             AutomationProperties.AutomationId="StatusTask"
             Text="{Binding TaskText}" />
+          <ui:Button
+            Margin="4,0,0,0"
+            AutomationProperties.AutomationId="CancelTask"
+            AutomationProperties.Name="{loc:Tr Status_CancelTask}"
+            Command="{Binding CancelTaskCommand}"
+            Icon="{ui:SymbolIcon Dismiss16}"
+            Style="{StaticResource StatusIconButton}"
+            ToolTip="{loc:Tr Status_CancelTask}"
+            Visibility="{Binding IsTaskRunning, Converter={StaticResource BoolToVisibility}}" />
         </StackPanel>
       </DockPanel>
     </Border>

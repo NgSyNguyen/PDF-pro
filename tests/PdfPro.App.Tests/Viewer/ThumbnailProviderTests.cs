@@ -1,4 +1,3 @@
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using PdfPro.App.Services.Rendering;
@@ -165,22 +164,4 @@ public sealed class ThumbnailProviderTests : IDisposable
 
     private ThumbnailProvider CreateProvider(RenderCache cache)
         => new(_renderer, cache, _diskCache, NullLogger<ThumbnailProvider>.Instance);
-
-    /// <summary>Renders blank bitmaps of the real pixel size, so cache size checks behave as in the app.</summary>
-    private sealed class SizedPageImageRenderer : IPageImageRenderer
-    {
-        public List<RenderCall> Calls { get; } = [];
-
-        public Task<RenderedPageImage> RenderAsync(IPdfDocument document, int pageIndex, double scale, PixelRect? region, PdfiumPriority priority, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            Calls.Add(new RenderCall(pageIndex, scale, region, priority, cancellationToken));
-            var size = document.PageSizes[pageIndex];
-            var width = PixelSize.FromPoints(size.Width, scale);
-            var height = PixelSize.FromPoints(size.Height, scale);
-            var image = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgr32, null, new byte[width * height * 4], width * 4);
-            image.Freeze();
-            return Task.FromResult(new RenderedPageImage(image, (long)width * height * 4, new PixelRect(0, 0, width, height), width, height));
-        }
-    }
 }

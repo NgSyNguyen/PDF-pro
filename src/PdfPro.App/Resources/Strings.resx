@@ -215,6 +215,18 @@
   <data name="DocProps_Loading" xml:space="preserve"><value>Đang đọc…</value></data>
   <data name="DocProps_ReadFailed" xml:space="preserve"><value>Không đọc được</value></data>
 
+  <!-- Printing -->
+  <data name="Print_Error_Title" xml:space="preserve"><value>Không in được</value></data>
+  <data name="Print_NotAllowed" xml:space="preserve"><value>Người tạo tài liệu này đã không cho phép in.</value></data>
+  <data name="Print_Progress" xml:space="preserve"><value>Đang in trang {0}/{1}…</value></data>
+  <data name="Print_Done" xml:space="preserve"><value>Đã gửi {0} trang tới máy in.</value></data>
+  <data name="Print_DoneWithFailures" xml:space="preserve"><value>Đã gửi {0} trang tới máy in; {1} trang không hiển thị được nên in trống.</value></data>
+  <data name="Print_Cancelled" xml:space="preserve"><value>Đã hủy in.</value></data>
+  <data name="Print_FailedStatus" xml:space="preserve"><value>In thất bại.</value></data>
+  <data name="Print_FailedMessage" xml:space="preserve"><value>Không gửi được tài liệu tới máy in. Hãy kiểm tra máy in đã bật và đang kết nối rồi thử lại. Chi tiết đã được ghi vào nhật ký.</value></data>
+  <data name="Status_CancelTask" xml:space="preserve"><value>Hủy tác vụ</value></data>
+  <data name="Status_Cancelling" xml:space="preserve"><value>Đang hủy…</value></data>
+
   <!-- Settings -->
   <data name="Settings_Title" xml:space="preserve"><value>Cài đặt</value></data>
   <data name="Settings_Theme" xml:space="preserve"><value>Chủ đề</value></data>

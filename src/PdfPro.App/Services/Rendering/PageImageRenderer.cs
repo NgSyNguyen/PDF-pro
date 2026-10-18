@@ -11,9 +11,21 @@ public sealed record RenderedPageImage(ImageSource Image, long ByteSize, PixelRe
 /// <summary>Renders pages to WPF images (seam for view-model tests).</summary>
 public interface IPageImageRenderer
 {
+    /// <param name="options">Scale in device pixels per PDF point, region, flags (screen or print) and extra rotation.</param>
+    Task<RenderedPageImage> RenderAsync(IPdfDocument document, int pageIndex, PageRenderOptions options, PdfiumPriority priority, CancellationToken cancellationToken);
+}
+
+public static class PageImageRendererExtensions
+{
+    /// <summary>Screen rendering: annotations drawn, the page as it is rotated in the file.</summary>
     /// <param name="scale">Device pixels per PDF point.</param>
     /// <param name="region">Part of the full page bitmap to render, or null for the whole page.</param>
-    Task<RenderedPageImage> RenderAsync(IPdfDocument document, int pageIndex, double scale, PixelRect? region, PdfiumPriority priority, CancellationToken cancellationToken);
+    public static Task<RenderedPageImage> RenderAsync(this IPageImageRenderer renderer, IPdfDocument document, int pageIndex, double scale, PixelRect? region, PdfiumPriority priority, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(renderer);
+        var options = new PageRenderOptions { Scale = scale, Region = region, Flags = PdfRenderFlags.Annotations };
+        return renderer.RenderAsync(document, pageIndex, options, priority, cancellationToken);
+    }
 }
 
 /// <summary>
@@ -22,10 +34,10 @@ public interface IPageImageRenderer
 /// </summary>
 internal sealed class PageImageRenderer : IPageImageRenderer
 {
-    public async Task<RenderedPageImage> RenderAsync(IPdfDocument document, int pageIndex, double scale, PixelRect? region, PdfiumPriority priority, CancellationToken cancellationToken)
+    public async Task<RenderedPageImage> RenderAsync(IPdfDocument document, int pageIndex, PageRenderOptions options, PdfiumPriority priority, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
-        var options = new PageRenderOptions { Scale = scale, Region = region, Flags = PdfRenderFlags.Annotations };
+        ArgumentNullException.ThrowIfNull(options);
         using var bitmap = await document.RenderPageAsync(pageIndex, options, priority, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
 

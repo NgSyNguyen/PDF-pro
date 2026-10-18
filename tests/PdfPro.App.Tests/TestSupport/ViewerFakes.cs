@@ -85,9 +85,9 @@ internal sealed class FakePageImageRenderer : IPageImageRenderer
         return image;
     }
 
-    public Task<RenderedPageImage> RenderAsync(IPdfDocument document, int pageIndex, double scale, PixelRect? region, PdfiumPriority priority, CancellationToken cancellationToken)
+    public Task<RenderedPageImage> RenderAsync(IPdfDocument document, int pageIndex, PageRenderOptions options, PdfiumPriority priority, CancellationToken cancellationToken)
     {
-        var call = new RenderCall(pageIndex, scale, region, priority, cancellationToken);
+        var call = new RenderCall(pageIndex, options, priority, cancellationToken);
         Calls.Add(call);
         if (FailWith is { } error)
         {
@@ -111,15 +111,17 @@ internal sealed class FakePageImageRenderer : IPageImageRenderer
     }
 }
 
-internal sealed class RenderCall(int pageIndex, double scale, PixelRect? region, PdfiumPriority priority, CancellationToken token)
+internal sealed class RenderCall(int pageIndex, PageRenderOptions options, PdfiumPriority priority, CancellationToken token)
 {
     private readonly TaskCompletionSource<RenderedPageImage> _completion = new();
 
     public int PageIndex { get; } = pageIndex;
 
-    public double Scale { get; } = scale;
+    public PageRenderOptions Options { get; } = options;
 
-    public PixelRect? Region { get; } = region;
+    public double Scale => Options.Scale;
+
+    public PixelRect? Region => Options.Region;
 
     public PdfiumPriority Priority { get; } = priority;
 
@@ -279,4 +281,39 @@ internal sealed class ThumbnailLoad
     }
 
     public void Fail(Exception error) => _completion.TrySetException(error);
+}
+
+/// <summary>Renders blank bitmaps of the real pixel size (rotation included), so size checks behave as in the app.</summary>
+internal sealed class SizedPageImageRenderer : IPageImageRenderer
+{
+    public List<RenderCall> Calls { get; } = [];
+
+    /// <summary>Pages whose render fails (like a damaged page in a real file).</summary>
+    public HashSet<int> FailingPages { get; } = [];
+
+    public Task<RenderedPageImage> RenderAsync(IPdfDocument document, int pageIndex, PageRenderOptions options, PdfiumPriority priority, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (Calls)
+        {
+            Calls.Add(new RenderCall(pageIndex, options, priority, cancellationToken));
+        }
+
+        if (FailingPages.Contains(pageIndex))
+        {
+            return Task.FromException<RenderedPageImage>(new InvalidOperationException($"Page {pageIndex} is damaged."));
+        }
+
+        var size = document.PageSizes[pageIndex];
+        var width = PixelSize.FromPoints(size.Width, options.Scale);
+        var height = PixelSize.FromPoints(size.Height, options.Scale);
+        if (options.ExtraQuarterTurns % 2 != 0)
+        {
+            (width, height) = (height, width);
+        }
+
+        var image = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgr32, null, new byte[width * height * 4], width * 4);
+        image.Freeze();
+        return Task.FromResult(new RenderedPageImage(image, (long)width * height * 4, new PixelRect(0, 0, width, height), width, height));
+    }
 }
