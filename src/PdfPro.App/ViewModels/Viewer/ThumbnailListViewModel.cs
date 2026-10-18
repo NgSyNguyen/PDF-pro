@@ -197,7 +197,7 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
 
     private static void Show(ThumbnailViewModel item, ImageSource image, double dpiScale)
     {
-        item.Image = image;
+        item.Image = DisplayImage.Of(image);
         item.ImageDpiScale = dpiScale;
         item.LoadFailed = false;
     }

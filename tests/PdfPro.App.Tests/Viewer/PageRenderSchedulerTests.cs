@@ -86,13 +86,13 @@ public sealed class PageRenderSchedulerTests : IDisposable
 
         _scheduler.Update(layout, ViewportAt(layout, 0, 900), 1.0, true, true);
 
-        _pages[0].Image.ShouldBeSameAs(thumbnail);
+        DisplayImage.SourceOf(_pages[0].Image).ShouldBeSameAs(thumbnail);
         _renderer.Calls.ShouldContain(c => c.PageIndex == 0, "the real render is still requested");
 
         _renderer.CompleteAll();
 
         _pages[0].Image.ShouldNotBeNull();
-        _pages[0].Image.ShouldNotBeSameAs(thumbnail);
+        DisplayImage.SourceOf(_pages[0].Image).ShouldNotBeSameAs(thumbnail);
         _pages[1].Image.ShouldNotBeNull("pages without a thumbnail simply wait for their render");
     }
 

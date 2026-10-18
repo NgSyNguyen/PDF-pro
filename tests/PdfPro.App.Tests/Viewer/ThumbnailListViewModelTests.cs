@@ -62,7 +62,7 @@ public sealed class ThumbnailListViewModelTests : IDisposable
 
         load.Complete();
 
-        item.Image.ShouldBeSameAs(load.Result);
+        DisplayImage.SourceOf(item.Image).ShouldBeSameAs(load.Result);
         item.LoadFailed.ShouldBeFalse();
         list.PendingCount.ShouldBe(0);
     }
@@ -110,7 +110,7 @@ public sealed class ThumbnailListViewModelTests : IDisposable
         item.Image.ShouldBeSameAs(first);
 
         _provider.Loads[1].Complete();
-        item.Image.ShouldBeSameAs(_provider.Loads[1].Result);
+        DisplayImage.SourceOf(item.Image).ShouldBeSameAs(_provider.Loads[1].Result);
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public sealed class ThumbnailListViewModelTests : IDisposable
 
         list.Items[2].Realize(1.25);
 
-        list.Items[2].Image.ShouldBeSameAs(cached);
+        DisplayImage.SourceOf(list.Items[2].Image).ShouldBeSameAs(cached);
         _provider.Loads.ShouldBeEmpty();
         list.PendingCount.ShouldBe(0);
     }

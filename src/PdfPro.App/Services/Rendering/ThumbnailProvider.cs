@@ -159,8 +159,20 @@ internal sealed class ThumbnailProvider(
         {
             using var stream = new MemoryStream(png);
             var frame = BitmapFrame.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-            frame.Freeze();
-            return frame.PixelWidth == size.Width && frame.PixelHeight == size.Height ? frame : null;
+            if (frame.PixelWidth != size.Width || frame.PixelHeight != size.Height)
+            {
+                return null;
+            }
+
+            // A decoded frame stays tied to its decoder, which belongs to this pool thread even when frozen; the UI
+            // thread could not wrap it for display. Copy the pixels into a bitmap that any thread may use.
+            var pixels = new FormatConvertedBitmap(frame, PixelFormats.Bgr32, null, 0);
+            var stride = size.Width * 4;
+            var buffer = new byte[stride * size.Height];
+            pixels.CopyPixels(buffer, stride, 0);
+            var bitmap = BitmapSource.Create(size.Width, size.Height, 96, 96, PixelFormats.Bgr32, null, buffer, stride);
+            bitmap.Freeze();
+            return bitmap;
         }
         catch (Exception ex) when (ex is NotSupportedException or FileFormatException or IOException or ArgumentException)
         {

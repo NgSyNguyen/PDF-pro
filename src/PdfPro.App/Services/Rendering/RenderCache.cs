@@ -29,6 +29,10 @@ public readonly record struct RenderKey(Guid DocumentId, int PageIndex, int Scal
 /// Rendered page images shared by every open tab, bounded by the memory budget from the settings
 /// (SPEC: LRU by bytes, default 512 MB). Only the cache keeps images of pages that are off screen.
 /// </summary>
+/// <remarks>
+/// Cached bitmaps are never drawn themselves (pages show a <see cref="DisplayImage"/> view of them), so WPF keeps
+/// no GPU copy of them and the budget matches the memory the cache holds.
+/// </remarks>
 public sealed class RenderCache : IDisposable
 {
     private const long BytesPerMegabyte = 1024 * 1024;
@@ -52,6 +56,7 @@ public sealed class RenderCache : IDisposable
 
     public bool TryGet(RenderKey key, out ImageSource image) => _cache.TryGet(key, out image);
 
+    /// <param name="byteSize">Size of the image pixels.</param>
     public bool Add(RenderKey key, ImageSource image, long byteSize) => _cache.Set(key, image, byteSize);
 
     /// <summary>Drops every image of a closed document.</summary>

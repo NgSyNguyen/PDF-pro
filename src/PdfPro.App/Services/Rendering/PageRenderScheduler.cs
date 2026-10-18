@@ -122,7 +122,7 @@ public sealed class PageRenderScheduler : IDisposable
         {
             if (_cache.TryGet(baseKey, out var cached))
             {
-                page.Image = cached;
+                page.Image = DisplayImage.Of(cached);
                 page.ImageKey = baseKey;
                 page.RenderFailed = false;
             }
@@ -137,7 +137,7 @@ public sealed class PageRenderScheduler : IDisposable
                 var thumbnailKey = RenderKey.Thumbnail(_document.Id, index);
                 if (page.Image is null && _cache.TryGet(thumbnailKey, out var thumbnail))
                 {
-                    page.Image = thumbnail;
+                    page.Image = DisplayImage.Of(thumbnail);
                     page.ImageKey = thumbnailKey;
                 }
             }
@@ -231,7 +231,7 @@ public sealed class PageRenderScheduler : IDisposable
 
     private void ApplyDetail(PageViewModel page, RenderKey key, System.Windows.Media.ImageSource image, PixelRect region, int fullWidth, int fullHeight)
     {
-        page.DetailImage = image;
+        page.DetailImage = DisplayImage.Of(image);
         page.DetailKey = key;
         page.DetailFraction = new Rect(
             (double)region.X / fullWidth,
@@ -307,7 +307,7 @@ public sealed class PageRenderScheduler : IDisposable
         }
         else
         {
-            page.Image = rendered.Image;
+            page.Image = DisplayImage.Of(rendered.Image);
             page.ImageKey = key;
             page.RenderFailed = false;
         }

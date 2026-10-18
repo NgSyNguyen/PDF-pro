@@ -75,6 +75,23 @@ public sealed class ThumbnailProviderTests : IDisposable
     }
 
     [Fact]
+    public async Task ThumbnailReadFromDisk_CanBeShownOnTheUiThread()
+    {
+        var first = CreateProvider(_cache);
+        await first.GetAsync(new ThumbnailRequest(_document, _file, 1, 1.0), CancellationToken.None);
+        await first.WhenWritesCompleteAsync();
+        using var freshCache = new RenderCache(new FakeSettingsService(AppSettings.Default));
+
+        // Decoded on a pool thread...
+        var fromDisk = await Task.Run(() => CreateProvider(freshCache).GetAsync(new ThumbnailRequest(FakePdfDocument.WithPages(5), _file, 1, 1.0), CancellationToken.None));
+
+        // ...and wrapped for display on another thread, as the sidebar does.
+        var shown = Sta.Run(() => DisplayImage.Of(fromDisk));
+        shown.IsFrozen.ShouldBeTrue();
+        _renderer.Calls.Count.ShouldBe(1, "the thumbnail came from disk");
+    }
+
+    [Fact]
     public async Task AnotherDpi_IsAMissAndRendersAgain()
     {
         var provider = CreateProvider(_cache);

@@ -1,3 +1,4 @@
+using System.Windows.Media.Imaging;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.Infrastructure.Settings;
@@ -35,6 +36,20 @@ public sealed class RenderCacheTests
 
         cache.Count.ShouldBe(1);
         cache.TryGet(new RenderKey(open, 0, 1000), out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DisplayImage_IsAViewOfTheCachedBitmapWithoutCopyingIt()
+    {
+        var cached = FakePageImageRenderer.CreateImage();
+
+        var shown = DisplayImage.Of(cached);
+
+        shown.ShouldNotBeSameAs(cached, "the cached bitmap itself is never drawn");
+        shown.IsFrozen.ShouldBeTrue();
+        DisplayImage.SourceOf(shown).ShouldBeSameAs(cached);
+        ((BitmapSource)shown).PixelWidth.ShouldBe(((BitmapSource)cached).PixelWidth);
+        DisplayImage.Of(cached).ShouldNotBeSameAs(shown, "each page gets its own view");
     }
 
     [Theory]
