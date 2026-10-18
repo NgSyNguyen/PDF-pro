@@ -23,9 +23,6 @@ public sealed record PropertySection(string Header, IReadOnlyList<PropertyRow> R
 /// </summary>
 public sealed partial class DocumentPropertiesViewModel : ObservableObject
 {
-    private const long BytesPerKilobyte = 1024;
-    private static readonly string[] SizeUnits = ["KB", "MB", "GB", "TB"];
-
     private readonly IPdfDocument _document;
     private readonly string _filePath;
     private readonly ILogger _logger;
@@ -85,21 +82,9 @@ public sealed partial class DocumentPropertiesViewModel : ObservableObject
     internal static string FormatFileSize(long bytes, CultureInfo culture)
     {
         var exact = bytes.ToString("N0", culture);
-        if (bytes < BytesPerKilobyte)
-        {
-            return string.Format(culture, Strings.DocProps_FileSizeBytes, exact);
-        }
-
-        double value = bytes;
-        var unit = -1;
-        while (value >= BytesPerKilobyte && unit < SizeUnits.Length - 1)
-        {
-            value /= BytesPerKilobyte;
-            unit++;
-        }
-
-        var rounded = value.ToString(value < 10 ? "0.#" : "0", culture) + " " + SizeUnits[unit];
-        return string.Format(culture, Strings.DocProps_FileSizeValue, rounded, exact);
+        return bytes < 1024
+            ? string.Format(culture, Strings.DocProps_FileSizeBytes, exact)
+            : string.Format(culture, Strings.DocProps_FileSizeValue, ByteSizeFormatter.Format(bytes, culture), exact);
     }
 
     private static string DescribeSize(PdfSize size, CultureInfo culture)

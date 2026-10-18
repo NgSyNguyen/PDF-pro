@@ -8,8 +8,10 @@ public partial class SettingsWindow : FluentWindow
 {
     public SettingsWindow(SettingsViewModel viewModel)
     {
+        ArgumentNullException.ThrowIfNull(viewModel);
         DataContext = viewModel;
         InitializeComponent();
+        _ = viewModel.LoadCacheSizeAsync();
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();

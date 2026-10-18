@@ -243,6 +243,13 @@
   <data name="Settings_RestartNow" xml:space="preserve"><value>Khởi động lại ngay</value></data>
   <data name="Settings_SaveFailed_Title" xml:space="preserve"><value>Không lưu được cài đặt</value></data>
   <data name="Settings_SaveFailed_Message" xml:space="preserve"><value>Thay đổi vẫn có hiệu lực đến khi đóng ứng dụng. Kiểm tra quyền ghi vào thư mục dữ liệu của PDF_Pro.</value></data>
+  <data name="Settings_RenderCache" xml:space="preserve"><value>Bộ nhớ cho trang đã hiển thị (MB)</value></data>
+  <data name="Settings_RenderCacheDescription" xml:space="preserve"><value>Từ 128 đến 4096 MB. Nhiều hơn giúp cuộn lại các trang đã xem nhanh hơn nhưng dùng nhiều RAM hơn.</value></data>
+  <data name="Settings_ClearCache" xml:space="preserve"><value>Bộ nhớ đệm</value></data>
+  <data name="Settings_ClearCacheDescription" xml:space="preserve"><value>Ảnh trang trong bộ nhớ và hình thu nhỏ lưu trên đĩa ({0}). Xóa an toàn, ảnh sẽ được tạo lại khi cần.</value></data>
+  <data name="Settings_ClearCacheButton" xml:space="preserve"><value>Xóa bộ nhớ đệm</value></data>
+  <data name="Settings_CacheCleared" xml:space="preserve"><value>Đã giải phóng {0}.</value></data>
+  <data name="Settings_Measuring" xml:space="preserve"><value>đang đo…</value></data>
 
   <!-- Errors -->
   <data name="Error_Unexpected_Title" xml:space="preserve"><value>Đã xảy ra lỗi</value></data>

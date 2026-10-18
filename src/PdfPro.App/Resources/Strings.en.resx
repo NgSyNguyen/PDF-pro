@@ -243,6 +243,13 @@
   <data name="Settings_RestartNow" xml:space="preserve"><value>Restart now</value></data>
   <data name="Settings_SaveFailed_Title" xml:space="preserve"><value>Settings could not be saved</value></data>
   <data name="Settings_SaveFailed_Message" xml:space="preserve"><value>Your changes stay in effect until the app closes. Check that PDF_Pro can write to its data folder.</value></data>
+  <data name="Settings_RenderCache" xml:space="preserve"><value>Memory for displayed pages (MB)</value></data>
+  <data name="Settings_RenderCacheDescription" xml:space="preserve"><value>From 128 to 4096 MB. More makes going back to pages you have seen faster but uses more RAM.</value></data>
+  <data name="Settings_ClearCache" xml:space="preserve"><value>Cache</value></data>
+  <data name="Settings_ClearCacheDescription" xml:space="preserve"><value>Page images in memory and thumbnails stored on disk ({0}). Safe to clear; images are recreated when needed.</value></data>
+  <data name="Settings_ClearCacheButton" xml:space="preserve"><value>Clear cache</value></data>
+  <data name="Settings_CacheCleared" xml:space="preserve"><value>Freed {0}.</value></data>
+  <data name="Settings_Measuring" xml:space="preserve"><value>measuring…</value></data>
 
   <!-- Errors -->
   <data name="Error_Unexpected_Title" xml:space="preserve"><value>Something went wrong</value></data>

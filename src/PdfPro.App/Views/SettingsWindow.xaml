@@ -66,6 +66,57 @@
           SelectedValuePath="Value" />
       </ui:CardControl>
 
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Ram20}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_RenderCache}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_RenderCacheDescription}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:NumberBox
+          MinWidth="160"
+          AutomationProperties.AutomationId="SettingsRenderCache"
+          AutomationProperties.Name="{loc:Tr Settings_RenderCache}"
+          ClearButtonEnabled="False"
+          LargeChange="512"
+          MaxDecimalPlaces="0"
+          Maximum="{Binding MaxRenderCacheMegabytes}"
+          Minimum="{Binding MinRenderCacheMegabytes}"
+          SmallChange="128"
+          SpinButtonPlacementMode="Inline"
+          Value="{Binding RenderCacheMegabytes, UpdateSourceTrigger=LostFocus}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Broom24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_ClearCache}" />
+            <TextBlock
+              AutomationProperties.AutomationId="SettingsCacheSize"
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{Binding DiskCacheSize, StringFormat={loc:Tr Settings_ClearCacheDescription}}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:Button
+          AutomationProperties.AutomationId="SettingsClearCache"
+          Command="{Binding ClearCacheCommand}"
+          Content="{loc:Tr Settings_ClearCacheButton}"
+          Icon="{ui:SymbolIcon Delete24}" />
+      </ui:CardControl>
+
+      <ui:InfoBar
+        Margin="0,0,0,8"
+        IsClosable="False"
+        IsOpen="{Binding HasCacheMessage}"
+        Message="{Binding CacheMessage}"
+        Severity="Success" />
+
       <ui:InfoBar
         Title="{loc:Tr Settings_RestartRequired_Title}"
         Margin="0,8,0,0"
