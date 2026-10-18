@@ -19,6 +19,17 @@ public partial class MainWindow : FluentWindow
 
     private MainWindowViewModel ViewModel => (MainWindowViewModel)DataContext;
 
+    /// <summary>Restores and activates the window (another launch handed its files over).</summary>
+    public void BringToFront()
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Activate();
+    }
+
     private void OnGoToPage(object sender, ExecutedRoutedEventArgs e)
     {
         if (ViewModel.HasActiveDocument)

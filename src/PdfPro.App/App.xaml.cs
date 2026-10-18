@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using PdfPro.App.Hosting;
 using PdfPro.App.Localization;
 using PdfPro.App.Resources;
@@ -9,15 +10,24 @@ using PdfPro.App.Services;
 using PdfPro.App.ViewModels;
 using PdfPro.App.Views;
 using PdfPro.Infrastructure;
+using PdfPro.Infrastructure.Instances;
 using PdfPro.Infrastructure.Settings;
 using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace PdfPro.App;
 
 public partial class App : Application
 {
+    /// <summary>How long a second launch waits for the running window to take its files.</summary>
+    private static readonly TimeSpan HandOverTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>How long a restarted instance waits for the previous one to exit.</summary>
+    private static readonly TimeSpan RestartWaitTimeout = TimeSpan.FromSeconds(15);
+
     private IHost? _host;
     private GlobalExceptionHandler? _exceptionHandler;
+    private SingleInstanceChannel? _instance;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -31,6 +41,13 @@ public partial class App : Application
             paths.EnsureCreated();
 
             Log.Logger = LoggingSetup.CreateLogger(paths.LogsDirectory);
+            var startup = StartupArguments.Parse(e.Args, Environment.CurrentDirectory);
+            if (TryHandOverToRunningInstance(startup))
+            {
+                Shutdown(0);
+                return;
+            }
+
             Log.ForContext<App>().Information(
                 "PDF_Pro {Version} starting on {OS} (.NET {Runtime})",
                 AppBuildInfo.Current.Version,
@@ -53,7 +70,7 @@ public partial class App : Application
             theme.AttachMainWindow(mainWindow);
             mainWindow.Show();
 
-            _ = OpenStartupFilesAsync(_host.Services.GetRequiredService<MainWindowViewModel>(), e.Args);
+            _ = OpenStartupFilesAsync(_host.Services.GetRequiredService<MainWindowViewModel>(), startup.Files);
         }
         catch (Exception ex)
         {
@@ -63,6 +80,9 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // Later launches must not hand their files to a window that is closing.
+        _instance?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
         if (_host is not null)
         {
             _host.Services.GetService<MainWindowViewModel>()?.CloseAllDocuments();
@@ -85,15 +105,68 @@ public partial class App : Application
     }
 
     /// <summary>"PdfPro.exe a.pdf b.pdf" (also how Explorer's "Open with" starts the app).</summary>
-    private static async Task OpenStartupFilesAsync(MainWindowViewModel viewModel, string[] args)
+    private static async Task OpenStartupFilesAsync(MainWindowViewModel viewModel, IReadOnlyList<string> files)
     {
-        var files = args.Where(a => !a.StartsWith("--", StringComparison.Ordinal)).ToList();
         if (files.Count > 0)
         {
             await viewModel.OpenFilesAsync(files);
         }
 
         await viewModel.RemoveMissingRecentFilesAsync();
+    }
+
+    /// <summary>
+    /// Single instance per user session: the first launch listens for later ones; a later launch hands its files
+    /// to the running window and returns true so this process exits. If the running instance does not answer
+    /// (hung or closing), this launch opens its own window instead.
+    /// </summary>
+    private bool TryHandOverToRunningInstance(StartupArguments startup)
+    {
+        var log = Log.ForContext<App>();
+        if (startup.WaitForProcessId is { } previous && !StartupArguments.WaitForProcessExit(previous, RestartWaitTimeout))
+        {
+            log.Warning("The previous instance did not exit within {Timeout}", RestartWaitTimeout);
+        }
+
+        var loggers = new SerilogLoggerFactory(Log.Logger);
+        var channel = SingleInstanceChannel.Create(SingleInstanceChannel.DefaultName(), loggers.CreateLogger<SingleInstanceChannel>());
+        if (channel.IsPrimary)
+        {
+            _instance = channel;
+            channel.StartListening(files => Dispatcher.BeginInvoke(() => OnFilesHandedOver(files)));
+            return false;
+        }
+
+        try
+        {
+            if (channel.SendAsync(startup.Files, HandOverTimeout).GetAwaiter().GetResult())
+            {
+                log.Information("Handed {Count} file(s) over to the running instance", startup.Files.Count);
+                return true;
+            }
+
+            log.Warning("The running instance did not take the files; opening another window");
+            return false;
+        }
+        finally
+        {
+            channel.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+    }
+
+    /// <summary>Another launch passed its files (or none): bring the window forward and open them.</summary>
+    private async void OnFilesHandedOver(IReadOnlyList<string> files)
+    {
+        if (_host is null || MainWindow is not MainWindow window)
+        {
+            return; // startup failed or the app is closing
+        }
+
+        window.BringToFront();
+        if (files.Count > 0)
+        {
+            await _host.Services.GetRequiredService<MainWindowViewModel>().OpenFilesAsync(files);
+        }
     }
 
     private void HandleStartupFailure(Exception exception, string? logsDirectory)

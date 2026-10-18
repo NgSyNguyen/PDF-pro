@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Windows;
 using Microsoft.Extensions.Logging;
+using PdfPro.Infrastructure.Instances;
 
 namespace PdfPro.App.Services;
 
@@ -18,9 +20,13 @@ internal sealed class AppLifetime(ILogger<AppLifetime> logger) : IAppLifetime
             return;
         }
 
+        // The new instance waits for this one to exit; otherwise it would find it running and hand over to it.
+        var start = new ProcessStartInfo(executable) { UseShellExecute = false };
+        start.ArgumentList.Add(StartupArguments.WaitForProcessOption);
+        start.ArgumentList.Add(Environment.ProcessId.ToString(CultureInfo.InvariantCulture));
         try
         {
-            using var _ = Process.Start(new ProcessStartInfo(executable) { UseShellExecute = false });
+            using var _ = Process.Start(start);
         }
         catch (Win32Exception ex)
         {

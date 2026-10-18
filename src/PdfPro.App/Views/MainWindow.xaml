@@ -226,6 +226,11 @@
         AutomationProperties.AutomationId="DocumentTabs"
         ItemsSource="{Binding Tabs}"
         SelectedItem="{Binding SelectedTab}">
+        <TabControl.ItemContainerStyle>
+          <Style BasedOn="{StaticResource {x:Type TabItem}}" TargetType="TabItem">
+            <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+          </Style>
+        </TabControl.ItemContainerStyle>
         <TabControl.ItemTemplate>
           <DataTemplate DataType="{x:Type vm:WorkspaceTabViewModel}">
             <StackPanel Orientation="Horizontal" ToolTip="{Binding ToolTip}">
