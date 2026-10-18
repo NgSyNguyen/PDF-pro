@@ -8,19 +8,27 @@ using Wpf.Ui.Controls;
 
 namespace PdfPro.App.ViewModels;
 
-/// <summary>An open document: owns the PDF handle and its viewer; closing the tab closes the document.</summary>
+/// <summary>An open document: owns the PDF handle, its viewer and sidebar panels; closing the tab closes the document.</summary>
 public sealed class DocumentTabViewModel : WorkspaceTabViewModel, IAsyncDisposable
 {
     private readonly RenderCache _cache;
     private int _disposed;
 
-    public DocumentTabViewModel(IPdfDocument document, string filePath, DocumentViewerViewModel viewer, RenderCache cache)
+    public DocumentTabViewModel(
+        IPdfDocument document,
+        string filePath,
+        DocumentViewerViewModel viewer,
+        ThumbnailListViewModel thumbnails,
+        BookmarkTreeViewModel bookmarks,
+        RenderCache cache)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         Document = document;
         FilePath = filePath;
         Viewer = viewer;
+        Thumbnails = thumbnails;
+        Bookmarks = bookmarks;
         _cache = cache;
     }
 
@@ -29,6 +37,10 @@ public sealed class DocumentTabViewModel : WorkspaceTabViewModel, IAsyncDisposab
     public string FilePath { get; }
 
     public DocumentViewerViewModel Viewer { get; }
+
+    public ThumbnailListViewModel Thumbnails { get; }
+
+    public BookmarkTreeViewModel Bookmarks { get; }
 
     public override string Title => Path.GetFileName(FilePath);
 
@@ -40,7 +52,7 @@ public sealed class DocumentTabViewModel : WorkspaceTabViewModel, IAsyncDisposab
 
     public bool IsSameFile(string path) => string.Equals(Path.GetFullPath(path), FilePath, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Stops rendering, drops cached images and closes the document.</summary>
+    /// <summary>Stops rendering and loading, drops cached images and closes the document.</summary>
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
@@ -48,6 +60,8 @@ public sealed class DocumentTabViewModel : WorkspaceTabViewModel, IAsyncDisposab
             return;
         }
 
+        Thumbnails.Dispose();
+        Bookmarks.Dispose();
         Viewer.Dispose();
         _cache.RemoveDocument(Document.Id);
         await Document.DisposeAsync().ConfigureAwait(false);
@@ -63,13 +77,19 @@ public interface IDocumentTabFactory
 internal sealed class DocumentTabFactory(
     IPageImageRenderer renderer,
     RenderCache cache,
+    IThumbnailProvider thumbnails,
     IUiDispatcher ui,
     IDebouncerFactory debouncers,
     ILoggerFactory loggers) : IDocumentTabFactory
 {
+    /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
     public DocumentTabViewModel Create(IPdfDocument document, string filePath)
     {
+        var fullPath = Path.GetFullPath(filePath);
         var viewer = new DocumentViewerViewModel(document, renderer, cache, ui, debouncers, loggers.CreateLogger<DocumentViewerViewModel>());
-        return new DocumentTabViewModel(document, Path.GetFullPath(filePath), viewer, cache);
+        var thumbnailList = new ThumbnailListViewModel(document, fullPath, viewer, thumbnails, ui, loggers.CreateLogger<ThumbnailListViewModel>());
+        var bookmarks = new BookmarkTreeViewModel(document, viewer, ui, loggers.CreateLogger<BookmarkTreeViewModel>());
+        _ = bookmarks.LoadAsync();
+        return new DocumentTabViewModel(document, fullPath, viewer, thumbnailList, bookmarks, cache);
     }
 }

@@ -28,7 +28,7 @@ public sealed class MainWindowViewModelTests : IDisposable
     public MainWindowViewModelTests()
     {
         _cache = new RenderCache(_settings);
-        _tabFactory = new DocumentTabFactory(new FakePageImageRenderer(), _cache, new ImmediateUiDispatcher(), new ManualDebouncerFactory(), NullLoggerFactory.Instance);
+        _tabFactory = new DocumentTabFactory(new FakePageImageRenderer(), _cache, new FakeThumbnailProvider(), new ImmediateUiDispatcher(), new ManualDebouncerFactory(), NullLoggerFactory.Instance);
     }
 
     public void Dispose() => _cache.Dispose();

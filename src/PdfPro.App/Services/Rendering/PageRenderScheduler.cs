@@ -126,9 +126,20 @@ public sealed class PageRenderScheduler : IDisposable
                 page.ImageKey = baseKey;
                 page.RenderFailed = false;
             }
-            else if (zoomSettled || page.Image is null)
+            else
             {
-                Request(index, detail: false, baseKey, baseScale, region: null, isVisible ? PdfiumPriority.High : PdfiumPriority.Normal);
+                if (zoomSettled || page.Image is null)
+                {
+                    Request(index, detail: false, baseKey, baseScale, region: null, isVisible ? PdfiumPriority.High : PdfiumPriority.Normal);
+                }
+
+                // Until the render arrives, a blank page shows its (blurry) sidebar thumbnail if there is one.
+                var thumbnailKey = RenderKey.Thumbnail(_document.Id, index);
+                if (page.Image is null && _cache.TryGet(thumbnailKey, out var thumbnail))
+                {
+                    page.Image = thumbnail;
+                    page.ImageKey = thumbnailKey;
+                }
             }
         }
 

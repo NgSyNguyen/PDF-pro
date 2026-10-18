@@ -196,7 +196,7 @@
       <Grid.ColumnDefinitions>
         <ColumnDefinition
           Width="240"
-          MinWidth="160"
+          MinWidth="220"
           MaxWidth="480" />
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="*" MinWidth="320" />
@@ -208,74 +208,7 @@
       </Grid.ColumnDefinitions>
 
       <!-- Left sidebar -->
-      <Border
-        Grid.Column="0"
-        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-        BorderThickness="1"
-        CornerRadius="8"
-        DataContext="{Binding Sidebar}">
-        <DockPanel>
-          <!-- Segmented switch; icon above label so both fit the narrowest sidebar. -->
-          <UniformGrid
-            Margin="8"
-            Columns="2"
-            DockPanel.Dock="Top">
-            <RadioButton
-              Margin="0,0,2,0"
-              Padding="4,6"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Center"
-              AutomationProperties.AutomationId="SidebarThumbnails"
-              AutomationProperties.Name="{loc:Tr Sidebar_Thumbnails}"
-              GroupName="SidebarPanel"
-              IsChecked="{Binding IsThumbnailsSelected}"
-              Style="{StaticResource {x:Type ToggleButton}}">
-              <StackPanel>
-                <ui:SymbolIcon HorizontalAlignment="Center" Symbol="GridDots24" />
-                <TextBlock
-                  Margin="0,2,0,0"
-                  HorizontalAlignment="Center"
-                  FontSize="12"
-                  Text="{loc:Tr Sidebar_Thumbnails}" />
-              </StackPanel>
-            </RadioButton>
-            <RadioButton
-              Margin="2,0,0,0"
-              Padding="4,6"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Center"
-              AutomationProperties.AutomationId="SidebarBookmarks"
-              AutomationProperties.Name="{loc:Tr Sidebar_Bookmarks}"
-              GroupName="SidebarPanel"
-              IsChecked="{Binding IsBookmarksSelected}"
-              Style="{StaticResource {x:Type ToggleButton}}">
-              <StackPanel>
-                <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Bookmark24" />
-                <TextBlock
-                  Margin="0,2,0,0"
-                  HorizontalAlignment="Center"
-                  FontSize="12"
-                  Text="{loc:Tr Sidebar_Bookmarks}" />
-              </StackPanel>
-            </RadioButton>
-          </UniformGrid>
-          <Grid Margin="16">
-            <TextBlock
-              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-              Text="{loc:Tr Sidebar_ThumbnailsEmpty}"
-              TextAlignment="Center"
-              TextWrapping="Wrap"
-              Visibility="{Binding IsThumbnailsSelected, Converter={StaticResource BoolToVisibility}}" />
-            <TextBlock
-              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-              Text="{loc:Tr Sidebar_BookmarksEmpty}"
-              TextAlignment="Center"
-              TextWrapping="Wrap"
-              Visibility="{Binding IsBookmarksSelected, Converter={StaticResource BoolToVisibility}}" />
-          </Grid>
-        </DockPanel>
-      </Border>
+      <views:SidebarView Grid.Column="0" />
 
       <GridSplitter
         Grid.Column="1"

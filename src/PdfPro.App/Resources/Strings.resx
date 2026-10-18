@@ -114,6 +114,11 @@
   <data name="Sidebar_Bookmarks" xml:space="preserve"><value>Dấu trang</value></data>
   <data name="Sidebar_ThumbnailsEmpty" xml:space="preserve"><value>Mở một tài liệu để xem các trang.</value></data>
   <data name="Sidebar_BookmarksEmpty" xml:space="preserve"><value>Mở một tài liệu để xem dấu trang.</value></data>
+  <data name="Thumbnail_LoadFailed" xml:space="preserve"><value>Không hiển thị được hình thu nhỏ của trang này.</value></data>
+  <data name="Bookmarks_Loading" xml:space="preserve"><value>Đang đọc dấu trang…</value></data>
+  <data name="Bookmarks_None" xml:space="preserve"><value>Tài liệu này không có dấu trang.</value></data>
+  <data name="Bookmarks_LoadFailed" xml:space="preserve"><value>Không đọc được dấu trang của tài liệu này.</value></data>
+  <data name="Bookmark_Untitled" xml:space="preserve"><value>(Không có tiêu đề)</value></data>
   <data name="Properties_Title" xml:space="preserve"><value>Thuộc tính</value></data>
   <data name="Properties_Empty" xml:space="preserve"><value>Chọn một trang hoặc đối tượng để xem thuộc tính.</value></data>
 

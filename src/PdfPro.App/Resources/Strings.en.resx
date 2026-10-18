@@ -114,6 +114,11 @@
   <data name="Sidebar_Bookmarks" xml:space="preserve"><value>Bookmarks</value></data>
   <data name="Sidebar_ThumbnailsEmpty" xml:space="preserve"><value>Open a document to see its pages.</value></data>
   <data name="Sidebar_BookmarksEmpty" xml:space="preserve"><value>Open a document to see its bookmarks.</value></data>
+  <data name="Thumbnail_LoadFailed" xml:space="preserve"><value>The thumbnail of this page could not be shown.</value></data>
+  <data name="Bookmarks_Loading" xml:space="preserve"><value>Reading bookmarks…</value></data>
+  <data name="Bookmarks_None" xml:space="preserve"><value>This document has no bookmarks.</value></data>
+  <data name="Bookmarks_LoadFailed" xml:space="preserve"><value>The bookmarks of this document could not be read.</value></data>
+  <data name="Bookmark_Untitled" xml:space="preserve"><value>(Untitled)</value></data>
   <data name="Properties_Title" xml:space="preserve"><value>Properties</value></data>
   <data name="Properties_Empty" xml:space="preserve"><value>Select a page or an object to see its properties.</value></data>
 

@@ -6,10 +6,23 @@ using PdfPro.Infrastructure.Settings;
 namespace PdfPro.App.Services.Rendering;
 
 /// <summary>Identifies one rendered image: a page (or a region of it) of an opened document at a scale.</summary>
-/// <param name="ScaleKey">Device pixels per point × 1000, rounded (renders within 0.1 % are interchangeable).</param>
+/// <param name="ScaleKey">
+/// Device pixels per point × 1000, rounded (renders within 0.1 % are interchangeable), or
+/// <see cref="ThumbnailScaleKey"/> for the page's sidebar thumbnail.
+/// </param>
 public readonly record struct RenderKey(Guid DocumentId, int PageIndex, int ScaleKey, PixelRect? Region = null)
 {
+    /// <summary>
+    /// Thumbnails have one entry per page whatever their resolution, so the viewer can find one to show as a
+    /// placeholder while the page renders.
+    /// </summary>
+    public const int ThumbnailScaleKey = -1;
+
+    public bool IsThumbnail => ScaleKey == ThumbnailScaleKey;
+
     public static int ToScaleKey(double scale) => (int)Math.Round(scale * 1000, MidpointRounding.AwayFromZero);
+
+    public static RenderKey Thumbnail(Guid documentId, int pageIndex) => new(documentId, pageIndex, ThumbnailScaleKey);
 }
 
 /// <summary>

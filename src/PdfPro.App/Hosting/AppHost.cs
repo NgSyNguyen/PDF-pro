@@ -57,6 +57,8 @@ internal static class AppHost
         services.AddSingleton<IDocumentOpener, DocumentOpener>();
         services.AddSingleton<RenderCache>();
         services.AddSingleton<IPageImageRenderer, PageImageRenderer>();
+        services.AddSingleton<IThumbnailProvider, ThumbnailProvider>();
+        services.AddHostedService<ThumbnailCacheMaintenance>();
         services.AddSingleton<IDocumentTabFactory, DocumentTabFactory>();
 
         services.AddSingleton<MainWindowViewModel>();
