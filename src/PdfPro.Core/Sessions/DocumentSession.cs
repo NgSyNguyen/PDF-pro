@@ -149,6 +149,30 @@ public sealed class DocumentSession
         RaiseDirtyChangedIfNeeded();
     }
 
+    /// <summary>The session as replayable data, for the crash-recovery manifest.</summary>
+    /// <exception cref="InvalidOperationException">The history holds a command that is not a session state command.</exception>
+    public SessionSnapshot CreateSnapshot()
+    {
+        var undo = History.UndoCommands.Select(StateCommand).ToArray();
+        var redo = History.RedoCommands.Select(StateCommand).ToArray();
+        return new SessionSnapshot
+        {
+            SessionId = Id,
+            OriginalPath = OriginalPath,
+            Sources = [.. _sources.Values],
+            State = State,
+            HistoryBase = undo.Length > 0 ? undo[0].Before : State,
+            Undo = [.. undo.Select(c => c.Record)],
+            Redo = [.. redo.Select(c => c.Record)],
+            SavePoint = History.SavePointPosition,
+            ForcedDirty = _forcedDirty,
+        };
+
+        static SessionStateCommand StateCommand(IUndoableCommand<DocumentSession> command)
+            => command as SessionStateCommand
+                ?? throw new InvalidOperationException("Only session state commands can be saved in the manifest.");
+    }
+
     /// <summary>Switches to <paramref name="state"/>; only <see cref="SessionStateCommand"/> calls this.</summary>
     internal void ApplyState(SessionState state)
     {

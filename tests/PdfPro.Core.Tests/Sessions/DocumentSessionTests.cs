@@ -204,6 +204,45 @@ public sealed class DocumentSessionTests
         => Should.Throw<ArgumentException>(() => PlanCommand.Create(" ", _session.State, _session.Plan, Record("organize.rotate")));
 
     [Fact]
+    public void CreateSnapshot_CapturesStateHistoryAndSavePoint()
+    {
+        var start = _session.State;
+        var first = Rotate(_session, [0]);
+        _session.History.Execute(first);
+        _session.MarkSaved();
+        var second = Move(_session, [4], 0);
+        _session.History.Execute(second);
+        var third = Rotate(_session, [2]);
+        _session.History.Execute(third);
+        _session.History.Undo();
+
+        var snapshot = _session.CreateSnapshot();
+
+        snapshot.SessionId.ShouldBe(_session.Id);
+        snapshot.OriginalPath.ShouldBe(@"C:\docs\a.pdf");
+        snapshot.Sources.ShouldBe([Original]);
+        snapshot.State.ShouldBeSameAs(_session.State);
+        snapshot.HistoryBase.ShouldBeSameAs(start);
+        snapshot.Undo.ShouldBe([first.Record, second.Record]);
+        snapshot.Redo.ShouldBe([third.Record]);
+        snapshot.SavePoint.ShouldBe(1);
+        snapshot.IsDirty.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void CreateSnapshot_WithoutHistory_StartsFromTheCurrentState()
+    {
+        _session.MarkUnsaved();
+
+        var snapshot = _session.CreateSnapshot();
+
+        snapshot.HistoryBase.ShouldBeSameAs(_session.State);
+        snapshot.Undo.ShouldBeEmpty();
+        snapshot.ForcedDirty.ShouldBeTrue();
+        snapshot.IsDirty.ShouldBeTrue();
+    }
+
+    [Fact]
     public void SetOriginalPath_ChangesWhereTheDocumentIsSaved()
     {
         _session.SetOriginalPath(@"D:\b.pdf");
