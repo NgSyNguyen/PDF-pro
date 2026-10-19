@@ -282,4 +282,64 @@ public sealed class UndoRedoStackTests
     [Fact]
     public void Stack_ImplementsINotifyPropertyChangedForBinding()
         => _stack.ShouldBeAssignableTo<INotifyPropertyChanged>();
+
+    [Fact]
+    public void CommandLists_AreOrderedForSavingAndReplaying()
+    {
+        var a = new AddItemCommand("a");
+        var b = new AddItemCommand("b");
+        var c = new AddItemCommand("c");
+        _stack.Execute(a);
+        _stack.Execute(b);
+        _stack.Execute(c);
+        _stack.Undo();
+        _stack.Undo();
+
+        _stack.UndoCommands.ShouldBe([a]);
+        _stack.RedoCommands.ShouldBe([b, c]);
+    }
+
+    [Fact]
+    public void SavePointPosition_CountsStepsFromTheOldestReachableState()
+    {
+        _stack.SavePointPosition.ShouldBe(0);
+
+        _stack.Execute(new AddItemCommand("a"));
+        _stack.SavePointPosition.ShouldBe(0, "the opened state is still the saved one");
+
+        _stack.Execute(new AddItemCommand("b"));
+        _stack.MarkSavePoint();
+        _stack.SavePointPosition.ShouldBe(2);
+
+        _stack.Undo();
+        _stack.Undo();
+        _stack.SavePointPosition.ShouldBe(2, "the saved state is two redos away");
+    }
+
+    [Fact]
+    public void SavePointPosition_IsNullOnceTheSavedStateIsGone()
+    {
+        _stack.Execute(new AddItemCommand("a"));
+        _stack.MarkSavePoint();
+        _stack.Undo();
+        _stack.Execute(new AddItemCommand("b"));
+        _stack.SavePointPosition.ShouldBeNull("the saved state was on the discarded redo branch");
+
+        var trimmed = new UndoRedoStack<FakeDocument>(new FakeDocument(), maxDepth: 2);
+        trimmed.Execute(new AddItemCommand("x"));
+        trimmed.Execute(new AddItemCommand("y"));
+        trimmed.Execute(new AddItemCommand("z"));
+        trimmed.SavePointPosition.ShouldBeNull("the opened state was dropped by the depth limit");
+    }
+
+    [Fact]
+    public void SavePointPosition_AfterClearAtTheSavePoint_IsZero()
+    {
+        _stack.Execute(new AddItemCommand("a"));
+        _stack.MarkSavePoint();
+
+        _stack.Clear();
+
+        _stack.SavePointPosition.ShouldBe(0);
+    }
 }

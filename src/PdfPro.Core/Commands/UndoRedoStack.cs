@@ -60,8 +60,43 @@ public sealed class UndoRedoStack<TContext> : INotifyPropertyChanged
     /// <summary>Descriptions of the redoable steps, next redo first.</summary>
     public IReadOnlyList<string> RedoHistory => _redo.Select(e => e.Command.Description).ToArray();
 
+    /// <summary>The undoable commands, oldest first (to save the history).</summary>
+    public IReadOnlyList<IUndoableCommand<TContext>> UndoCommands => _undo.Select(e => e.Command).ToArray();
+
+    /// <summary>The redoable commands, next redo first.</summary>
+    public IReadOnlyList<IUndoableCommand<TContext>> RedoCommands => _redo.Select(e => e.Command).ToArray();
+
     /// <summary>True when the context is in the state recorded by the last <see cref="MarkSavePoint"/>.</summary>
     public bool IsAtSavePoint => CurrentStateId == _savedStateId;
+
+    /// <summary>
+    /// Where the saved state lies in the history, in steps from the oldest reachable state: 0 is the state before the
+    /// oldest undoable command, <see cref="UndoCount"/> the current state and UndoCount + k the state after the k-th
+    /// redo. Null when the saved state can no longer be reached (dropped by <see cref="MaxDepth"/> or
+    /// <see cref="Clear"/>, or left on a discarded redo branch).
+    /// </summary>
+    public int? SavePointPosition
+    {
+        get
+        {
+            if (_savedStateId == _baseStateId)
+            {
+                return 0;
+            }
+
+            var position = 0;
+            foreach (var entry in _undo.Concat(_redo))
+            {
+                position++;
+                if (entry.Sequence == _savedStateId)
+                {
+                    return position;
+                }
+            }
+
+            return null;
+        }
+    }
 
     private long CurrentStateId => _undo.Last?.Value.Sequence ?? _baseStateId;
 
