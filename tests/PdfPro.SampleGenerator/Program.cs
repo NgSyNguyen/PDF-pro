@@ -18,6 +18,7 @@ ISample[] samples =
     new EncryptedSample(),
     new BrokenSample(),
     new RotatedCropBoxSample(),
+    new LinksAnnotsSample(),
 ];
 
 Console.WriteLine($"Writing samples to {outputDirectory}");

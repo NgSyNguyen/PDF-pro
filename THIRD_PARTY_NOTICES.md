@@ -23,6 +23,7 @@ Before adding a package: state its name, license and reason, and add it below.
 | [PDFiumCore](https://github.com/Dtronix/PDFiumCore) | 157.0.8100 | Apache-2.0 | .NET bindings for PDFium |
 | [bblanchon.PDFium.Win32](https://github.com/bblanchon/pdfium-binaries) (native `pdfium.dll`) | 157.0.8100 | Apache-2.0 (packaging) | Pre-built PDFium binaries (win-x64, win-arm64) |
 | [PDFium](https://pdfium.googlesource.com/pdfium/) | chromium/8100 | BSD-3-Clause, Apache-2.0 | PDF rendering, text, document structure |
+| [PDFsharp](https://github.com/empira/PDFsharp) | 6.2.4 | MIT | Writes page plans to PDF (page tree, rotation, CropBox, imported pages) in `PdfPro.Operations`; also generates `samples/`. **6.5.0+ is AGPL-3.0 — never upgrade beyond 6.2.x** (guarded by `LicenseGuardTests`). |
 | [System.Security.Cryptography.Pkcs](https://github.com/dotnet/runtime) | 10.0.13 | MIT | Pinned transitive dependency of PDFsharp (security fixes) |
 
 ### Libraries bundled inside PDFium
@@ -46,7 +47,6 @@ The complete license texts will be collected in this file before the first relea
 | [xunit.v3](https://github.com/xunit/xunit) | 4.0.2 | Apache-2.0 | Unit tests (Microsoft.Testing.Platform runner) |
 | [Shouldly](https://github.com/shouldly/shouldly) | 4.3.0 | BSD-3-Clause | Test assertions |
 | [NSubstitute](https://github.com/nsubstitute/NSubstitute) | 6.2.0 | BSD-3-Clause | Test doubles |
-| [PDFsharp](https://github.com/empira/PDFsharp) | 6.2.4 | MIT | Generates the sample documents in `samples/` (shipped from Phase 3). **6.5.0+ is AGPL-3.0 — never upgrade beyond 6.2.x.** |
 | Arial, Times New Roman (Windows fonts) | — | Monotype (embedding allowed) | Subsets embedded in the generated sample PDFs only |
 
 ## Planned (added in later phases, listed here once added)

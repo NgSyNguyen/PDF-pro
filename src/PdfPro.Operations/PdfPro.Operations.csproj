@@ -1,13 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- PDF operations (IPdfOperation implementations). PDF libraries are added from Phase 3. -->
+  <!-- PDF operations (IPdfOperation implementations) and the page plan materializer. -->
   <PropertyGroup>
     <RootNamespace>PdfPro.Operations</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Pinned at 6.2.4 in Directory.Packages.props: 6.5+ is AGPL (LicenseGuardTests). -->
+    <PackageReference Include="PDFsharp" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PdfPro.Core\PdfPro.Core.csproj" />
     <ProjectReference Include="..\PdfPro.Pdfium\PdfPro.Pdfium.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PdfPro.Operations.Tests" />
   </ItemGroup>
 
 </Project>

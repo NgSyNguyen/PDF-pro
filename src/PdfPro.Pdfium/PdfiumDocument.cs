@@ -225,6 +225,27 @@ public sealed class PdfiumDocument : IDisposable
         }
     }
 
+    /// <summary>
+    /// Writes a complete copy of the document with a freshly built cross-reference table (no incremental update).
+    /// Used to repair files other libraries cannot parse: PDFium reads damaged files and writes clean ones.
+    /// </summary>
+    /// <exception cref="IOException">Writing failed.</exception>
+    public void SaveCopy(Stream output)
+    {
+        ArgumentNullException.ThrowIfNull(output);
+        const ulong noIncremental = 2; // FPDF_NO_INCREMENTAL
+        var native = Native;
+
+        // After rebuilding a damaged cross-reference table, PDFium writes the document information dictionary only if
+        // it has been loaded; otherwise the trailer's /Info points at nothing and stricter readers reject the copy.
+        _ = fpdf_doc.FPDF_GetMetaText(native, "Producer", IntPtr.Zero, 0);
+        using var writer = new PdfFileWriter(output);
+        if (fpdf_save.FPDF_SaveAsCopy(native, writer.Native, noIncremental) == 0 || writer.Error is not null)
+        {
+            throw new IOException("PDFium could not write a copy of the document.", writer.Error);
+        }
+    }
+
     public void Dispose()
     {
         _gate.VerifyAccess();
