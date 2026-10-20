@@ -18,7 +18,7 @@ internal sealed class DialogService(IServiceProvider services) : IDialogService
     public void ShowDocumentProperties(DocumentTabViewModel document)
     {
         ArgumentNullException.ThrowIfNull(document);
-        var viewModel = new DocumentPropertiesViewModel(document.Document, document.FilePath, services.GetRequiredService<ILogger<DocumentPropertiesViewModel>>());
+        var viewModel = new DocumentPropertiesViewModel(document.Document, document.Workspace.Pages.PageSizes, document.FilePath, services.GetRequiredService<ILogger<DocumentPropertiesViewModel>>());
         var window = new DocumentPropertiesWindow(viewModel) { Owner = Application.Current.MainWindow };
         _ = viewModel.LoadAsync(); // fills in the Info dictionary and file size while the dialog is open
         window.ShowDialog();

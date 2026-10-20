@@ -90,7 +90,8 @@ public sealed class DocumentPropertiesViewModelTests : IDisposable
     [Fact]
     public async Task Load_MissingFile_SaysTheSizeCouldNotBeRead()
     {
-        var viewModel = new DocumentPropertiesViewModel(FakePdfDocument.WithPages(1), _temp.Combine("gone.pdf"), _logger);
+        var document = FakePdfDocument.WithPages(1);
+        var viewModel = new DocumentPropertiesViewModel(document, document.PageSizes, _temp.Combine("gone.pdf"), _logger);
 
         await viewModel.LoadAsync();
 
@@ -180,5 +181,5 @@ public sealed class DocumentPropertiesViewModelTests : IDisposable
     private static string Value(DocumentPropertiesViewModel viewModel, string label)
         => viewModel.Sections.SelectMany(s => s.Rows).Single(r => r.Label == label).Value;
 
-    private DocumentPropertiesViewModel Create(FakePdfDocument document) => new(document, _file, _logger);
+    private DocumentPropertiesViewModel Create(FakePdfDocument document) => new(document, document.PageSizes, _file, _logger);
 }

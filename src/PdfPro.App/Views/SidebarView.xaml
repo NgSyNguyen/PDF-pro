@@ -64,11 +64,16 @@
           BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
           BorderThickness="1">
           <Grid Width="{Binding Width}" Height="{Binding Height}">
+            <!-- The image is upright; the page plan's rotation turns it here, so a turned page shows at once. -->
             <Image
               controls:Realization.IsEnabled="True"
               RenderOptions.BitmapScalingMode="HighQuality"
               Source="{Binding Image}"
-              Stretch="Fill" />
+              Stretch="Fill">
+              <Image.LayoutTransform>
+                <RotateTransform Angle="{Binding Angle}" />
+              </Image.LayoutTransform>
+            </Image>
             <ui:SymbolIcon
               HorizontalAlignment="Center"
               VerticalAlignment="Center"

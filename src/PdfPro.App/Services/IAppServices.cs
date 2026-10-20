@@ -51,7 +51,10 @@ public interface IDocumentOpener
     /// Returns the opened document, or null when the user cancelled the password prompt or the file could not
     /// be opened (the user has already been told why).
     /// </summary>
-    Task<Pdfium.IPdfDocument?> OpenAsync(string path, CancellationToken cancellationToken = default);
+    /// <param name="path">The file to open (a copy in a session folder).</param>
+    /// <param name="displayName">The name shown in prompts and messages (the original file name).</param>
+    /// <param name="cancellationToken">Cancels the open.</param>
+    Task<Pdfium.IPdfDocument?> OpenAsync(string path, string displayName, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Asks the user for a document password. Never stores it.</summary>

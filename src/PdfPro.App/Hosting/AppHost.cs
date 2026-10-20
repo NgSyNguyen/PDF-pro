@@ -3,11 +3,17 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Localization;
 using PdfPro.App.Services;
+using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.ViewModels;
 using PdfPro.App.Views;
+using PdfPro.Core.Operations;
+using PdfPro.Core.Organizing;
 using PdfPro.Infrastructure;
+using PdfPro.Operations;
+using PdfPro.Operations.Materializing;
+using PdfPro.Operations.Organizing;
 using PdfPro.Pdfium;
 using Serilog;
 
@@ -64,10 +70,32 @@ internal static class AppHost
         services.AddSingleton<IPrintDialogService, PrintDialogService>();
         services.AddSingleton<IDocumentPrinter, DocumentPrinter>();
 
+        // Document sessions, page operations and writing PDF files
+        services.AddSingleton<ISourceRepairer, PdfiumSourceRepairer>();
+        services.AddSingleton<IPlanMaterializer, PdfSharpPlanMaterializer>();
+        services.AddPlanOperation<RotatePagesOperation>();
+        services.AddPlanOperation<MovePagesOperation>();
+        services.AddPlanOperation<DeletePagesOperation>();
+        services.AddPlanOperation<DuplicatePagesOperation>();
+        services.AddPlanOperation<InsertBlankPagesOperation>();
+        services.AddPlanOperation<InsertPagesOperation>();
+        services.AddPlanOperation<CropPagesOperation>();
+        services.AddSingleton<OperationCatalog>();
+        services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
+
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<SettingsWindow>();
+        return services;
+    }
+
+    /// <summary>Registers a page operation once, reachable as itself and through the operation catalog.</summary>
+    private static IServiceCollection AddPlanOperation<T>(this IServiceCollection services)
+        where T : class, IPdfOperation
+    {
+        services.AddSingleton<T>();
+        services.AddSingleton<IPdfOperation>(sp => sp.GetRequiredService<T>());
         return services;
     }
 }

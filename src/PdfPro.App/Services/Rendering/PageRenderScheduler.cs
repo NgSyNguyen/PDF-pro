@@ -1,5 +1,6 @@
 using System.Windows;
 using Microsoft.Extensions.Logging;
+using PdfPro.App.Services.Documents;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Viewing;
@@ -29,8 +30,8 @@ public sealed class PageRenderScheduler : IDisposable
     /// <summary>Detail regions snap to this grid so small scrolls reuse the same tile.</summary>
     private const int DetailGrid = 128;
 
-    private readonly IPdfDocument _document;
-    private readonly IReadOnlyList<PageViewModel> _pages;
+    private VirtualDocument _document;
+    private IReadOnlyList<PageViewModel> _pages;
     private readonly IPageImageRenderer _renderer;
     private readonly RenderCache _cache;
     private readonly IUiDispatcher _ui;
@@ -41,7 +42,7 @@ public sealed class PageRenderScheduler : IDisposable
     private DocumentLayout? _layout;
     private bool _disposed;
 
-    public PageRenderScheduler(IPdfDocument document, IReadOnlyList<PageViewModel> pages, IPageImageRenderer renderer, RenderCache cache, IUiDispatcher ui, ILogger logger)
+    public PageRenderScheduler(VirtualDocument document, IReadOnlyList<PageViewModel> pages, IPageImageRenderer renderer, RenderCache cache, IUiDispatcher ui, ILogger logger)
     {
         _document = document;
         _pages = pages;
@@ -92,6 +93,21 @@ public sealed class PageRenderScheduler : IDisposable
         }
     }
 
+    /// <summary>
+    /// The page plan changed: renders in flight are dropped and every page is looked at again on the next
+    /// <see cref="Update"/>. Page view models that follow their page keep their image while it still matches.
+    /// </summary>
+    public void SetDocument(VirtualDocument document, IReadOnlyList<PageViewModel> pages)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(pages);
+        CancelAll();
+        _realized.Clear();
+        _failureLogged.Clear();
+        _document = document;
+        _pages = pages;
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -100,6 +116,11 @@ public sealed class PageRenderScheduler : IDisposable
         }
 
         _disposed = true;
+        CancelAll();
+    }
+
+    private void CancelAll()
+    {
         foreach (var inFlight in _inFlight.Values)
         {
             inFlight.Cancellation.Cancel();
@@ -112,11 +133,22 @@ public sealed class PageRenderScheduler : IDisposable
     private void UpdatePage(int index, DocumentLayout layout, ViewRect viewport, double deviceScale, double dpiScale, bool isVisible, bool zoomSettled, bool detailAllowed)
     {
         var page = _pages[index];
-        var size = _document.PageSizes[index];
+        var virtualPage = _document.Pages[index];
+        if (virtualPage.IsBlank)
+        {
+            // Blank pages are the white page background itself: nothing to render.
+            CancelRequest(index, detail: false);
+            CancelRequest(index, detail: true);
+            page.ClearImages();
+            page.RenderFailed = false;
+            return;
+        }
+
+        var size = virtualPage.DisplaySize;
         var fullPixels = (long)PixelSize.FromPoints(size.Width, deviceScale) * PixelSize.FromPoints(size.Height, deviceScale);
         var needsDetail = fullPixels > MaxFullPagePixels;
         var baseScale = needsDetail ? deviceScale * Math.Sqrt((double)MaxFullPagePixels / fullPixels) : deviceScale;
-        var baseKey = new RenderKey(_document.Id, index, RenderKey.ToScaleKey(baseScale));
+        var baseKey = RenderKey.For(virtualPage, RenderKey.ToScaleKey(baseScale));
 
         if (page.ImageKey != baseKey)
         {
@@ -124,6 +156,7 @@ public sealed class PageRenderScheduler : IDisposable
             {
                 page.Image = DisplayImage.Of(cached);
                 page.ImageKey = baseKey;
+                page.ImageQuarterTurns = virtualPage.QuarterTurns;
                 page.RenderFailed = false;
             }
             else
@@ -134,11 +167,12 @@ public sealed class PageRenderScheduler : IDisposable
                 }
 
                 // Until the render arrives, a blank page shows its (blurry) sidebar thumbnail if there is one.
-                var thumbnailKey = RenderKey.Thumbnail(_document.Id, index);
+                var thumbnailKey = RenderKey.ThumbnailOf(virtualPage);
                 if (page.Image is null && _cache.TryGet(thumbnailKey, out var thumbnail))
                 {
                     page.Image = DisplayImage.Of(thumbnail);
                     page.ImageKey = thumbnailKey;
+                    page.ImageQuarterTurns = 0; // thumbnails are upright
                 }
             }
         }
@@ -183,7 +217,7 @@ public sealed class PageRenderScheduler : IDisposable
         var fullWidth = PixelSize.FromPoints(size.Width, deviceScale);
         var fullHeight = PixelSize.FromPoints(size.Height, deviceScale);
         var region = DetailRegion(visiblePart.Offset(-bounds.X, -bounds.Y), viewport, dpiScale, fullWidth, fullHeight);
-        var detailKey = new RenderKey(_document.Id, index, RenderKey.ToScaleKey(deviceScale), region);
+        var detailKey = RenderKey.For(virtualPage, RenderKey.ToScaleKey(deviceScale), region);
         if (page.DetailKey is { Region: { } current } existing && existing.ScaleKey == detailKey.ScaleKey
             && current.Contains(ToPixels(visiblePart.Offset(-bounds.X, -bounds.Y), dpiScale, fullWidth, fullHeight)))
         {
@@ -196,7 +230,7 @@ public sealed class PageRenderScheduler : IDisposable
             return;
         }
 
-        Request(index, detail: true, detailKey, deviceScale, region, PdfiumPriority.High);
+        Request(index, detail: true, detailKey, deviceScale, region, PdfiumPriority.High, fullWidth, fullHeight);
     }
 
     private static PixelRect DetailRegion(ViewRect visibleInPage, ViewRect viewport, double dpiScale, int fullWidth, int fullHeight)
@@ -245,7 +279,7 @@ public sealed class PageRenderScheduler : IDisposable
         }
     }
 
-    private void Request(int index, bool detail, RenderKey key, double scale, PixelRect? region, PdfiumPriority priority)
+    private void Request(int index, bool detail, RenderKey key, double scale, PixelRect? region, PdfiumPriority priority, int fullWidth = 0, int fullHeight = 0)
     {
         var slot = (index, detail);
         if (_inFlight.TryGetValue(slot, out var existing))
@@ -260,7 +294,7 @@ public sealed class PageRenderScheduler : IDisposable
         }
 
         var cancellation = new CancellationTokenSource();
-        _inFlight[slot] = new InFlight(key, cancellation);
+        _inFlight[slot] = new InFlight(key, cancellation, fullWidth, fullHeight);
         _ = RenderAsync(index, detail, key, scale, region, priority, cancellation.Token);
     }
 
@@ -268,7 +302,7 @@ public sealed class PageRenderScheduler : IDisposable
     {
         try
         {
-            var rendered = await _renderer.RenderAsync(_document, index, scale, region, priority, cancellationToken).ConfigureAwait(false);
+            var rendered = await _renderer.RenderAsync(_document.Pages[index], scale, region, PdfRenderFlags.Annotations, priority, cancellationToken).ConfigureAwait(false);
             _cache.Add(key, rendered.Image, rendered.ByteSize);
             _ui.Post(() => Complete(index, detail, key, rendered));
         }
@@ -303,12 +337,14 @@ public sealed class PageRenderScheduler : IDisposable
         var page = _pages[index];
         if (detail)
         {
-            ApplyDetail(page, key, rendered.Image, rendered.Region, rendered.PagePixelWidth, rendered.PagePixelHeight);
+            // The rendered region is in pixels of the source page; the tile is placed in the displayed (cropped) page.
+            ApplyDetail(page, key, rendered.Image, key.Region ?? rendered.Region, inFlight.FullWidth, inFlight.FullHeight);
         }
         else
         {
             page.Image = DisplayImage.Of(rendered.Image);
             page.ImageKey = key;
+            page.ImageQuarterTurns = key.QuarterTurns;
             page.RenderFailed = false;
         }
     }
@@ -349,5 +385,7 @@ public sealed class PageRenderScheduler : IDisposable
         }
     }
 
-    private sealed record InFlight(RenderKey Key, CancellationTokenSource Cancellation);
+    /// <param name="FullWidth">For detail tiles: width of the displayed page in pixels at the tile's scale.</param>
+    /// <param name="FullHeight">For detail tiles: height of the displayed page in pixels.</param>
+    private sealed record InFlight(RenderKey Key, CancellationTokenSource Cancellation, int FullWidth, int FullHeight);
 }

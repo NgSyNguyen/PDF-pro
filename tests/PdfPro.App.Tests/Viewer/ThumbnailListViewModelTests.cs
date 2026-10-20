@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using PdfPro.App.Services;
+using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels.Viewer;
@@ -19,10 +20,12 @@ public sealed class ThumbnailListViewModelTests : IDisposable
     private readonly FakeThumbnailProvider _provider = new();
     private readonly CapturingLogger<ThumbnailListViewModel> _logger = new();
     private readonly DocumentViewerViewModel _viewer;
+    private readonly VirtualDocument _pages;
 
     public ThumbnailListViewModelTests()
     {
-        _viewer = new DocumentViewerViewModel(_document, new FakePageImageRenderer { AutoComplete = true }, _cache, new ImmediateUiDispatcher(), new ManualDebouncerFactory(), NullLogger<DocumentViewerViewModel>.Instance);
+        _pages = VirtualDocuments.Of(_document);
+        _viewer = new DocumentViewerViewModel(_pages, new FakePageImageRenderer { AutoComplete = true }, _cache, new ImmediateUiDispatcher(), new ManualDebouncerFactory(), NullLogger<DocumentViewerViewModel>.Instance);
         _viewer.ViewportSize = Viewport;
     }
 
@@ -244,5 +247,5 @@ public sealed class ThumbnailListViewModelTests : IDisposable
     }
 
     private ThumbnailListViewModel Create(IUiDispatcher? ui = null)
-        => new(_document, @"C:\docs\sample.pdf", _viewer, _provider, ui ?? new ImmediateUiDispatcher(), _logger);
+        => new(_pages, _ => @"C:\docs\sample.pdf", _viewer, _provider, ui ?? new ImmediateUiDispatcher(), _logger);
 }

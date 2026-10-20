@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Organizing;
 using PdfPro.Infrastructure;
 using PdfPro.Infrastructure.Caching;
 using PdfPro.Infrastructure.Settings;
@@ -36,7 +37,7 @@ public sealed class ThumbnailProviderTests : IDisposable
     public async Task FirstLoad_RendersAtLowPriorityAndKeepsTheThumbnailInMemory()
     {
         var provider = CreateProvider(_cache);
-        var request = new ThumbnailRequest(_document, _file, 2, DpiScale: 1.5);
+        var request = Request(_document, _file, 2, 1.5);
 
         var image = await provider.GetAsync(request, CancellationToken.None);
 
@@ -57,7 +58,7 @@ public sealed class ThumbnailProviderTests : IDisposable
     public async Task RenderedThumbnail_IsSavedToDiskAndReusedAfterReopening()
     {
         var first = CreateProvider(_cache);
-        var request = new ThumbnailRequest(_document, _file, 1, 1.0);
+        var request = Request(_document, _file, 1, 1.0);
         await first.GetAsync(request, CancellationToken.None);
         await first.WhenWritesCompleteAsync();
         _diskCache.GetSize().ShouldBeGreaterThan(0);
@@ -66,24 +67,24 @@ public sealed class ThumbnailProviderTests : IDisposable
         var reopened = FakePdfDocument.WithPages(5);
         using var freshCache = new RenderCache(new FakeSettingsService(AppSettings.Default));
         var second = CreateProvider(freshCache);
-        var image = await second.GetAsync(new ThumbnailRequest(reopened, _file, 1, 1.0), CancellationToken.None);
+        var image = await second.GetAsync(Request(reopened, _file, 1, 1.0), CancellationToken.None);
 
         _renderer.Calls.Count.ShouldBe(1, "the second load came from the disk cache");
         ((BitmapSource)image).PixelWidth.ShouldBe(request.Pixels.Width);
         ((BitmapSource)image).PixelHeight.ShouldBe(request.Pixels.Height);
-        second.TryGetCached(new ThumbnailRequest(reopened, _file, 1, 1.0), out _).ShouldBeTrue();
+        second.TryGetCached(Request(reopened, _file, 1, 1.0), out _).ShouldBeTrue();
     }
 
     [Fact]
     public async Task ThumbnailReadFromDisk_CanBeShownOnTheUiThread()
     {
         var first = CreateProvider(_cache);
-        await first.GetAsync(new ThumbnailRequest(_document, _file, 1, 1.0), CancellationToken.None);
+        await first.GetAsync(Request(_document, _file, 1, 1.0), CancellationToken.None);
         await first.WhenWritesCompleteAsync();
         using var freshCache = new RenderCache(new FakeSettingsService(AppSettings.Default));
 
         // Decoded on a pool thread...
-        var fromDisk = await Task.Run(() => CreateProvider(freshCache).GetAsync(new ThumbnailRequest(FakePdfDocument.WithPages(5), _file, 1, 1.0), CancellationToken.None));
+        var fromDisk = await Task.Run(() => CreateProvider(freshCache).GetAsync(Request(FakePdfDocument.WithPages(5), _file, 1, 1.0), CancellationToken.None));
 
         // ...and wrapped for display on another thread, as the sidebar does.
         var shown = Sta.Run(() => DisplayImage.Of(fromDisk));
@@ -95,8 +96,8 @@ public sealed class ThumbnailProviderTests : IDisposable
     public async Task AnotherDpi_IsAMissAndRendersAgain()
     {
         var provider = CreateProvider(_cache);
-        await provider.GetAsync(new ThumbnailRequest(_document, _file, 0, 1.0), CancellationToken.None);
-        var sharper = new ThumbnailRequest(_document, _file, 0, 2.0);
+        await provider.GetAsync(Request(_document, _file, 0, 1.0), CancellationToken.None);
+        var sharper = Request(_document, _file, 0, 2.0);
 
         provider.TryGetCached(sharper, out _).ShouldBeFalse();
         var image = await provider.GetAsync(sharper, CancellationToken.None);
@@ -112,7 +113,7 @@ public sealed class ThumbnailProviderTests : IDisposable
         _document.Features = FakePdfDocument.PlainFeatures with { SecurityHandlerRevision = 4 };
         var provider = CreateProvider(_cache);
 
-        await provider.GetAsync(new ThumbnailRequest(_document, _file, 0, 1.0), CancellationToken.None);
+        await provider.GetAsync(Request(_document, _file, 0, 1.0), CancellationToken.None);
         await provider.WhenWritesCompleteAsync();
 
         _diskCache.GetSize().ShouldBe(0);
@@ -123,13 +124,13 @@ public sealed class ThumbnailProviderTests : IDisposable
     public async Task EncryptedDocument_DoesNotReadEarlierEntriesEither()
     {
         var plain = CreateProvider(_cache);
-        await plain.GetAsync(new ThumbnailRequest(_document, _file, 0, 1.0), CancellationToken.None);
+        await plain.GetAsync(Request(_document, _file, 0, 1.0), CancellationToken.None);
         await plain.WhenWritesCompleteAsync();
 
         var encrypted = FakePdfDocument.WithPages(5);
         encrypted.Features = FakePdfDocument.PlainFeatures with { SecurityHandlerRevision = 3 };
         using var freshCache = new RenderCache(new FakeSettingsService(AppSettings.Default));
-        await CreateProvider(freshCache).GetAsync(new ThumbnailRequest(encrypted, _file, 0, 1.0), CancellationToken.None);
+        await CreateProvider(freshCache).GetAsync(Request(encrypted, _file, 0, 1.0), CancellationToken.None);
 
         _renderer.Calls.Count.ShouldBe(2);
     }
@@ -139,7 +140,7 @@ public sealed class ThumbnailProviderTests : IDisposable
     {
         var provider = CreateProvider(_cache);
 
-        var image = await provider.GetAsync(new ThumbnailRequest(_document, _temp.Combine("missing.pdf"), 0, 1.0), CancellationToken.None);
+        var image = await provider.GetAsync(Request(_document, _temp.Combine("missing.pdf"), 0, 1.0), CancellationToken.None);
         await provider.WhenWritesCompleteAsync();
 
         image.ShouldNotBeNull();
@@ -149,7 +150,7 @@ public sealed class ThumbnailProviderTests : IDisposable
     [Fact]
     public async Task DamagedDiskEntry_IsRenderedAgain()
     {
-        var request = new ThumbnailRequest(_document, _file, 3, 1.0);
+        var request = Request(_document, _file, 3, 1.0);
         var fingerprint = await DocumentFingerprint.ComputeAsync(_file, TestContext.Current.CancellationToken);
         await _diskCache.WriteAsync(fingerprint, 3, request.Pixels.Width, [1, 2, 3, 4, 5], TestContext.Current.CancellationToken);
 
@@ -166,7 +167,7 @@ public sealed class ThumbnailProviderTests : IDisposable
         await cancellation.CancelAsync();
 
         await Should.ThrowAsync<OperationCanceledException>(
-            () => CreateProvider(_cache).GetAsync(new ThumbnailRequest(_document, _file, 0, 1.0), cancellation.Token));
+            () => CreateProvider(_cache).GetAsync(Request(_document, _file, 0, 1.0), cancellation.Token));
     }
 
     [Fact]
@@ -178,6 +179,41 @@ public sealed class ThumbnailProviderTests : IDisposable
         ThumbnailGeometry.ScaleFor(new PdfSize(0, 100)).ShouldBe(0);
         ThumbnailGeometry.PixelSizeFor(new PdfSize(842, 595), 1.5).Width.ShouldBe(240);
     }
+
+    [Fact]
+    public async Task TurnedPage_RendersUprightAtTheScaleOfItsTurnedBox()
+    {
+        var provider = CreateProvider(_cache);
+        var plan = PagePlan.Identity(SourceIds.Original, 5, RandomPageKeys.Instance).Rotate([2], 90);
+        var request = new ThumbnailRequest(VirtualDocuments.Of(plan, _document).Pages[2], _file, 1.0);
+
+        var image = (BitmapSource)await provider.GetAsync(request, CancellationToken.None);
+
+        var call = _renderer.Calls.ShouldHaveSingleItem();
+        call.Options.ExtraQuarterTurns.ShouldBe(0, "the view turns the thumbnail");
+        call.Scale.ShouldBe(ThumbnailGeometry.ScaleFor(new PdfSize(842, 595)), 1e-9);
+        image.PixelWidth.ShouldBeLessThan(image.PixelHeight);
+    }
+
+    [Fact]
+    public async Task CroppedPage_RendersOnlyTheKeptAreaAndStaysOffDisk()
+    {
+        var provider = CreateProvider(_cache);
+        var plan = PagePlan.Identity(SourceIds.Original, 5, RandomPageKeys.Instance).Crop([1], new PageCrop(100, 200, 300, 400));
+        var request = new ThumbnailRequest(VirtualDocuments.Of(plan, _document).Pages[1], _file, 1.0);
+
+        await provider.GetAsync(request, CancellationToken.None);
+        await provider.WhenWritesCompleteAsync();
+
+        var call = _renderer.Calls.ShouldHaveSingleItem();
+        var scale = ThumbnailGeometry.ScaleFor(new PdfSize(300, 400));
+        call.Region.ShouldNotBeNull().Width.ShouldBe(PixelSize.FromPoints(300, scale));
+        _diskCache.GetSize().ShouldBe(0);
+        request.CanUseDiskCache.ShouldBeFalse();
+    }
+
+    private ThumbnailRequest Request(IPdfDocument document, string file, int pageIndex, double dpiScale)
+        => new(VirtualDocuments.Of(document).Pages[pageIndex], file, dpiScale);
 
     private ThumbnailProvider CreateProvider(RenderCache cache)
         => new(_renderer, cache, _diskCache, NullLogger<ThumbnailProvider>.Instance);

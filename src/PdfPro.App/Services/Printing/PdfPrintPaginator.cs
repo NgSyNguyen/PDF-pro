@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using Microsoft.Extensions.Logging;
+using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Rendering;
 using PdfPro.Core.Printing;
 using PdfPro.Pdfium;
@@ -19,7 +20,7 @@ internal sealed class PdfPrintPaginator : DocumentPaginator
     /// <summary>Above this, sheets get much larger and slower to spool without a visible gain.</summary>
     public const double MaxDpi = 300;
 
-    private readonly IPdfDocument _document;
+    private readonly VirtualDocument _document;
     private readonly IPageImageRenderer _renderer;
     private readonly IReadOnlyList<int> _pages;
     private readonly PrintSheet _sheet;
@@ -27,7 +28,7 @@ internal sealed class PdfPrintPaginator : DocumentPaginator
     private readonly CancellationToken _cancellation;
     private Size _pageSize;
 
-    public PdfPrintPaginator(IPdfDocument document, IPageImageRenderer renderer, IReadOnlyList<int> pageIndices, PrintSheet sheet, ILogger logger, CancellationToken cancellation)
+    public PdfPrintPaginator(VirtualDocument document, IPageImageRenderer renderer, IReadOnlyList<int> pageIndices, PrintSheet sheet, ILogger logger, CancellationToken cancellation)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(pageIndices);
@@ -77,18 +78,23 @@ internal sealed class PdfPrintPaginator : DocumentPaginator
 
     private ImageSource? Render(int pageIndex, PrintPlacement placement)
     {
-        var dpi = Math.Clamp(_sheet.Dpi, 72, MaxDpi);
-        var options = new PageRenderOptions
+        var page = _document.Pages[pageIndex];
+        if (page.Source is not { } source)
         {
-            Scale = placement.Scale * dpi / 96.0,
-            Flags = PdfRenderFlags.Printing | PdfRenderFlags.Annotations,
-            ExtraQuarterTurns = placement.Rotated ? 1 : 0,
-        };
+            return null; // a blank page prints as an empty sheet
+        }
+
+        var dpi = Math.Clamp(_sheet.Dpi, 72, MaxDpi);
+        var options = page.RenderOptions(
+            placement.Scale * dpi / 96.0,
+            region: null,
+            PdfRenderFlags.Printing | PdfRenderFlags.Annotations,
+            extraQuarterTurns: placement.Rotated ? 1 : 0);
 
         try
         {
             // The renderer completes on the PDFium thread, never on this one, so blocking cannot deadlock.
-            return _renderer.RenderAsync(_document, pageIndex, options, PdfiumPriority.Normal, _cancellation).GetAwaiter().GetResult().Image;
+            return _renderer.RenderAsync(source, page.SourcePageIndex, options, PdfiumPriority.Normal, _cancellation).GetAwaiter().GetResult().Image;
         }
         catch (OperationCanceledException) when (_cancellation.IsCancellationRequested)
         {

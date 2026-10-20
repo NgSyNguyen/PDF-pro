@@ -264,4 +264,18 @@ Chi tiết đã được ghi vào nhật ký (mã sự cố: {0}).</value></data
 Chi tiết đã được ghi vào nhật ký tại:
 {0}</value></data>
   <data name="Error_OpenLogFolder" xml:space="preserve"><value>Mở thư mục nhật ký</value></data>
+  <data name="History_Rotate" xml:space="preserve"><value>Xoay {0} trang</value></data>
+  <data name="History_Move" xml:space="preserve"><value>Di chuyển {0} trang</value></data>
+  <data name="History_Delete" xml:space="preserve"><value>Xóa {0} trang</value></data>
+  <data name="History_Duplicate" xml:space="preserve"><value>Nhân bản {0} trang</value></data>
+  <data name="History_InsertBlank" xml:space="preserve"><value>Chèn {0} trang trắng</value></data>
+  <data name="History_InsertPages" xml:space="preserve"><value>Chèn {0} trang từ “{1}”</value></data>
+  <data name="History_Crop" xml:space="preserve"><value>Cắt lề {0} trang</value></data>
+  <data name="History_CropReset" xml:space="preserve"><value>Bỏ cắt lề {0} trang</value></data>
+  <data name="History_Other" xml:space="preserve"><value>Thay đổi tài liệu</value></data>
+  <data name="Cmd_UndoWith" xml:space="preserve"><value>Hoàn tác: {0}</value></data>
+  <data name="Cmd_RedoWith" xml:space="preserve"><value>Làm lại: {0}</value></data>
+  <data name="Edit_Error_Title" xml:space="preserve"><value>Không thực hiện được</value></data>
+  <data name="Edit_Error_Invalid" xml:space="preserve"><value>Thao tác này không áp dụng được cho các trang đã chọn.</value></data>
+  <data name="Document_ReadOnlyEncrypted" xml:space="preserve"><value>Tài liệu được bảo vệ bằng mật khẩu nên hiện chỉ xem và in được; chưa sắp xếp hay lưu được. Tính năng này sẽ có ở phần Bảo mật.</value></data>
 </root>

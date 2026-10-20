@@ -1,6 +1,7 @@
 using System.IO;
 using System.Printing;
 using Microsoft.Extensions.Logging;
+using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Rendering;
 using PdfPro.Pdfium;
 
@@ -9,7 +10,7 @@ namespace PdfPro.App.Services.Printing;
 /// <summary>Prints through the XPS print path on a background STA thread (see <see cref="XpsPrintRunner"/>).</summary>
 internal sealed class DocumentPrinter(IPageImageRenderer renderer, ILogger<DocumentPrinter> logger) : IDocumentPrinter
 {
-    public async Task<PrintOutcome> PrintAsync(IPdfDocument document, PrintJob job, string jobName, IProgress<int>? progress, CancellationToken cancellationToken)
+    public async Task<PrintOutcome> PrintAsync(VirtualDocument document, PrintJob job, string jobName, IProgress<int>? progress, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(job);

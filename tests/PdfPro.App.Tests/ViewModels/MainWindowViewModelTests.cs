@@ -4,6 +4,7 @@ using NSubstitute;
 using PdfPro.App.Hosting;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
+using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Tests.TestSupport;
@@ -20,7 +21,8 @@ public sealed class MainWindowViewModelTests : IDisposable
     private readonly IDialogService _dialogs = Substitute.For<IDialogService>();
     private readonly IAppLifetime _lifetime = Substitute.For<IAppLifetime>();
     private readonly IShellLauncher _shell = Substitute.For<IShellLauncher>();
-    private readonly IDocumentOpener _opener = Substitute.For<IDocumentOpener>();
+    private readonly IDocumentWorkspaceService _workspaces = Substitute.For<IDocumentWorkspaceService>();
+    private readonly WorkspaceFixture _fixture = new();
     private readonly IFileDialogService _fileDialogs = Substitute.For<IFileDialogService>();
     private readonly IMessageService _messages = Substitute.For<IMessageService>();
     private readonly IPrintDialogService _printDialogs = Substitute.For<IPrintDialogService>();
@@ -33,10 +35,14 @@ public sealed class MainWindowViewModelTests : IDisposable
     public MainWindowViewModelTests()
     {
         _cache = new RenderCache(_settings);
-        _tabFactory = new DocumentTabFactory(new FakePageImageRenderer(), _cache, new FakeThumbnailProvider(), new ImmediateUiDispatcher(), new ManualDebouncerFactory(), NullLoggerFactory.Instance);
+        _tabFactory = new DocumentTabFactory(new FakePageImageRenderer(), _cache, new FakeThumbnailProvider(), new ImmediateUiDispatcher(), new ManualDebouncerFactory(), TestOperations.Catalog(), _messages, NullLoggerFactory.Instance);
     }
 
-    public void Dispose() => _cache.Dispose();
+    public void Dispose()
+    {
+        _fixture.Dispose();
+        _cache.Dispose();
+    }
 
     [Fact]
     public void Ribbon_HasTheSevenTabsInOrder()
@@ -70,7 +76,8 @@ public sealed class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException"],
+            ["file.open", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException",
+                "edit.undo", "edit.redo", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -128,7 +135,7 @@ public sealed class MainWindowViewModelTests : IDisposable
     public async Task OpenFiles_AddsSelectsAndRemembersTheDocument()
     {
         var document = FakePdfDocument.WithPages(3);
-        _opener.OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>()).Returns(document);
+        _workspaces.OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>()).Returns(_ => _fixture.OpenAsync(document, @"C:\docs\a.pdf"));
         var viewModel = Create(isDebugBuild: false);
 
         await viewModel.OpenFilesAsync([@"C:\docs\a.pdf"]);
@@ -146,7 +153,7 @@ public sealed class MainWindowViewModelTests : IDisposable
     [Fact]
     public async Task OpenFiles_AnAlreadyOpenFileIsSelectedNotReopened()
     {
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(1));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(1), call.ArgAt<string>(0)));
         var viewModel = Create(isDebugBuild: false);
         await viewModel.OpenFilesAsync([@"C:\docs\a.pdf", @"C:\docs\b.pdf"]);
 
@@ -154,14 +161,14 @@ public sealed class MainWindowViewModelTests : IDisposable
 
         viewModel.Documents.Count().ShouldBe(2);
         viewModel.ActiveDocument!.Title.ShouldBe("a.pdf");
-        await _opener.Received(1).OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>());
+        await _workspaces.Received(1).OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>());
         _settings.Current.RecentFiles.ShouldBe([@"C:\docs\b.pdf", @"C:\docs\a.pdf"]);
     }
 
     [Fact]
     public async Task OpenFiles_CancelledOrFailedOpen_AddsNoTab()
     {
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns((IPdfDocument?)null);
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns((DocumentWorkspace?)null);
         var viewModel = Create(isDebugBuild: false);
 
         await viewModel.OpenFilesAsync([@"C:\docs\locked.pdf"]);
@@ -173,7 +180,7 @@ public sealed class MainWindowViewModelTests : IDisposable
     [Fact]
     public async Task OpenFiles_FromDrop_SkipsNonPdfFilesAndSaysSo()
     {
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(1));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(1), call.ArgAt<string>(0)));
         var viewModel = Create(isDebugBuild: false);
 
         await viewModel.OpenFilesAsync([@"C:\docs\notes.txt", @"C:\docs\scan.PDF"], pdfOnly: true);
@@ -189,7 +196,7 @@ public sealed class MainWindowViewModelTests : IDisposable
         var job = Job([1, 2, 3]);
         _printDialogs.ShowPrintDialog(5, 0).Returns(job);
         var printing = new TaskCompletionSource<PrintOutcome>();
-        _printer.PrintAsync(Arg.Any<IPdfDocument>(), job, "a.pdf", Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>()).Returns(printing.Task);
+        _printer.PrintAsync(Arg.Any<VirtualDocument>(), job, "a.pdf", Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>()).Returns(printing.Task);
 
         var command = viewModel.PrintCommand.ExecuteAsync(null);
 
@@ -265,7 +272,7 @@ public sealed class MainWindowViewModelTests : IDisposable
 
         await viewModel.PrintCommand.ExecuteAsync(null);
 
-        await _printer.DidNotReceive().PrintAsync(Arg.Any<IPdfDocument>(), Arg.Any<PrintJob>(), Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>());
+        await _printer.DidNotReceive().PrintAsync(Arg.Any<VirtualDocument>(), Arg.Any<PrintJob>(), Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>());
         viewModel.StatusBar.TaskText.ShouldBe(Strings.Status_Ready);
     }
 
@@ -314,7 +321,7 @@ public sealed class MainWindowViewModelTests : IDisposable
     [Fact]
     public async Task PropertiesCommand_ShowsTheActiveDocumentsProperties()
     {
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(2));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(2), call.ArgAt<string>(0)));
         var viewModel = Create(isDebugBuild: false);
         var properties = Command(viewModel, "file.properties").Command;
         properties.CanExecute(null).ShouldBeFalse("the home tab has no properties");
@@ -330,7 +337,7 @@ public sealed class MainWindowViewModelTests : IDisposable
     public async Task OpenCommand_UsesTheFileDialog()
     {
         _fileDialogs.PickPdfFiles().Returns([@"C:\docs\a.pdf", @"C:\docs\b.pdf"]);
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(1));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(1), call.ArgAt<string>(0)));
         var viewModel = Create(isDebugBuild: false);
 
         await viewModel.OpenCommand.ExecuteAsync(null);
@@ -343,8 +350,8 @@ public sealed class MainWindowViewModelTests : IDisposable
     {
         var first = FakePdfDocument.WithPages(1);
         var second = FakePdfDocument.WithPages(1);
-        _opener.OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>()).Returns(first);
-        _opener.OpenAsync(@"C:\docs\b.pdf", Arg.Any<CancellationToken>()).Returns(second);
+        _workspaces.OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>()).Returns(_ => _fixture.OpenAsync(first, @"C:\docs\a.pdf"));
+        _workspaces.OpenAsync(@"C:\docs\b.pdf", Arg.Any<CancellationToken>()).Returns(_ => _fixture.OpenAsync(second, @"C:\docs\b.pdf"));
         var viewModel = Create(isDebugBuild: false);
         await viewModel.OpenFilesAsync([@"C:\docs\a.pdf", @"C:\docs\b.pdf"]);
 
@@ -374,7 +381,7 @@ public sealed class MainWindowViewModelTests : IDisposable
     [Fact]
     public async Task CloseAllDocuments_ClosesEverything()
     {
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(1));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(1), call.ArgAt<string>(0)));
         var viewModel = Create(isDebugBuild: false);
         await viewModel.OpenFilesAsync([@"C:\docs\a.pdf", @"C:\docs\b.pdf"]);
         var documents = viewModel.Documents.Select(d => (FakePdfDocument)d.Document).ToList();
@@ -383,6 +390,68 @@ public sealed class MainWindowViewModelTests : IDisposable
 
         documents.ShouldAllBe(d => d.IsDisposed);
         viewModel.Documents.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task PageAndHistoryCommands_ActOnTheActiveDocument()
+    {
+        var viewModel = await CreateWithDocumentAsync(FakePdfDocument.WithPages(3));
+        var undo = Command(viewModel, "edit.undo");
+        undo.Command.CanExecute(null).ShouldBeFalse();
+
+        Command(viewModel, "organize.rotateRight").Command.Execute(null);
+
+        var document = viewModel.ActiveDocument.ShouldNotBeNull();
+        document.Title.ShouldBe("a.pdf *");
+        undo.Command.CanExecute(null).ShouldBeTrue();
+        undo.ToolTip.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Cmd_UndoWith, string.Format(CultureInfo.CurrentCulture, Strings.History_Rotate, 1)));
+
+        viewModel.UndoCommand.Execute(null);
+
+        document.IsDirty.ShouldBeFalse();
+        viewModel.RedoCommand.CanExecute(null).ShouldBeTrue();
+        undo.ToolTip.ShouldBe(Strings.Cmd_Undo);
+    }
+
+    [Fact]
+    public async Task DocumentCommands_FollowTheSelectedTab()
+    {
+        var viewModel = Create(isDebugBuild: false);
+        viewModel.RotateRightCommand.CanExecute(null).ShouldBeFalse();
+        viewModel.UndoCommand.CanExecute(null).ShouldBeFalse();
+        Command(viewModel, "organize.delete").Command.CanExecute(null).ShouldBeFalse();
+
+        _workspaces.OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>()).Returns(_ => _fixture.OpenAsync(FakePdfDocument.WithPages(2), @"C:\docs\a.pdf"));
+        await viewModel.OpenFilesAsync([@"C:\docs\a.pdf"]);
+        viewModel.RotateRightCommand.CanExecute(null).ShouldBeTrue();
+        viewModel.DeletePagesCommand.CanExecute(null).ShouldBeTrue();
+
+        viewModel.SelectedTab = viewModel.Home;
+
+        viewModel.RotateRightCommand.CanExecute(null).ShouldBeFalse();
+        viewModel.DuplicatePagesCommand.CanExecute(null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task CloseAllDocuments_OnTheUiThread_NeverWaitsForTheUiThread()
+    {
+        // Application exit blocks the UI thread until the documents are closed; closing must not need it.
+        var document = FakePdfDocument.WithPages(1);
+        document.DisposeDelay = TimeSpan.FromMilliseconds(50);
+        var viewModel = await CreateWithDocumentAsync(document);
+        var sessionFolder = Directory.GetDirectories(_fixture.Store.RootDirectory).ShouldHaveSingleItem();
+
+        var elapsed = Sta.Run(() =>
+        {
+            SynchronizationContext.SetSynchronizationContext(new System.Windows.Threading.DispatcherSynchronizationContext(System.Windows.Threading.Dispatcher.CurrentDispatcher));
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            viewModel.CloseAllDocuments();
+            return watch.Elapsed;
+        });
+
+        elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(3));
+        document.IsDisposed.ShouldBeTrue();
+        Directory.Exists(sessionFolder).ShouldBeFalse("the session folder is removed when the document closes");
     }
 
     [Fact]
@@ -414,14 +483,14 @@ public sealed class MainWindowViewModelTests : IDisposable
 
     /// <summary>Any call to the printer, for setting up its result.</summary>
     private Task<PrintOutcome> AnyPrint()
-        => _printer.PrintAsync(Arg.Any<IPdfDocument>(), Arg.Any<PrintJob>(), Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>());
+        => _printer.PrintAsync(Arg.Any<VirtualDocument>(), Arg.Any<PrintJob>(), Arg.Any<string>(), Arg.Any<IProgress<int>?>(), Arg.Any<CancellationToken>());
 
     private static PrintJob Job(IReadOnlyList<int> pages)
         => new(string.Empty, "Test printer", [], new PrintSheet(new ViewSize(816, 1056), new ViewRect(0, 0, 816, 1056), 300), pages);
 
     private async Task<MainWindowViewModel> CreateWithDocumentAsync(FakePdfDocument document)
     {
-        _opener.OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>()).Returns(document);
+        _workspaces.OpenAsync(@"C:\docs\a.pdf", Arg.Any<CancellationToken>()).Returns(_ => _fixture.OpenAsync(document, @"C:\docs\a.pdf"));
         var viewModel = Create(isDebugBuild: false);
         await viewModel.OpenFilesAsync([@"C:\docs\a.pdf"]);
         return viewModel;
@@ -434,7 +503,7 @@ public sealed class MainWindowViewModelTests : IDisposable
             _shell,
             _paths,
             new AppBuildInfo("1.0.0", isDebugBuild),
-            _opener,
+            _workspaces,
             _tabFactory,
             _settings,
             _fileDialogs,

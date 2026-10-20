@@ -1,16 +1,27 @@
 using System.Windows.Media;
+using PdfPro.App.Services.Documents;
 using PdfPro.Core.Caching;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Organizing;
 using PdfPro.Infrastructure.Settings;
+using PdfPro.Pdfium;
 
 namespace PdfPro.App.Services.Rendering;
 
-/// <summary>Identifies one rendered image: a page (or a region of it) of an opened document at a scale.</summary>
+/// <summary>
+/// Identifies one rendered image: a page (or a region of it) of an opened source document at a scale, turned and
+/// cropped as the page plan shows it. Moving a page keeps its key; turning or cropping it gives a new one.
+/// </summary>
+/// <param name="DocumentId">The source document (<see cref="IPdfDocument.Id"/>).</param>
+/// <param name="PageIndex">The page in the source document.</param>
 /// <param name="ScaleKey">
 /// Device pixels per point × 1000, rounded (renders within 0.1 % are interchangeable), or
 /// <see cref="ThumbnailScaleKey"/> for the page's sidebar thumbnail.
 /// </param>
-public readonly record struct RenderKey(Guid DocumentId, int PageIndex, int ScaleKey, PixelRect? Region = null)
+/// <param name="Region">Part of the displayed page, in pixels at that scale; null for the whole page.</param>
+/// <param name="QuarterTurns">The plan's extra rotation (thumbnails are always upright: 0).</param>
+/// <param name="Crop">The plan's crop, if any.</param>
+public readonly record struct RenderKey(Guid DocumentId, int PageIndex, int ScaleKey, PixelRect? Region = null, int QuarterTurns = 0, PageCrop? Crop = null)
 {
     /// <summary>
     /// Thumbnails have one entry per page whatever their resolution, so the viewer can find one to show as a
@@ -22,7 +33,23 @@ public readonly record struct RenderKey(Guid DocumentId, int PageIndex, int Scal
 
     public static int ToScaleKey(double scale) => (int)Math.Round(scale * 1000, MidpointRounding.AwayFromZero);
 
-    public static RenderKey Thumbnail(Guid documentId, int pageIndex) => new(documentId, pageIndex, ThumbnailScaleKey);
+    public static RenderKey Thumbnail(Guid documentId, int pageIndex, PageCrop? crop = null) => new(documentId, pageIndex, ThumbnailScaleKey, Crop: crop);
+
+    /// <summary>The key of a page of the virtual document (not for blank pages, which are never rendered).</summary>
+    public static RenderKey For(VirtualPage page, int scaleKey, PixelRect? region = null)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+        var source = page.Source ?? throw new ArgumentException("Blank pages are not rendered.", nameof(page));
+        return new RenderKey(source.Id, page.SourcePageIndex, scaleKey, region, page.QuarterTurns, page.Crop);
+    }
+
+    /// <summary>The sidebar thumbnail of a page of the virtual document (upright: the view turns it).</summary>
+    public static RenderKey ThumbnailOf(VirtualPage page)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+        var source = page.Source ?? throw new ArgumentException("Blank pages are not rendered.", nameof(page));
+        return Thumbnail(source.Id, page.SourcePageIndex, page.Crop);
+    }
 }
 
 /// <summary>

@@ -1,5 +1,6 @@
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using PdfPro.App.Services.Documents;
 using PdfPro.Core.Geometry;
 using PdfPro.Pdfium;
 
@@ -25,6 +26,22 @@ public static class PageImageRendererExtensions
         ArgumentNullException.ThrowIfNull(renderer);
         var options = new PageRenderOptions { Scale = scale, Region = region, Flags = PdfRenderFlags.Annotations };
         return renderer.RenderAsync(document, pageIndex, options, priority, cancellationToken);
+    }
+
+    /// <summary>Renders a page of the virtual document as displayed (the plan's rotation and crop applied).</summary>
+    /// <param name="renderer">The renderer.</param>
+    /// <param name="page">The page; blank pages are not rendered.</param>
+    /// <param name="scale">Device pixels per PDF point.</param>
+    /// <param name="region">Part of the displayed page in pixels, or null for the whole page.</param>
+    /// <param name="flags">Annotations (screen) or printing flags.</param>
+    /// <param name="priority">Queue priority on the PDFium thread.</param>
+    /// <param name="cancellationToken">Cancels before the render starts.</param>
+    public static Task<RenderedPageImage> RenderAsync(this IPageImageRenderer renderer, VirtualPage page, double scale, PixelRect? region, PdfRenderFlags flags, PdfiumPriority priority, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(renderer);
+        ArgumentNullException.ThrowIfNull(page);
+        var source = page.Source ?? throw new ArgumentException("Blank pages are not rendered.", nameof(page));
+        return renderer.RenderAsync(source, page.SourcePageIndex, page.RenderOptions(scale, region, flags), priority, cancellationToken);
     }
 }
 

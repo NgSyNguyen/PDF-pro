@@ -3,6 +3,7 @@ using PdfPro.App.Services.Rendering;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Organizing;
 using PdfPro.Core.Viewing;
 using PdfPro.Infrastructure.Settings;
 using PdfPro.Pdfium;
@@ -20,7 +21,7 @@ public sealed class PageRenderSchedulerTests : IDisposable
     public PageRenderSchedulerTests()
     {
         _pages = Enumerable.Range(0, _document.PageCount).Select(i => new PageViewModel(i)).ToArray();
-        _scheduler = new PageRenderScheduler(_document, _pages, _renderer, _cache, new ImmediateUiDispatcher(), NullLogger.Instance);
+        _scheduler = new PageRenderScheduler(VirtualDocuments.Of(_document), _pages, _renderer, _cache, new ImmediateUiDispatcher(), NullLogger.Instance);
     }
 
     public void Dispose()
@@ -192,6 +193,39 @@ public sealed class PageRenderSchedulerTests : IDisposable
 
         _renderer.Calls.ShouldAllBe(c => c.Token.IsCancellationRequested);
         _scheduler.PendingCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void BlankPages_AreNotRendered()
+    {
+        var plan = PagePlan.Identity(SourceIds.Original, 50, RandomPageKeys.Instance).InsertBlank(0, new PdfSize(595, 842), RandomPageKeys.Instance).Delete([50]);
+        _scheduler.SetDocument(VirtualDocuments.Of(plan, _document), _pages);
+        var layout = Layout(zoom: 1.0);
+
+        _scheduler.Update(layout, ViewportAt(layout, page: 0, height: 900), dpiScale: 1.0, zoomSettled: true, detailAllowed: true);
+
+        _renderer.Calls.ShouldNotContain(c => c.PageIndex == 49, "the last plan page is source page 48");
+        _renderer.Calls.Select(c => c.PageIndex).ShouldNotContain(-1);
+        _pages[0].Image.ShouldBeNull();
+        _pages[0].RenderFailed.ShouldBeFalse();
+        _renderer.Calls.First().PageIndex.ShouldBe(0, "plan page 1 is blank, plan page 2 shows source page 1 (index 0)");
+    }
+
+    [Fact]
+    public void TurnedPage_IsRenderedTurnedUnderItsOwnKey()
+    {
+        var plan = PagePlan.Identity(SourceIds.Original, 50, RandomPageKeys.Instance).Rotate([0], 90);
+        var document = VirtualDocuments.Of(plan, _document);
+        _scheduler.SetDocument(document, _pages);
+        var layout = DocumentLayout.Create(document.PageSizes, 1.0, PageLayoutMode.Single, 1200);
+
+        _scheduler.Update(layout, ViewportAt(layout, page: 0, height: 900), dpiScale: 1.0, zoomSettled: true, detailAllowed: true);
+        _renderer.CompleteAll();
+
+        var call = _renderer.Calls.First(c => c.PageIndex == 0);
+        call.Options.ExtraQuarterTurns.ShouldBe(1);
+        _pages[0].ImageKey.ShouldNotBeNull().QuarterTurns.ShouldBe(1);
+        _pages[0].ImageQuarterTurns.ShouldBe(1);
     }
 
     private DocumentLayout Layout(double zoom) => DocumentLayout.Create(_document.PageSizes, zoom, PageLayoutMode.Single, 1200);

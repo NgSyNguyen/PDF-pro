@@ -24,17 +24,24 @@ public sealed record PropertySection(string Header, IReadOnlyList<PropertyRow> R
 public sealed partial class DocumentPropertiesViewModel : ObservableObject
 {
     private readonly IPdfDocument _document;
+    private readonly IReadOnlyList<PdfSize> _pageSizes;
     private readonly string _filePath;
     private readonly ILogger _logger;
     private PdfDocumentMetadata? _metadata;
     private long? _fileSize;
     private bool _loaded;
 
-    public DocumentPropertiesViewModel(IPdfDocument document, string filePath, ILogger<DocumentPropertiesViewModel> logger)
+    /// <param name="document">The document whose structure is described (metadata, version, security).</param>
+    /// <param name="pageSizes">The pages as the page plan shows them.</param>
+    /// <param name="filePath">The file the document is saved to.</param>
+    /// <param name="logger">Logs read failures.</param>
+    public DocumentPropertiesViewModel(IPdfDocument document, IReadOnlyList<PdfSize> pageSizes, string filePath, ILogger<DocumentPropertiesViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(pageSizes);
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         _document = document;
+        _pageSizes = pageSizes;
         _filePath = filePath;
         _logger = logger;
         Sections = BuildSections();
@@ -138,8 +145,8 @@ public sealed partial class DocumentPropertiesViewModel : ObservableObject
             new(Strings.DocProps_SectionDocument,
             [
                 new(Strings.DocProps_PdfVersion, string.IsNullOrWhiteSpace(features.FileVersion) ? Strings.DocProps_NotSet : features.FileVersion),
-                new(Strings.DocProps_PageCount, _document.PageCount.ToString("N0", culture)),
-                new(Strings.DocProps_PaperSize, DescribePaperSize(_document.PageSizes, culture)),
+                new(Strings.DocProps_PageCount, _pageSizes.Count.ToString("N0", culture)),
+                new(Strings.DocProps_PaperSize, DescribePaperSize(_pageSizes, culture)),
                 new(Strings.DocProps_Creator, Info(m => m.Creator)),
                 new(Strings.DocProps_Producer, Info(m => m.Producer)),
                 new(Strings.DocProps_Created, Date(m => m.CreationDate, culture)),

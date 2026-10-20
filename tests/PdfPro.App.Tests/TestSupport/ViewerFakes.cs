@@ -41,10 +41,17 @@ internal sealed class FakePdfDocument(IReadOnlyList<PdfSize> pageSizes) : IPdfDo
     public static FakePdfDocument WithPages(int count, PdfSize? size = null)
         => new(Enumerable.Repeat(size ?? A4, count).ToArray());
 
-    public ValueTask DisposeAsync()
+    /// <summary>Makes <see cref="DisposeAsync"/> finish later on another thread, like closing a real PDFium document.</summary>
+    public TimeSpan DisposeDelay { get; set; }
+
+    public async ValueTask DisposeAsync()
     {
+        if (DisposeDelay > TimeSpan.Zero)
+        {
+            await Task.Delay(DisposeDelay).ConfigureAwait(false);
+        }
+
         IsDisposed = true;
-        return ValueTask.CompletedTask;
     }
 
     public Task<PageBitmap> RenderPageAsync(int pageIndex, PageRenderOptions options, PdfiumPriority priority = PdfiumPriority.High, CancellationToken cancellationToken = default)
@@ -312,8 +319,9 @@ internal sealed class SizedPageImageRenderer : IPageImageRenderer
             (width, height) = (height, width);
         }
 
-        var image = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgr32, null, new byte[width * height * 4], width * 4);
+        var region = options.Region ?? new PixelRect(0, 0, width, height);
+        var image = BitmapSource.Create(region.Width, region.Height, 96, 96, PixelFormats.Bgr32, null, new byte[region.Width * region.Height * 4], region.Width * 4);
         image.Freeze();
-        return Task.FromResult(new RenderedPageImage(image, (long)width * height * 4, new PixelRect(0, 0, width, height), width, height));
+        return Task.FromResult(new RenderedPageImage(image, region.Area * 4, region, width, height));
     }
 }

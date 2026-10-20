@@ -1,3 +1,4 @@
+using PdfPro.App.Services.Documents;
 using PdfPro.Core.Geometry;
 using PdfPro.Pdfium;
 
@@ -34,7 +35,7 @@ public interface IDocumentPrinter
     /// <param name="jobName">Name shown in the printer queue.</param>
     /// <param name="progress">Number of pages handed to the printer so far.</param>
     /// <exception cref="PrintFailedException">The printer or spooler refused the job.</exception>
-    Task<PrintOutcome> PrintAsync(IPdfDocument document, PrintJob job, string jobName, IProgress<int>? progress, CancellationToken cancellationToken);
+    Task<PrintOutcome> PrintAsync(VirtualDocument document, PrintJob job, string jobName, IProgress<int>? progress, CancellationToken cancellationToken);
 }
 
 /// <summary>The job could not be sent to the printer (offline printer, spooler error, invalid ticket…).</summary>

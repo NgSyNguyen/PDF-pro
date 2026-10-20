@@ -1,0 +1,132 @@
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
+using PdfPro.App.Services.Documents;
+using PdfPro.Core.Organizing;
+using PdfPro.Core.Sessions;
+using PdfPro.Infrastructure;
+using PdfPro.Infrastructure.IO;
+using PdfPro.Infrastructure.Sessions;
+using PdfPro.Operations;
+using PdfPro.Operations.Organizing;
+using PdfPro.Pdfium;
+
+namespace PdfPro.App.Tests.TestSupport;
+
+internal static class VirtualDocuments
+{
+    /// <summary>Every page of <paramref name="document"/> in order, as source "s0".</summary>
+    public static VirtualDocument Of(IPdfDocument document)
+        => VirtualDocument.Create(PagePlan.Identity(SourceIds.Original, document.PageCount, RandomPageKeys.Instance), Sources(document));
+
+    /// <summary>A virtual document for <paramref name="plan"/> over source "s0" (and more sources if given).</summary>
+    public static VirtualDocument Of(PagePlan plan, IPdfDocument document, params (string Id, IPdfDocument Document)[] others)
+    {
+        var sources = Sources(document);
+        foreach (var (id, other) in others)
+        {
+            sources[id] = other;
+        }
+
+        return VirtualDocument.Create(plan, sources);
+    }
+
+    private static Dictionary<string, IPdfDocument> Sources(IPdfDocument document)
+        => new(StringComparer.Ordinal) { [SourceIds.Original] = document };
+}
+
+internal static class TestOperations
+{
+    /// <summary>The page operations as the app registers them (their file-based execution is not used by view models).</summary>
+    public static OperationCatalog Catalog()
+    {
+        var materializer = Substitute.For<Core.Organizing.IPlanMaterializer>();
+        var loader = Substitute.For<IPdfDocumentLoader>();
+        return new OperationCatalog(
+        [
+            new RotatePagesOperation(materializer, loader),
+            new MovePagesOperation(materializer, loader),
+            new DeletePagesOperation(materializer, loader),
+            new DuplicatePagesOperation(materializer, loader),
+            new InsertBlankPagesOperation(materializer, loader),
+            new InsertPagesOperation(materializer, loader),
+            new CropPagesOperation(materializer, loader),
+        ]);
+    }
+}
+
+/// <summary>
+/// Real document workspaces over fake PDF documents: a real session store in a temporary folder (so session folders,
+/// locks and manifests behave as in the app) and <see cref="FakePdfDocument"/> sources. Disposing closes every
+/// workspace still open.
+/// </summary>
+internal sealed class WorkspaceFixture : IDisposable
+{
+    private readonly TempDirectory _temp = new();
+    private readonly List<DocumentWorkspace> _created = [];
+
+    public WorkspaceFixture()
+    {
+        Paths = new AppPaths(_temp.Combine("data"), _temp.Combine("tools"));
+        Paths.EnsureCreated();
+        Store = new SessionStore(Paths, NullLogger<SessionStore>.Instance);
+    }
+
+    public AppPaths Paths { get; }
+
+    public SessionStore Store { get; }
+
+    /// <summary>A file that exists on disk.</summary>
+    public string CreateFile(string fileName, byte[]? content = null)
+    {
+        var path = _temp.Combine(fileName);
+        File.WriteAllBytes(path, content ?? [0x25, 0x50, 0x44, 0x46]);
+        return path;
+    }
+
+    /// <summary>
+    /// A workspace for <paramref name="document"/>. The session copies a scratch file, but records
+    /// <paramref name="originalPath"/> as the file it was opened from (it need not exist).
+    /// </summary>
+    public async Task<DocumentWorkspace> CreateAsync(IPdfDocument document, string originalPath = @"C:\docs\a.pdf")
+    {
+        var scratch = CreateFile($"{Guid.NewGuid():N}.pdf");
+        var folder = await Store.CreateAsync(scratch, TestContext.Current.CancellationToken);
+        var source = new SessionSource(SourceIds.Original, SessionStore.SourceFileName(SourceIds.Original), SessionSourceKind.Original, document.PageCount, Path.GetFileName(originalPath));
+        var session = new DocumentSession(
+            folder.Id,
+            folder.Directory,
+            originalPath,
+            [source],
+            new SessionState(PagePlan.Identity(SourceIds.Original, document.PageCount, RandomPageKeys.Instance), SourceIds.Original, 0));
+        var workspace = new DocumentWorkspace(
+            session,
+            Store,
+            folder,
+            [new OpenSource(source, folder.PathOf(source.FileName), document)],
+            FileStamp.Read(originalPath),
+            DateTimeOffset.UtcNow,
+            NullLogger<DocumentWorkspace>.Instance);
+        lock (_created)
+        {
+            _created.Add(workspace);
+        }
+
+        return workspace;
+    }
+
+    /// <summary>For workspace service substitutes: <c>Returns(_ =&gt; fixture.OpenAsync(document, path))</c>.</summary>
+    public async Task<DocumentWorkspace?> OpenAsync(IPdfDocument document, string originalPath) => await CreateAsync(document, originalPath);
+
+    public void Dispose()
+    {
+        lock (_created)
+        {
+            foreach (var workspace in _created)
+            {
+                workspace.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            }
+        }
+
+        _temp.Dispose();
+    }
+}

@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
+using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Rendering;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Viewing;
@@ -25,7 +26,7 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
     internal static readonly TimeSpan ZoomSettleDelay = TimeSpan.FromMilliseconds(150);
     internal static readonly TimeSpan ScrollSettleDelay = TimeSpan.FromMilliseconds(120);
 
-    private readonly IReadOnlyList<PdfSize> _pageSizes;
+    private IReadOnlyList<PdfSize> _pageSizes;
     private readonly PageRenderScheduler _scheduler;
     private readonly IDebouncer _zoomSettle;
     private readonly IDebouncer _scrollSettle;
@@ -35,12 +36,13 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
     private int? _pinnedPage;
     private ViewPoint? _pinnedOffset;
 
-    public DocumentViewerViewModel(IPdfDocument document, IPageImageRenderer renderer, RenderCache cache, IUiDispatcher ui, IDebouncerFactory debouncers, ILogger<DocumentViewerViewModel> logger)
+    public DocumentViewerViewModel(VirtualDocument document, IPageImageRenderer renderer, RenderCache cache, IUiDispatcher ui, IDebouncerFactory debouncers, ILogger<DocumentViewerViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(debouncers);
+        Document = document;
         _pageSizes = document.PageSizes;
-        Pages = Enumerable.Range(0, document.PageCount).Select(i => new PageViewModel(i)).ToArray();
+        Pages = document.Pages.Select((p, i) => { var page = new PageViewModel(p.Key, i); page.MoveTo(i, p.QuarterTurns); return page; }).ToArray();
         _scheduler = new PageRenderScheduler(document, Pages, renderer, cache, ui, logger);
         _zoomSettle = debouncers.Create();
         _scrollSettle = debouncers.Create();
@@ -51,7 +53,12 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
         Layout = DocumentLayout.Create(_pageSizes, Zoom, LayoutMode, 0);
     }
 
-    public IReadOnlyList<PageViewModel> Pages { get; }
+    /// <summary>The document as the page plan shows it.</summary>
+    public VirtualDocument Document { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PageCount))]
+    public partial IReadOnlyList<PageViewModel> Pages { get; private set; }
 
     public int PageCount => Pages.Count;
 
@@ -166,6 +173,67 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
         {
             Refresh(zoomChanged: false);
         }
+    }
+
+    /// <summary>
+    /// The page plan changed (pages moved, turned, deleted, inserted): rebuilds the pages and the layout while keeping
+    /// the current page where it is on screen. Pages that only moved keep their image.
+    /// </summary>
+    public void SetDocument(VirtualDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        var anchorIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, PageCount - 1));
+        var anchorKey = PageCount > 0 ? Pages[anchorIndex].Key : Guid.Empty;
+        var anchorBounds = PageCount > 0 ? Layout.GetPageBounds(anchorIndex) : default;
+        var withinPage = new ViewPoint(ScrollOffset.X - anchorBounds.X, ScrollOffset.Y - anchorBounds.Y);
+
+        var existing = Pages.ToDictionary(p => p.Key);
+        var pages = new PageViewModel[document.PageCount];
+        for (var i = 0; i < pages.Length; i++)
+        {
+            var virtualPage = document.Pages[i];
+            pages[i] = existing.TryGetValue(virtualPage.Key, out var page) ? page : new PageViewModel(virtualPage.Key, i);
+            pages[i].MoveTo(i, virtualPage.QuarterTurns);
+        }
+
+        Document = document;
+        _pageSizes = document.PageSizes;
+        var index = document.IndexOf(anchorKey);
+        if (index < 0)
+        {
+            index = Math.Clamp(anchorIndex, 0, Math.Max(0, document.PageCount - 1));
+        }
+
+        _pinnedPage = null;
+        _pinnedOffset = null;
+        CurrentPageIndex = index;
+        _scheduler.SetDocument(document, pages);
+
+        var zoom = ZoomMode == ZoomMode.Custom ? Zoom : ComputeFitZoom(ZoomMode);
+        var layout = DocumentLayout.Create(_pageSizes, zoom, LayoutMode, ViewportSize.Width);
+        var offset = ScrollOffset;
+        if (document.PageCount > 0)
+        {
+            var bounds = layout.GetPageBounds(index);
+            offset = layout.ClampOffset(
+                new ViewPoint(bounds.X + Math.Clamp(withinPage.X, 0, bounds.Width), bounds.Y + Math.Clamp(withinPage.Y, 0, bounds.Height)),
+                ViewportSize);
+        }
+
+        _applyingView = true;
+        try
+        {
+            Pages = pages;
+            Layout = layout;
+            Zoom = zoom;
+            ScrollOffset = offset;
+        }
+        finally
+        {
+            _applyingView = false;
+        }
+
+        Refresh(zoomChanged: false);
     }
 
     public void Dispose()

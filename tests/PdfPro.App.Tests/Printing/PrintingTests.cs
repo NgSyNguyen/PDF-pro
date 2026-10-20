@@ -95,7 +95,7 @@ public sealed class PrintingTests : IDisposable
 
         var (failed, blank, next) = Sta.Run(() =>
         {
-            var paginator = new PdfPrintPaginator(_document, _renderer, [1, 0], LetterSheet, logger, CancellationToken.None);
+            var paginator = new PdfPrintPaginator(VirtualDocuments.Of(_document), _renderer, [1, 0], LetterSheet, logger, CancellationToken.None);
             var damaged = ImageRect(paginator.GetPage(0).Visual);
             var good = ImageRect(paginator.GetPage(1).Visual);
             return (paginator.FailedPages, damaged, good);
@@ -108,6 +108,27 @@ public sealed class PrintingTests : IDisposable
     }
 
     [Fact]
+    public void Paginator_PrintsThePlanBlankPagesEmptyAndTurnedPagesTurned()
+    {
+        var plan = Core.Organizing.PagePlan.Identity(Core.Organizing.SourceIds.Original, _document.PageCount, Core.Organizing.RandomPageKeys.Instance)
+            .InsertBlank(0, A4, Core.Organizing.RandomPageKeys.Instance)
+            .Rotate([1], 90);
+
+        var (blank, turned) = Sta.Run(() =>
+        {
+            var paginator = new PdfPrintPaginator(VirtualDocuments.Of(plan, _document), _renderer, [0, 1], LetterSheet, NullLogger.Instance, CancellationToken.None);
+            return (ImageRect(paginator.GetPage(0).Visual), ImageRect(paginator.GetPage(1).Visual));
+        });
+
+        blank.ShouldBeNull("a blank page prints as an empty sheet");
+        turned.ShouldNotBeNull();
+        var call = _renderer.Calls.ShouldHaveSingleItem();
+        call.PageIndex.ShouldBe(0);
+        call.Options.ExtraQuarterTurns.ShouldBe(2, "the plan turns the page once; printing a landscape page on portrait paper turns it once more");
+        call.Options.Flags.ShouldBe(PdfRenderFlags.Printing | PdfRenderFlags.Annotations);
+    }
+
+    [Fact]
     public void Paginator_AfterCancellation_ReturnsBlankSheetsWithoutRendering()
     {
         using var cancellation = new CancellationTokenSource();
@@ -115,7 +136,7 @@ public sealed class PrintingTests : IDisposable
 
         var blank = Sta.Run(() =>
         {
-            var paginator = new PdfPrintPaginator(_document, _renderer, [0, 1], LetterSheet, NullLogger.Instance, cancellation.Token);
+            var paginator = new PdfPrintPaginator(VirtualDocuments.Of(_document), _renderer, [0, 1], LetterSheet, NullLogger.Instance, cancellation.Token);
             return ImageRect(paginator.GetPage(0).Visual);
         });
 
@@ -165,7 +186,7 @@ public sealed class PrintingTests : IDisposable
 
         var completed = await XpsPrintRunner.RunAsync(
             () => XpsFile(_temp.Combine("cancelled.xps")),
-            token => new PdfPrintPaginator(_document, renderer, [0, 1, 2, 0, 1, 2], LetterSheet, NullLogger.Instance, token),
+            token => new PdfPrintPaginator(VirtualDocuments.Of(_document), renderer, [0, 1, 2, 0, 1, 2], LetterSheet, NullLogger.Instance, token),
             progress: null,
             cancellation.Token);
 
@@ -212,7 +233,7 @@ public sealed class PrintingTests : IDisposable
     }
 
     private PdfPrintPaginator CreatePaginator(IReadOnlyList<int> pages, PrintSheet? sheet = null, CancellationToken token = default)
-        => new(_document, _renderer, pages, sheet ?? LetterSheet, NullLogger.Instance, token);
+        => new(VirtualDocuments.Of(_document), _renderer, pages, sheet ?? LetterSheet, NullLogger.Instance, token);
 
     /// <summary>Reports synchronously on the calling thread (Progress&lt;T&gt; would post to the thread pool).</summary>
     private sealed class InlineProgress(Action<int> report) : IProgress<int>

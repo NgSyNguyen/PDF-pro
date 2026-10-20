@@ -158,22 +158,26 @@ public sealed partial class BookmarkTreeViewModel : ObservableObject, IDisposabl
         return items;
     }
 
-    /// <summary>Shows the bookmark's destination: its page, scrolled to the destination's top when it has one.</summary>
+    /// <summary>
+    /// Shows the bookmark's destination: the first page of the plan showing its target page, scrolled to the
+    /// destination's top when it has one (moved through the page's crop and rotation). Does nothing when the target
+    /// page was deleted.
+    /// </summary>
     [RelayCommand]
     private async Task NavigateAsync(BookmarkItemViewModel? item)
     {
-        if (_disposed || item?.Destination is not { } destination || (uint)destination.PageIndex >= (uint)_viewer.PageCount)
+        if (_disposed || item?.Destination is not { } destination || _viewer.Document.FirstIndexOf(_document, destination.PageIndex) < 0)
         {
             return;
         }
 
-        ViewPoint? pointInPage = null;
+        ViewPoint? pointInSource = null;
         if (destination.Left is not null || destination.Top is not null)
         {
             try
             {
                 var geometry = await _document.GetPageGeometryAsync(destination.PageIndex, _lifetime.Token);
-                pointInPage = DestinationPlacement.PointInPage(geometry, destination.Left, destination.Top, _viewer.Layout.Scale);
+                pointInSource = DestinationPlacement.PointInPage(geometry, destination.Left, destination.Top, scale: 1);
             }
             catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException)
             {
@@ -186,9 +190,20 @@ public sealed partial class BookmarkTreeViewModel : ObservableObject, IDisposabl
             }
         }
 
-        if (!_disposed)
+        // The plan may have changed while the page was measured.
+        var index = _viewer.Document.FirstIndexOf(_document, destination.PageIndex);
+        if (_disposed || index < 0)
         {
-            _viewer.NavigateTo(destination.PageIndex, pointInPage);
+            return;
         }
+
+        ViewPoint? pointInPage = null;
+        if (pointInSource is { } point)
+        {
+            var shown = _viewer.Document.Pages[index].FromSourcePoint(point);
+            pointInPage = new ViewPoint(shown.X * _viewer.Layout.Scale, shown.Y * _viewer.Layout.Scale);
+        }
+
+        _viewer.NavigateTo(index, pointInPage);
     }
 }

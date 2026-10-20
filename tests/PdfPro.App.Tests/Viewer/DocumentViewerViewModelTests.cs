@@ -20,7 +20,7 @@ public sealed class DocumentViewerViewModelTests : IDisposable
 
     public DocumentViewerViewModelTests()
     {
-        _viewer = new DocumentViewerViewModel(_document, _renderer, _cache, new ImmediateUiDispatcher(), _debouncers, NullLogger<DocumentViewerViewModel>.Instance);
+        _viewer = new DocumentViewerViewModel(VirtualDocuments.Of(_document), _renderer, _cache, new ImmediateUiDispatcher(), _debouncers, NullLogger<DocumentViewerViewModel>.Instance);
     }
 
     public void Dispose()
@@ -244,6 +244,66 @@ public sealed class DocumentViewerViewModelTests : IDisposable
         _debouncers.FireAll();
         _renderer.Calls.Skip(calls).Where(c => c.PageIndex == 0).ShouldHaveSingleItem().Scale
             .ShouldBe(_viewer.Layout.Scale, 1e-9);
+    }
+
+    [Fact]
+    public void SetDocument_MovedPage_KeepsItsViewModelImageAndPlaceOnScreen()
+    {
+        _viewer.ViewportSize = Viewport;
+        _viewer.NavigateTo(5);
+        var page = _viewer.Pages[5];
+        var image = page.Image;
+        var renders = _renderer.Calls.Count;
+
+        _viewer.SetDocument(VirtualDocuments.Of(_viewer.Document.Plan.Move([5], 0), _document));
+
+        _viewer.Pages[0].ShouldBeSameAs(page);
+        page.Index.ShouldBe(0);
+        page.Number.ShouldBe(1);
+        page.Image.ShouldBeSameAs(image);
+        _viewer.CurrentPageIndex.ShouldBe(0, "the page the user was reading stays the current one");
+        _viewer.ScrollOffset.Y.ShouldBe(_viewer.Layout.GetPageBounds(0).Y, 1);
+        _renderer.Calls.Skip(renders).ShouldNotContain(c => c.PageIndex == 5, "the moved page keeps its render");
+    }
+
+    [Fact]
+    public void SetDocument_TurnedPage_RendersItTurned()
+    {
+        _viewer.ViewportSize = Viewport;
+        _debouncers.FireAll(); // the first fit-width zoom has settled
+        var page = _viewer.Pages[0];
+
+        _viewer.SetDocument(VirtualDocuments.Of(_viewer.Document.Plan.Rotate([0], 90), _document));
+
+        page.QuarterTurns.ShouldBe(1);
+        _renderer.Calls.ShouldContain(c => c.PageIndex == 0 && c.Options.ExtraQuarterTurns == 1);
+        page.ImageQuarterTurns.ShouldBe(1);
+        page.ImageAngle.ShouldBe(0);
+        _viewer.Layout.GetPageBounds(0).Width.ShouldBeGreaterThan(_viewer.Layout.GetPageBounds(0).Height);
+    }
+
+    [Fact]
+    public void TurnedPage_ShowsItsOldImageTurnedUntilTheNewRenderArrives()
+    {
+        var page = new PageViewModel(Guid.NewGuid(), 0) { Image = FakePageImageRenderer.CreateImage() };
+
+        page.MoveTo(0, quarterTurns: 3);
+
+        page.ImageAngle.ShouldBe(270);
+        page.ImageQuarterTurns = 3;
+        page.ImageAngle.ShouldBe(0);
+    }
+
+    [Fact]
+    public void SetDocument_DeletedCurrentPage_MovesToANeighbour()
+    {
+        _viewer.ViewportSize = Viewport;
+        _viewer.NavigateTo(19);
+
+        _viewer.SetDocument(VirtualDocuments.Of(_viewer.Document.Plan.Delete([18, 19]), _document));
+
+        _viewer.PageCount.ShouldBe(18);
+        _viewer.CurrentPageIndex.ShouldBe(17);
     }
 
     private (int Page, double X, double Y) PagePointAt(ViewPoint anchor)

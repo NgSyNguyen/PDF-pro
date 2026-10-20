@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.Logging;
+using PdfPro.App.Services.Documents;
 using PdfPro.Core.Geometry;
 using PdfPro.Infrastructure.Caching;
 using PdfPro.Pdfium;
@@ -34,12 +35,41 @@ public static class ThumbnailGeometry
     }
 }
 
-/// <summary>A thumbnail to load.</summary>
-/// <param name="FilePath">The document's file, used to recognise it in the disk cache.</param>
+/// <summary>
+/// A thumbnail to load: a page of the virtual document rendered upright (the view turns it), at the scale that makes it
+/// fill the thumbnail box once turned.
+/// </summary>
+/// <param name="Page">The page (not blank).</param>
+/// <param name="FilePath">The source file, used to recognise it in the disk cache (empty: no disk cache).</param>
 /// <param name="DpiScale">Device pixels per view unit where the thumbnail is shown.</param>
-public sealed record ThumbnailRequest(IPdfDocument Document, string FilePath, int PageIndex, double DpiScale)
+public sealed record ThumbnailRequest(VirtualPage Page, string FilePath, double DpiScale)
 {
-    public (int Width, int Height) Pixels => ThumbnailGeometry.PixelSizeFor(Document.PageSizes[PageIndex], DpiScale);
+    public IPdfDocument Document => Page.Source ?? throw new InvalidOperationException("Blank pages have no thumbnail image.");
+
+    public int PageIndex => Page.SourcePageIndex;
+
+    /// <summary>Device pixels per point.</summary>
+    public double Scale => ThumbnailGeometry.ScaleFor(Page.DisplaySize) * DpiScale;
+
+    /// <summary>Size of the upright image in device pixels.</summary>
+    public (int Width, int Height) Pixels
+    {
+        get
+        {
+            var size = Page.Crop?.Size ?? Page.BaseSize;
+            return (PixelSize.FromPoints(size.Width, Scale), PixelSize.FromPoints(size.Height, Scale));
+        }
+    }
+
+    /// <summary>Cropped pages are not cached on disk (rare; their files would need the crop in their name).</summary>
+    public bool CanUseDiskCache => Page.Crop is null && FilePath.Length > 0;
+
+    /// <summary>True when both requests produce the same image.</summary>
+    public bool IsSameImage(ThumbnailRequest other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        return ReferenceEquals(Page.Source, other.Page.Source) && PageIndex == other.PageIndex && Page.Crop == other.Page.Crop && Pixels == other.Pixels;
+    }
 }
 
 /// <summary>Page thumbnails for the sidebar (seam for view-model tests).</summary>
@@ -72,7 +102,7 @@ internal sealed class ThumbnailProvider(
     public bool TryGetCached(ThumbnailRequest request, out ImageSource image)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (cache.TryGet(RenderKey.Thumbnail(request.Document.Id, request.PageIndex), out var cached)
+        if (cache.TryGet(RenderKey.ThumbnailOf(request.Page), out var cached)
             && cached is BitmapSource bitmap
             && bitmap.PixelWidth == request.Pixels.Width)
         {
@@ -92,7 +122,7 @@ internal sealed class ThumbnailProvider(
             return cached;
         }
 
-        var key = RenderKey.Thumbnail(request.Document.Id, request.PageIndex);
+        var key = RenderKey.ThumbnailOf(request.Page);
         var size = request.Pixels;
         var fingerprint = await FingerprintOfAsync(request).ConfigureAwait(false);
         if (fingerprint is not null)
@@ -105,8 +135,8 @@ internal sealed class ThumbnailProvider(
             }
         }
 
-        var scale = ThumbnailGeometry.ScaleFor(request.Document.PageSizes[request.PageIndex]) * request.DpiScale;
-        var rendered = await renderer.RenderAsync(request.Document, request.PageIndex, scale, region: null, PdfiumPriority.Low, cancellationToken).ConfigureAwait(false);
+        var options = request.Page.RenderOptions(request.Scale, region: null, PdfRenderFlags.Annotations, extraQuarterTurns: -request.Page.QuarterTurns);
+        var rendered = await renderer.RenderAsync(request.Document, request.PageIndex, options, PdfiumPriority.Low, cancellationToken).ConfigureAwait(false);
         cache.Add(key, rendered.Image, rendered.ByteSize);
         if (fingerprint is not null && rendered.Image is BitmapSource bitmap)
         {
@@ -123,7 +153,7 @@ internal sealed class ThumbnailProvider(
 
     private Task<string?> FingerprintOfAsync(ThumbnailRequest request)
     {
-        if (request.Document.Features.IsEncrypted)
+        if (request.Document.Features.IsEncrypted || !request.CanUseDiskCache)
         {
             return Task.FromResult<string?>(null);
         }

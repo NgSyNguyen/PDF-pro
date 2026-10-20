@@ -264,4 +264,18 @@ Details were written to the log (incident id: {0}).</value></data>
 Details were written to the log at:
 {0}</value></data>
   <data name="Error_OpenLogFolder" xml:space="preserve"><value>Open log folder</value></data>
+  <data name="History_Rotate" xml:space="preserve"><value>Rotate {0} page(s)</value></data>
+  <data name="History_Move" xml:space="preserve"><value>Move {0} page(s)</value></data>
+  <data name="History_Delete" xml:space="preserve"><value>Delete {0} page(s)</value></data>
+  <data name="History_Duplicate" xml:space="preserve"><value>Duplicate {0} page(s)</value></data>
+  <data name="History_InsertBlank" xml:space="preserve"><value>Insert {0} blank page(s)</value></data>
+  <data name="History_InsertPages" xml:space="preserve"><value>Insert {0} page(s) from “{1}”</value></data>
+  <data name="History_Crop" xml:space="preserve"><value>Crop {0} page(s)</value></data>
+  <data name="History_CropReset" xml:space="preserve"><value>Remove the crop of {0} page(s)</value></data>
+  <data name="History_Other" xml:space="preserve"><value>Document change</value></data>
+  <data name="Cmd_UndoWith" xml:space="preserve"><value>Undo: {0}</value></data>
+  <data name="Cmd_RedoWith" xml:space="preserve"><value>Redo: {0}</value></data>
+  <data name="Edit_Error_Title" xml:space="preserve"><value>Cannot do that</value></data>
+  <data name="Edit_Error_Invalid" xml:space="preserve"><value>This action does not apply to the selected pages.</value></data>
+  <data name="Document_ReadOnlyEncrypted" xml:space="preserve"><value>This document is password protected: it can be viewed and printed but not reorganized or saved yet. This comes with the Security features.</value></data>
 </root>

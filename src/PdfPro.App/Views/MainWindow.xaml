@@ -40,6 +40,11 @@
     <KeyBinding Key="D2" Command="{Binding ActiveDocument.Viewer.FitWidthCommand}" Modifiers="Control" />
     <KeyBinding Key="NumPad2" Command="{Binding ActiveDocument.Viewer.FitWidthCommand}" Modifiers="Control" />
     <KeyBinding Key="G" Command="{x:Static views:MainWindow.GoToPageCommand}" Modifiers="Control" />
+    <KeyBinding Key="Z" Command="{Binding UndoCommand}" Modifiers="Control" />
+    <KeyBinding Key="Y" Command="{Binding RedoCommand}" Modifiers="Control" />
+    <KeyBinding Key="Z" Command="{Binding RedoCommand}" Modifiers="Control+Shift" />
+    <KeyBinding Key="R" Command="{Binding RotateRightCommand}" Modifiers="Control" />
+    <KeyBinding Key="R" Command="{Binding RotateLeftCommand}" Modifiers="Control+Shift" />
   </ui:FluentWindow.InputBindings>
 
   <ui:FluentWindow.CommandBindings>

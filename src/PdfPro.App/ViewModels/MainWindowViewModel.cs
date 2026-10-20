@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using PdfPro.App.Hosting;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
+using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Printing;
 using PdfPro.Infrastructure;
 using PdfPro.Infrastructure.Settings;
@@ -22,7 +23,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IAppLifetime _lifetime;
     private readonly IShellLauncher _shell;
     private readonly AppPaths _paths;
-    private readonly IDocumentOpener _opener;
+    private readonly IDocumentWorkspaceService _workspaces;
     private readonly IDocumentTabFactory _tabFactory;
     private readonly ISettingsService _settings;
     private readonly IFileDialogService _fileDialogs;
@@ -31,6 +32,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IDocumentPrinter _printer;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
+    private DocumentTabViewModel? _trackedDocument;
 
     public MainWindowViewModel(
         IDialogService dialogs,
@@ -38,7 +40,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IShellLauncher shell,
         AppPaths paths,
         AppBuildInfo buildInfo,
-        IDocumentOpener opener,
+        IDocumentWorkspaceService workspaces,
         IDocumentTabFactory tabFactory,
         ISettingsService settings,
         IFileDialogService fileDialogs,
@@ -52,7 +54,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _lifetime = lifetime;
         _shell = shell;
         _paths = paths;
-        _opener = opener;
+        _workspaces = workspaces;
         _tabFactory = tabFactory;
         _settings = settings;
         _fileDialogs = fileDialogs;
@@ -61,6 +63,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _printer = printer;
         _logger = logger;
 
+        UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
+        RedoCommand = new ActiveDocumentCommand(d => d.RedoCommand);
+        RotateLeftCommand = new ActiveDocumentCommand(d => d.RotateLeftCommand);
+        RotateRightCommand = new ActiveDocumentCommand(d => d.RotateRightCommand);
+        DeletePagesCommand = new ActiveDocumentCommand(d => d.DeletePagesCommand);
+        DuplicatePagesCommand = new ActiveDocumentCommand(d => d.DuplicatePagesCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
@@ -89,6 +97,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public SidebarViewModel Sidebar { get; } = new();
 
+    /// <summary>Ctrl+Z and the ribbon's "Hoàn tác": undoes the last change of the active document.</summary>
+    public ActiveDocumentCommand UndoCommand { get; }
+
+    /// <summary>Ctrl+Y / Ctrl+Shift+Z.</summary>
+    public ActiveDocumentCommand RedoCommand { get; }
+
+    /// <summary>Ctrl+Shift+R: turns the current page left.</summary>
+    public ActiveDocumentCommand RotateLeftCommand { get; }
+
+    /// <summary>Ctrl+R: turns the current page right.</summary>
+    public ActiveDocumentCommand RotateRightCommand { get; }
+
+    public ActiveDocumentCommand DeletePagesCommand { get; }
+
+    public ActiveDocumentCommand DuplicatePagesCommand { get; }
+
     public StatusBarViewModel StatusBar { get; } = new();
 
     /// <summary>
@@ -116,8 +140,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 continue;
             }
 
-            var document = await _opener.OpenAsync(fullPath);
-            if (document is null)
+            var workspace = await _workspaces.OpenAsync(fullPath);
+            if (workspace is null)
             {
                 if (!File.Exists(fullPath))
                 {
@@ -127,7 +151,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 continue;
             }
 
-            var tab = _tabFactory.Create(document, fullPath);
+            var tab = _tabFactory.Create(workspace);
             Tabs.Add(tab);
             SelectedTab = tab;
             await UpdateRecentFilesAsync(list => RecentFileList.Add(list, fullPath));
@@ -219,7 +243,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        var job = _printDialogs.ShowPrintDialog(document.Document.PageCount, document.Viewer.CurrentPageIndex);
+        var pages = document.Workspace.Pages;
+        var job = _printDialogs.ShowPrintDialog(pages.PageCount, document.Viewer.CurrentPageIndex);
         if (job is null || job.PageIndices.Count == 0)
         {
             return;
@@ -228,7 +253,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         var total = job.PageIndices.Count;
         var task = StatusBar.StartTask(PrintProgressText(0, total));
         var progress = new Progress<int>(done => task.Report((double)done / total, PrintProgressText(done, total)));
-        var printing = _printer.PrintAsync(document.Document, job, document.Title, progress, task.Token);
+        var printing = _printer.PrintAsync(pages, job, document.FileName, progress, task.Token);
         _activePrint = new ActivePrint(document, task, printing);
         try
         {
@@ -256,6 +281,42 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private static string PrintProgressText(int done, int total)
         => string.Format(CultureInfo.CurrentCulture, Strings.Print_Progress, Math.Min(done + 1, total), total);
+
+    partial void OnSelectedTabChanged(WorkspaceTabViewModel? value)
+    {
+        if (_trackedDocument is not null)
+        {
+            _trackedDocument.PropertyChanged -= OnActiveDocumentPropertyChanged;
+        }
+
+        _trackedDocument = value as DocumentTabViewModel;
+        if (_trackedDocument is not null)
+        {
+            _trackedDocument.PropertyChanged += OnActiveDocumentPropertyChanged;
+        }
+
+        foreach (var command in new[] { UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand })
+        {
+            command.Attach(_trackedDocument);
+        }
+
+        UpdateHistoryToolTips();
+    }
+
+    private void OnActiveDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(DocumentTabViewModel.UndoToolTip) or nameof(DocumentTabViewModel.RedoToolTip))
+        {
+            UpdateHistoryToolTips();
+        }
+    }
+
+    private void UpdateHistoryToolTips()
+    {
+        var commands = RibbonTabs.SelectMany(t => t.Groups).SelectMany(g => g.Commands).ToList();
+        commands.FirstOrDefault(c => c.Id == "edit.undo")?.SetToolTip(_trackedDocument?.UndoToolTip ?? Strings.Cmd_Undo);
+        commands.FirstOrDefault(c => c.Id == "edit.redo")?.SetToolTip(_trackedDocument?.RedoToolTip ?? Strings.Cmd_Redo);
+    }
 
     private void OnStatusBarPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -347,10 +408,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             [
                 new(Strings.Ribbon_Group_Arrange,
                 [
-                    new("organize.rotateLeft", Strings.Cmd_RotateLeft, SymbolRegular.ArrowRotateCounterclockwise24),
-                    new("organize.rotateRight", Strings.Cmd_RotateRight, SymbolRegular.ArrowRotateClockwise24),
-                    new("organize.delete", Strings.Cmd_DeletePages, SymbolRegular.Delete24),
-                    new("organize.duplicate", Strings.Cmd_DuplicatePages, SymbolRegular.DocumentCopy24),
+                    new("organize.rotateLeft", Strings.Cmd_RotateLeft, SymbolRegular.ArrowRotateCounterclockwise24, RotateLeftCommand),
+                    new("organize.rotateRight", Strings.Cmd_RotateRight, SymbolRegular.ArrowRotateClockwise24, RotateRightCommand),
+                    new("organize.delete", Strings.Cmd_DeletePages, SymbolRegular.Delete24, DeletePagesCommand),
+                    new("organize.duplicate", Strings.Cmd_DuplicatePages, SymbolRegular.DocumentCopy24, DuplicatePagesCommand),
                 ]),
                 new(Strings.Ribbon_Group_Insert,
                 [
@@ -373,8 +434,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             [
                 new(Strings.Ribbon_Group_History,
                 [
-                    new("edit.undo", Strings.Cmd_Undo, SymbolRegular.ArrowUndo24),
-                    new("edit.redo", Strings.Cmd_Redo, SymbolRegular.ArrowRedo24),
+                    new("edit.undo", Strings.Cmd_Undo, SymbolRegular.ArrowUndo24, UndoCommand),
+                    new("edit.redo", Strings.Cmd_Redo, SymbolRegular.ArrowRedo24, RedoCommand),
                 ]),
                 new(Strings.Ribbon_Group_Add,
                 [

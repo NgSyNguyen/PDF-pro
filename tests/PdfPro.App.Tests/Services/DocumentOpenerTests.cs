@@ -10,6 +10,7 @@ namespace PdfPro.App.Tests.Services;
 public sealed class DocumentOpenerTests
 {
     private const string Path = @"C:\Hồ sơ\Nguyễn Văn A - hợp đồng.pdf";
+    private const string FileName = "Nguyễn Văn A - hợp đồng.pdf";
 
     private readonly IPdfDocumentLoader _loader = Substitute.For<IPdfDocumentLoader>();
     private readonly IPasswordPrompt _passwords = Substitute.For<IPasswordPrompt>();
@@ -27,7 +28,7 @@ public sealed class DocumentOpenerTests
         var document = FakePdfDocument.WithPages(3);
         _loader.LoadAsync(Path, null, Arg.Any<CancellationToken>()).Returns(document);
 
-        var opened = await _opener.OpenAsync(Path, TestToken);
+        var opened = await _opener.OpenAsync(Path, FileName, TestToken);
 
         opened.ShouldBeSameAs(document);
         _passwords.DidNotReceiveWithAnyArgs().RequestPassword(default!, default);
@@ -41,7 +42,7 @@ public sealed class DocumentOpenerTests
         _loader.LoadAsync(Path, "test123", Arg.Any<CancellationToken>()).Returns(document);
         _passwords.RequestPassword("Nguyễn Văn A - hợp đồng.pdf", false).Returns("test123");
 
-        var opened = await _opener.OpenAsync(Path, TestToken);
+        var opened = await _opener.OpenAsync(Path, FileName, TestToken);
 
         opened.ShouldBeSameAs(document);
     }
@@ -54,7 +55,7 @@ public sealed class DocumentOpenerTests
         _passwords.RequestPassword(Arg.Any<string>(), false).Returns("sai");
         _passwords.RequestPassword(Arg.Any<string>(), true).Returns((string?)null);
 
-        var opened = await _opener.OpenAsync(Path, TestToken);
+        var opened = await _opener.OpenAsync(Path, FileName, TestToken);
 
         opened.ShouldBeNull();
         _passwords.Received(1).RequestPassword(Arg.Any<string>(), true);
@@ -73,7 +74,7 @@ public sealed class DocumentOpenerTests
     {
         _loader.LoadAsync(Path, null, Arg.Any<CancellationToken>()).ThrowsAsync(new PdfDocumentException(failure, "x"));
 
-        var opened = await _opener.OpenAsync(Path, TestToken);
+        var opened = await _opener.OpenAsync(Path, FileName, TestToken);
 
         opened.ShouldBeNull();
         await _messages.Received(1).ShowErrorAsync(
@@ -87,7 +88,7 @@ public sealed class DocumentOpenerTests
     {
         _loader.LoadAsync(Path, null, Arg.Any<CancellationToken>()).ThrowsAsync(new InsufficientMemoryException());
 
-        (await _opener.OpenAsync(Path, TestToken)).ShouldBeNull();
+        (await _opener.OpenAsync(Path, FileName, TestToken)).ShouldBeNull();
 
         await _messages.Received(1).ShowErrorAsync(Strings.Open_Error_Title, Arg.Is<string>(m => m.Contains("Nguyễn Văn A")));
     }
@@ -100,7 +101,7 @@ public sealed class DocumentOpenerTests
             .ThrowsAsync(new PdfFileAccessException(PdfOpenFailure.ReadFailed, new IOException($"Could not read '{Path}'")));
         _passwords.RequestPassword(Arg.Any<string>(), Arg.Any<bool>()).Returns("mat-khau-bi-mat");
 
-        await _opener.OpenAsync(Path, TestToken);
+        await _opener.OpenAsync(Path, FileName, TestToken);
 
         _logger.Entries.ShouldNotBeEmpty();
         _logger.Entries.ShouldAllBe(e =>

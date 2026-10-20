@@ -22,7 +22,7 @@ public sealed class BookmarkTreeViewModelTests : IDisposable
 
     public BookmarkTreeViewModelTests()
     {
-        _viewer = new DocumentViewerViewModel(_document, new FakePageImageRenderer { AutoComplete = true }, _cache, new ImmediateUiDispatcher(), new ManualDebouncerFactory(), NullLogger<DocumentViewerViewModel>.Instance);
+        _viewer = new DocumentViewerViewModel(VirtualDocuments.Of(_document), new FakePageImageRenderer { AutoComplete = true }, _cache, new ImmediateUiDispatcher(), new ManualDebouncerFactory(), NullLogger<DocumentViewerViewModel>.Instance);
         _viewer.ViewportSize = Viewport;
     }
 
@@ -180,6 +180,48 @@ public sealed class BookmarkTreeViewModelTests : IDisposable
         await tree.NavigateCommand.ExecuteAsync(tree.Items[0]);
 
         _viewer.CurrentPageIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Navigate_AfterPagesMoved_GoesWhereTheTargetPageIsNow()
+    {
+        _document.Bookmarks = [Bookmark("Chương 3", 12)];
+        using var tree = Create();
+        await tree.LoadAsync();
+        _viewer.SetDocument(VirtualDocuments.Of(_viewer.Document.Plan.Move([12], 0), _document));
+
+        await tree.NavigateCommand.ExecuteAsync(tree.Items[0]);
+
+        _viewer.CurrentPageIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Navigate_ToADeletedPage_DoesNothing()
+    {
+        _document.Bookmarks = [Bookmark("Chương 3", 12)];
+        using var tree = Create();
+        await tree.LoadAsync();
+        _viewer.SetDocument(VirtualDocuments.Of(_viewer.Document.Plan.Delete([12]), _document));
+        _viewer.NavigateTo(4);
+
+        await tree.NavigateCommand.ExecuteAsync(tree.Items[0]);
+
+        _viewer.CurrentPageIndex.ShouldBe(4);
+    }
+
+    [Fact]
+    public async Task Navigate_OnACroppedPage_MovesTheSpotWithTheCrop()
+    {
+        _document.Bookmarks = [new PdfBookmark("Mục 4.2", new PdfDestination(5, null, 442, null), [])];
+        using var tree = Create();
+        await tree.LoadAsync();
+        _viewer.SetDocument(VirtualDocuments.Of(_viewer.Document.Plan.Crop([5], new Core.Organizing.PageCrop(0, 100, 595, 600)), _document));
+
+        await tree.NavigateCommand.ExecuteAsync(tree.Items[0]);
+
+        // 400 pt below the page top is 300 pt below the top of the kept area.
+        var expected = _viewer.Layout.GetPageBounds(5).Y + (300 * _viewer.Layout.Scale) - (_viewer.Layout.Spacing.RowGap / 2);
+        _viewer.ScrollOffset.Y.ShouldBe(expected, 1e-6);
     }
 
     private static PdfBookmark Bookmark(string title, int page, IReadOnlyList<PdfBookmark>? children = null)

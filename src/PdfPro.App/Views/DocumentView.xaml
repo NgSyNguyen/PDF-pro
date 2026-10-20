@@ -25,10 +25,15 @@
     <DataTemplate x:Key="PageTemplate" DataType="{x:Type viewer:PageViewModel}">
       <Grid AutomationProperties.Name="{Binding AutomationName}">
         <Border Background="White" Effect="{StaticResource PageShadow}" />
+        <!-- Until a render with the page's rotation arrives, the previous image (or upright thumbnail) is turned here. -->
         <Image
           RenderOptions.BitmapScalingMode="HighQuality"
           Source="{Binding Image}"
-          Stretch="Fill" />
+          Stretch="Fill">
+          <Image.LayoutTransform>
+            <RotateTransform Angle="{Binding ImageAngle}" />
+          </Image.LayoutTransform>
+        </Image>
         <Canvas ClipToBounds="True">
           <Image
             Canvas.Left="{Binding DetailBounds.X}"
@@ -58,29 +63,41 @@
     </DataTemplate>
   </UserControl.Resources>
 
-  <ScrollViewer
-    x:Name="Scroller"
-    AutomationProperties.AutomationId="DocumentScroller"
-    AutomationProperties.Name="{Binding Title}"
-    Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
-    CanContentScroll="True"
-    DataContext="{Binding Viewer}"
-    Focusable="True"
-    FocusVisualStyle="{x:Null}"
-    HorizontalScrollBarVisibility="Auto"
-    PreviewKeyDown="OnPreviewKeyDown"
-    PreviewMouseDown="OnPreviewMouseDown"
-    PreviewMouseWheel="OnPreviewMouseWheel"
-    VerticalScrollBarVisibility="Visible">
-    <controls:DocumentViewPanel
-      x:Name="Surface"
-      AutomationProperties.AutomationId="DocumentSurface"
-      Background="Transparent"
-      DpiScale="{Binding DpiScale, Mode=TwoWay}"
-      Offset="{Binding ScrollOffset, Mode=TwoWay}"
-      PageLayout="{Binding Layout}"
-      PageTemplate="{StaticResource PageTemplate}"
-      Pages="{Binding Pages}"
-      ViewportSize="{Binding ViewportSize, Mode=TwoWay}" />
-  </ScrollViewer>
+  <DockPanel>
+    <ui:InfoBar
+      Margin="0,0,0,6"
+      AutomationProperties.AutomationId="ReadOnlyNotice"
+      DockPanel.Dock="Top"
+      IsClosable="False"
+      IsOpen="{Binding IsReadOnly}"
+      Message="{loc:Tr Document_ReadOnlyEncrypted}"
+      Severity="Informational"
+      Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVisibility}}" />
+
+    <ScrollViewer
+      x:Name="Scroller"
+      AutomationProperties.AutomationId="DocumentScroller"
+      AutomationProperties.Name="{Binding Title}"
+      Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+      CanContentScroll="True"
+      DataContext="{Binding Viewer}"
+      Focusable="True"
+      FocusVisualStyle="{x:Null}"
+      HorizontalScrollBarVisibility="Auto"
+      PreviewKeyDown="OnPreviewKeyDown"
+      PreviewMouseDown="OnPreviewMouseDown"
+      PreviewMouseWheel="OnPreviewMouseWheel"
+      VerticalScrollBarVisibility="Visible">
+      <controls:DocumentViewPanel
+        x:Name="Surface"
+        AutomationProperties.AutomationId="DocumentSurface"
+        Background="Transparent"
+        DpiScale="{Binding DpiScale, Mode=TwoWay}"
+        Offset="{Binding ScrollOffset, Mode=TwoWay}"
+        PageLayout="{Binding Layout}"
+        PageTemplate="{StaticResource PageTemplate}"
+        Pages="{Binding Pages}"
+        ViewportSize="{Binding ViewportSize, Mode=TwoWay}" />
+    </ScrollViewer>
+  </DockPanel>
 </UserControl>

@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 using PdfPro.App.Resources;
 using Wpf.Ui.Controls;
 
@@ -13,7 +14,7 @@ public sealed record RibbonGroupViewModel(string Header, IReadOnlyList<RibbonCom
 /// <summary>
 /// One ribbon button. Commands that are not implemented yet are shown disabled with an explanatory tooltip.
 /// </summary>
-public sealed class RibbonCommandViewModel
+public sealed partial class RibbonCommandViewModel : ObservableObject
 {
     public RibbonCommandViewModel(string id, string label, SymbolRegular icon, ICommand? command = null)
     {
@@ -39,7 +40,18 @@ public sealed class RibbonCommandViewModel
 
     public bool IsAvailable { get; }
 
-    public string ToolTip { get; }
+    [ObservableProperty]
+    public partial string ToolTip { get; private set; }
+
+    /// <summary>Changes the tooltip of an available command (e.g. "Hoàn tác: Xoay 1 trang").</summary>
+    public void SetToolTip(string toolTip)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(toolTip);
+        if (IsAvailable)
+        {
+            ToolTip = toolTip;
+        }
+    }
 }
 
 /// <summary>Command of a feature that ships in a later phase: never executable.</summary>

@@ -16,10 +16,11 @@ internal sealed class DocumentOpener(
     IMessageService messages,
     ILogger<DocumentOpener> logger) : IDocumentOpener
 {
-    public async Task<IPdfDocument?> OpenAsync(string path, CancellationToken cancellationToken = default)
+    public async Task<IPdfDocument?> OpenAsync(string path, string displayName, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        var fileName = Path.GetFileName(path);
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        var fileName = displayName;
         string? password = null;
 
         while (true)
