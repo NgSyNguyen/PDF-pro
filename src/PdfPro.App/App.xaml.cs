@@ -78,6 +78,21 @@ public partial class App : Application
         }
     }
 
+    /// <summary>
+    /// Windows is signing out or shutting down: no questions. Unsaved documents keep their sessions and are offered
+    /// for recovery at the next start.
+    /// </summary>
+    protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
+    {
+        if (_host?.Services.GetService<MainWindowViewModel>() is { } viewModel)
+        {
+            viewModel.ExitConfirmed = true;
+        }
+
+        Log.ForContext<App>().Information("Windows session ending ({Reason})", e.ReasonSessionEnding);
+        base.OnSessionEnding(e);
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
         // Later launches must not hand their files to a window that is closing.
@@ -104,9 +119,13 @@ public partial class App : Application
         base.OnExit(e);
     }
 
-    /// <summary>"PdfPro.exe a.pdf b.pdf" (also how Explorer's "Open with" starts the app).</summary>
+    /// <summary>
+    /// Documents left unsaved by a crash first, then "PdfPro.exe a.pdf b.pdf" (also how Explorer's "Open with"
+    /// starts the app).
+    /// </summary>
     private static async Task OpenStartupFilesAsync(MainWindowViewModel viewModel, IReadOnlyList<string> files)
     {
+        await viewModel.RecoverSessionsAsync();
         if (files.Count > 0)
         {
             await viewModel.OpenFilesAsync(files);

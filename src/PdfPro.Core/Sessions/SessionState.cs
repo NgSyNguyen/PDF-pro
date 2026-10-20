@@ -39,6 +39,12 @@ public sealed record SessionState
 
     /// <summary>The same state with another plan (a plan edit); this instance when the plan is unchanged.</summary>
     public SessionState WithPlan(PagePlan plan) => ReferenceEquals(plan, Plan) ? this : new SessionState(plan, BaseSourceId, Revision);
+
+    /// <summary>
+    /// The state after a content operation wrote <paramref name="revisionSourceId"/>: the plan shows the revision's
+    /// pages and the revision number goes up by one (the same rule when the step is replayed after a crash).
+    /// </summary>
+    public SessionState NextRevision(string revisionSourceId, PagePlan plan) => new(plan, revisionSourceId, Revision + 1);
 }
 
 /// <summary>Old and new state of a <see cref="DocumentSession.StateChanged"/> notification.</summary>

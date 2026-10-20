@@ -82,8 +82,12 @@ internal static class AppHost
         services.AddPlanOperation<CropPagesOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
+        services.AddSingleton<IDocumentSaver, DocumentSaver>();
+        services.AddSingleton<IRecoveryDialog, RecoveryDialog>();
+        services.AddSingleton<IRecoveryService, RecoveryService>();
 
         services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton<IExitGuard>(sp => sp.GetRequiredService<MainWindowViewModel>());
         services.AddSingleton<MainWindow>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<SettingsWindow>();

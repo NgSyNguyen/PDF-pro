@@ -185,11 +185,22 @@ public sealed class DocumentWorkspace : IAsyncDisposable
     /// Closes the document: stops background writes, closes the source documents and removes the session folder.
     /// Ask the user about unsaved changes before calling this.
     /// </summary>
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync() => CloseAsync(keepSession: false);
+
+    /// <summary>
+    /// Closes the document. With <paramref name="keepSession"/> the session folder stays on disk (its lock is
+    /// released) so the unsaved changes are offered for recovery at the next start, e.g. when Windows shuts down.
+    /// </summary>
+    public async ValueTask CloseAsync(bool keepSession)
     {
         if (_disposed)
         {
             return;
+        }
+
+        if (keepSession)
+        {
+            ScheduleManifest(); // the last state must be on disk
         }
 
         _disposed = true;
@@ -203,15 +214,64 @@ public sealed class DocumentWorkspace : IAsyncDisposable
             await source.Document.DisposeAsync().ConfigureAwait(false);
         }
 
-        _store.Delete(_folder);
+        if (keepSession)
+        {
+            _folder.Dispose();
+            _logger.LogInformation("Session {SessionId} kept for recovery", Session.Id);
+        }
+        else
+        {
+            _store.Delete(_folder);
+        }
     }
 
-    internal void SetPendingSave(PendingSaveDto? pendingSave) => _pendingSave = pendingSave;
+    /// <summary>True when the saved file was changed by another program since it was opened or last saved.</summary>
+    public bool HasChangedOnDisk()
+        => FilePath is { } path && OriginalStamp is { } known && FileStamp.Read(path) is { } current && current != known;
 
-    internal void SetOriginalStamp(FileStamp? stamp)
+    /// <summary>
+    /// A save is about to write: the manifest records its files first, so a crash while writing or swapping can be
+    /// repaired at the next start. Safe from any thread (it reuses the last snapshot: edits are blocked while saving).
+    /// </summary>
+    internal async Task RecordPendingSaveAsync(PendingSaveDto pendingSave)
     {
+        _pendingSave = pendingSave;
+        if (Volatile.Read(ref _latest) is { } latest)
+        {
+            Volatile.Write(ref _latest, latest with { PendingSave = pendingSave });
+            _manifestWriter.Request();
+            await _manifestWriter.FlushAsync().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>The save finished (or failed): the manifest no longer mentions it.</summary>
+    internal async Task ClearPendingSaveAsync()
+    {
+        if (_pendingSave is null)
+        {
+            return;
+        }
+
+        _pendingSave = null;
+        await FlushManifestAsync();
+    }
+
+    /// <summary>
+    /// The document was written to <paramref name="path"/>: it becomes the document's file ("Save as"), its stamp is
+    /// remembered and the current state is the saved one.
+    /// </summary>
+    internal void CompleteSave(string path, FileStamp? stamp)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (!string.Equals(Session.OriginalPath, path, StringComparison.OrdinalIgnoreCase))
+        {
+            Session.SetOriginalPath(path);
+        }
+
         OriginalStamp = stamp;
+        Session.MarkSaved();
         ScheduleManifest();
+        StatusChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private Dictionary<string, IPdfDocument> Documents() => _sources.ToDictionary(s => s.Key, s => s.Value.Document, StringComparer.Ordinal);

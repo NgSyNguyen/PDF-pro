@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using PdfPro.App.ViewModels;
@@ -5,7 +6,10 @@ using Wpf.Ui.Controls;
 
 namespace PdfPro.App.Views;
 
-/// <summary>Main window. Code-behind only handles view concerns: focus (Ctrl+G) and drag-and-drop plumbing.</summary>
+/// <summary>
+/// Main window. Code-behind only handles view concerns: focus (Ctrl+G), drag-and-drop plumbing and routing the
+/// window's X to the exit command.
+/// </summary>
 public partial class MainWindow : FluentWindow
 {
     /// <summary>Ctrl+G: focus the page number box of the active document.</summary>
@@ -28,6 +32,25 @@ public partial class MainWindow : FluentWindow
         }
 
         Activate();
+    }
+
+    /// <summary>
+    /// The window's X (or Alt+F4) with unsaved documents: the close waits while the exit command asks Lưu / Không lưu /
+    /// Hủy; it closes the application once everything is saved or discarded.
+    /// </summary>
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        base.OnClosing(e);
+        if (e.Cancel || ViewModel.ExitConfirmed || !ViewModel.HasUnsavedDocuments)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        if (ViewModel.ExitCommand.CanExecute(null))
+        {
+            ViewModel.ExitCommand.Execute(null);
+        }
     }
 
     private void OnGoToPage(object sender, ExecutedRoutedEventArgs e)

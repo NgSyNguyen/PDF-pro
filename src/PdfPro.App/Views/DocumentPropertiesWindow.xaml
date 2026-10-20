@@ -11,6 +11,7 @@
   d:DataContext="{d:DesignInstance Type=vm:DocumentPropertiesViewModel}"
   Title="{loc:Tr DocProps_Title}"
   Width="600"
+  MinHeight="0"
   MaxHeight="760"
   ExtendsContentIntoTitleBar="True"
   ResizeMode="NoResize"

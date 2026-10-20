@@ -278,6 +278,19 @@ public sealed class DocumentSessionTests
     }
 
     [Fact]
+    public void NextRevision_ShowsTheRevisionOneNumberLater()
+    {
+        var state = new SessionState(Plans.Identity(2), "s0", 3);
+        var plan = PagePlan.Identity("r2", 2, RandomPageKeys.Instance);
+
+        var next = state.NextRevision("r2", plan);
+
+        next.BaseSourceId.ShouldBe("r2");
+        next.Revision.ShouldBe(4);
+        next.Plan.ShouldBeSameAs(plan);
+    }
+
+    [Fact]
     public void HistoryRecord_ValidatesItsParts()
     {
         Should.Throw<ArgumentException>(() => new HistoryRecord("rotate", new object(), []));

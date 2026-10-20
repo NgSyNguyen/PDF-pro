@@ -89,6 +89,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// <summary>Password protected documents can be viewed and printed but not edited or saved yet.</summary>
     public bool IsReadOnly => Workspace.IsReadOnly;
 
+    /// <summary>
+    /// The user chose "Không lưu": closing removes the session. Otherwise a tab closed with unsaved changes (Windows
+    /// shutting down) keeps its session for recovery.
+    /// </summary>
+    public bool DiscardChanges { get; set; }
+
     /// <summary>"Hoàn tác: Xoay 1 trang", or just "Hoàn tác" when there is nothing to undo.</summary>
     public string UndoToolTip => Workspace.Session.History.NextUndoDescription is { } step
         ? string.Format(CultureInfo.CurrentCulture, Strings.Cmd_UndoWith, step)
@@ -145,7 +151,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
 
         // Application exit waits for this on the UI thread: do not resume there.
-        await Workspace.DisposeAsync().ConfigureAwait(false);
+        await Workspace.CloseAsync(keepSession: IsDirty && !DiscardChanges).ConfigureAwait(false);
     }
 
     [RelayCommand(CanExecute = nameof(CanUndo))]
@@ -220,6 +226,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         HistoryEntries = BuildHistory();
         OnPropertyChanged(nameof(HistoryEntries));
         OnPropertyChanged(nameof(Title));
+        OnPropertyChanged(nameof(ToolTip));
+        OnPropertyChanged(nameof(FilePath));
+        OnPropertyChanged(nameof(FileName));
         OnPropertyChanged(nameof(IsDirty));
         OnPropertyChanged(nameof(UndoToolTip));
         OnPropertyChanged(nameof(RedoToolTip));

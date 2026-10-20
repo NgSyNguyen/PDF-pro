@@ -133,7 +133,7 @@ public sealed class SettingsViewModelTests : IDisposable
 
         await viewModel.RestartNowCommand.ExecuteAsync(null);
 
-        _lifetime.Received(1).Restart();
+        await _lifetime.Received(1).RestartAsync();
         _settings.Current.Language.ShouldBe("en");
     }
 

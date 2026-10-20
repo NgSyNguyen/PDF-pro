@@ -25,6 +25,8 @@
 
   <ui:FluentWindow.InputBindings>
     <KeyBinding Key="O" Command="{Binding OpenCommand}" Modifiers="Control" />
+    <KeyBinding Key="S" Command="{Binding SaveCommand}" Modifiers="Control" />
+    <KeyBinding Key="S" Command="{Binding SaveAsCommand}" Modifiers="Control+Shift" />
     <KeyBinding Key="W" Command="{Binding CloseActiveDocumentCommand}" Modifiers="Control" />
     <KeyBinding Key="F4" Command="{Binding CloseActiveDocumentCommand}" Modifiers="Control" />
     <KeyBinding Key="D" Command="{Binding ShowPropertiesCommand}" Modifiers="Control" />

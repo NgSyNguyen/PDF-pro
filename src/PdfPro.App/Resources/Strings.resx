@@ -278,4 +278,58 @@ Chi tiết đã được ghi vào nhật ký tại:
   <data name="Edit_Error_Title" xml:space="preserve"><value>Không thực hiện được</value></data>
   <data name="Edit_Error_Invalid" xml:space="preserve"><value>Thao tác này không áp dụng được cho các trang đã chọn.</value></data>
   <data name="Document_ReadOnlyEncrypted" xml:space="preserve"><value>Tài liệu được bảo vệ bằng mật khẩu nên hiện chỉ xem và in được; chưa sắp xếp hay lưu được. Tính năng này sẽ có ở phần Bảo mật.</value></data>
+
+  <!-- Saving -->
+  <data name="Save_Progress" xml:space="preserve"><value>Đang lưu “{0}”…</value></data>
+  <data name="Save_Done" xml:space="preserve"><value>Đã lưu “{0}”</value></data>
+  <data name="Save_Cancelled" xml:space="preserve"><value>Đã hủy lưu; tệp không thay đổi</value></data>
+  <data name="Save_FailedStatus" xml:space="preserve"><value>Không lưu được tài liệu</value></data>
+  <data name="Save_Error_Title" xml:space="preserve"><value>Không lưu được tài liệu</value></data>
+  <data name="Save_Error_Locked" xml:space="preserve"><value>“{0}” đang được một chương trình khác mở nên không ghi đè được. Hãy đóng chương trình đó rồi lưu lại, hoặc lưu thành tệp khác.
+
+Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn nguyên.</value></data>
+  <data name="Save_Error_AccessDenied" xml:space="preserve"><value>Không có quyền ghi “{0}” (tệp chỉ đọc hoặc thư mục được bảo vệ). Hãy lưu thành tệp ở thư mục khác.
+
+Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn nguyên.</value></data>
+  <data name="Save_Error_DiskFull" xml:space="preserve"><value>Ổ đĩa không đủ chỗ để lưu “{0}”. Hãy giải phóng dung lượng rồi lưu lại.
+
+Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn nguyên.</value></data>
+  <data name="Save_Error_SourceUnreadable" xml:space="preserve"><value>Không đọc được dữ liệu của tài liệu để tạo “{0}”. Chi tiết đã được ghi vào nhật ký.
+
+Tệp gốc không bị thay đổi.</value></data>
+  <data name="Save_Error_Verification" xml:space="preserve"><value>Tệp vừa tạo cho “{0}” không mở lại được nên đã không được dùng. Chi tiết đã được ghi vào nhật ký.
+
+Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn nguyên.</value></data>
+  <data name="Save_Error_Failed" xml:space="preserve"><value>Đã xảy ra lỗi khi lưu “{0}”. Chi tiết đã được ghi vào nhật ký.
+
+Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn nguyên.</value></data>
+  <data name="Save_SaveAsButton" xml:space="preserve"><value>Lưu thành…</value></data>
+  <data name="Save_OverwriteAnyway" xml:space="preserve"><value>Vẫn ghi đè</value></data>
+  <data name="Save_Signed_Title" xml:space="preserve"><value>Tài liệu có chữ ký số</value></data>
+  <data name="Save_Signed_Message" xml:space="preserve"><value>“{0}” có chữ ký số. Ghi đè sẽ làm các chữ ký không còn hợp lệ. Nên lưu thành tệp khác để giữ bản đã ký.</value></data>
+  <data name="Save_Changed_Title" xml:space="preserve"><value>Tệp đã bị thay đổi</value></data>
+  <data name="Save_Changed_Message" xml:space="preserve"><value>“{0}” đã bị một chương trình khác thay đổi sau khi bạn mở. Ghi đè sẽ làm mất những thay đổi đó.</value></data>
+  <data name="Save_Dialog_Title" xml:space="preserve"><value>Lưu thành</value></data>
+  <data name="Save_Dialog_Filter" xml:space="preserve"><value>Tệp PDF (*.pdf)|*.pdf</value></data>
+  <data name="Save_AlreadyOpen" xml:space="preserve"><value>“{0}” đang mở ở một thẻ khác. Hãy đóng thẻ đó hoặc chọn tên khác.</value></data>
+
+  <!-- Closing with unsaved changes -->
+  <data name="Close_SaveChanges_Title" xml:space="preserve"><value>Lưu thay đổi?</value></data>
+  <data name="Close_SaveChanges_Message" xml:space="preserve"><value>Lưu các thay đổi của “{0}” trước khi đóng?</value></data>
+  <data name="Close_Save" xml:space="preserve"><value>Lưu</value></data>
+  <data name="Close_DontSave" xml:space="preserve"><value>Không lưu</value></data>
+
+  <!-- Crash recovery -->
+  <data name="Recovery_Title" xml:space="preserve"><value>Khôi phục tài liệu chưa lưu</value></data>
+  <data name="Recovery_Message" xml:space="preserve"><value>PDF_Pro đã đóng đột ngột khi các tài liệu dưới đây còn thay đổi chưa lưu. Chọn tài liệu muốn mở lại cùng các thay đổi đó.</value></data>
+  <data name="Recovery_Details" xml:space="preserve"><value>Sửa lần cuối {0} · {1} thay đổi</value></data>
+  <data name="Recovery_Untitled" xml:space="preserve"><value>(không tên)</value></data>
+  <data name="Recovery_Restore" xml:space="preserve"><value>Khôi phục mục đã chọn</value></data>
+  <data name="Recovery_DiscardAll" xml:space="preserve"><value>Bỏ tất cả</value></data>
+  <data name="Recovery_Later" xml:space="preserve"><value>Để sau</value></data>
+  <data name="Recovery_UncheckedWarning" xml:space="preserve"><value>{0} tài liệu không chọn sẽ bị bỏ các thay đổi chưa lưu.</value></data>
+  <data name="Recovery_ConfirmDiscard" xml:space="preserve"><value>Bỏ các thay đổi chưa lưu của cả {0} tài liệu? Không thể hoàn tác.</value></data>
+  <data name="Recovery_Back" xml:space="preserve"><value>Quay lại</value></data>
+  <data name="Recovery_Failed" xml:space="preserve"><value>Không khôi phục được “{0}”. Dữ liệu khôi phục vẫn được giữ để thử lại ở lần mở sau.</value></data>
+  <data name="Recovery_Done" xml:space="preserve"><value>Đã khôi phục {0} tài liệu</value></data>
 </root>

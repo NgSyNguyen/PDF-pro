@@ -16,7 +16,7 @@ using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.ViewModels;
 
-public sealed class MainWindowViewModelTests : IDisposable
+public sealed partial class MainWindowViewModelTests : IDisposable
 {
     private readonly IDialogService _dialogs = Substitute.For<IDialogService>();
     private readonly IAppLifetime _lifetime = Substitute.For<IAppLifetime>();
@@ -27,6 +27,8 @@ public sealed class MainWindowViewModelTests : IDisposable
     private readonly IMessageService _messages = Substitute.For<IMessageService>();
     private readonly IPrintDialogService _printDialogs = Substitute.For<IPrintDialogService>();
     private readonly IDocumentPrinter _printer = Substitute.For<IDocumentPrinter>();
+    private readonly IDocumentSaver _saver = Substitute.For<IDocumentSaver>();
+    private readonly IRecoveryService _recovery = Substitute.For<IRecoveryService>();
     private readonly FakeSettingsService _settings = new(AppSettings.Default);
     private readonly AppPaths _paths = new(@"C:\data\PdfPro", @"C:\app\tools");
     private readonly RenderCache _cache;
@@ -76,7 +78,7 @@ public sealed class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException",
+            ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException",
                 "edit.undo", "edit.redo", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate"],
             ignoreOrder: true);
 
@@ -97,11 +99,13 @@ public sealed class MainWindowViewModelTests : IDisposable
     }
 
     [Fact]
-    public void ExitCommand_ShutsDownTheApp()
+    public async Task ExitCommand_ShutsDownTheApp()
     {
+        _lifetime.ShutdownAsync().Returns(true);
+
         Command(Create(isDebugBuild: false), "app.exit").Command.Execute(null);
 
-        _lifetime.Received(1).Shutdown();
+        await _lifetime.Received(1).ShutdownAsync();
     }
 
     [Fact]
@@ -510,5 +514,7 @@ public sealed class MainWindowViewModelTests : IDisposable
             _messages,
             _printDialogs,
             _printer,
+            _saver,
+            _recovery,
             NullLogger<MainWindowViewModel>.Instance);
 }

@@ -173,7 +173,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private async Task RestartNowAsync()
     {
         await PendingSave;
-        _lifetime.Restart();
+        await _lifetime.RestartAsync();
     }
 
     private async Task SaveAsync(Func<AppSettings, AppSettings> update)

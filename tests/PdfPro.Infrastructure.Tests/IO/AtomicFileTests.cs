@@ -183,7 +183,7 @@ public sealed class AtomicFileTests : IDisposable
     }
 
     [Fact]
-    public async Task Write_ReportsTheSwapBeforeDoingIt_AndCanDropTheBackup()
+    public async Task Write_ReportsItsFilesBeforeWriting_AndCanDropTheBackup()
     {
         var path = _temp.Combine("doc.pdf");
         var backup = _temp.Combine(".doc.pdf.bak");
@@ -192,14 +192,19 @@ public sealed class AtomicFileTests : IDisposable
 
         await AtomicFile.WriteAsync(
             path,
-            (s, ct) => s.WriteAsync("v2"u8.ToArray(), ct).AsTask(),
+            (s, ct) =>
+            {
+                recorded.ShouldNotBeNull("the paths are recorded before anything is written");
+                return s.WriteAsync("v2"u8.ToArray(), ct).AsTask();
+            },
             new AtomicWriteOptions
             {
                 BackupPath = backup,
                 DeleteBackupAfterSwap = true,
-                BeforeSwapAsync = (temp, bak, _) =>
+                BeforeWriteAsync = (temp, bak, _) =>
                 {
-                    File.Exists(temp).ShouldBeTrue();
+                    File.Exists(temp).ShouldBeFalse();
+                    Path.GetDirectoryName(temp).ShouldBe(_temp.Path);
                     recorded = (temp, bak);
                     return Task.CompletedTask;
                 },
@@ -211,6 +216,28 @@ public sealed class AtomicFileTests : IDisposable
         File.Exists(recorded.Value.Temp).ShouldBeFalse();
         File.Exists(backup).ShouldBeFalse();
         (await File.ReadAllTextAsync(path, TestToken)).ShouldBe("v2");
+    }
+
+    [Fact]
+    public async Task Write_RecordingFails_WritesNothing()
+    {
+        var path = _temp.Combine("doc.pdf");
+        await File.WriteAllTextAsync(path, "v1", TestToken);
+        var written = false;
+
+        await Should.ThrowAsync<IOException>(() => AtomicFile.WriteAsync(
+            path,
+            (_, _) =>
+            {
+                written = true;
+                return Task.CompletedTask;
+            },
+            new AtomicWriteOptions { BeforeWriteAsync = (_, _, _) => throw new IOException("manifest") },
+            TestToken));
+
+        written.ShouldBeFalse();
+        Directory.GetFiles(_temp.Path).ShouldBe([path]);
+        (await File.ReadAllTextAsync(path, TestToken)).ShouldBe("v1");
     }
 
     [Fact]

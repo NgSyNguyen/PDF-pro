@@ -30,6 +30,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IMessageService _messages;
     private readonly IPrintDialogService _printDialogs;
     private readonly IDocumentPrinter _printer;
+    private readonly IDocumentSaver _saver;
+    private readonly IRecoveryService _recovery;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -47,6 +49,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IMessageService messages,
         IPrintDialogService printDialogs,
         IDocumentPrinter printer,
+        IDocumentSaver saver,
+        IRecoveryService recovery,
         ILogger<MainWindowViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
@@ -61,6 +65,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _messages = messages;
         _printDialogs = printDialogs;
         _printer = printer;
+        _saver = saver;
+        _recovery = recovery;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -85,7 +91,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -208,6 +214,18 @@ public sealed partial class MainWindowViewModel : ObservableObject
             return;
         }
 
+        // Unsaved changes: Lưu / Không lưu / Hủy. A save that fails keeps the tab open.
+        if (document.IsDirty && !document.DiscardChanges)
+        {
+            var choice = await AskToSaveAsync(document, exiting: false);
+            if (choice == UnsavedChoice.Cancel || !Tabs.Contains(document))
+            {
+                return;
+            }
+
+            document.DiscardChanges = choice == UnsavedChoice.Discard;
+        }
+
         var index = Tabs.IndexOf(document);
         Tabs.Remove(document);
         if (SelectedTab is null || ReferenceEquals(SelectedTab, document))
@@ -309,6 +327,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             UpdateHistoryToolTips();
         }
+
+        if (e.PropertyName == nameof(DocumentTabViewModel.IsDirty))
+        {
+            NotifySaveCommands();
+        }
     }
 
     private void UpdateHistoryToolTips()
@@ -323,6 +346,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (e.PropertyName == nameof(StatusBarViewModel.IsTaskRunning))
         {
             PrintCommand.NotifyCanExecuteChanged();
+            NotifySaveCommands();
         }
     }
 
@@ -341,8 +365,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings() => _dialogs.ShowSettings();
 
+    /// <summary>"Thoát" and the window's X: asks about unsaved documents, then closes the application.</summary>
     [RelayCommand]
-    private void Exit() => _lifetime.Shutdown();
+    private Task ExitAsync() => _lifetime.ShutdownAsync();
 
     [RelayCommand]
     private void OpenLogFolder() => _shell.OpenFolder(_paths.LogsDirectory);
@@ -392,8 +417,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Document,
                 [
                     new("file.open", Strings.Cmd_Open, SymbolRegular.FolderOpen24, OpenCommand),
-                    new("file.save", Strings.Cmd_Save, SymbolRegular.Save24),
-                    new("file.saveAs", Strings.Cmd_SaveAs, SymbolRegular.SaveEdit24),
+                    new("file.save", Strings.Cmd_Save, SymbolRegular.Save24, SaveCommand),
+                    new("file.saveAs", Strings.Cmd_SaveAs, SymbolRegular.SaveEdit24, SaveAsCommand),
                     new("file.print", Strings.Cmd_Print, SymbolRegular.Print24, PrintCommand),
                     new("file.properties", Strings.Cmd_Properties, SymbolRegular.DocumentData24, ShowPropertiesCommand),
                     new("file.close", Strings.Cmd_Close, SymbolRegular.Dismiss24, CloseActiveDocumentCommand),

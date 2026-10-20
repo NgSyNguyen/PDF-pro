@@ -15,10 +15,11 @@ public sealed record AtomicWriteOptions
     public Func<string, CancellationToken, Task>? VerifyAsync { get; init; }
 
     /// <summary>
-    /// Called with the temporary and backup paths right before the swap: record them so that a crash during the swap
-    /// can be repaired with <see cref="AtomicFile.RecoverInterruptedSwap"/>.
+    /// Called with the temporary and backup paths before anything is written: record them so that a crash while
+    /// writing, verifying or swapping can be repaired with <see cref="AtomicFile.RecoverInterruptedSwap"/> (partial
+    /// temporary file removed, previous content put back). An exception aborts the write.
     /// </summary>
-    public Func<string, string?, CancellationToken, Task>? BeforeSwapAsync { get; init; }
+    public Func<string, string?, CancellationToken, Task>? BeforeWriteAsync { get; init; }
 }
 
 /// <summary>What <see cref="AtomicFile.RecoverInterruptedSwap"/> found.</summary>
@@ -76,6 +77,10 @@ public static class AtomicFile
         var fullPath = Path.GetFullPath(path);
         var tempPath = TempPathFor(fullPath);
         var backupPath = options.BackupPath is null ? null : Path.GetFullPath(options.BackupPath);
+        if (options.BeforeWriteAsync is { } beforeWrite)
+        {
+            await beforeWrite(tempPath, backupPath, cancellationToken).ConfigureAwait(false);
+        }
 
         try
         {
@@ -107,11 +112,6 @@ public static class AtomicFile
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            if (options.BeforeSwapAsync is { } beforeSwap)
-            {
-                await beforeSwap(tempPath, backupPath, cancellationToken).ConfigureAwait(false);
-            }
-
             Swap(tempPath, fullPath, backupPath);
         }
         catch
@@ -136,7 +136,7 @@ public static class AtomicFile
 
     /// <summary>
     /// Repairs the leftovers of a swap interrupted by a crash or power loss (paths recorded by
-    /// <see cref="AtomicWriteOptions.BeforeSwapAsync"/>): when the destination was moved aside and not replaced, the
+    /// <see cref="AtomicWriteOptions.BeforeWriteAsync"/>): when the destination was moved aside and not replaced, the
     /// previous content is put back; otherwise the temporary and backup files are removed.
     /// </summary>
     public static SwapRecovery RecoverInterruptedSwap(string path, string tempPath, string? backupPath)

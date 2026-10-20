@@ -1,0 +1,239 @@
+using System.Text;
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using PdfPro.App.Services.Documents;
+using PdfPro.App.Tests.TestSupport;
+using PdfPro.Core.Operations;
+using PdfPro.Core.Organizing;
+using PdfPro.Infrastructure.IO;
+using PdfPro.Infrastructure.Sessions;
+using PdfPro.Operations.Organizing;
+using PdfPro.Pdfium;
+
+namespace PdfPro.App.Tests.Documents;
+
+public sealed class DocumentSaverTests : IDisposable
+{
+    private static readonly byte[] OldContent = Encoding.ASCII.GetBytes("%PDF-1.4 original");
+    private static readonly byte[] NewContent = Encoding.ASCII.GetBytes("%PDF-1.7 saved by PDF_Pro");
+
+    private readonly WorkspaceFixture _fixture = new();
+    private readonly IPlanMaterializer _materializer = Substitute.For<IPlanMaterializer>();
+    private readonly IPdfDocumentLoader _loader = Substitute.For<IPdfDocumentLoader>();
+    private readonly IProgress<OperationProgress> _progress = Substitute.For<IProgress<OperationProgress>>();
+    private readonly DocumentSaver _saver;
+    private int _reopenedPages = 3;
+
+    public DocumentSaverTests()
+    {
+        _saver = new DocumentSaver(_materializer, _loader, NullLogger<DocumentSaver>.Instance);
+        _materializer.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<Stream>(1).WriteAsync(NewContent, call.ArgAt<CancellationToken>(3)).AsTask());
+        _loader.LoadAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<IPdfDocument>(FakePdfDocument.WithPages(_reopenedPages)));
+    }
+
+    private static CancellationToken TestToken => TestContext.Current.CancellationToken;
+
+    public void Dispose() => _fixture.Dispose();
+
+    [Fact]
+    public async Task Save_ReplacesTheFileAndMarksTheDocumentSaved()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        MaterializeRequest? request = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(call => request = call.ArgAt<MaterializeRequest>(0));
+
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(NewContent);
+        workspace.IsDirty.ShouldBeFalse();
+        workspace.IsBusy.ShouldBeFalse();
+        workspace.OriginalStamp.ShouldBe(FileStamp.Read(path));
+        workspace.HasChangedOnDisk().ShouldBeFalse();
+        LeftoversNextTo(path).ShouldBeEmpty();
+
+        request.ShouldNotBeNull();
+        request.Plan.ShouldBeSameAs(workspace.Session.Plan);
+        request.BaseSourceId.ShouldBe(SourceIds.Original);
+        request.SourcePaths[SourceIds.Original].ShouldStartWith(workspace.Session.Directory);
+        request.WorkingDirectory.ShouldBe(workspace.WorkDirectory);
+        await _loader.Received(1).LoadAsync(Arg.Is<string>(p => p != path), Arg.Is<string?>(p => p == null), Arg.Any<CancellationToken>());
+
+        var manifest = await ReadManifestAsync(workspace);
+        manifest.IsDirty.ShouldBeFalse();
+        manifest.PendingSave.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Save_RecordsItsFilesInTheManifestBeforeWriting()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        var manifestPath = Path.Combine(workspace.Session.Directory, SessionStore.ManifestFileName);
+        PendingSaveDto? recorded = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(_ => recorded = SessionManifestSerializer.Deserialize(File.ReadAllText(manifestPath)).PendingSave);
+
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        recorded.ShouldNotBeNull("a crash while writing must be repairable");
+        recorded.TargetPath.ShouldBe(path);
+        Path.GetDirectoryName(recorded.TempPath).ShouldBe(Path.GetDirectoryName(path));
+        recorded.BackupPath.ShouldNotBeNull();
+        (await ReadManifestAsync(workspace)).PendingSave.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SaveAs_NewFile_BecomesTheDocumentsFile()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        var target = Path.Combine(Path.GetDirectoryName(path)!, "Bản sao.pdf");
+
+        await _saver.SaveAsync(workspace, target, _progress, TestToken);
+
+        (await File.ReadAllBytesAsync(target, TestToken)).ShouldBe(NewContent);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+        workspace.FilePath.ShouldBe(target);
+        workspace.FileName.ShouldBe("Bản sao.pdf");
+        workspace.IsDirty.ShouldBeFalse();
+        (await ReadManifestAsync(workspace)).OriginalPath.ShouldBe(target);
+    }
+
+    [Fact]
+    public async Task Save_TargetLockedByAnotherProgram_FailsAsLockedAndKeepsTheFile()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+
+        DocumentSaveException error;
+        await using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            error = await Should.ThrowAsync<DocumentSaveException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+        }
+
+        error.Failure.ShouldBe(SaveFailure.Locked);
+        error.Message.ShouldNotContain(path);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+        workspace.IsDirty.ShouldBeTrue();
+        workspace.IsBusy.ShouldBeFalse();
+        LeftoversNextTo(path).ShouldBeEmpty();
+        (await ReadManifestAsync(workspace)).PendingSave.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Save_WrittenFileWithWrongPageCount_IsNotUsed()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        _reopenedPages = 2;
+
+        var error = await Should.ThrowAsync<DocumentSaveException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        error.Failure.ShouldBe(SaveFailure.VerificationFailed);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+        LeftoversNextTo(path).ShouldBeEmpty();
+        workspace.IsDirty.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Save_WrittenFileThatDoesNotOpen_IsNotUsed()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        _loader.LoadAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new PdfDocumentException(PdfOpenFailure.Corrupted, "broken"));
+
+        var error = await Should.ThrowAsync<DocumentSaveException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        error.Failure.ShouldBe(SaveFailure.VerificationFailed);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+    }
+
+    [Fact]
+    public async Task Save_SourceThatCannotBeRead_FailsAsSourceUnreadable()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        _materializer.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new MaterializationException(MaterializationFailure.SourceUnreadable, SourceIds.Original));
+
+        var error = await Should.ThrowAsync<DocumentSaveException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        error.Failure.ShouldBe(SaveFailure.SourceUnreadable);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+        LeftoversNextTo(path).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Save_Cancelled_KeepsTheFileAndTheChanges()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        using var cancellation = new CancellationTokenSource();
+        _materializer.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>())
+            .Returns(async call =>
+            {
+                await cancellation.CancelAsync();
+                call.ArgAt<CancellationToken>(3).ThrowIfCancellationRequested();
+            });
+
+        await Should.ThrowAsync<OperationCanceledException>(() => _saver.SaveAsync(workspace, path, _progress, cancellation.Token));
+
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+        LeftoversNextTo(path).ShouldBeEmpty();
+        workspace.IsDirty.ShouldBeTrue();
+        workspace.IsBusy.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Save_BlocksEditsWhileWriting()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        bool? canEditWhileWriting = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(_ => canEditWhileWriting = workspace.CanEdit);
+
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        canEditWhileWriting.ShouldBe(false);
+        workspace.CanEdit.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Save_PasswordProtectedDocument_IsRefused()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var document = FakePdfDocument.WithPages(3);
+        document.Features = FakePdfDocument.PlainFeatures with { SecurityHandlerRevision = 4 };
+        var workspace = await _fixture.CreateAsync(document, path);
+
+        await Should.ThrowAsync<InvalidOperationException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+    }
+
+    private async Task<DocumentWorkspace> DirtyWorkspaceAsync(string path)
+    {
+        var workspace = await _fixture.CreateAsync(FakePdfDocument.WithPages(3), path);
+        workspace.Apply(TestOperations.Catalog().Get<RotatePagesOperation>(), new RotatePagesParams("1", 90)).ShouldBeTrue();
+        workspace.IsDirty.ShouldBeTrue();
+        return workspace;
+    }
+
+    /// <summary>Temporary or backup files of a save (".a.pdf.{guid}.tmp/.bak").</summary>
+    private static string[] LeftoversNextTo(string path)
+        => Directory.GetFiles(Path.GetDirectoryName(path)!, $".{Path.GetFileName(path)}.*");
+
+    private static async Task<SessionManifest> ReadManifestAsync(DocumentWorkspace workspace)
+    {
+        await workspace.FlushManifestAsync();
+        var json = await File.ReadAllTextAsync(Path.Combine(workspace.Session.Directory, SessionStore.ManifestFileName), TestContext.Current.CancellationToken);
+        return SessionManifestSerializer.Deserialize(json);
+    }
+}
