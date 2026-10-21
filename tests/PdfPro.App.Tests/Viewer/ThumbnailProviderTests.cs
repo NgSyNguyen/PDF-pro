@@ -212,6 +212,29 @@ public sealed class ThumbnailProviderTests : IDisposable
         request.CanUseDiskCache.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task OrganizerTile_RendersAtItsSizeApartFromTheSidebarThumbnailAndStaysOffDisk()
+    {
+        var provider = CreateProvider(_cache);
+        var page = VirtualDocuments.Of(_document).Pages[3];
+        var sidebar = new ThumbnailRequest(page, _file, 1.0);
+        var tile = new ThumbnailRequest(page, _file, 1.0, BoxWidth: 280);
+
+        var sidebarImage = (BitmapSource)await provider.GetAsync(sidebar, CancellationToken.None);
+        var tileImage = (BitmapSource)await provider.GetAsync(tile, CancellationToken.None);
+        await provider.WhenWritesCompleteAsync();
+
+        _renderer.Calls.Count.ShouldBe(2);
+        _renderer.Calls[1].Scale.ShouldBe(ThumbnailGeometry.ScaleFor(FakePdfDocument.A4, 280), 1e-9);
+        tileImage.PixelWidth.ShouldBe(tile.Pixels.Width);
+        tileImage.PixelWidth.ShouldBeGreaterThan(sidebarImage.PixelWidth);
+        tile.CacheKey.ShouldNotBe(sidebar.CacheKey);
+        provider.TryGetCached(sidebar, out var stillCached).ShouldBeTrue();
+        stillCached.ShouldBeSameAs(sidebarImage);
+        tile.CanUseDiskCache.ShouldBeFalse();
+        sidebar.CanUseDiskCache.ShouldBeTrue();
+    }
+
     private ThumbnailRequest Request(IPdfDocument document, string file, int pageIndex, double dpiScale)
         => new(VirtualDocuments.Of(document).Pages[pageIndex], file, dpiScale);
 

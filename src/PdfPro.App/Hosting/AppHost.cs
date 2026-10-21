@@ -53,6 +53,7 @@ internal static class AppHost
         services.AddSingleton<IShellLauncher, ShellLauncher>();
         services.AddSingleton<IMessageService, MessageService>();
         services.AddSingleton<IFileDialogService, FileDialogService>();
+        services.AddSingleton<IPageDialogService, PageDialogService>();
         services.AddSingleton<IPasswordPrompt, PasswordPrompt>();
         services.AddSingleton<IUiDispatcher, WpfUiDispatcher>();
         services.AddSingleton<IDebouncerFactory, DispatcherDebouncerFactory>();
@@ -73,13 +74,14 @@ internal static class AppHost
         // Document sessions, page operations and writing PDF files
         services.AddSingleton<ISourceRepairer, PdfiumSourceRepairer>();
         services.AddSingleton<IPlanMaterializer, PdfSharpPlanMaterializer>();
-        services.AddPlanOperation<RotatePagesOperation>();
-        services.AddPlanOperation<MovePagesOperation>();
-        services.AddPlanOperation<DeletePagesOperation>();
-        services.AddPlanOperation<DuplicatePagesOperation>();
-        services.AddPlanOperation<InsertBlankPagesOperation>();
-        services.AddPlanOperation<InsertPagesOperation>();
-        services.AddPlanOperation<CropPagesOperation>();
+        services.AddOperation<RotatePagesOperation>();
+        services.AddOperation<MovePagesOperation>();
+        services.AddOperation<DeletePagesOperation>();
+        services.AddOperation<DuplicatePagesOperation>();
+        services.AddOperation<InsertBlankPagesOperation>();
+        services.AddOperation<InsertPagesOperation>();
+        services.AddOperation<CropPagesOperation>();
+        services.AddOperation<ExtractPagesOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();
@@ -94,8 +96,8 @@ internal static class AppHost
         return services;
     }
 
-    /// <summary>Registers a page operation once, reachable as itself and through the operation catalog.</summary>
-    private static IServiceCollection AddPlanOperation<T>(this IServiceCollection services)
+    /// <summary>Registers an operation once, reachable as itself and through the operation catalog.</summary>
+    private static IServiceCollection AddOperation<T>(this IServiceCollection services)
         where T : class, IPdfOperation
     {
         services.AddSingleton<T>();

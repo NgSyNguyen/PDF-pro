@@ -1,0 +1,286 @@
+<UserControl
+  x:Class="PdfPro.App.Views.OrganizerView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:dd="urn:gong-wpf-dragdrop"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:controls="clr-namespace:PdfPro.App.Controls"
+  xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
+  xmlns:organizer="clr-namespace:PdfPro.App.ViewModels.Organizer"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:DocumentTabViewModel}"
+  d:DesignHeight="600"
+  d:DesignWidth="900">
+  <UserControl.Resources>
+    <!--
+      A tile: margin 6 + padding 6 + 2 around the box on each side (PageOrganizerViewModel.TileChrome = 28), then the
+      box and the number. The 2 around the box leave room for the thicker frame of a selected page.
+    -->
+    <Style x:Key="TileItemStyle" TargetType="ListBoxItem">
+      <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+      <Setter Property="Margin" Value="6" />
+      <Setter Property="Padding" Value="6" />
+      <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ListBoxItem">
+            <Border
+              x:Name="Root"
+              Padding="{TemplateBinding Padding}"
+              Background="Transparent"
+              BorderBrush="Transparent"
+              BorderThickness="1"
+              CornerRadius="6">
+              <ContentPresenter />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              </Trigger>
+              <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource FocusStrokeColorOuterBrush}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <DataTemplate x:Key="TileTemplate" DataType="{x:Type organizer:PageTileViewModel}">
+      <StackPanel>
+        <Grid>
+          <!-- Reserves the box (plus room for the selection frame) whatever the page's shape. -->
+          <Border
+            Width="{Binding BoxWidth}"
+            Height="{Binding BoxHeight}"
+            Margin="2" />
+          <Border
+            x:Name="Frame"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Background="White"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1">
+            <Grid Width="{Binding Width}" Height="{Binding Height}">
+              <!-- The image is upright; the page plan's rotation turns it here, so a turned page shows at once. -->
+              <Image
+                controls:Realization.IsEnabled="True"
+                RenderOptions.BitmapScalingMode="HighQuality"
+                Source="{Binding Image}"
+                Stretch="Fill">
+                <Image.LayoutTransform>
+                  <RotateTransform Angle="{Binding Angle}" />
+                </Image.LayoutTransform>
+              </Image>
+              <ui:SymbolIcon
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="28"
+                Foreground="Gray"
+                Symbol="DocumentError24"
+                ToolTip="{loc:Tr Thumbnail_LoadFailed}"
+                Visibility="{Binding LoadFailed, Converter={StaticResource BoolToVisibility}}" />
+            </Grid>
+          </Border>
+        </Grid>
+        <TextBlock
+          x:Name="Number"
+          Height="24"
+          Padding="0,4,0,0"
+          HorizontalAlignment="Center"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{Binding Number}" />
+      </StackPanel>
+      <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+          <Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+          <Setter TargetName="Frame" Property="BorderThickness" Value="3" />
+          <Setter TargetName="Frame" Property="Margin" Value="-2" />
+          <Setter TargetName="Number" Property="FontWeight" Value="SemiBold" />
+          <Setter TargetName="Number" Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        </DataTrigger>
+      </DataTemplate.Triggers>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <DockPanel>
+    <!-- Toolbar: back to the viewer, select by page range, selection summary, tile size -->
+    <Border
+      Padding="4,4,8,8"
+      BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+      BorderThickness="0,0,0,1"
+      DockPanel.Dock="Top">
+      <DockPanel LastChildFill="False">
+        <ui:Button
+          Margin="0,0,16,0"
+          AutomationProperties.AutomationId="OrganizerBack"
+          Command="{Binding ToggleOrganizeModeCommand}"
+          Content="{loc:Tr Organizer_Back}"
+          DockPanel.Dock="Left"
+          Icon="{ui:SymbolIcon ArrowLeft24}"
+          ToolTip="{loc:Tr Organizer_Back_ToolTip}" />
+
+        <StackPanel
+          DataContext="{Binding Organizer}"
+          DockPanel.Dock="Left"
+          Orientation="Horizontal">
+          <TextBlock VerticalAlignment="Center" Text="{loc:Tr Organizer_RangeLabel}" />
+          <TextBox
+            x:Name="RangeBox"
+            Width="180"
+            Margin="8,0,0,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="OrganizerRange"
+            AutomationProperties.Name="{loc:Tr Organizer_RangeLabel}"
+            Text="{Binding RangeText, UpdateSourceTrigger=PropertyChanged}"
+            ToolTip="{loc:Tr Organizer_Range_ToolTip}">
+            <TextBox.InputBindings>
+              <KeyBinding Key="Enter" Command="{Binding SelectRangeCommand}" />
+            </TextBox.InputBindings>
+          </TextBox>
+          <TextBlock
+            MaxWidth="360"
+            Margin="12,0,0,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="OrganizerRangeError"
+            Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+            Text="{Binding RangeError}"
+            TextTrimming="CharacterEllipsis"
+            ToolTip="{Binding RangeError}"
+            Visibility="{Binding RangeError, Converter={StaticResource NullToCollapsed}}" />
+        </StackPanel>
+
+        <StackPanel
+          DataContext="{Binding Organizer}"
+          DockPanel.Dock="Right"
+          Orientation="Horizontal">
+          <TextBlock
+            Margin="0,0,16,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="OrganizerSelection"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{Binding SelectionSummary}" />
+          <ui:Button
+            Padding="6,4"
+            Appearance="Transparent"
+            AutomationProperties.AutomationId="OrganizerSmaller"
+            AutomationProperties.Name="{loc:Tr Organizer_SmallerTiles}"
+            BorderThickness="0"
+            Command="{Binding ZoomTilesOutCommand}"
+            Icon="{ui:SymbolIcon ZoomOut24}"
+            ToolTip="{loc:Tr Organizer_SmallerTiles}" />
+          <Slider
+            Width="140"
+            Margin="4,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="OrganizerTileSize"
+            AutomationProperties.Name="{loc:Tr Organizer_TileSize}"
+            IsSnapToTickEnabled="True"
+            LargeChange="40"
+            Maximum="360"
+            Minimum="120"
+            SmallChange="40"
+            TickFrequency="40"
+            ToolTip="{loc:Tr Organizer_TileSize}"
+            Value="{Binding TileSize}" />
+          <ui:Button
+            Padding="6,4"
+            Appearance="Transparent"
+            AutomationProperties.AutomationId="OrganizerLarger"
+            AutomationProperties.Name="{loc:Tr Organizer_LargerTiles}"
+            BorderThickness="0"
+            Command="{Binding ZoomTilesInCommand}"
+            Icon="{ui:SymbolIcon ZoomIn24}"
+            ToolTip="{loc:Tr Organizer_LargerTiles}" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!--
+      Virtualized and recycled grid: only visible tiles exist and hold images (Realization). Pages are dragged with
+      gong-wpf-dragdrop (the selection moves together); PDF files dropped from Explorer are inserted where they land.
+    -->
+    <controls:PageTileListBox
+      x:Name="TileList"
+      dd:DragDrop.DropHandler="{Binding Organizer}"
+      dd:DragDrop.IsDragSource="{Binding CanEditPages}"
+      dd:DragDrop.IsDropTarget="{Binding CanEditPages}"
+      dd:DragDrop.ItemsPanelOrientation="Horizontal"
+      dd:DragDrop.UseDefaultDragAdorner="True"
+      AutomationProperties.AutomationId="OrganizerGrid"
+      AutomationProperties.Name="{loc:Tr Organizer_Grid_Name}"
+      Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+      BorderThickness="0"
+      ItemContainerStyle="{StaticResource TileItemStyle}"
+      ItemTemplate="{StaticResource TileTemplate}"
+      ItemsSource="{Binding Organizer.Tiles}"
+      OpenItemCommand="{Binding Organizer.OpenPageCommand}"
+      PreviewMouseWheel="OnPreviewMouseWheel"
+      ScrollViewer.CanContentScroll="True"
+      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+      ScrollViewer.VerticalScrollBarVisibility="Visible"
+      SelectionHost="{Binding Organizer}"
+      UseLayoutRounding="True"
+      VirtualizingPanel.IsVirtualizing="True"
+      VirtualizingPanel.VirtualizationMode="Recycling">
+      <controls:PageTileListBox.InputBindings>
+        <KeyBinding Key="Delete" Command="{Binding DeletePagesCommand}" />
+      </controls:PageTileListBox.InputBindings>
+      <controls:PageTileListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+          <controls:VirtualizingTilePanel
+            Background="Transparent"
+            TileHeight="{Binding Organizer.CellHeight}"
+            TileWidth="{Binding Organizer.CellWidth}" />
+        </ItemsPanelTemplate>
+      </controls:PageTileListBox.ItemsPanel>
+      <controls:PageTileListBox.ContextMenu>
+        <ContextMenu>
+          <MenuItem
+            Command="{Binding RotateLeftCommand}"
+            Header="{loc:Tr Cmd_RotateLeft}"
+            Icon="{ui:SymbolIcon ArrowRotateCounterclockwise24}"
+            InputGestureText="Ctrl+Shift+R" />
+          <MenuItem
+            Command="{Binding RotateRightCommand}"
+            Header="{loc:Tr Cmd_RotateRight}"
+            Icon="{ui:SymbolIcon ArrowRotateClockwise24}"
+            InputGestureText="Ctrl+R" />
+          <MenuItem
+            Command="{Binding DuplicatePagesCommand}"
+            Header="{loc:Tr Cmd_DuplicatePages}"
+            Icon="{ui:SymbolIcon DocumentCopy24}" />
+          <MenuItem
+            Command="{Binding DeletePagesCommand}"
+            Header="{loc:Tr Cmd_DeletePages}"
+            Icon="{ui:SymbolIcon Delete24}"
+            InputGestureText="Delete" />
+          <Separator />
+          <MenuItem
+            Command="{Binding InsertBlankPagesCommand}"
+            Header="{loc:Tr Menu_InsertBlank}"
+            Icon="{ui:SymbolIcon DocumentAdd24}" />
+          <MenuItem
+            Command="{Binding InsertPagesFromFileCommand}"
+            Header="{loc:Tr Menu_InsertFromFile}"
+            Icon="{ui:SymbolIcon DocumentArrowLeft24}" />
+          <MenuItem
+            Command="{Binding ExtractPagesCommand}"
+            Header="{loc:Tr Menu_ExtractPages}"
+            Icon="{ui:SymbolIcon DocumentArrowRight24}" />
+          <Separator />
+          <MenuItem
+            Command="{Binding Organizer.SelectAllCommand}"
+            Header="{loc:Tr Organizer_SelectAll}"
+            InputGestureText="Ctrl+A" />
+        </ContextMenu>
+      </controls:PageTileListBox.ContextMenu>
+    </controls:PageTileListBox>
+  </DockPanel>
+</UserControl>

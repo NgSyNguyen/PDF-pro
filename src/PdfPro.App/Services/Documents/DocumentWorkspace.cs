@@ -151,6 +151,63 @@ public sealed class DocumentWorkspace : IAsyncDisposable
         return true;
     }
 
+    /// <summary>
+    /// Copies a PDF file into the session folder and opens the copy as a new source ("s1", "s2"…) whose pages can then
+    /// be inserted. The source stays in the session (an undone insert can be redone, a crash restores it). Password
+    /// protected files are refused for now (Phase 8, security).
+    /// </summary>
+    /// <param name="path">The file to add.</param>
+    /// <param name="loader">Opens the copy.</param>
+    /// <param name="cancellationToken">Cancels copying and opening; nothing is added then.</param>
+    /// <exception cref="PdfDocumentException">The file cannot be opened, or it is password protected
+    /// (<see cref="PdfOpenFailure.PasswordRequired"/>).</exception>
+    /// <exception cref="IOException">The file could not be copied.</exception>
+    /// <exception cref="UnauthorizedAccessException">The file could not be read.</exception>
+    public async Task<OpenSource> AddSourceAsync(string path, IPdfDocumentLoader loader, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(loader);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var id = Session.NextSourceId(SessionSourceKind.Inserted);
+        var fileName = SessionStore.SourceFileName(id);
+        var copy = _folder.PathOf(fileName);
+        IPdfDocument? document = null;
+        try
+        {
+            await _store.CopySourceAsync(_folder, id, path, cancellationToken);
+            document = await loader.LoadAsync(copy, password: null, cancellationToken);
+            if (document.Features.IsEncrypted)
+            {
+                throw new PdfPasswordRequiredException();
+            }
+
+            if (document.PageCount == 0)
+            {
+                throw new PdfDocumentException(PdfOpenFailure.Corrupted, "The PDF document has no pages.");
+            }
+
+            ObjectDisposedException.ThrowIf(_disposed, this);
+        }
+        catch
+        {
+            if (document is not null)
+            {
+                await document.DisposeAsync();
+            }
+
+            TryDelete(copy);
+            throw;
+        }
+
+        var source = new SessionSource(id, fileName, SessionSourceKind.Inserted, document.PageCount, Path.GetFileName(path));
+        var open = new OpenSource(source, copy, document);
+        Session.AddSource(source);
+        _sources.Add(id, open);
+        _logger.LogInformation("Session {SessionId}: source {SourceId} added ({PageCount} pages)", Session.Id, id, document.PageCount);
+        ScheduleManifest();
+        return open;
+    }
+
     /// <summary>Undoes <paramref name="steps"/> steps (the history menu jumps several at once).</summary>
     public void Undo(int steps = 1)
     {
@@ -275,6 +332,18 @@ public sealed class DocumentWorkspace : IAsyncDisposable
     }
 
     private Dictionary<string, IPdfDocument> Documents() => _sources.ToDictionary(s => s.Key, s => s.Value.Document, StringComparer.Ordinal);
+
+    private void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogDebug("A source copy that was not added could not be removed: {ErrorType}", ex.GetType().Name);
+        }
+    }
 
     private void EnsureEditable()
     {

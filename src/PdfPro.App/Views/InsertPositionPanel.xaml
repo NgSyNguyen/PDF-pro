@@ -1,0 +1,64 @@
+<UserControl
+  x:Class="PdfPro.App.Views.InsertPositionPanel"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:organizer="clr-namespace:PdfPro.App.ViewModels.Organizer"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=organizer:InsertPositionViewModel}">
+  <!-- "Vị trí": before/after the first page, the last page or page N. DataContext: InsertPositionViewModel. -->
+  <StackPanel>
+    <TextBlock FontWeight="SemiBold" Text="{loc:Tr Insert_Position}" />
+    <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+      <RadioButton
+        MinWidth="0"
+        Margin="0,0,16,0"
+        AutomationProperties.AutomationId="InsertAfter"
+        Content="{loc:Tr Insert_After}"
+        GroupName="InsertLocation"
+        IsChecked="{Binding IsAfter}" />
+      <RadioButton
+        MinWidth="0"
+        AutomationProperties.AutomationId="InsertBefore"
+        Content="{loc:Tr Insert_Before}"
+        GroupName="InsertLocation"
+        IsChecked="{Binding IsBefore}" />
+    </StackPanel>
+    <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+      <RadioButton
+        MinWidth="0"
+        Margin="0,0,16,0"
+        AutomationProperties.AutomationId="InsertFirstPage"
+        Content="{loc:Tr Insert_FirstPage}"
+        GroupName="InsertAnchor"
+        IsChecked="{Binding IsFirstPage}" />
+      <RadioButton
+        MinWidth="0"
+        Margin="0,0,16,0"
+        AutomationProperties.AutomationId="InsertLastPage"
+        Content="{loc:Tr Insert_LastPage}"
+        GroupName="InsertAnchor"
+        IsChecked="{Binding IsLastPage}" />
+      <RadioButton
+        MinWidth="0"
+        Margin="0,0,8,0"
+        AutomationProperties.AutomationId="InsertPageNumberChoice"
+        Content="{loc:Tr Insert_PageNumber}"
+        GroupName="InsertAnchor"
+        IsChecked="{Binding IsPageNumber}" />
+      <TextBox
+        Width="72"
+        VerticalAlignment="Center"
+        AutomationProperties.AutomationId="InsertPageNumber"
+        AutomationProperties.Name="{loc:Tr Insert_PageNumber}"
+        IsEnabled="{Binding IsPageNumber}"
+        Text="{Binding PageNumberText, UpdateSourceTrigger=PropertyChanged}" />
+      <TextBlock
+        Margin="8,0,0,0"
+        VerticalAlignment="Center"
+        Text="{Binding PageCountText}" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

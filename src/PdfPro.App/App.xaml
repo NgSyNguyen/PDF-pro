@@ -15,6 +15,7 @@
 
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
       <controls:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" IsInverted="True" />
+      <controls:NullToCollapsedConverter x:Key="NullToCollapsed" />
     </ResourceDictionary>
   </Application.Resources>
 </Application>

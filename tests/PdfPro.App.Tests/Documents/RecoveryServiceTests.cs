@@ -171,6 +171,34 @@ public sealed class RecoveryServiceTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task Recover_InsertedPages_ComeBackFromTheSessionsCopyOfTheFile()
+    {
+        var workspace = await _fixture.CreateAsync(FakePdfDocument.WithPages(3), @"C:\docs\a.pdf");
+        await workspace.AddSourceAsync(_fixture.CreateFile("b.pdf"), _loader, TestToken);
+        workspace.Apply(TestOperations.Catalog().Get<InsertPagesOperation>(), new InsertPagesParams("s1", "2-3", 1)).ShouldBeTrue();
+        workspace.Apply(TestOperations.Catalog().Get<RotatePagesOperation>(), new RotatePagesParams("1", 90)).ShouldBeTrue();
+        await workspace.CloseAsync(keepSession: true);
+        _loader.ClearReceivedCalls();
+        RestoreEverything();
+
+        var restored = (await _service.RecoverAsync(TestToken)).ShouldHaveSingleItem();
+
+        await using (restored)
+        {
+            restored.Sources.Select(s => s.Source.Id).Order().ShouldBe(["s0", "s1"]);
+            restored.Session.Sources["s1"].DisplayName.ShouldBe("b.pdf");
+            restored.Session.Plan.Select(p => (p.SourceId, p.SourcePageIndex)).ShouldBe([("s1", 1), ("s1", 2), ("s0", 0), ("s0", 1), ("s0", 2)]);
+            restored.Session.Plan[0].RotationDelta.ShouldBe(90);
+            restored.Session.History.UndoCount.ShouldBe(2);
+            await _loader.Received(1).LoadAsync(Path.Combine(restored.Session.Directory, "sources", "s1.pdf"), null, Arg.Any<CancellationToken>());
+
+            restored.Undo(2);
+            restored.Session.Plan.Count.ShouldBe(3);
+            restored.IsDirty.ShouldBeFalse();
+        }
+    }
+
     /// <summary>A session left behind with one rotation (or none), as after a crash.</summary>
     private async Task<Guid> CreateOrphanAsync(string originalPath, bool dirty = true, PendingSaveDto? pending = null)
     {

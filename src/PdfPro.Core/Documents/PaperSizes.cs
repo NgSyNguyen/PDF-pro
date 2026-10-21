@@ -48,5 +48,20 @@ public static class PaperSizes
         return null;
     }
 
+    /// <summary>The portrait size of a known format ("A4", "Letter"…, ignoring case), or null.</summary>
+    public static PdfSize? SizeOf(string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        foreach (var (known, width, height) in Known)
+        {
+            if (string.Equals(known, name, StringComparison.OrdinalIgnoreCase))
+            {
+                return new PdfSize(width, height);
+            }
+        }
+
+        return null;
+    }
+
     public static double ToMillimetres(double points) => points * MillimetresPerPoint;
 }

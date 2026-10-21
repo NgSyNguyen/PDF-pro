@@ -16,7 +16,7 @@ namespace PdfPro.App.ViewModels.Viewer;
 /// A page thumbnail in the sidebar. Its image is loaded only while the list shows it. The image is upright; the view
 /// turns it by <see cref="Angle"/>, so turning a page shows at once.
 /// </summary>
-public sealed partial class ThumbnailViewModel : ObservableObject, IRealizable
+public sealed partial class ThumbnailViewModel : ObservableObject, IRealizable, IThumbnailItem
 {
     private readonly ThumbnailListViewModel _owner;
 
@@ -65,6 +65,12 @@ public sealed partial class ThumbnailViewModel : ObservableObject, IRealizable
     /// <summary>The request the current <see cref="Image"/> was made for.</summary>
     internal ThumbnailRequest? ImageRequest { get; set; }
 
+    ImageSource? IThumbnailItem.Image { get => Image; set => Image = value; }
+
+    ThumbnailRequest? IThumbnailItem.ImageRequest { get => ImageRequest; set => ImageRequest = value; }
+
+    bool IThumbnailItem.LoadFailed { get => LoadFailed; set => LoadFailed = value; }
+
     public void Realize(double dpiScale) => _owner.Realize(this, dpiScale);
 
     public void Release() => _owner.Release(this);
@@ -90,13 +96,9 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
 {
     private readonly Func<IPdfDocument, string?> _filePathOf;
     private readonly DocumentViewerViewModel _viewer;
-    private readonly IThumbnailProvider _provider;
     private readonly IUiDispatcher _ui;
-    private readonly ILogger _logger;
-    private readonly Dictionary<Guid, PendingLoad> _loads = [];
-    private readonly HashSet<Guid> _documentIds = [];
+    private readonly ThumbnailLoader _loader;
     private bool _syncingSelection;
-    private bool _failureLogged;
     private bool _disposed;
 
     /// <param name="document">The pages to show.</param>
@@ -118,11 +120,10 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
         ArgumentNullException.ThrowIfNull(viewer);
         _filePathOf = filePathOf;
         _viewer = viewer;
-        _provider = provider;
         _ui = ui;
-        _logger = logger;
+        _loader = new ThumbnailLoader(provider, ui, logger);
         Items = document.Pages.Select((page, i) => new ThumbnailViewModel(this, page, i)).ToArray();
-        RememberDocuments(document);
+        _loader.Remember(document);
         _viewer.PropertyChanged += OnViewerPropertyChanged;
         SyncSelection();
     }
@@ -135,7 +136,7 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
     public partial ThumbnailViewModel? SelectedItem { get; set; }
 
     /// <summary>Thumbnails being loaded (tests and diagnostics).</summary>
-    public int PendingCount => _loads.Count;
+    public int PendingCount => _loader.PendingCount;
 
     /// <summary>The page plan changed: thumbnails follow their pages; pages that turned or were cropped reload.</summary>
     public void SetDocument(VirtualDocument document)
@@ -163,7 +164,7 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
             Release(removed);
         }
 
-        RememberDocuments(document);
+        _loader.Remember(document);
         _syncingSelection = true;
         try
         {
@@ -186,17 +187,7 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
 
         _disposed = true;
         _viewer.PropertyChanged -= OnViewerPropertyChanged;
-        foreach (var load in _loads.Values)
-        {
-            load.Cancellation.Cancel();
-            load.Cancellation.Dispose();
-        }
-
-        _loads.Clear();
-        foreach (var id in _documentIds)
-        {
-            _provider.ForgetDocument(id);
-        }
+        _loader.Dispose();
     }
 
     internal void Realize(ThumbnailViewModel item, double dpiScale)
@@ -212,40 +203,10 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
             return;
         }
 
-        var request = new ThumbnailRequest(item.Page, _filePathOf(source) ?? string.Empty, dpiScale);
-        if (_loads.TryGetValue(item.Key, out var pending))
-        {
-            if (pending.Request.IsSameImage(request))
-            {
-                return;
-            }
-
-            CancelLoad(item.Key);
-        }
-
-        if (item.Image is not null && item.ImageRequest is { } shown && shown.IsSameImage(request))
-        {
-            return;
-        }
-
-        if (_provider.TryGetCached(request, out var cached))
-        {
-            Show(item, cached, request);
-            return;
-        }
-
-        // Until the new image arrives the old one (turned by the view) stays on screen.
-        var cancellation = new CancellationTokenSource();
-        _loads[item.Key] = new PendingLoad(request, cancellation);
-        _ = LoadAsync(item, request, cancellation, cancellation.Token);
+        _loader.Load(item, new ThumbnailRequest(item.Page, _filePathOf(source) ?? string.Empty, dpiScale));
     }
 
-    internal void Release(ThumbnailViewModel item)
-    {
-        CancelLoad(item.Key);
-        item.Image = null;
-        item.ImageRequest = null;
-    }
+    internal void Release(ThumbnailViewModel item) => _loader.Release(item);
 
     partial void OnSelectedItemChanged(ThumbnailViewModel? value)
     {
@@ -274,86 +235,6 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
         if (item is not null && !_disposed)
         {
             _viewer.NavigateTo(item.Index);
-        }
-    }
-
-    private static void Show(ThumbnailViewModel item, ImageSource image, ThumbnailRequest request)
-    {
-        item.Image = DisplayImage.Of(image);
-        item.ImageRequest = request;
-        item.LoadFailed = false;
-    }
-
-    private void RememberDocuments(VirtualDocument document)
-    {
-        foreach (var page in document.Pages)
-        {
-            if (page.Source is { } source)
-            {
-                _documentIds.Add(source.Id);
-            }
-        }
-    }
-
-    private async Task LoadAsync(ThumbnailViewModel item, ThumbnailRequest request, CancellationTokenSource owner, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var image = await _provider.GetAsync(request, cancellationToken).ConfigureAwait(false);
-            _ui.Post(() =>
-            {
-                if (Complete(item.Key, owner))
-                {
-                    Show(item, image, request);
-                }
-            });
-        }
-        catch (OperationCanceledException)
-        {
-            // Scrolled away, or the document was closed.
-        }
-        catch (ObjectDisposedException)
-        {
-            // The document was closed while the thumbnail was queued.
-        }
-        catch (Exception ex)
-        {
-            _ui.Post(() =>
-            {
-                if (!Complete(item.Key, owner))
-                {
-                    return;
-                }
-
-                item.LoadFailed = true;
-                if (!_failureLogged)
-                {
-                    _failureLogged = true;
-                    _logger.LogWarning(ex, "Loading the thumbnail of page {PageNumber} failed", item.Number);
-                }
-            });
-        }
-    }
-
-    /// <summary>Ends a load that is still current; false when it was cancelled or replaced meanwhile.</summary>
-    private bool Complete(Guid key, CancellationTokenSource owner)
-    {
-        if (_disposed || !_loads.TryGetValue(key, out var load) || !ReferenceEquals(load.Cancellation, owner))
-        {
-            return false;
-        }
-
-        _loads.Remove(key);
-        owner.Dispose();
-        return true;
-    }
-
-    private void CancelLoad(Guid key)
-    {
-        if (_loads.Remove(key, out var load))
-        {
-            load.Cancellation.Cancel();
-            load.Cancellation.Dispose();
         }
     }
 
@@ -388,6 +269,4 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
             _syncingSelection = false;
         }
     }
-
-    private sealed record PendingLoad(ThumbnailRequest Request, CancellationTokenSource Cancellation);
 }

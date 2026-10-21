@@ -1,11 +1,13 @@
 using System.Globalization;
 using System.IO;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.ViewModels.Organizer;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
@@ -22,16 +24,34 @@ namespace PdfPro.App.ViewModels;
 /// <param name="Steps">How many steps to undo or redo to reach this entry.</param>
 public sealed record HistoryEntryViewModel(string Description, bool IsRedo, int Steps);
 
+/// <summary>Services a document tab uses for its page commands.</summary>
+/// <param name="Operations">The page operations.</param>
+/// <param name="Messages">Explains refused edits and failed inserts.</param>
+/// <param name="PageDialogs">The insert dialogs.</param>
+/// <param name="FileDialogs">Picks the file to insert.</param>
+/// <param name="Loader">Opens inserted files.</param>
+/// <param name="CreateOrganizer">Builds the organizer grid the first time it is shown.</param>
+public sealed record DocumentTabServices(
+    OperationCatalog Operations,
+    IMessageService Messages,
+    IPageDialogService PageDialogs,
+    IFileDialogService FileDialogs,
+    IPdfDocumentLoader Loader,
+    Func<DocumentWorkspace, IPageOrganizerHost, PageOrganizerViewModel> CreateOrganizer);
+
 /// <summary>
-/// An open document tab: its workspace (session, sources), viewer and sidebar panels, undo/redo and the page commands.
+/// An open document tab: its workspace (session, sources), viewer, sidebar panels and page organizer, undo/redo and the
+/// page commands. In the viewer the page commands act on the current page; in the organizer, on the selected pages.
 /// Closing the tab closes the document and removes its session folder. Must be used on the UI thread.
 /// </summary>
-public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsyncDisposable
+public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsyncDisposable, IPageOrganizerHost
 {
     private readonly RenderCache _cache;
+    private readonly DocumentTabServices _services;
     private readonly OperationCatalog _operations;
     private readonly IMessageService _messages;
     private readonly ILogger _logger;
+    private bool _inserting;
     private int _disposed;
 
     public DocumentTabViewModel(
@@ -40,18 +60,19 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         ThumbnailListViewModel thumbnails,
         BookmarkTreeViewModel bookmarks,
         RenderCache cache,
-        OperationCatalog operations,
-        IMessageService messages,
+        DocumentTabServices services,
         ILogger<DocumentTabViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(workspace);
+        ArgumentNullException.ThrowIfNull(services);
         Workspace = workspace;
         Viewer = viewer;
         Thumbnails = thumbnails;
         Bookmarks = bookmarks;
         _cache = cache;
-        _operations = operations;
-        _messages = messages;
+        _services = services;
+        _operations = services.Operations;
+        _messages = services.Messages;
         _logger = logger;
         HistoryEntries = BuildHistory();
         workspace.PagesChanged += OnPagesChanged;
@@ -74,6 +95,28 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     public ThumbnailListViewModel Thumbnails { get; }
 
     public BookmarkTreeViewModel Bookmarks { get; }
+
+    /// <summary>The page organizer grid, created the first time the organizer is shown.</summary>
+    [ObservableProperty]
+    public partial PageOrganizerViewModel? Organizer { get; private set; }
+
+    /// <summary>The organizer grid replaces the viewer (and the sidebar) while true.</summary>
+    [ObservableProperty]
+    public partial bool IsOrganizing { get; set; }
+
+    /// <summary>
+    /// The pages the page commands act on: the selection in the organizer, the current page in the viewer (0-based, in
+    /// document order).
+    /// </summary>
+    public IReadOnlyList<int> TargetPageIndices
+        => IsOrganizing && Organizer is { } organizer
+            ? organizer.SelectedIndices
+            : Viewer.PageCount > 0 ? [Math.Clamp(Viewer.CurrentPageIndex, 0, Viewer.PageCount - 1)] : [];
+
+    public bool HasTargetPages => TargetPageIndices.Count > 0;
+
+    /// <summary>The document can be edited now (not read-only, not saving).</summary>
+    public bool CanEditPages => Workspace.CanEdit && Viewer.PageCount > 0;
 
     /// <summary>The file name, with " *" while there are unsaved changes.</summary>
     public override string Title => IsDirty ? FileName + " *" : FileName;
@@ -107,6 +150,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// <summary>The history menu: redoable steps (furthest first), then undoable steps (most recent first).</summary>
     public IReadOnlyList<HistoryEntryViewModel> HistoryEntries { get; private set; }
 
+    /// <summary>"Trích trang…" was chosen: the pages to write to a new file (0-based, in document order).</summary>
+    public event EventHandler<IReadOnlyList<int>>? ExtractRequested;
+
     public bool IsSameFile(string path)
         => FilePath.Length > 0 && string.Equals(Path.GetFullPath(path), Path.GetFullPath(FilePath), StringComparison.OrdinalIgnoreCase);
 
@@ -131,6 +177,48 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
     }
 
+    /// <summary>Double-click or Enter on a tile: back to the viewer, at that page.</summary>
+    public void OpenPage(int index)
+    {
+        IsOrganizing = false;
+        if (index >= 0 && index < Viewer.PageCount)
+        {
+            Viewer.NavigateTo(index);
+        }
+    }
+
+    /// <summary>Dragging tiles: one undoable "Di chuyển" step.</summary>
+    public bool MovePages(IReadOnlyList<int> indices, int insertAt)
+    {
+        ArgumentNullException.ThrowIfNull(indices);
+        if (indices.Count == 0 || !CanEditPages)
+        {
+            return false;
+        }
+
+        var position = Math.Clamp(insertAt, 0, Viewer.PageCount) + 1;
+        return Apply(_operations.Get<MovePagesOperation>(), new MovePagesParams(PageRanges.Format(indices), position));
+    }
+
+    /// <summary>PDF files dropped on the organizer: every page of each file, in the order dropped, at the drop point.</summary>
+    public async Task InsertFilesAsync(IReadOnlyList<string> paths, int insertAt)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        var position = insertAt;
+        foreach (var path in paths)
+        {
+            if (!CanInsert())
+            {
+                return;
+            }
+
+            if (await AddSourceAsync(path) is { } source && InsertSource(source, sourcePages: null, position))
+            {
+                position += source.Document.PageCount;
+            }
+        }
+    }
+
     /// <summary>Stops rendering and loading, drops cached images, closes the document and removes its session.</summary>
     public async ValueTask DisposeAsync()
     {
@@ -142,6 +230,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         Workspace.PagesChanged -= OnPagesChanged;
         Workspace.StatusChanged -= OnStatusChanged;
         Viewer.PropertyChanged -= OnViewerPropertyChanged;
+        if (Organizer is { } organizer)
+        {
+            organizer.SelectionChanged -= OnOrganizerSelectionChanged;
+            organizer.Dispose();
+        }
+
         Thumbnails.Dispose();
         Bookmarks.Dispose();
         Viewer.Dispose();
@@ -183,27 +277,162 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanEditPages))]
-    private void RotateLeft() => ApplyToCurrentPage(pages => (_operations.Get<RotatePagesOperation>(), new RotatePagesParams(pages, -90)));
+    [RelayCommand(CanExecute = nameof(CanEditTargets))]
+    private void RotateLeft() => ApplyToTargets(pages => (_operations.Get<RotatePagesOperation>(), new RotatePagesParams(pages, -90)));
 
-    [RelayCommand(CanExecute = nameof(CanEditPages))]
-    private void RotateRight() => ApplyToCurrentPage(pages => (_operations.Get<RotatePagesOperation>(), new RotatePagesParams(pages, 90)));
+    [RelayCommand(CanExecute = nameof(CanEditTargets))]
+    private void RotateRight() => ApplyToTargets(pages => (_operations.Get<RotatePagesOperation>(), new RotatePagesParams(pages, 90)));
 
     [RelayCommand(CanExecute = nameof(CanDeletePages))]
-    private void DeletePages() => ApplyToCurrentPage(pages => (_operations.Get<DeletePagesOperation>(), new DeletePagesParams(pages)));
+    private void DeletePages() => ApplyToTargets(pages => (_operations.Get<DeletePagesOperation>(), new DeletePagesParams(pages)));
 
-    [RelayCommand(CanExecute = nameof(CanEditPages))]
-    private void DuplicatePages() => ApplyToCurrentPage(pages => (_operations.Get<DuplicatePagesOperation>(), new DuplicatePagesParams(pages)));
+    [RelayCommand(CanExecute = nameof(CanEditTargets))]
+    private void DuplicatePages() => ApplyToTargets(pages => (_operations.Get<DuplicatePagesOperation>(), new DuplicatePagesParams(pages)));
 
-    private bool CanEditPages() => Workspace.CanEdit && Viewer.PageCount > 0;
+    private bool CanEditTargets() => CanEditPages && HasTargetPages && !_inserting;
 
-    private bool CanDeletePages() => CanEditPages() && Viewer.PageCount > 1;
+    /// <summary>A document keeps at least one page.</summary>
+    private bool CanDeletePages() => CanEditTargets() && TargetPageIndices.Count < Viewer.PageCount;
 
-    /// <summary>In the viewer, page commands act on the current page.</summary>
-    private void ApplyToCurrentPage(Func<string, (IPlanOperation Operation, object Parameters)> build)
+    private void ApplyToTargets(Func<string, (IPlanOperation Operation, object Parameters)> build)
     {
-        var (operation, parameters) = build(PageRanges.Format([Viewer.CurrentPageIndex]));
+        var targets = TargetPageIndices;
+        if (targets.Count == 0)
+        {
+            return;
+        }
+
+        var (operation, parameters) = build(PageRanges.Format(targets));
         Apply(operation, parameters);
+    }
+
+    /// <summary>"Sắp xếp trang": switches between the viewer and the organizer grid.</summary>
+    [RelayCommand]
+    private void ToggleOrganizeMode() => IsOrganizing = !IsOrganizing;
+
+    partial void OnIsOrganizingChanged(bool value)
+    {
+        if (value)
+        {
+            if (Organizer is null)
+            {
+                var organizer = _services.CreateOrganizer(Workspace, this);
+                organizer.SelectionChanged += OnOrganizerSelectionChanged;
+                Organizer = organizer;
+            }
+
+            // The organizer opens on the page the viewer shows.
+            var current = Math.Clamp(Viewer.CurrentPageIndex, 0, Math.Max(0, Viewer.PageCount - 1));
+            Organizer.Select([current], current);
+        }
+        else if (Organizer?.FocusIndex is { } focus && focus != Viewer.CurrentPageIndex)
+        {
+            Viewer.NavigateTo(focus);
+        }
+
+        OnTargetsChanged();
+    }
+
+    /// <summary>"Chèn trang trắng…": the dialog, then one undoable step.</summary>
+    [RelayCommand(CanExecute = nameof(CanInsert))]
+    private void InsertBlankPages()
+    {
+        var dialog = new InsertBlankPagesViewModel(Workspace.Pages.PageSizes, AnchorPageNumber());
+        if (_services.PageDialogs.ShowInsertBlankPages(dialog) && dialog.Result is { } parameters && CanEditPages)
+        {
+            Apply(_operations.Get<InsertBlankPagesOperation>(), parameters);
+        }
+    }
+
+    /// <summary>
+    /// "Chèn từ tệp…": picks a PDF, copies it into the session (password protected files are refused), asks which of
+    /// its pages go where, then inserts them as one undoable step.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanInsert))]
+    private async Task InsertPagesFromFileAsync()
+    {
+        if (_services.FileDialogs.PickPdfFile(Strings.Insert_PickFile_Title) is not { } path)
+        {
+            return;
+        }
+
+        if (await AddSourceAsync(path) is not { } source)
+        {
+            return;
+        }
+
+        var dialog = new InsertPagesViewModel(Path.GetFileName(path), source.Document.PageCount, Viewer.PageCount, AnchorPageNumber());
+        if (_services.PageDialogs.ShowInsertPages(dialog) && dialog.Result is { } choice)
+        {
+            InsertSource(source, choice.SourcePages, choice.InsertAt);
+        }
+    }
+
+    private bool CanInsert() => CanEditPages && !_inserting;
+
+    /// <summary>
+    /// "Trích trang…": asks the window to write the target pages to a new file (it owns the file dialog and the status
+    /// bar). The document does not change.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanExtract))]
+    private void ExtractPages() => ExtractRequested?.Invoke(this, TargetPageIndices);
+
+    private bool CanExtract() => !IsReadOnly && HasTargetPages && !_inserting;
+
+    /// <summary>The page the insert dialogs propose: the last selected page, or the current page (1-based).</summary>
+    private int AnchorPageNumber() => (TargetPageIndices.Count > 0 ? TargetPageIndices[^1] : Viewer.CurrentPageIndex) + 1;
+
+    /// <summary>Copies and opens a file to insert; failures are explained to the user and give null.</summary>
+    private async Task<OpenSource?> AddSourceAsync(string path)
+    {
+        var fileName = Path.GetFileName(path);
+        _inserting = true;
+        NotifyCommands();
+        try
+        {
+            return await Workspace.AddSourceAsync(path, _services.Loader);
+        }
+        catch (PdfDocumentException ex)
+        {
+            _logger.LogWarning("A file could not be inserted: {Failure} (cause {Cause})", ex.Failure, ex.InnerException?.GetType().Name);
+            var message = ex.Failure is PdfOpenFailure.PasswordRequired or PdfOpenFailure.WrongPassword or PdfOpenFailure.UnsupportedSecurity
+                ? Strings.Insert_Error_Encrypted
+                : DocumentOpener.MessageFor(ex.Failure);
+            await _messages.ShowErrorAsync(Strings.Insert_Error_Title, string.Format(CultureInfo.CurrentCulture, message, fileName));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning("A file could not be copied for inserting: {ErrorType}", ex.GetType().Name);
+            var message = ex switch
+            {
+                UnauthorizedAccessException => Strings.Open_Error_AccessDenied,
+                FileNotFoundException or DirectoryNotFoundException => Strings.Open_Error_FileNotFound,
+                _ => Strings.Open_Error_ReadFailed,
+            };
+            await _messages.ShowErrorAsync(Strings.Insert_Error_Title, string.Format(CultureInfo.CurrentCulture, message, fileName));
+        }
+        catch (ObjectDisposedException)
+        {
+            // The tab was closed meanwhile.
+        }
+        finally
+        {
+            _inserting = false;
+            NotifyCommands();
+        }
+
+        return null;
+    }
+
+    private bool InsertSource(OpenSource source, string? sourcePages, int insertAt)
+    {
+        if (!CanEditPages)
+        {
+            return false;
+        }
+
+        var position = Math.Clamp(insertAt, 0, Viewer.PageCount) + 1;
+        return Apply(_operations.Get<InsertPagesOperation>(), new InsertPagesParams(source.Source.Id, sourcePages, position));
     }
 
     private IReadOnlyList<HistoryEntryViewModel> BuildHistory()
@@ -218,7 +447,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     {
         Viewer.SetDocument(Workspace.Pages);
         Thumbnails.SetDocument(Workspace.Pages);
-        NotifyCommands();
+        Organizer?.SetDocument(Workspace.Pages);
+        OnTargetsChanged();
     }
 
     private void OnStatusChanged(object? sender, EventArgs e)
@@ -232,15 +462,31 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         OnPropertyChanged(nameof(IsDirty));
         OnPropertyChanged(nameof(UndoToolTip));
         OnPropertyChanged(nameof(RedoToolTip));
+        OnPropertyChanged(nameof(CanEditPages));
         NotifyCommands();
     }
 
     private void OnViewerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(DocumentViewerViewModel.PageCount))
+        if (e.PropertyName is nameof(DocumentViewerViewModel.PageCount) or nameof(DocumentViewerViewModel.CurrentPageIndex) && !IsOrganizing)
         {
-            NotifyCommands();
+            OnTargetsChanged();
         }
+    }
+
+    private void OnOrganizerSelectionChanged(object? sender, EventArgs e)
+    {
+        if (IsOrganizing)
+        {
+            OnTargetsChanged();
+        }
+    }
+
+    private void OnTargetsChanged()
+    {
+        OnPropertyChanged(nameof(TargetPageIndices));
+        OnPropertyChanged(nameof(HasTargetPages));
+        NotifyCommands();
     }
 
     private void NotifyCommands()
@@ -251,6 +497,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         RotateRightCommand.NotifyCanExecuteChanged();
         DeletePagesCommand.NotifyCanExecuteChanged();
         DuplicatePagesCommand.NotifyCanExecuteChanged();
+        InsertBlankPagesCommand.NotifyCanExecuteChanged();
+        InsertPagesFromFileCommand.NotifyCanExecuteChanged();
+        ExtractPagesCommand.NotifyCanExecuteChanged();
     }
 }
 
@@ -268,6 +517,9 @@ internal sealed class DocumentTabFactory(
     IDebouncerFactory debouncers,
     OperationCatalog operations,
     IMessageService messages,
+    IPageDialogService pageDialogs,
+    IFileDialogService fileDialogs,
+    IPdfDocumentLoader loader,
     ILoggerFactory loggers) : IDocumentTabFactory
 {
     /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
@@ -278,6 +530,13 @@ internal sealed class DocumentTabFactory(
         var thumbnailList = new ThumbnailListViewModel(workspace.Pages, workspace.SourcePathOf, viewer, thumbnails, ui, loggers.CreateLogger<ThumbnailListViewModel>());
         var bookmarks = new BookmarkTreeViewModel(workspace.BaseDocument, viewer, ui, loggers.CreateLogger<BookmarkTreeViewModel>());
         _ = bookmarks.LoadAsync();
-        return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, operations, messages, loggers.CreateLogger<DocumentTabViewModel>());
+        var services = new DocumentTabServices(
+            operations,
+            messages,
+            pageDialogs,
+            fileDialogs,
+            loader,
+            (w, host) => new PageOrganizerViewModel(w.Pages, w.SourcePathOf, host, thumbnails, ui, loggers.CreateLogger<PageOrganizerViewModel>()));
+        return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
     }
 }

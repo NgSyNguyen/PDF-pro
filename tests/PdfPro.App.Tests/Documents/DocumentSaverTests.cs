@@ -27,7 +27,7 @@ public sealed class DocumentSaverTests : IDisposable
 
     public DocumentSaverTests()
     {
-        _saver = new DocumentSaver(_materializer, _loader, NullLogger<DocumentSaver>.Instance);
+        _saver = new DocumentSaver(_materializer, _loader, new ExtractPagesOperation(_materializer, _loader), NullLogger<DocumentSaver>.Instance);
         _materializer.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>())
             .Returns(call => call.ArgAt<Stream>(1).WriteAsync(NewContent, call.ArgAt<CancellationToken>(3)).AsTask());
         _loader.LoadAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
@@ -216,6 +216,73 @@ public sealed class DocumentSaverTests : IDisposable
         await Should.ThrowAsync<InvalidOperationException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
 
         (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+    }
+
+    [Fact]
+    public async Task Export_WritesTheChosenPagesInDocumentOrderAndLeavesTheDocumentAlone()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        var target = Path.Combine(Path.GetDirectoryName(path)!, "a (trang 1, 3).pdf");
+        MaterializeRequest? request = null;
+        bool? canEditWhileWriting = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(call =>
+            {
+                request = call.ArgAt<MaterializeRequest>(0);
+                canEditWhileWriting = workspace.CanEdit;
+            });
+        _reopenedPages = 2;
+
+        await _saver.ExportAsync(workspace, [2, 0], target, _progress, TestToken);
+
+        (await File.ReadAllBytesAsync(target, TestToken)).ShouldBe(NewContent);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+        request.ShouldNotBeNull();
+        request.Plan.Select(p => p.PageKey).ShouldBe([workspace.Session.Plan[0].PageKey, workspace.Session.Plan[2].PageKey]);
+        request.Plan[0].RotationDelta.ShouldBe(90, "pages are written as the document shows them");
+        request.BaseSourceId.ShouldBe(SourceIds.Original);
+        canEditWhileWriting.ShouldBe(true);
+        workspace.IsDirty.ShouldBeTrue();
+        workspace.FilePath.ShouldBe(path);
+        LeftoversNextTo(target).ShouldBeEmpty();
+        (await ReadManifestAsync(workspace)).PendingSave.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Export_IntoTheDocumentsOwnFile_IsRefused()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+
+        await Should.ThrowAsync<ArgumentException>(() => _saver.ExportAsync(workspace, [0], path.ToUpperInvariant(), _progress, TestToken));
+
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+    }
+
+    [Fact]
+    public async Task Export_Failure_KeepsAnExistingTarget()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        var target = _fixture.CreateFile("old-extract.pdf", OldContent);
+        _reopenedPages = 5;
+
+        var error = await Should.ThrowAsync<DocumentSaveException>(() => _saver.ExportAsync(workspace, [0], target, _progress, TestToken));
+
+        error.Failure.ShouldBe(SaveFailure.VerificationFailed);
+        (await File.ReadAllBytesAsync(target, TestToken)).ShouldBe(OldContent);
+        LeftoversNextTo(target).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Export_PagesThatDoNotExist_AreRefused()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+
+        await Should.ThrowAsync<Core.Operations.OperationValidationException>(
+            () => _saver.ExportAsync(workspace, [7], Path.Combine(Path.GetDirectoryName(path)!, "x.pdf"), _progress, TestToken));
     }
 
     private async Task<DocumentWorkspace> DirtyWorkspaceAsync(string path)

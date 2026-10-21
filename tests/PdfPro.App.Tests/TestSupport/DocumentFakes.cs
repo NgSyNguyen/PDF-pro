@@ -50,6 +50,7 @@ internal static class TestOperations
             new InsertBlankPagesOperation(materializer, loader),
             new InsertPagesOperation(materializer, loader),
             new CropPagesOperation(materializer, loader),
+            new ExtractPagesOperation(materializer, loader),
         ]);
     }
 }

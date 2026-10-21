@@ -242,17 +242,7 @@ public sealed partial class MainWindowViewModel : IExitGuard
     /// </summary>
     private async Task<bool> ExplainSaveFailureAsync(DocumentTabViewModel document, SaveFailure failure, string fileName)
     {
-        var message = Format(
-            failure switch
-            {
-                SaveFailure.Locked => Strings.Save_Error_Locked,
-                SaveFailure.AccessDenied => Strings.Save_Error_AccessDenied,
-                SaveFailure.DiskFull => Strings.Save_Error_DiskFull,
-                SaveFailure.SourceUnreadable => Strings.Save_Error_SourceUnreadable,
-                SaveFailure.VerificationFailed => Strings.Save_Error_Verification,
-                _ => Strings.Save_Error_Failed,
-            },
-            fileName);
+        var message = Format(SaveFailureMessage(failure), fileName);
 
         if (failure is SaveFailure.Locked or SaveFailure.AccessDenied)
         {

@@ -1,0 +1,108 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.InsertPagesWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:organizer="clr-namespace:PdfPro.App.ViewModels.Organizer"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:views="clr-namespace:PdfPro.App.Views"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=organizer:InsertPagesViewModel}"
+  Title="{loc:Tr InsertPages_Title}"
+  Width="480"
+  MinHeight="0"
+  AutomationProperties.AutomationId="InsertPagesWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr InsertPages_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <StackPanel Orientation="Horizontal">
+        <ui:SymbolIcon
+          Margin="0,0,12,0"
+          VerticalAlignment="Center"
+          FontSize="24"
+          Symbol="DocumentPdf24" />
+        <TextBlock
+          MaxWidth="380"
+          VerticalAlignment="Center"
+          AutomationProperties.AutomationId="InsertPagesSource"
+          Text="{Binding SourceSummary}"
+          TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+
+      <TextBlock
+        Margin="0,16,0,0"
+        FontWeight="SemiBold"
+        Text="{loc:Tr InsertPages_Pages}" />
+      <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+        <RadioButton
+          MinWidth="0"
+          Margin="0,0,16,0"
+          AutomationProperties.AutomationId="InsertPagesAll"
+          Content="{loc:Tr InsertPages_All}"
+          GroupName="InsertSourcePages"
+          IsChecked="{Binding IsAllPages}" />
+        <RadioButton
+          MinWidth="0"
+          Margin="0,0,8,0"
+          AutomationProperties.AutomationId="InsertPagesSome"
+          Content="{loc:Tr InsertPages_Some}"
+          GroupName="InsertSourcePages"
+          IsChecked="{Binding IsSomePages}" />
+        <TextBox
+          Width="160"
+          VerticalAlignment="Center"
+          AutomationProperties.AutomationId="InsertPagesRange"
+          AutomationProperties.Name="{loc:Tr InsertPages_Some}"
+          IsEnabled="{Binding IsSomePages}"
+          Text="{Binding SourcePagesText, UpdateSourceTrigger=PropertyChanged}"
+          ToolTip="{loc:Tr Organizer_Range_ToolTip}" />
+      </StackPanel>
+
+      <views:InsertPositionPanel Margin="0,16,0,0" DataContext="{Binding Position}" />
+
+      <TextBlock
+        Margin="0,12,0,0"
+        AutomationProperties.AutomationId="InsertPagesError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding Error}"
+        TextWrapping="Wrap"
+        Visibility="{Binding Error, Converter={StaticResource NullToCollapsed}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          x:Name="InsertButton"
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="InsertPagesOk"
+          Command="{Binding InsertCommand}"
+          Content="{loc:Tr Insert_Button}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="InsertPagesCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

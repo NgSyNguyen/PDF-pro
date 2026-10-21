@@ -107,9 +107,22 @@ public interface IFileDialogService
     /// <returns>Selected PDF files, empty when cancelled.</returns>
     IReadOnlyList<string> PickPdfFiles();
 
+    /// <summary>Asks for one PDF file (to insert its pages).</summary>
+    /// <param name="title">The dialog title.</param>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickPdfFile(string title);
+
     /// <summary>Asks where to save a PDF ("Lưu thành"); overwriting asks for confirmation.</summary>
     /// <param name="suggestedFileName">File name proposed in the dialog.</param>
     /// <param name="initialDirectory">Folder shown first, or null.</param>
     /// <returns>The chosen path, or null when cancelled.</returns>
     string? PickSavePath(string suggestedFileName, string? initialDirectory);
+}
+
+/// <summary>The page organizer's dialogs. Each returns true when the user confirmed; the result is in the view model.</summary>
+public interface IPageDialogService
+{
+    bool ShowInsertBlankPages(ViewModels.Organizer.InsertBlankPagesViewModel viewModel);
+
+    bool ShowInsertPages(ViewModels.Organizer.InsertPagesViewModel viewModel);
 }

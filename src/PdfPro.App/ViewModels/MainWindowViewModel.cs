@@ -75,6 +75,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
         RotateRightCommand = new ActiveDocumentCommand(d => d.RotateRightCommand);
         DeletePagesCommand = new ActiveDocumentCommand(d => d.DeletePagesCommand);
         DuplicatePagesCommand = new ActiveDocumentCommand(d => d.DuplicatePagesCommand);
+        OrganizeModeCommand = new ActiveDocumentCommand(d => d.ToggleOrganizeModeCommand);
+        InsertBlankPagesCommand = new ActiveDocumentCommand(d => d.InsertBlankPagesCommand);
+        InsertPagesFromFileCommand = new ActiveDocumentCommand(d => d.InsertPagesFromFileCommand);
+        ExtractPagesCommand = new ActiveDocumentCommand(d => d.ExtractPagesCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
@@ -90,7 +94,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public HomeTabViewModel Home { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument))]
+    [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
     [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
@@ -118,6 +122,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand DeletePagesCommand { get; }
 
     public ActiveDocumentCommand DuplicatePagesCommand { get; }
+
+    /// <summary>"Sáº¯p xáº¿p trang": switches the active document between the viewer and the organizer grid.</summary>
+    public ActiveDocumentCommand OrganizeModeCommand { get; }
+
+    public ActiveDocumentCommand InsertBlankPagesCommand { get; }
+
+    public ActiveDocumentCommand InsertPagesFromFileCommand { get; }
+
+    public ActiveDocumentCommand ExtractPagesCommand { get; }
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -240,6 +253,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
             await Task.WhenAny(print.Completion);
         }
 
+        // A save or extraction may still read its files.
+        if (_activeSave is { } save)
+        {
+            await Task.WhenAny(save);
+        }
+
         await document.DisposeAsync();
     }
 
@@ -305,15 +324,21 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (_trackedDocument is not null)
         {
             _trackedDocument.PropertyChanged -= OnActiveDocumentPropertyChanged;
+            _trackedDocument.ExtractRequested -= OnExtractRequested;
         }
 
         _trackedDocument = value as DocumentTabViewModel;
         if (_trackedDocument is not null)
         {
             _trackedDocument.PropertyChanged += OnActiveDocumentPropertyChanged;
+            _trackedDocument.ExtractRequested += OnExtractRequested;
         }
 
-        foreach (var command in new[] { UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand })
+        foreach (var command in new[]
+        {
+            UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
+            OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand,
+        })
         {
             command.Attach(_trackedDocument);
         }
@@ -331,6 +356,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (e.PropertyName == nameof(DocumentTabViewModel.IsDirty))
         {
             NotifySaveCommands();
+        }
+
+        if (e.PropertyName == nameof(DocumentTabViewModel.IsOrganizing))
+        {
+            OnPropertyChanged(nameof(IsOrganizing));
+            OnPropertyChanged(nameof(ShowsViewerStatus));
         }
     }
 
@@ -433,6 +464,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             [
                 new(Strings.Ribbon_Group_Arrange,
                 [
+                    new("organize.mode", Strings.Cmd_OrganizePages, SymbolRegular.GridDots24, OrganizeModeCommand),
                     new("organize.rotateLeft", Strings.Cmd_RotateLeft, SymbolRegular.ArrowRotateCounterclockwise24, RotateLeftCommand),
                     new("organize.rotateRight", Strings.Cmd_RotateRight, SymbolRegular.ArrowRotateClockwise24, RotateRightCommand),
                     new("organize.delete", Strings.Cmd_DeletePages, SymbolRegular.Delete24, DeletePagesCommand),
@@ -440,9 +472,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Insert,
                 [
-                    new("organize.insertBlank", Strings.Cmd_InsertBlank, SymbolRegular.DocumentAdd24),
-                    new("organize.insertFromFile", Strings.Cmd_InsertFromFile, SymbolRegular.DocumentArrowLeft24),
-                    new("organize.extract", Strings.Cmd_ExtractPages, SymbolRegular.DocumentArrowRight24),
+                    new("organize.insertBlank", Strings.Cmd_InsertBlank, SymbolRegular.DocumentAdd24, InsertBlankPagesCommand),
+                    new("organize.insertFromFile", Strings.Cmd_InsertFromFile, SymbolRegular.DocumentArrowLeft24, InsertPagesFromFileCommand),
+                    new("organize.extract", Strings.Cmd_ExtractPages, SymbolRegular.DocumentArrowRight24, ExtractPagesCommand),
                 ]),
                 new(Strings.Ribbon_Group_Layout,
                 [

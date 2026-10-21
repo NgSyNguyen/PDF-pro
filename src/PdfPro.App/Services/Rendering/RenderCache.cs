@@ -16,7 +16,7 @@ namespace PdfPro.App.Services.Rendering;
 /// <param name="PageIndex">The page in the source document.</param>
 /// <param name="ScaleKey">
 /// Device pixels per point × 1000, rounded (renders within 0.1 % are interchangeable), or
-/// <see cref="ThumbnailScaleKey"/> for the page's sidebar thumbnail.
+/// <see cref="ThumbnailScaleKey"/> for the page's sidebar thumbnail, or <see cref="TileScaleKey"/> for an organizer tile.
 /// </param>
 /// <param name="Region">Part of the displayed page, in pixels at that scale; null for the whole page.</param>
 /// <param name="QuarterTurns">The plan's extra rotation (thumbnails are always upright: 0).</param>
@@ -35,6 +35,16 @@ public readonly record struct RenderKey(Guid DocumentId, int PageIndex, int Scal
 
     public static RenderKey Thumbnail(Guid documentId, int pageIndex, PageCrop? crop = null) => new(documentId, pageIndex, ThumbnailScaleKey, Crop: crop);
 
+    /// <summary>
+    /// Organizer tiles have one entry per page and tile size (sizes come in a few steps), apart from the sidebar
+    /// thumbnail so switching between the views does not throw either image away.
+    /// </summary>
+    public static int TileScaleKey(int boxWidth)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(boxWidth, 1);
+        return ThumbnailScaleKey - boxWidth;
+    }
+
     /// <summary>The key of a page of the virtual document (not for blank pages, which are never rendered).</summary>
     public static RenderKey For(VirtualPage page, int scaleKey, PixelRect? region = null)
     {
@@ -49,6 +59,14 @@ public readonly record struct RenderKey(Guid DocumentId, int PageIndex, int Scal
         ArgumentNullException.ThrowIfNull(page);
         var source = page.Source ?? throw new ArgumentException("Blank pages are not rendered.", nameof(page));
         return Thumbnail(source.Id, page.SourcePageIndex, page.Crop);
+    }
+
+    /// <summary>The organizer tile of a page at a tile width (upright: the view turns it).</summary>
+    public static RenderKey TileOf(VirtualPage page, int boxWidth)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+        var source = page.Source ?? throw new ArgumentException("Blank pages are not rendered.", nameof(page));
+        return new RenderKey(source.Id, page.SourcePageIndex, TileScaleKey(boxWidth), Crop: page.Crop);
     }
 }
 

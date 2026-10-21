@@ -10,24 +10,38 @@ using PdfPro.Pdfium;
 
 namespace PdfPro.App.Services.Rendering;
 
-/// <summary>Size of sidebar thumbnails: pages are fitted into a 160 × 226 box (an A4 page fills it).</summary>
+/// <summary>
+/// Size of thumbnails: pages are fitted into a box of the A4 proportions, 160 × 226 in the sidebar (an A4 page fills
+/// it) and as wide as the organizer's tile size there.
+/// </summary>
 public static class ThumbnailGeometry
 {
     public const double MaxWidth = 160;
     public const double MaxHeight = 226;
 
-    /// <summary>View units per point that fit the page into the thumbnail box.</summary>
-    public static double ScaleFor(PdfSize pageSize)
-        => pageSize.Width <= 0 || pageSize.Height <= 0 ? 0 : Math.Min(MaxWidth / pageSize.Width, MaxHeight / pageSize.Height);
+    /// <summary>Height of a box <paramref name="boxWidth"/> wide.</summary>
+    public static double BoxHeightFor(double boxWidth) => boxWidth * MaxHeight / MaxWidth;
 
-    /// <summary>Thumbnail size in view units.</summary>
-    public static ViewSize SizeFor(PdfSize pageSize)
+    /// <summary>View units per point that fit the page into the sidebar box.</summary>
+    public static double ScaleFor(PdfSize pageSize) => ScaleFor(pageSize, MaxWidth);
+
+    /// <summary>View units per point that fit the page into a box <paramref name="boxWidth"/> wide.</summary>
+    public static double ScaleFor(PdfSize pageSize, double boxWidth)
+        => pageSize.Width <= 0 || pageSize.Height <= 0 || boxWidth <= 0
+            ? 0
+            : Math.Min(boxWidth / pageSize.Width, BoxHeightFor(boxWidth) / pageSize.Height);
+
+    /// <summary>Sidebar thumbnail size in view units.</summary>
+    public static ViewSize SizeFor(PdfSize pageSize) => SizeFor(pageSize, MaxWidth);
+
+    /// <summary>Thumbnail size in view units in a box <paramref name="boxWidth"/> wide.</summary>
+    public static ViewSize SizeFor(PdfSize pageSize, double boxWidth)
     {
-        var scale = ScaleFor(pageSize);
+        var scale = ScaleFor(pageSize, boxWidth);
         return new ViewSize(pageSize.Width * scale, pageSize.Height * scale);
     }
 
-    /// <summary>Thumbnail size in device pixels at <paramref name="dpiScale"/>.</summary>
+    /// <summary>Sidebar thumbnail size in device pixels at <paramref name="dpiScale"/>.</summary>
     public static (int Width, int Height) PixelSizeFor(PdfSize pageSize, double dpiScale)
     {
         var scale = ScaleFor(pageSize) * dpiScale;
@@ -42,14 +56,20 @@ public static class ThumbnailGeometry
 /// <param name="Page">The page (not blank).</param>
 /// <param name="FilePath">The source file, used to recognise it in the disk cache (empty: no disk cache).</param>
 /// <param name="DpiScale">Device pixels per view unit where the thumbnail is shown.</param>
-public sealed record ThumbnailRequest(VirtualPage Page, string FilePath, double DpiScale)
+/// <param name="BoxWidth">Width of the box the thumbnail fits in: the sidebar's, or an organizer tile size.</param>
+public sealed record ThumbnailRequest(VirtualPage Page, string FilePath, double DpiScale, double BoxWidth = ThumbnailGeometry.MaxWidth)
 {
     public IPdfDocument Document => Page.Source ?? throw new InvalidOperationException("Blank pages have no thumbnail image.");
 
     public int PageIndex => Page.SourcePageIndex;
 
     /// <summary>Device pixels per point.</summary>
-    public double Scale => ThumbnailGeometry.ScaleFor(Page.DisplaySize) * DpiScale;
+    public double Scale => ThumbnailGeometry.ScaleFor(Page.DisplaySize, BoxWidth) * DpiScale;
+
+    /// <summary>The memory cache entry: the sidebar thumbnail, or the tile of this size.</summary>
+    public RenderKey CacheKey => BoxWidth == ThumbnailGeometry.MaxWidth
+        ? RenderKey.ThumbnailOf(Page)
+        : RenderKey.TileOf(Page, (int)Math.Round(BoxWidth));
 
     /// <summary>Size of the upright image in device pixels.</summary>
     public (int Width, int Height) Pixels
@@ -61,8 +81,11 @@ public sealed record ThumbnailRequest(VirtualPage Page, string FilePath, double 
         }
     }
 
-    /// <summary>Cropped pages are not cached on disk (rare; their files would need the crop in their name).</summary>
-    public bool CanUseDiskCache => Page.Crop is null && FilePath.Length > 0;
+    /// <summary>
+    /// Only sidebar thumbnails of uncropped pages are cached on disk: cropped pages are rare (their files would need the
+    /// crop in their name), and organizer tiles come in many sizes that would multiply the cache for little gain.
+    /// </summary>
+    public bool CanUseDiskCache => Page.Crop is null && FilePath.Length > 0 && BoxWidth == ThumbnailGeometry.MaxWidth;
 
     /// <summary>True when both requests produce the same image.</summary>
     public bool IsSameImage(ThumbnailRequest other)
@@ -102,7 +125,7 @@ internal sealed class ThumbnailProvider(
     public bool TryGetCached(ThumbnailRequest request, out ImageSource image)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (cache.TryGet(RenderKey.ThumbnailOf(request.Page), out var cached)
+        if (cache.TryGet(request.CacheKey, out var cached)
             && cached is BitmapSource bitmap
             && bitmap.PixelWidth == request.Pixels.Width)
         {
@@ -122,7 +145,7 @@ internal sealed class ThumbnailProvider(
             return cached;
         }
 
-        var key = RenderKey.ThumbnailOf(request.Page);
+        var key = request.CacheKey;
         var size = request.Pixels;
         var fingerprint = await FingerprintOfAsync(request).ConfigureAwait(false);
         if (fingerprint is not null)

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using PdfPro.App.ViewModels;
 using Wpf.Ui.Controls;
@@ -7,18 +8,23 @@ using Wpf.Ui.Controls;
 namespace PdfPro.App.Views;
 
 /// <summary>
-/// Main window. Code-behind only handles view concerns: focus (Ctrl+G), drag-and-drop plumbing and routing the
-/// window's X to the exit command.
+/// Main window. Code-behind only handles view concerns: focus (Ctrl+G), drag-and-drop plumbing, hiding the sidebar
+/// while a document shows its page organizer, and routing the window's X to the exit command.
 /// </summary>
 public partial class MainWindow : FluentWindow
 {
     /// <summary>Ctrl+G: focus the page number box of the active document.</summary>
     public static readonly RoutedCommand GoToPageCommand = new(nameof(GoToPageCommand), typeof(MainWindow));
 
+    private GridLength _sidebarWidth;
+
     public MainWindow(MainWindowViewModel viewModel)
     {
+        ArgumentNullException.ThrowIfNull(viewModel);
         DataContext = viewModel;
         InitializeComponent();
+        _sidebarWidth = SidebarColumn.Width;
+        viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
     private MainWindowViewModel ViewModel => (MainWindowViewModel)DataContext;
@@ -51,6 +57,39 @@ public partial class MainWindow : FluentWindow
         {
             ViewModel.ExitCommand.Execute(null);
         }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainWindowViewModel.IsOrganizing))
+        {
+            ShowSidebar(!ViewModel.IsOrganizing);
+        }
+    }
+
+    /// <summary>The organizer grid uses the sidebar's room; its width (set with the splitter) comes back afterwards.</summary>
+    private void ShowSidebar(bool show)
+    {
+        var isShown = Sidebar.Visibility == Visibility.Visible;
+        if (show == isShown)
+        {
+            return;
+        }
+
+        if (show)
+        {
+            SidebarColumn.MinWidth = 220;
+            SidebarColumn.Width = _sidebarWidth;
+        }
+        else
+        {
+            _sidebarWidth = SidebarColumn.Width;
+            SidebarColumn.MinWidth = 0;
+            SidebarColumn.Width = new GridLength(0);
+        }
+
+        Sidebar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        SidebarSplitter.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnGoToPage(object sender, ExecutedRoutedEventArgs e)

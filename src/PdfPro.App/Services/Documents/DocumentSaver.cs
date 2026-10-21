@@ -4,6 +4,7 @@ using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
+using PdfPro.Operations.Organizing;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Services.Documents;
@@ -45,6 +46,19 @@ public interface IDocumentSaver
     /// <exception cref="DocumentSaveException">The save failed; nothing was replaced.</exception>
     /// <exception cref="OperationCanceledException">Cancelled; nothing was replaced.</exception>
     Task SaveAsync(DocumentWorkspace workspace, string targetPath, IProgress<OperationProgress> progress, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// "Trích trang": writes pages of the document (as the plan shows them) to a new file; the document itself and its
+    /// saved state do not change.
+    /// </summary>
+    /// <param name="workspace">The document.</param>
+    /// <param name="pageIndices">The pages to write (0-based, in any order: they keep the document's order).</param>
+    /// <param name="targetPath">The new file (never the document's own file).</param>
+    /// <param name="progress">Receives progress.</param>
+    /// <param name="cancellationToken">Cancels; nothing is written then.</param>
+    /// <exception cref="DocumentSaveException">Writing failed; an existing file at the target is unchanged.</exception>
+    /// <exception cref="OperationCanceledException">Cancelled.</exception>
+    Task ExportAsync(DocumentWorkspace workspace, IReadOnlyList<int> pageIndices, string targetPath, IProgress<OperationProgress> progress, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -54,7 +68,11 @@ public interface IDocumentSaver
 /// the old or the new file (the next start removes a partial temporary file or puts the old file back), and the session
 /// still holds the changes. Edits are blocked while saving so the saved state is exactly the save point.
 /// </summary>
-internal sealed class DocumentSaver(IPlanMaterializer materializer, IPdfDocumentLoader loader, ILogger<DocumentSaver> logger) : IDocumentSaver
+internal sealed class DocumentSaver(
+    IPlanMaterializer materializer,
+    IPdfDocumentLoader loader,
+    ExtractPagesOperation extract,
+    ILogger<DocumentSaver> logger) : IDocumentSaver
 {
     public async Task SaveAsync(DocumentWorkspace workspace, string targetPath, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
     {
@@ -74,9 +92,67 @@ internal sealed class DocumentSaver(IPlanMaterializer materializer, IPdfDocument
             SourcePaths = workspace.SourcePaths,
             WorkingDirectory = workspace.WorkDirectory,
         };
-        var backup = Path.Combine(Path.GetDirectoryName(path)!, $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.bak");
 
         workspace.IsBusy = true;
+        try
+        {
+            await WriteAsync(workspace, request, path, progress, cancellationToken);
+            workspace.CompleteSave(path, FileStamp.Read(path));
+            logger.LogInformation("Session {SessionId} saved: {PageCount} pages", workspace.Session.Id, request.Plan.Count);
+        }
+        finally
+        {
+            workspace.IsBusy = false;
+        }
+    }
+
+    public async Task ExportAsync(
+        DocumentWorkspace workspace,
+        IReadOnlyList<int> pageIndices,
+        string targetPath,
+        IProgress<OperationProgress> progress,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(workspace);
+        ArgumentNullException.ThrowIfNull(pageIndices);
+        ArgumentException.ThrowIfNullOrWhiteSpace(targetPath);
+        ArgumentNullException.ThrowIfNull(progress);
+        if (workspace.IsReadOnly)
+        {
+            throw new InvalidOperationException("Pages of password protected documents cannot be extracted yet.");
+        }
+
+        var path = Path.GetFullPath(targetPath);
+        if (workspace.FilePath is { } own && string.Equals(Path.GetFullPath(own), path, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Extracted pages cannot replace the document's own file.", nameof(targetPath));
+        }
+
+        // The plan and the source files are immutable: editing may go on while the pages are written.
+        var request = new MaterializeRequest
+        {
+            Plan = extract.SelectPages(workspace.Session.Plan, new ExtractPagesParams(PageRanges.Format(pageIndices))),
+            BaseSourceId = workspace.Session.BaseSourceId,
+            SourcePaths = workspace.SourcePaths,
+            WorkingDirectory = workspace.WorkDirectory,
+        };
+
+        await WriteAsync(workspace, request, path, progress, cancellationToken);
+        logger.LogInformation("Session {SessionId}: {PageCount} pages extracted", workspace.Session.Id, request.Plan.Count);
+    }
+
+    /// <summary>
+    /// Materializes <paramref name="request"/> into <paramref name="path"/> safely; the manifest records the files
+    /// while they are written.
+    /// </summary>
+    private async Task WriteAsync(
+        DocumentWorkspace workspace,
+        MaterializeRequest request,
+        string path,
+        IProgress<OperationProgress> progress,
+        CancellationToken cancellationToken)
+    {
+        var backup = Path.Combine(Path.GetDirectoryName(path)!, $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.bak");
         try
         {
             await AtomicFile.WriteAsync(
@@ -90,19 +166,16 @@ internal sealed class DocumentSaver(IPlanMaterializer materializer, IPdfDocument
                     BeforeWriteAsync = (temp, backupPath, _) => workspace.RecordPendingSaveAsync(new PendingSaveDto(path, temp, backupPath)),
                 },
                 cancellationToken);
-
-            workspace.CompleteSave(path, FileStamp.Read(path));
-            logger.LogInformation("Session {SessionId} saved: {PageCount} pages", workspace.Session.Id, request.Plan.Count);
         }
         catch (MaterializationException ex)
         {
-            logger.LogWarning("Saving session {SessionId} failed: {Failure} (source {SourceId})", workspace.Session.Id, ex.Failure, ex.SourceId);
+            logger.LogWarning("Writing session {SessionId} failed: {Failure} (source {SourceId})", workspace.Session.Id, ex.Failure, ex.SourceId);
             throw new DocumentSaveException(SaveFailure.SourceUnreadable, ex);
         }
         catch (FileSaveException ex)
         {
             // The exception's own text may contain the path: log the classification only.
-            logger.LogWarning("Saving session {SessionId} failed: {Failure} (HRESULT 0x{HResult:X8})", workspace.Session.Id, ex.Failure, ex.HResult);
+            logger.LogWarning("Writing session {SessionId} failed: {Failure} (HRESULT 0x{HResult:X8})", workspace.Session.Id, ex.Failure, ex.HResult);
             throw new DocumentSaveException(ex.Failure switch
             {
                 FileSaveFailure.Locked => SaveFailure.Locked,
@@ -113,13 +186,12 @@ internal sealed class DocumentSaver(IPlanMaterializer materializer, IPdfDocument
         }
         catch (InvalidDataException ex)
         {
-            logger.LogError("Saving session {SessionId} failed: the written file did not open again", workspace.Session.Id);
+            logger.LogError("Writing session {SessionId} failed: the written file did not open again", workspace.Session.Id);
             throw new DocumentSaveException(SaveFailure.VerificationFailed, ex);
         }
         finally
         {
             await workspace.ClearPendingSaveAsync();
-            workspace.IsBusy = false;
         }
     }
 

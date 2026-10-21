@@ -11,6 +11,7 @@ Before adding a package: state its name, license and reason, and add it below.
 | [.NET runtime](https://github.com/dotnet/runtime) | 10.0 | MIT | Runtime |
 | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | 8.4.2 | MIT | MVVM (ObservableObject, RelayCommand) |
 | [WPF-UI](https://github.com/lepoco/wpfui) | 4.3.0 | MIT | Fluent design controls, Mica, light/dark themes |
+| [gong-wpf-dragdrop](https://github.com/punker76/gong-wpf-dragdrop) | 4.0.0 | BSD-3-Clause | Dragging pages (and PDF files from Explorer) in the page organizer grid, with the insertion marker and auto-scroll |
 | [Microsoft.Extensions.Hosting](https://github.com/dotnet/runtime) | 10.0.13 | MIT | Generic host, dependency injection, configuration |
 | [Microsoft.Extensions.Logging.Abstractions](https://github.com/dotnet/runtime) | 10.0.13 | MIT | Logging abstractions |
 | [Microsoft.Extensions.DependencyInjection.Abstractions](https://github.com/dotnet/runtime) | 10.0.13 | MIT | DI abstractions |
@@ -52,5 +53,5 @@ The complete license texts will be collected in this file before the first relea
 ## Planned (added in later phases, listed here once added)
 
 PdfPig, SkiaSharp, OpenCvSharp4, Tesseract + tessdata, qpdf,
-DiffPlex, tabula-sharp, ClosedXML, gong-wpf-dragdrop, Velopack, BenchmarkDotNet, FlaUI,
+DiffPlex, tabula-sharp, ClosedXML, Velopack, BenchmarkDotNet, FlaUI,
 fonts Noto Sans / Noto Serif / Be Vietnam Pro (SIL OFL 1.1).

@@ -10,16 +10,20 @@ using PdfPro.Core.Geometry;
 using PdfPro.Infrastructure.Sessions;
 using PdfPro.Infrastructure.Settings;
 using PdfPro.Operations.Organizing;
+using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.ViewModels;
 
-public sealed class DocumentTabViewModelTests : IDisposable
+public sealed partial class DocumentTabViewModelTests : IDisposable
 {
     private static readonly ViewSize Viewport = new(1000, 700);
 
     private readonly WorkspaceFixture _fixture = new();
     private readonly RenderCache _cache = new(new FakeSettingsService(AppSettings.Default));
     private readonly IMessageService _messages = Substitute.For<IMessageService>();
+    private readonly IPageDialogService _pageDialogs = Substitute.For<IPageDialogService>();
+    private readonly IFileDialogService _fileDialogs = Substitute.For<IFileDialogService>();
+    private readonly IPdfDocumentLoader _loader = Substitute.For<IPdfDocumentLoader>();
     private readonly DocumentTabFactory _factory;
 
     public DocumentTabViewModelTests()
@@ -31,6 +35,9 @@ public sealed class DocumentTabViewModelTests : IDisposable
             new ManualDebouncerFactory(),
             TestOperations.Catalog(),
             _messages,
+            _pageDialogs,
+            _fileDialogs,
+            _loader,
             NullLoggerFactory.Instance);
 
     public void Dispose()

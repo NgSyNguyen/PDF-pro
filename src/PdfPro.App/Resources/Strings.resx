@@ -332,4 +332,54 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Recovery_Back" xml:space="preserve"><value>Quay lại</value></data>
   <data name="Recovery_Failed" xml:space="preserve"><value>Không khôi phục được “{0}”. Dữ liệu khôi phục vẫn được giữ để thử lại ở lần mở sau.</value></data>
   <data name="Recovery_Done" xml:space="preserve"><value>Đã khôi phục {0} tài liệu</value></data>
+  <data name="Cmd_OrganizePages" xml:space="preserve"><value>Sắp xếp trang</value></data>
+  <data name="Menu_InsertBlank" xml:space="preserve"><value>Chèn trang trắng…</value></data>
+  <data name="Menu_InsertFromFile" xml:space="preserve"><value>Chèn trang từ tệp…</value></data>
+  <data name="Menu_ExtractPages" xml:space="preserve"><value>Trích trang ra tệp mới…</value></data>
+  <data name="Organizer_Back" xml:space="preserve"><value>Quay lại xem</value></data>
+  <data name="Organizer_Back_ToolTip" xml:space="preserve"><value>Đóng lưới sắp xếp và quay lại xem tài liệu</value></data>
+  <data name="Organizer_Grid_Name" xml:space="preserve"><value>Lưới trang</value></data>
+  <data name="Organizer_RangeLabel" xml:space="preserve"><value>Chọn trang:</value></data>
+  <data name="Organizer_Range_ToolTip" xml:space="preserve"><value>Gõ các trang rồi nhấn Enter, ví dụ 1-5, 8, 10-, lẻ, chẵn</value></data>
+  <data name="Organizer_Range_Empty" xml:space="preserve"><value>Hãy nhập các trang cần chọn, ví dụ 1-5, 8, 10-.</value></data>
+  <data name="Organizer_Range_Invalid" xml:space="preserve"><value>Không hiểu “{0}”. Ví dụ hợp lệ: 1-5, 8, 10-, lẻ, chẵn.</value></data>
+  <data name="Organizer_Range_OutOfRange" xml:space="preserve"><value>Không có trang “{0}” (chỉ có {1} trang).</value></data>
+  <data name="Organizer_SelectionSummary" xml:space="preserve"><value>Đã chọn {0}/{1} trang</value></data>
+  <data name="Organizer_SelectAll" xml:space="preserve"><value>Chọn tất cả</value></data>
+  <data name="Organizer_OpenPage" xml:space="preserve"><value>Mở trang này</value></data>
+  <data name="Organizer_TileSize" xml:space="preserve"><value>Cỡ ô trang</value></data>
+  <data name="Organizer_SmallerTiles" xml:space="preserve"><value>Thu nhỏ ô trang</value></data>
+  <data name="Organizer_LargerTiles" xml:space="preserve"><value>Phóng to ô trang</value></data>
+  <data name="Insert_Position" xml:space="preserve"><value>Vị trí</value></data>
+  <data name="Insert_After" xml:space="preserve"><value>Sau</value></data>
+  <data name="Insert_Before" xml:space="preserve"><value>Trước</value></data>
+  <data name="Insert_FirstPage" xml:space="preserve"><value>Trang đầu</value></data>
+  <data name="Insert_LastPage" xml:space="preserve"><value>Trang cuối</value></data>
+  <data name="Insert_PageNumber" xml:space="preserve"><value>Trang:</value></data>
+  <data name="Insert_PageOf" xml:space="preserve"><value>/ {0}</value></data>
+  <data name="Insert_Error_PageNumber" xml:space="preserve"><value>Hãy nhập số trang từ 1 đến {0}.</value></data>
+  <data name="Insert_SizeMillimetres" xml:space="preserve"><value>{0} × {1} mm</value></data>
+  <data name="Insert_Button" xml:space="preserve"><value>Chèn</value></data>
+  <data name="Insert_PickFile_Title" xml:space="preserve"><value>Chọn tệp PDF để chèn</value></data>
+  <data name="Insert_Error_Title" xml:space="preserve"><value>Không chèn được trang</value></data>
+  <data name="Insert_Error_Encrypted" xml:space="preserve"><value>“{0}” được bảo vệ bằng mật khẩu. Phiên bản này chưa chèn được trang từ tệp có mật khẩu.</value></data>
+  <data name="InsertBlank_Title" xml:space="preserve"><value>Chèn trang trắng</value></data>
+  <data name="InsertBlank_Format" xml:space="preserve"><value>Khổ giấy</value></data>
+  <data name="InsertBlank_SameAsAdjacent" xml:space="preserve"><value>Giống trang kề</value></data>
+  <data name="InsertBlank_Portrait" xml:space="preserve"><value>Dọc</value></data>
+  <data name="InsertBlank_Landscape" xml:space="preserve"><value>Ngang</value></data>
+  <data name="InsertBlank_Count" xml:space="preserve"><value>Số trang</value></data>
+  <data name="InsertBlank_Error_Count" xml:space="preserve"><value>Số trang phải từ 1 đến {0}.</value></data>
+  <data name="InsertPages_Title" xml:space="preserve"><value>Chèn trang từ tệp</value></data>
+  <data name="InsertPages_SourceSummary" xml:space="preserve"><value>“{0}” có {1} trang.</value></data>
+  <data name="InsertPages_Pages" xml:space="preserve"><value>Trang cần chèn</value></data>
+  <data name="InsertPages_All" xml:space="preserve"><value>Tất cả</value></data>
+  <data name="InsertPages_Some" xml:space="preserve"><value>Các trang:</value></data>
+  <data name="Extract_FileName" xml:space="preserve"><value>{0} (trang {1})</value></data>
+  <data name="Extract_Progress" xml:space="preserve"><value>Đang trích trang ra “{0}”…</value></data>
+  <data name="Extract_Done" xml:space="preserve"><value>Đã trích {0} trang ra “{1}”</value></data>
+  <data name="Extract_Cancelled" xml:space="preserve"><value>Đã hủy trích trang</value></data>
+  <data name="Extract_FailedStatus" xml:space="preserve"><value>Không trích được trang</value></data>
+  <data name="Extract_Error_Title" xml:space="preserve"><value>Không trích được trang</value></data>
+  <data name="Extract_Error_OwnFile" xml:space="preserve"><value>Không thể trích trang đè lên chính tệp đang mở. Hãy chọn tên tệp khác.</value></data>
 </root>

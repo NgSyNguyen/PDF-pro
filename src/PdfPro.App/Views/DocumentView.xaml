@@ -9,6 +9,7 @@
   xmlns:controls="clr-namespace:PdfPro.App.Controls"
   xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
   xmlns:viewer="clr-namespace:PdfPro.App.ViewModels.Viewer"
+  xmlns:views="clr-namespace:PdfPro.App.Views"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance Type=vm:DocumentTabViewModel}"
   d:DesignHeight="600"
@@ -74,6 +75,9 @@
       Severity="Informational"
       Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVisibility}}" />
 
+    <!-- "Sáº¯p xáº¿p trang": the organizer grid replaces the viewer. -->
+    <views:OrganizerView Visibility="{Binding IsOrganizing, Converter={StaticResource BoolToVisibility}}" />
+
     <ScrollViewer
       x:Name="Scroller"
       AutomationProperties.AutomationId="DocumentScroller"
@@ -87,7 +91,8 @@
       PreviewKeyDown="OnPreviewKeyDown"
       PreviewMouseDown="OnPreviewMouseDown"
       PreviewMouseWheel="OnPreviewMouseWheel"
-      VerticalScrollBarVisibility="Visible">
+      VerticalScrollBarVisibility="Visible"
+      Visibility="{Binding DataContext.IsOrganizing, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBoolToVisibility}}">
       <controls:DocumentViewPanel
         x:Name="Surface"
         AutomationProperties.AutomationId="DocumentSurface"

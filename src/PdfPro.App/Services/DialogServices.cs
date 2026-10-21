@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using PdfPro.App.Resources;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.ViewModels;
+using PdfPro.App.ViewModels.Organizer;
 using PdfPro.App.Views;
 using WpfUiMessageBox = Wpf.Ui.Controls.MessageBox;
 
@@ -69,6 +70,19 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileNames : [];
     }
 
+    public string? PickPdfFile(string title)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = title,
+            Filter = Strings.Open_Dialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickSavePath(string suggestedFileName, string? initialDirectory)
     {
         var dialog = new SaveFileDialog
@@ -116,5 +130,30 @@ internal sealed class PasswordPrompt : IPasswordPrompt
         }
 
         return window.ShowDialog() == true ? window.TakePassword() : null;
+    }
+}
+
+internal sealed class PageDialogService : IPageDialogService
+{
+    public bool ShowInsertBlankPages(InsertBlankPagesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new InsertBlankPagesWindow(viewModel));
+    }
+
+    public bool ShowInsertPages(InsertPagesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new InsertPagesWindow(viewModel));
+    }
+
+    private static bool Show(Window window)
+    {
+        if (Application.Current?.MainWindow is { IsVisible: true } owner)
+        {
+            window.Owner = owner;
+        }
+
+        return window.ShowDialog() == true;
     }
 }

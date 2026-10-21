@@ -332,4 +332,54 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Recovery_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Recovery_Failed" xml:space="preserve"><value>“{0}” could not be recovered. Its recovery data is kept to try again next time.</value></data>
   <data name="Recovery_Done" xml:space="preserve"><value>Recovered {0} document(s)</value></data>
+  <data name="Cmd_OrganizePages" xml:space="preserve"><value>Organize pages</value></data>
+  <data name="Menu_InsertBlank" xml:space="preserve"><value>Insert blank pages…</value></data>
+  <data name="Menu_InsertFromFile" xml:space="preserve"><value>Insert pages from file…</value></data>
+  <data name="Menu_ExtractPages" xml:space="preserve"><value>Extract pages to a new file…</value></data>
+  <data name="Organizer_Back" xml:space="preserve"><value>Back to viewer</value></data>
+  <data name="Organizer_Back_ToolTip" xml:space="preserve"><value>Close the organizer and go back to the document</value></data>
+  <data name="Organizer_Grid_Name" xml:space="preserve"><value>Page grid</value></data>
+  <data name="Organizer_RangeLabel" xml:space="preserve"><value>Select pages:</value></data>
+  <data name="Organizer_Range_ToolTip" xml:space="preserve"><value>Type pages and press Enter, e.g. 1-5, 8, 10-, odd, even</value></data>
+  <data name="Organizer_Range_Empty" xml:space="preserve"><value>Type the pages to select, e.g. 1-5, 8, 10-.</value></data>
+  <data name="Organizer_Range_Invalid" xml:space="preserve"><value>“{0}” is not understood. Examples: 1-5, 8, 10-, odd, even.</value></data>
+  <data name="Organizer_Range_OutOfRange" xml:space="preserve"><value>There is no page “{0}” (there are {1} pages).</value></data>
+  <data name="Organizer_SelectionSummary" xml:space="preserve"><value>{0} of {1} pages selected</value></data>
+  <data name="Organizer_SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="Organizer_OpenPage" xml:space="preserve"><value>Open this page</value></data>
+  <data name="Organizer_TileSize" xml:space="preserve"><value>Tile size</value></data>
+  <data name="Organizer_SmallerTiles" xml:space="preserve"><value>Smaller tiles</value></data>
+  <data name="Organizer_LargerTiles" xml:space="preserve"><value>Larger tiles</value></data>
+  <data name="Insert_Position" xml:space="preserve"><value>Location</value></data>
+  <data name="Insert_After" xml:space="preserve"><value>After</value></data>
+  <data name="Insert_Before" xml:space="preserve"><value>Before</value></data>
+  <data name="Insert_FirstPage" xml:space="preserve"><value>First page</value></data>
+  <data name="Insert_LastPage" xml:space="preserve"><value>Last page</value></data>
+  <data name="Insert_PageNumber" xml:space="preserve"><value>Page:</value></data>
+  <data name="Insert_PageOf" xml:space="preserve"><value>of {0}</value></data>
+  <data name="Insert_Error_PageNumber" xml:space="preserve"><value>Enter a page number from 1 to {0}.</value></data>
+  <data name="Insert_SizeMillimetres" xml:space="preserve"><value>{0} × {1} mm</value></data>
+  <data name="Insert_Button" xml:space="preserve"><value>Insert</value></data>
+  <data name="Insert_PickFile_Title" xml:space="preserve"><value>Choose a PDF file to insert</value></data>
+  <data name="Insert_Error_Title" xml:space="preserve"><value>Pages could not be inserted</value></data>
+  <data name="Insert_Error_Encrypted" xml:space="preserve"><value>“{0}” is password protected. Pages of password-protected files cannot be inserted in this version.</value></data>
+  <data name="InsertBlank_Title" xml:space="preserve"><value>Insert blank pages</value></data>
+  <data name="InsertBlank_Format" xml:space="preserve"><value>Page size</value></data>
+  <data name="InsertBlank_SameAsAdjacent" xml:space="preserve"><value>Same as the adjacent page</value></data>
+  <data name="InsertBlank_Portrait" xml:space="preserve"><value>Portrait</value></data>
+  <data name="InsertBlank_Landscape" xml:space="preserve"><value>Landscape</value></data>
+  <data name="InsertBlank_Count" xml:space="preserve"><value>Number of pages</value></data>
+  <data name="InsertBlank_Error_Count" xml:space="preserve"><value>The number of pages must be from 1 to {0}.</value></data>
+  <data name="InsertPages_Title" xml:space="preserve"><value>Insert pages from file</value></data>
+  <data name="InsertPages_SourceSummary" xml:space="preserve"><value>“{0}” has {1} page(s).</value></data>
+  <data name="InsertPages_Pages" xml:space="preserve"><value>Pages to insert</value></data>
+  <data name="InsertPages_All" xml:space="preserve"><value>All</value></data>
+  <data name="InsertPages_Some" xml:space="preserve"><value>Pages:</value></data>
+  <data name="Extract_FileName" xml:space="preserve"><value>{0} (pages {1})</value></data>
+  <data name="Extract_Progress" xml:space="preserve"><value>Extracting pages to “{0}”…</value></data>
+  <data name="Extract_Done" xml:space="preserve"><value>Extracted {0} page(s) to “{1}”</value></data>
+  <data name="Extract_Cancelled" xml:space="preserve"><value>Page extraction cancelled</value></data>
+  <data name="Extract_FailedStatus" xml:space="preserve"><value>Pages could not be extracted</value></data>
+  <data name="Extract_Error_Title" xml:space="preserve"><value>Pages could not be extracted</value></data>
+  <data name="Extract_Error_OwnFile" xml:space="preserve"><value>Extracted pages cannot replace the open document's own file. Choose another file name.</value></data>
 </root>

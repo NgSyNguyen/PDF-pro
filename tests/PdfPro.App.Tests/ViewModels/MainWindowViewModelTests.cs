@@ -37,7 +37,18 @@ public sealed partial class MainWindowViewModelTests : IDisposable
     public MainWindowViewModelTests()
     {
         _cache = new RenderCache(_settings);
-        _tabFactory = new DocumentTabFactory(new FakePageImageRenderer(), _cache, new FakeThumbnailProvider(), new ImmediateUiDispatcher(), new ManualDebouncerFactory(), TestOperations.Catalog(), _messages, NullLoggerFactory.Instance);
+        _tabFactory = new DocumentTabFactory(
+            new FakePageImageRenderer(),
+            _cache,
+            new FakeThumbnailProvider(),
+            new ImmediateUiDispatcher(),
+            new ManualDebouncerFactory(),
+            TestOperations.Catalog(),
+            _messages,
+            Substitute.For<IPageDialogService>(),
+            _fileDialogs,
+            Substitute.For<IPdfDocumentLoader>(),
+            NullLoggerFactory.Instance);
     }
 
     public void Dispose()
@@ -79,7 +90,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
             ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException",
-                "edit.undo", "edit.redo", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate"],
+                "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
+                "organize.insertBlank", "organize.insertFromFile", "organize.extract"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>

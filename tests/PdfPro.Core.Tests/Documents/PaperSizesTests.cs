@@ -41,6 +41,28 @@ public sealed class PaperSizesTests
         PaperSizes.Identify(new PdfSize(598.5, 842)).ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData("A4", 595, 842)]
+    [InlineData("a3", 842, 1191)]
+    [InlineData("Letter", 612, 792)]
+    [InlineData("LEGAL", 612, 1008)]
+    public void SizeOf_GivesThePortraitSize(string name, double width, double height)
+        => PaperSizes.SizeOf(name).ShouldBe(new PdfSize(width, height));
+
+    [Theory]
+    [InlineData("A10")]
+    [InlineData("")]
+    public void SizeOf_UnknownFormat_IsNull(string name) => PaperSizes.SizeOf(name).ShouldBeNull();
+
+    [Fact]
+    public void SizeOf_IsRecognisedAgain()
+    {
+        foreach (var name in new[] { "A3", "A4", "A5", "Letter", "Legal" })
+        {
+            PaperSizes.Identify(PaperSizes.SizeOf(name)!.Value)!.Name.ShouldBe(name);
+        }
+    }
+
     [Fact]
     public void ToMillimetres_ConvertsPoints()
     {

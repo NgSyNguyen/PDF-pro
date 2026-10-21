@@ -204,6 +204,7 @@
     <Grid Grid.Row="2" Margin="8,0,8,4">
       <Grid.ColumnDefinitions>
         <ColumnDefinition
+          x:Name="SidebarColumn"
           Width="240"
           MinWidth="220"
           MaxWidth="480" />
@@ -217,9 +218,10 @@
       </Grid.ColumnDefinitions>
 
       <!-- Left sidebar -->
-      <views:SidebarView Grid.Column="0" />
+      <views:SidebarView x:Name="Sidebar" Grid.Column="0" />
 
       <GridSplitter
+        x:Name="SidebarSplitter"
         Grid.Column="1"
         Width="8"
         HorizontalAlignment="Center"
@@ -309,7 +311,7 @@
           DataContext="{Binding ActiveDocument.Viewer}"
           DockPanel.Dock="Left"
           Orientation="Horizontal"
-          Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
+          Visibility="{Binding DataContext.ShowsViewerStatus, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
           <TextBlock VerticalAlignment="Center" Text="{loc:Tr Status_PageLabel}" />
           <TextBox
             x:Name="PageNumberBox"
@@ -339,7 +341,7 @@
           DataContext="{Binding ActiveDocument.Viewer}"
           DockPanel.Dock="Right"
           Orientation="Horizontal"
-          Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
+          Visibility="{Binding DataContext.ShowsViewerStatus, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
           <RadioButton
             AutomationProperties.AutomationId="LayoutSingle"
             AutomationProperties.Name="{loc:Tr Layout_Single}"
