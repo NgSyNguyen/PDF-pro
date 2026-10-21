@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using Microsoft.Extensions.Logging;
 using PdfPro.Core.Geometry;
@@ -206,6 +207,45 @@ public sealed class DocumentWorkspace : IAsyncDisposable
         _logger.LogInformation("Session {SessionId}: source {SourceId} added ({PageCount} pages)", Session.Id, id, document.PageCount);
         ScheduleManifest();
         return open;
+    }
+
+    /// <summary>The next revision's source id ("r1", "r2"…), its file name in the session folder and full path.</summary>
+    internal (string SourceId, string FileName, string Path) ReserveRevision()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var id = Session.NextSourceId(SessionSourceKind.Revision);
+        var fileName = SessionStore.RevisionFileName(int.Parse(id.AsSpan(1), NumberStyles.None, CultureInfo.InvariantCulture));
+        return (id, fileName, _folder.PathOf(fileName));
+    }
+
+    /// <summary>
+    /// A content operation wrote the revision file reserved with <see cref="ReserveRevision"/>: it becomes the base of
+    /// the document (every page, in order, as the plan showed them) as one undoable step.
+    /// </summary>
+    /// <param name="before">The state the operation started from; it must still be the current one.</param>
+    /// <param name="operationId">The operation.</param>
+    /// <param name="parameters">Its parameters (written to the manifest for crash recovery).</param>
+    /// <param name="revision">The reserved revision.</param>
+    /// <param name="document">The opened revision file; the workspace owns it from now on.</param>
+    /// <exception cref="InvalidOperationException">The document changed or cannot be edited any more.</exception>
+    internal void CompleteRevision(SessionState before, string operationId, object parameters, (string SourceId, string FileName, string Path) revision, IPdfDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(before);
+        ArgumentNullException.ThrowIfNull(document);
+        EnsureEditable();
+        if (!Equals(Session.State, before))
+        {
+            throw new InvalidOperationException("The document changed while the content operation ran.");
+        }
+
+        var source = new SessionSource(revision.SourceId, revision.FileName, SessionSourceKind.Revision, document.PageCount);
+        Session.AddSource(source);
+        _sources.Add(revision.SourceId, new OpenSource(source, revision.Path, document));
+        var keys = new RecordingPageKeys(RandomPageKeys.Instance);
+        var plan = PagePlan.Identity(revision.SourceId, document.PageCount, keys);
+        var record = new HistoryRecord(operationId, parameters, [.. keys.Keys], revision.SourceId);
+        Session.History.Execute(new RevisionCommand(Describe(record, before.Plan), before, before.NextRevision(revision.SourceId, plan), record));
+        _logger.LogInformation("Session {SessionId}: revision {SourceId} made by {OperationId}", Session.Id, revision.SourceId, operationId);
     }
 
     /// <summary>Undoes <paramref name="steps"/> steps (the history menu jumps several at once).</summary>

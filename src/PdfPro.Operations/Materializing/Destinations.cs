@@ -36,6 +36,9 @@ internal sealed class NamedDestinations
 
     public PdfArray? Find(string name) => _destinations.GetValueOrDefault(name.TrimStart('/'));
 
+    /// <summary>Every named destination.</summary>
+    public IEnumerable<PdfArray> All => _destinations.Values;
+
     private void ReadTree(PdfDictionary node, int depth, HashSet<PdfDictionary> visited)
     {
         if (depth > MaxTreeDepth || !visited.Add(node))

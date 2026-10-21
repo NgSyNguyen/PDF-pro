@@ -82,9 +82,11 @@ internal static class AppHost
         services.AddOperation<InsertPagesOperation>();
         services.AddOperation<CropPagesOperation>();
         services.AddOperation<ExtractPagesOperation>();
+        services.AddOperation<ChangePageSizeOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();
+        services.AddSingleton<IContentChanger, ContentChanger>();
         services.AddSingleton<IRecoveryDialog, RecoveryDialog>();
         services.AddSingleton<IRecoveryService, RecoveryService>();
 

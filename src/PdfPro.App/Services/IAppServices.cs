@@ -125,4 +125,8 @@ public interface IPageDialogService
     bool ShowInsertBlankPages(ViewModels.Organizer.InsertBlankPagesViewModel viewModel);
 
     bool ShowInsertPages(ViewModels.Organizer.InsertPagesViewModel viewModel);
+
+    bool ShowCropPages(ViewModels.Organizer.CropPagesViewModel viewModel);
+
+    bool ShowPageSize(ViewModels.Organizer.PageSizeViewModel viewModel);
 }

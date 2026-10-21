@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IO;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -31,13 +32,21 @@ public sealed record HistoryEntryViewModel(string Description, bool IsRedo, int 
 /// <param name="FileDialogs">Picks the file to insert.</param>
 /// <param name="Loader">Opens inserted files.</param>
 /// <param name="CreateOrganizer">Builds the organizer grid the first time it is shown.</param>
+/// <param name="LoadPreview">Loads a page image for the crop dialog's preview (upright, as displayed), or null.</param>
 public sealed record DocumentTabServices(
     OperationCatalog Operations,
     IMessageService Messages,
     IPageDialogService PageDialogs,
     IFileDialogService FileDialogs,
     IPdfDocumentLoader Loader,
-    Func<DocumentWorkspace, IPageOrganizerHost, PageOrganizerViewModel> CreateOrganizer);
+    Func<DocumentWorkspace, IPageOrganizerHost, PageOrganizerViewModel> CreateOrganizer,
+    Func<VirtualPage, CancellationToken, Task<ImageSource?>> LoadPreview);
+
+/// <summary>A content change the user asked for, run by the window in the background.</summary>
+/// <param name="Operation">The content operation.</param>
+/// <param name="Parameters">Its parameters.</param>
+/// <param name="Description">The step's name ("Đổi khổ giấy 3 trang"), for the status bar.</param>
+public sealed record ContentChangeRequest(IContentOperation Operation, object Parameters, string Description);
 
 /// <summary>
 /// An open document tab: its workspace (session, sources), viewer, sidebar panels and page organizer, undo/redo and the
@@ -152,6 +161,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>"Trích trang…" was chosen: the pages to write to a new file (0-based, in document order).</summary>
     public event EventHandler<IReadOnlyList<int>>? ExtractRequested;
+
+    /// <summary>A content change ("Đổi khổ giấy") was confirmed: the window runs it with progress and cancel.</summary>
+    public event EventHandler<ContentChangeRequest>? ContentChangeRequested;
 
     public bool IsSameFile(string path)
         => FilePath.Length > 0 && string.Equals(Path.GetFullPath(path), Path.GetFullPath(FilePath), StringComparison.OrdinalIgnoreCase);
@@ -379,6 +391,34 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     private bool CanExtract() => !IsReadOnly && HasTargetPages && !_inserting;
 
+    /// <summary>"Cắt lề…": the dialog (with a preview), then one undoable step.</summary>
+    [RelayCommand(CanExecute = nameof(CanEditTargetsOrAll))]
+    private void CropPages()
+    {
+        var dialog = new CropPagesViewModel(Workspace.Pages.Pages, TargetPageIndices, _services.LoadPreview);
+        if (_services.PageDialogs.ShowCropPages(dialog) && dialog.Result is { } parameters && CanEditPages)
+        {
+            Apply(_operations.Get<CropPagesOperation>(), parameters);
+        }
+    }
+
+    /// <summary>"Đổi khổ giấy…": the dialog, then the window rewrites the pages in the background (a new revision).</summary>
+    [RelayCommand(CanExecute = nameof(CanEditTargetsOrAll))]
+    private void ChangePageSize()
+    {
+        var targets = TargetPageIndices;
+        var current = Workspace.Pages.PageSizes[targets.Count > 0 ? targets[0] : 0];
+        var dialog = new PageSizeViewModel(Viewer.PageCount, targets, current);
+        if (_services.PageDialogs.ShowPageSize(dialog) && dialog.Result is { } parameters && CanEditPages)
+        {
+            var description = Workspace.Describe(new Core.Sessions.HistoryRecord(ChangePageSizeOperation.OperationId, parameters, []), Workspace.Session.Plan);
+            ContentChangeRequested?.Invoke(this, new ContentChangeRequest(_operations.Get<ChangePageSizeOperation>(), parameters, description));
+        }
+    }
+
+    /// <summary>The crop and page size dialogs can also be used without a selection (they offer every page).</summary>
+    private bool CanEditTargetsOrAll() => CanEditPages && !_inserting;
+
     /// <summary>The page the insert dialogs propose: the last selected page, or the current page (1-based).</summary>
     private int AnchorPageNumber() => (TargetPageIndices.Count > 0 ? TargetPageIndices[^1] : Viewer.CurrentPageIndex) + 1;
 
@@ -500,6 +540,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         InsertBlankPagesCommand.NotifyCanExecuteChanged();
         InsertPagesFromFileCommand.NotifyCanExecuteChanged();
         ExtractPagesCommand.NotifyCanExecuteChanged();
+        CropPagesCommand.NotifyCanExecuteChanged();
+        ChangePageSizeCommand.NotifyCanExecuteChanged();
     }
 }
 
@@ -536,7 +578,20 @@ internal sealed class DocumentTabFactory(
             pageDialogs,
             fileDialogs,
             loader,
-            (w, host) => new PageOrganizerViewModel(w.Pages, w.SourcePathOf, host, thumbnails, ui, loggers.CreateLogger<PageOrganizerViewModel>()));
+            (w, host) => new PageOrganizerViewModel(w.Pages, w.SourcePathOf, host, thumbnails, ui, loggers.CreateLogger<PageOrganizerViewModel>()),
+            (page, token) => LoadPreviewAsync(workspace, page, token));
         return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
+    }
+
+    /// <summary>A page as displayed, sharp enough for the crop preview box.</summary>
+    private async Task<ImageSource?> LoadPreviewAsync(DocumentWorkspace workspace, VirtualPage page, CancellationToken cancellationToken)
+    {
+        if (page.Source is not { } source)
+        {
+            return null;
+        }
+
+        var request = new ThumbnailRequest(page, workspace.SourcePathOf(source) ?? string.Empty, DpiScale: 2, BoxWidth: CropPagesViewModel.PreviewBoxWidth);
+        return await thumbnails.GetAsync(request, cancellationToken);
     }
 }

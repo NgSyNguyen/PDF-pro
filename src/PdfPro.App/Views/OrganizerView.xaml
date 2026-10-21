@@ -276,6 +276,15 @@
             Icon="{ui:SymbolIcon DocumentArrowRight24}" />
           <Separator />
           <MenuItem
+            Command="{Binding CropPagesCommand}"
+            Header="{loc:Tr Menu_Crop}"
+            Icon="{ui:SymbolIcon Crop24}" />
+          <MenuItem
+            Command="{Binding ChangePageSizeCommand}"
+            Header="{loc:Tr Menu_PageSize}"
+            Icon="{ui:SymbolIcon DocumentLandscape24}" />
+          <Separator />
+          <MenuItem
             Command="{Binding Organizer.SelectAllCommand}"
             Header="{loc:Tr Organizer_SelectAll}"
             InputGestureText="Ctrl+A" />

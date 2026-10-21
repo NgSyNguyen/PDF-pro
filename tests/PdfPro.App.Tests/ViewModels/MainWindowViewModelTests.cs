@@ -29,6 +29,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
     private readonly IDocumentPrinter _printer = Substitute.For<IDocumentPrinter>();
     private readonly IDocumentSaver _saver = Substitute.For<IDocumentSaver>();
     private readonly IRecoveryService _recovery = Substitute.For<IRecoveryService>();
+    private readonly IContentChanger _contentChanger = Substitute.For<IContentChanger>();
+    private readonly IPageDialogService _pageDialogs = Substitute.For<IPageDialogService>();
     private readonly FakeSettingsService _settings = new(AppSettings.Default);
     private readonly AppPaths _paths = new(@"C:\data\PdfPro", @"C:\app\tools");
     private readonly RenderCache _cache;
@@ -45,7 +47,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             new ManualDebouncerFactory(),
             TestOperations.Catalog(),
             _messages,
-            Substitute.For<IPageDialogService>(),
+            _pageDialogs,
             _fileDialogs,
             Substitute.For<IPdfDocumentLoader>(),
             NullLoggerFactory.Instance);
@@ -91,7 +93,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
             ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException",
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
-                "organize.insertBlank", "organize.insertFromFile", "organize.extract"],
+                "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -528,5 +530,6 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _printer,
             _saver,
             _recovery,
+            _contentChanger,
             NullLogger<MainWindowViewModel>.Instance);
 }

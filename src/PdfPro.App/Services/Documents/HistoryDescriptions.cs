@@ -26,6 +26,7 @@ internal static class HistoryDescriptions
             InsertPagesParams p => Format(Strings.History_InsertPages, record.NewPageKeys.Count, sourceName(p.SourceId) ?? p.SourceId),
             CropPagesParams { Reset: true } p => Format(Strings.History_CropReset, Count(p.Pages, before)),
             CropPagesParams p => Format(Strings.History_Crop, Count(p.Pages, before)),
+            ChangePageSizeParams p => Format(Strings.History_PageSize, Count(p.Pages, before)),
             _ => Strings.History_Other,
         };
     }

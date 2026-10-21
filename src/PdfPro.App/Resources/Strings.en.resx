@@ -382,4 +382,49 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Extract_FailedStatus" xml:space="preserve"><value>Pages could not be extracted</value></data>
   <data name="Extract_Error_Title" xml:space="preserve"><value>Pages could not be extracted</value></data>
   <data name="Extract_Error_OwnFile" xml:space="preserve"><value>Extracted pages cannot replace the open document's own file. Choose another file name.</value></data>
+  <data name="Menu_Crop" xml:space="preserve"><value>Crop pages…</value></data>
+  <data name="Menu_PageSize" xml:space="preserve"><value>Change page size…</value></data>
+  <data name="Target_Label" xml:space="preserve"><value>Apply to</value></data>
+  <data name="Target_Selected" xml:space="preserve"><value>Selected pages ({0})</value></data>
+  <data name="Target_All" xml:space="preserve"><value>All pages</value></data>
+  <data name="Target_Odd" xml:space="preserve"><value>Odd pages</value></data>
+  <data name="Target_Even" xml:space="preserve"><value>Even pages</value></data>
+  <data name="Target_Range" xml:space="preserve"><value>Pages:</value></data>
+  <data name="Target_Error_NoEvenPages" xml:space="preserve"><value>The document has a single page, so there are no even pages.</value></data>
+  <data name="Crop_Title" xml:space="preserve"><value>Crop pages</value></data>
+  <data name="Crop_Margins" xml:space="preserve"><value>Margins to cut (mm)</value></data>
+  <data name="Crop_Left" xml:space="preserve"><value>Left</value></data>
+  <data name="Crop_Top" xml:space="preserve"><value>Top</value></data>
+  <data name="Crop_Right" xml:space="preserve"><value>Right</value></data>
+  <data name="Crop_Bottom" xml:space="preserve"><value>Bottom</value></data>
+  <data name="Crop_Uniform" xml:space="preserve"><value>Same on all sides</value></data>
+  <data name="Crop_Reset" xml:space="preserve"><value>Remove the crop (show the whole page)</value></data>
+  <data name="Crop_Preview" xml:space="preserve"><value>Preview of the first chosen page</value></data>
+  <data name="Crop_PreviewHint" xml:space="preserve"><value>The shaded part is cut away. This can be undone.</value></data>
+  <data name="Crop_Apply" xml:space="preserve"><value>Crop</value></data>
+  <data name="Crop_Error_Margin" xml:space="preserve"><value>Each margin must be a number from 0 to {0} mm.</value></data>
+  <data name="Crop_Error_Nothing" xml:space="preserve"><value>Enter at least one margin above 0, or choose “Remove the crop”.</value></data>
+  <data name="Crop_Error_TooLarge" xml:space="preserve"><value>The margins are too large: almost nothing of page {0} would remain.</value></data>
+  <data name="PageSize_Title" xml:space="preserve"><value>Change page size</value></data>
+  <data name="PageSize_Format" xml:space="preserve"><value>New page size</value></data>
+  <data name="PageSize_Custom" xml:space="preserve"><value>Custom</value></data>
+  <data name="PageSize_Width" xml:space="preserve"><value>Width (mm)</value></data>
+  <data name="PageSize_Height" xml:space="preserve"><value>Height (mm)</value></data>
+  <data name="PageSize_Orientation" xml:space="preserve"><value>Orientation</value></data>
+  <data name="PageSize_LikeEachPage" xml:space="preserve"><value>Like each page</value></data>
+  <data name="PageSize_Content" xml:space="preserve"><value>Page content</value></data>
+  <data name="PageSize_ScaleToFit" xml:space="preserve"><value>Scale to fit the new size</value></data>
+  <data name="PageSize_Center" xml:space="preserve"><value>Keep its size, centred</value></data>
+  <data name="PageSize_Note" xml:space="preserve"><value>Content is scaled by a transform, so text can still be selected and searched. This can be undone.</value></data>
+  <data name="PageSize_Apply" xml:space="preserve"><value>Change</value></data>
+  <data name="PageSize_Error_Custom" xml:space="preserve"><value>A custom size must be from {0} to {1} mm.</value></data>
+  <data name="History_PageSize" xml:space="preserve"><value>Change the size of {0} page(s)</value></data>
+  <data name="Content_Progress" xml:space="preserve"><value>{0}…</value></data>
+  <data name="Content_Done" xml:space="preserve"><value>Done: {0}</value></data>
+  <data name="Content_Cancelled" xml:space="preserve"><value>Cancelled: {0}</value></data>
+  <data name="Content_FailedStatus" xml:space="preserve"><value>Failed: {0}</value></data>
+  <data name="Content_Error_Title" xml:space="preserve"><value>The page content could not be changed</value></data>
+  <data name="Content_Error_SourceUnreadable" xml:space="preserve"><value>The document's data could not be read to make the change. The document is unchanged; details were written to the log.</value></data>
+  <data name="Content_Error_DiskFull" xml:space="preserve"><value>There is not enough disk space for the change. Free some space and try again; the document is unchanged.</value></data>
+  <data name="Content_Error_Failed" xml:space="preserve"><value>An error occurred while changing the page content. The document is unchanged; details were written to the log.</value></data>
 </root>

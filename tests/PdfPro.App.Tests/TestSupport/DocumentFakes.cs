@@ -51,6 +51,7 @@ internal static class TestOperations
             new InsertPagesOperation(materializer, loader),
             new CropPagesOperation(materializer, loader),
             new ExtractPagesOperation(materializer, loader),
+            new ChangePageSizeOperation(),
         ]);
     }
 }

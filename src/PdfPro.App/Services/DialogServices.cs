@@ -147,6 +147,18 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new InsertPagesWindow(viewModel));
     }
 
+    public bool ShowCropPages(CropPagesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new CropPagesWindow(viewModel));
+    }
+
+    public bool ShowPageSize(PageSizeViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new PageSizeWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

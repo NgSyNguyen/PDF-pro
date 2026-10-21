@@ -7,6 +7,7 @@ using PdfPro.App.ViewModels;
 using PdfPro.App.ViewModels.Organizer;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
+using PdfPro.Operations.Organizing;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.ViewModels;
@@ -314,6 +315,75 @@ public sealed partial class DocumentTabViewModelTests
         tab.InsertBlankPagesCommand.CanExecute(null).ShouldBeFalse();
         tab.ExtractPagesCommand.CanExecute(null).ShouldBeFalse();
         tab.MovePages([0], 3).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task CropPages_AppliesTheDialogsMarginsAsOneStep()
+    {
+        await using var tab = await OrganizingAsync(4, [1, 2]);
+        _pageDialogs.ShowCropPages(Arg.Any<CropPagesViewModel>()).Returns(call =>
+        {
+            var dialog = call.Arg<CropPagesViewModel>();
+            dialog.Target.IsSelected.ShouldBeTrue();
+            dialog.PreviewPage.ShouldBeSameAs(tab.Workspace.Pages.Pages[1]);
+            dialog.LeftText = "10";
+            dialog.ApplyCommand.Execute(null);
+            return true;
+        });
+
+        tab.CropPagesCommand.Execute(null);
+
+        var plan = tab.Workspace.Session.Plan;
+        plan.Select(p => p.CropBoxOverride is not null).ShouldBe([false, true, true, false]);
+        tab.Viewer.Document.PageSizes[1].Width.ShouldBe(595 - (10 * 72 / 25.4), 0.01);
+        tab.UndoToolTip.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Cmd_UndoWith, string.Format(CultureInfo.CurrentCulture, Strings.History_Crop, 2)));
+    }
+
+    [Fact]
+    public async Task CropPages_Cancelled_ChangesNothing()
+    {
+        await using var tab = await CreateAsync(2);
+        _pageDialogs.ShowCropPages(Arg.Any<CropPagesViewModel>()).Returns(false);
+
+        tab.CropPagesCommand.Execute(null);
+
+        tab.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ChangePageSize_AsksTheWindowToRunIt()
+    {
+        await using var tab = await OrganizingAsync(5, [0, 4]);
+        ContentChangeRequest? request = null;
+        tab.ContentChangeRequested += (_, r) => request = r;
+        _pageDialogs.ShowPageSize(Arg.Any<PageSizeViewModel>()).Returns(call =>
+        {
+            var dialog = call.Arg<PageSizeViewModel>();
+            dialog.SelectedFormat = dialog.Formats.Single(f => f.Format == "A5");
+            dialog.ApplyCommand.Execute(null);
+            return true;
+        });
+
+        tab.ChangePageSizeCommand.Execute(null);
+
+        request.ShouldNotBeNull();
+        request.Operation.ShouldBeOfType<ChangePageSizeOperation>();
+        request.Parameters.ShouldBe(new ChangePageSizeParams("1, 5", 420, 595));
+        request.Description.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.History_PageSize, 2));
+        tab.IsDirty.ShouldBeFalse("the window applies it");
+    }
+
+    [Fact]
+    public async Task ChangePageSize_Cancelled_AsksNothing()
+    {
+        await using var tab = await CreateAsync(2);
+        var requested = false;
+        tab.ContentChangeRequested += (_, _) => requested = true;
+        _pageDialogs.ShowPageSize(Arg.Any<PageSizeViewModel>()).Returns(false);
+
+        tab.ChangePageSizeCommand.Execute(null);
+
+        requested.ShouldBeFalse();
     }
 
     private async Task<DocumentTabViewModel> OrganizingAsync(int pages, int[] selection)

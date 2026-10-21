@@ -1,4 +1,5 @@
 using System.IO;
+using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
 using PdfPro.App.Services.Documents;
 using PdfPro.Core.Operations;
@@ -83,6 +84,75 @@ public sealed partial class MainWindowViewModel
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Runs a content change ("Đổi khổ giấy") in the background with progress and cancel in the status bar; the
+    /// document cannot be edited or saved meanwhile. Returns true once the change is in the document's history.
+    /// </summary>
+    internal async Task<bool> ChangeContentAsync(DocumentTabViewModel document, ContentChangeRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(request);
+        await WaitForBackgroundWorkAsync(cancelPrint: false);
+        if (!Tabs.Contains(document) || !document.CanEditPages)
+        {
+            return false;
+        }
+
+        var task = StatusBar.StartTask(Format(Strings.Content_Progress, request.Description));
+        var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, Format(Strings.Content_Progress, request.Description)));
+        var change = _contentChanger.ApplyAsync(document.Workspace, request.Operation, request.Parameters, progress, task.Token);
+        _activeSave = change;
+        NotifySaveCommands();
+        string? error = null;
+        try
+        {
+            await change;
+            task.Complete(Format(Strings.Content_Done, request.Description));
+        }
+        catch (OperationCanceledException)
+        {
+            task.Complete(Format(Strings.Content_Cancelled, request.Description));
+            return false;
+        }
+        catch (OperationValidationException ex)
+        {
+            _logger.LogWarning("A content change was refused: {OperationId}, {ErrorCount} error(s)", ex.OperationId, ex.Errors.Count);
+            task.Complete(Format(Strings.Content_FailedStatus, request.Description));
+            error = Strings.Edit_Error_Invalid;
+        }
+        catch (ContentChangeException ex)
+        {
+            task.Complete(Format(Strings.Content_FailedStatus, request.Description));
+            error = ex.Failure switch
+            {
+                ContentChangeFailure.SourceUnreadable => Strings.Content_Error_SourceUnreadable,
+                ContentChangeFailure.DiskFull => Strings.Content_Error_DiskFull,
+                _ => Strings.Content_Error_Failed,
+            };
+        }
+        finally
+        {
+            _activeSave = null;
+            NotifySaveCommands();
+        }
+
+        if (error is not null)
+        {
+            await _messages.ShowErrorAsync(Strings.Content_Error_Title, error);
+            return false;
+        }
+
+        return true;
+    }
+
+    private async void OnContentChangeRequested(object? sender, ContentChangeRequest request)
+    {
+        if (sender is DocumentTabViewModel document && Tabs.Contains(document))
+        {
+            await ChangeContentAsync(document, request);
+        }
     }
 
     private async void OnExtractRequested(object? sender, IReadOnlyList<int> pageIndices)

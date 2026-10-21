@@ -1,0 +1,141 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.PageSizeWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:organizer="clr-namespace:PdfPro.App.ViewModels.Organizer"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:views="clr-namespace:PdfPro.App.Views"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=organizer:PageSizeViewModel}"
+  Title="{loc:Tr PageSize_Title}"
+  Width="500"
+  MinHeight="0"
+  AutomationProperties.AutomationId="PageSizeWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr PageSize_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock FontWeight="SemiBold" Text="{loc:Tr PageSize_Format}" />
+      <ComboBox
+        x:Name="FormatBox"
+        Margin="0,6,0,0"
+        AutomationProperties.AutomationId="PageSizeFormat"
+        AutomationProperties.Name="{loc:Tr PageSize_Format}"
+        DisplayMemberPath="Label"
+        ItemsSource="{Binding Formats}"
+        SelectedItem="{Binding SelectedFormat}" />
+      <StackPanel
+        Margin="0,8,0,0"
+        Orientation="Horizontal"
+        Visibility="{Binding IsCustom, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="{loc:Tr PageSize_Width}" />
+        <TextBox
+          Width="88"
+          AutomationProperties.AutomationId="PageSizeWidth"
+          AutomationProperties.Name="{loc:Tr PageSize_Width}"
+          Text="{Binding WidthText, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Margin="16,0,8,0" VerticalAlignment="Center" Text="{loc:Tr PageSize_Height}" />
+        <TextBox
+          Width="88"
+          AutomationProperties.AutomationId="PageSizeHeight"
+          AutomationProperties.Name="{loc:Tr PageSize_Height}"
+          Text="{Binding HeightText, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <TextBlock
+        Margin="0,16,0,0"
+        FontWeight="SemiBold"
+        Text="{loc:Tr PageSize_Orientation}" />
+      <WrapPanel Margin="0,6,0,0">
+        <RadioButton
+          MinWidth="0"
+          Margin="0,0,16,4"
+          AutomationProperties.AutomationId="PageSizeLikeEachPage"
+          Content="{loc:Tr PageSize_LikeEachPage}"
+          GroupName="PageSizeOrientation"
+          IsChecked="{Binding IsLikeEachPage}" />
+        <RadioButton
+          MinWidth="0"
+          Margin="0,0,16,4"
+          AutomationProperties.AutomationId="PageSizePortrait"
+          Content="{loc:Tr InsertBlank_Portrait}"
+          GroupName="PageSizeOrientation"
+          IsChecked="{Binding IsPortrait}" />
+        <RadioButton
+          MinWidth="0"
+          Margin="0,0,16,4"
+          AutomationProperties.AutomationId="PageSizeLandscape"
+          Content="{loc:Tr InsertBlank_Landscape}"
+          GroupName="PageSizeOrientation"
+          IsChecked="{Binding IsLandscape}" />
+      </WrapPanel>
+
+      <TextBlock
+        Margin="0,12,0,0"
+        FontWeight="SemiBold"
+        Text="{loc:Tr PageSize_Content}" />
+      <RadioButton
+        Margin="0,6,0,0"
+        AutomationProperties.AutomationId="PageSizeScaleToFit"
+        Content="{loc:Tr PageSize_ScaleToFit}"
+        GroupName="PageSizeFit"
+        IsChecked="{Binding IsScaleToFit}" />
+      <RadioButton
+        Margin="0,4,0,0"
+        AutomationProperties.AutomationId="PageSizeCenter"
+        Content="{loc:Tr PageSize_Center}"
+        GroupName="PageSizeFit"
+        IsChecked="{Binding IsCentered}" />
+
+      <views:PageTargetPanel Margin="0,16,0,0" DataContext="{Binding Target}" />
+
+      <TextBlock
+        Margin="0,12,0,0"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr PageSize_Note}"
+        TextWrapping="Wrap" />
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="PageSizeError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding Error}"
+        TextWrapping="Wrap"
+        Visibility="{Binding Error, Converter={StaticResource NullToCollapsed}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="PageSizeOk"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr PageSize_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="PageSizeCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

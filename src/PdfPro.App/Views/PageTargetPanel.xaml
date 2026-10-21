@@ -1,0 +1,62 @@
+<UserControl
+  x:Class="PdfPro.App.Views.PageTargetPanel"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:organizer="clr-namespace:PdfPro.App.ViewModels.Organizer"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=organizer:PageTargetViewModel}">
+  <!-- "Áp dụng cho": selected pages, all, odd, even or a range. DataContext: PageTargetViewModel. -->
+  <StackPanel>
+    <TextBlock FontWeight="SemiBold" Text="{loc:Tr Target_Label}" />
+    <RadioButton
+      Margin="0,6,0,0"
+      AutomationProperties.AutomationId="TargetSelected"
+      Content="{Binding SelectedLabel}"
+      GroupName="PageTarget"
+      IsChecked="{Binding IsSelected}"
+      Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+    <WrapPanel Margin="0,4,0,0">
+      <RadioButton
+        MinWidth="0"
+        Margin="0,0,16,4"
+        AutomationProperties.AutomationId="TargetAll"
+        Content="{loc:Tr Target_All}"
+        GroupName="PageTarget"
+        IsChecked="{Binding IsAll}" />
+      <RadioButton
+        MinWidth="0"
+        Margin="0,0,16,4"
+        AutomationProperties.AutomationId="TargetOdd"
+        Content="{loc:Tr Target_Odd}"
+        GroupName="PageTarget"
+        IsChecked="{Binding IsOdd}" />
+      <RadioButton
+        MinWidth="0"
+        Margin="0,0,16,4"
+        AutomationProperties.AutomationId="TargetEven"
+        Content="{loc:Tr Target_Even}"
+        GroupName="PageTarget"
+        IsChecked="{Binding IsEven}" />
+    </WrapPanel>
+    <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
+      <RadioButton
+        MinWidth="0"
+        Margin="0,0,8,0"
+        AutomationProperties.AutomationId="TargetRange"
+        Content="{loc:Tr Target_Range}"
+        GroupName="PageTarget"
+        IsChecked="{Binding IsRange}" />
+      <TextBox
+        Width="180"
+        VerticalAlignment="Center"
+        AutomationProperties.AutomationId="TargetRangeText"
+        AutomationProperties.Name="{loc:Tr Target_Range}"
+        IsEnabled="{Binding IsRange}"
+        Text="{Binding RangeText, UpdateSourceTrigger=PropertyChanged}"
+        ToolTip="{loc:Tr Organizer_Range_ToolTip}" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

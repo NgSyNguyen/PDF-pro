@@ -4,6 +4,7 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.ViewModels;
 using PdfPro.Core.Operations;
+using PdfPro.Operations.Organizing;
 
 namespace PdfPro.App.Tests.ViewModels;
 
@@ -157,6 +158,99 @@ public sealed partial class MainWindowViewModelTests
         await closing;
         Directory.Exists(document.Workspace.Session.Directory).ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task ChangeContent_RunsInTheBackgroundWithProgress()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        var document = viewModel.ActiveDocument!;
+        var request = new ContentChangeRequest(new ChangePageSizeOperation(), new ChangePageSizeParams("1", 420, 595), "Đổi khổ giấy 1 trang");
+        var running = new TaskCompletionSource();
+        AnyContentChange().Returns(running.Task);
+
+        var change = viewModel.ChangeContentAsync(document, request);
+
+        viewModel.StatusBar.IsTaskRunning.ShouldBeTrue();
+        viewModel.StatusBar.TaskText.ShouldBe(Format(Strings.Content_Progress, "Đổi khổ giấy 1 trang"));
+        viewModel.SaveAsCommand.CanExecute(null).ShouldBeFalse("one task at a time");
+        running.SetResult();
+        (await change).ShouldBeTrue();
+
+        await _contentChanger.Received(1).ApplyAsync(document.Workspace, request.Operation, request.Parameters, Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
+        viewModel.StatusBar.TaskText.ShouldBe(Format(Strings.Content_Done, "Đổi khổ giấy 1 trang"));
+        viewModel.StatusBar.IsTaskRunning.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(ContentChangeFailure.SourceUnreadable)]
+    [InlineData(ContentChangeFailure.DiskFull)]
+    [InlineData(ContentChangeFailure.Failed)]
+    public async Task ChangeContent_Failure_IsExplained(ContentChangeFailure failure)
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        AnyContentChange().ThrowsAsync(new ContentChangeException(failure));
+        var expected = failure switch
+        {
+            ContentChangeFailure.SourceUnreadable => Strings.Content_Error_SourceUnreadable,
+            ContentChangeFailure.DiskFull => Strings.Content_Error_DiskFull,
+            _ => Strings.Content_Error_Failed,
+        };
+
+        (await viewModel.ChangeContentAsync(viewModel.ActiveDocument!, PageSizeRequest())).ShouldBeFalse();
+
+        await _messages.Received(1).ShowErrorAsync(Strings.Content_Error_Title, expected);
+        viewModel.StatusBar.TaskText.ShouldBe(Format(Strings.Content_FailedStatus, "x"));
+    }
+
+    [Fact]
+    public async Task ChangeContent_Cancelled_SaysSo()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        AnyContentChange().Returns(_ => Task.FromCanceled(new CancellationToken(canceled: true)));
+
+        (await viewModel.ChangeContentAsync(viewModel.ActiveDocument!, PageSizeRequest())).ShouldBeFalse();
+
+        viewModel.StatusBar.TaskText.ShouldBe(Format(Strings.Content_Cancelled, "x"));
+        await _messages.DidNotReceiveWithAnyArgs().ShowErrorAsync(default!, default!);
+    }
+
+    [Fact]
+    public async Task ChangeContent_RefusedParameters_AreExplained()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        AnyContentChange().ThrowsAsync(new OperationValidationException("organize.pageSize", [new OperationValidationError("Pages", "bad")]));
+
+        (await viewModel.ChangeContentAsync(viewModel.ActiveDocument!, PageSizeRequest())).ShouldBeFalse();
+
+        await _messages.Received(1).ShowErrorAsync(Strings.Content_Error_Title, Strings.Edit_Error_Invalid);
+    }
+
+    [Fact]
+    public async Task PageSizeRibbonCommand_ReachesTheContentChanger()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        _pageDialogs.ShowPageSize(Arg.Any<PdfPro.App.ViewModels.Organizer.PageSizeViewModel>()).Returns(call =>
+        {
+            call.Arg<PdfPro.App.ViewModels.Organizer.PageSizeViewModel>().ApplyCommand.Execute(null);
+            return true;
+        });
+        AnyContentChange().Returns(Task.CompletedTask);
+
+        Command(viewModel, "organize.pageSize").Command.Execute(null);
+        await WaitUntilAsync(() => _contentChanger.ReceivedCalls().Any());
+
+        await _contentChanger.Received(1).ApplyAsync(
+            viewModel.ActiveDocument!.Workspace,
+            Arg.Any<ChangePageSizeOperation>(),
+            new ChangePageSizeParams("1", 595, 842),
+            Arg.Any<IProgress<OperationProgress>>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    private static ContentChangeRequest PageSizeRequest() => new(new ChangePageSizeOperation(), new ChangePageSizeParams("1", 420, 595), "x");
+
+    private Task AnyContentChange()
+        => _contentChanger.ApplyAsync(Arg.Any<DocumentWorkspace>(), Arg.Any<Core.Organizing.IContentOperation>(), Arg.Any<object>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
 
     private Task AnyExport()
         => _saver.ExportAsync(Arg.Any<DocumentWorkspace>(), Arg.Any<IReadOnlyList<int>>(), Arg.Any<string>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());

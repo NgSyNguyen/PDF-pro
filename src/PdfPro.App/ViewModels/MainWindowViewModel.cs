@@ -32,6 +32,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IDocumentPrinter _printer;
     private readonly IDocumentSaver _saver;
     private readonly IRecoveryService _recovery;
+    private readonly IContentChanger _contentChanger;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -51,6 +52,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IDocumentPrinter printer,
         IDocumentSaver saver,
         IRecoveryService recovery,
+        IContentChanger contentChanger,
         ILogger<MainWindowViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
@@ -67,6 +69,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _printer = printer;
         _saver = saver;
         _recovery = recovery;
+        _contentChanger = contentChanger;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -79,6 +82,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         InsertBlankPagesCommand = new ActiveDocumentCommand(d => d.InsertBlankPagesCommand);
         InsertPagesFromFileCommand = new ActiveDocumentCommand(d => d.InsertPagesFromFileCommand);
         ExtractPagesCommand = new ActiveDocumentCommand(d => d.ExtractPagesCommand);
+        CropPagesCommand = new ActiveDocumentCommand(d => d.CropPagesCommand);
+        ChangePageSizeCommand = new ActiveDocumentCommand(d => d.ChangePageSizeCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
@@ -131,6 +136,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand InsertPagesFromFileCommand { get; }
 
     public ActiveDocumentCommand ExtractPagesCommand { get; }
+
+    public ActiveDocumentCommand CropPagesCommand { get; }
+
+    public ActiveDocumentCommand ChangePageSizeCommand { get; }
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -325,6 +334,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             _trackedDocument.PropertyChanged -= OnActiveDocumentPropertyChanged;
             _trackedDocument.ExtractRequested -= OnExtractRequested;
+            _trackedDocument.ContentChangeRequested -= OnContentChangeRequested;
         }
 
         _trackedDocument = value as DocumentTabViewModel;
@@ -332,12 +342,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             _trackedDocument.PropertyChanged += OnActiveDocumentPropertyChanged;
             _trackedDocument.ExtractRequested += OnExtractRequested;
+            _trackedDocument.ContentChangeRequested += OnContentChangeRequested;
         }
 
         foreach (var command in new[]
         {
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
-            OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand,
+            OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -478,8 +489,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Layout,
                 [
-                    new("organize.crop", Strings.Cmd_Crop, SymbolRegular.Crop24),
-                    new("organize.pageSize", Strings.Cmd_PageSize, SymbolRegular.DocumentLandscape24),
+                    new("organize.crop", Strings.Cmd_Crop, SymbolRegular.Crop24, CropPagesCommand),
+                    new("organize.pageSize", Strings.Cmd_PageSize, SymbolRegular.DocumentLandscape24, ChangePageSizeCommand),
                 ]),
                 new(Strings.Ribbon_Group_MergeSplit,
                 [
