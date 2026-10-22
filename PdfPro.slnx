@@ -23,6 +23,7 @@
   <Folder Name="/tests/">
     <File Path="tests/Directory.Build.props" />
     <Project Path="tests/PdfPro.App.Tests/PdfPro.App.Tests.csproj" />
+    <Project Path="tests/PdfPro.App.UiTests/PdfPro.App.UiTests.csproj" />
     <Project Path="tests/PdfPro.Core.Tests/PdfPro.Core.Tests.csproj" />
     <Project Path="tests/PdfPro.Infrastructure.Tests/PdfPro.Infrastructure.Tests.csproj" />
     <Project Path="tests/PdfPro.Operations.Tests/PdfPro.Operations.Tests.csproj" />
