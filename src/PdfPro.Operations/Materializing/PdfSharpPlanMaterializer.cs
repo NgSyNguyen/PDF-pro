@@ -25,7 +25,19 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
     private const int SharingViolation = unchecked((int)0x80070020);
     private const int LockViolation = unchecked((int)0x80070021);
 
-    public async Task MaterializeAsync(MaterializeRequest request, Stream output, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    public Task MaterializeAsync(MaterializeRequest request, Stream output, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+        => MaterializeAsync(request, output, progress, finish: null, cancellationToken);
+
+    /// <summary>
+    /// Writes the plan, letting <paramref name="finish"/> complete the document (outline, table of contents,
+    /// metadata) just before it is saved.
+    /// </summary>
+    internal async Task MaterializeAsync(
+        MaterializeRequest request,
+        Stream output,
+        IProgress<OperationProgress> progress,
+        Action<PdfDocument, IReadOnlyList<PlacedPage>>? finish,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(output);
@@ -39,10 +51,11 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
             foreach (var sourceId in request.Plan.GetSourceIds().Append(request.BaseSourceId).Distinct().OrderBy(id => id != request.BaseSourceId))
             {
                 var mode = sourceId == request.BaseSourceId ? PdfDocumentOpenMode.Modify : PdfDocumentOpenMode.Import;
-                documents[sourceId] = await OpenAsync(sourceId, request.SourcePaths[sourceId], mode, request.WorkingDirectory, cancellationToken).ConfigureAwait(false);
+                var password = request.SourcePasswords?.GetValueOrDefault(sourceId);
+                documents[sourceId] = await OpenAsync(sourceId, request.SourcePaths[sourceId], mode, password, request.WorkingDirectory, cancellationToken).ConfigureAwait(false);
             }
 
-            await Task.Run(() => Write(request, documents, output, progress, cancellationToken), cancellationToken).ConfigureAwait(false);
+            await Task.Run(() => Write(request, documents, output, progress, finish, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -70,7 +83,13 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
         ArgumentException.ThrowIfNullOrWhiteSpace(request.WorkingDirectory, nameof(request));
     }
 
-    private static void Write(MaterializeRequest request, Dictionary<string, PdfDocument> documents, Stream output, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    private static void Write(
+        MaterializeRequest request,
+        Dictionary<string, PdfDocument> documents,
+        Stream output,
+        IProgress<OperationProgress> progress,
+        Action<PdfDocument, IReadOnlyList<PlacedPage>>? finish,
+        CancellationToken cancellationToken)
     {
         var plan = request.Plan;
         var baseDocument = documents[request.BaseSourceId];
@@ -106,6 +125,13 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
         }
 
         baseDocument.Version = documents.Values.Max(d => d.Version);
+        if (baseDocument.SecuritySettings.IsEncrypted)
+        {
+            // Only reached when a password was given (merging protected files): the output is never encrypted.
+            baseDocument.SecurityHandler.SetEncryptionToNoneAndResetPasswords();
+        }
+
+        finish?.Invoke(baseDocument, placed);
         cancellationToken.ThrowIfCancellationRequested();
         progress.Report(new OperationProgress(0, 0, MaterializeStages.Write));
         try
@@ -118,11 +144,11 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
         }
     }
 
-    private async Task<PdfDocument> OpenAsync(string sourceId, string path, PdfDocumentOpenMode mode, string workingDirectory, CancellationToken cancellationToken)
+    private async Task<PdfDocument> OpenAsync(string sourceId, string path, PdfDocumentOpenMode mode, string? password, string workingDirectory, CancellationToken cancellationToken)
     {
         try
         {
-            return await Task.Run(() => Open(sourceId, path, mode), cancellationToken).ConfigureAwait(false);
+            return await Task.Run(() => Open(sourceId, path, mode, password), cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (IsAccessFailure(ex))
         {
@@ -147,7 +173,7 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
 
             try
             {
-                return await Task.Run(() => Open(sourceId, repaired, mode), cancellationToken).ConfigureAwait(false);
+                return await Task.Run(() => Open(sourceId, repaired, mode, password: null), cancellationToken).ConfigureAwait(false);
             }
             catch (Exception retryError) when (retryError is not (MaterializationException or OperationCanceledException or OutOfMemoryException))
             {
@@ -156,10 +182,10 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
         }
     }
 
-    private static PdfDocument Open(string sourceId, string path, PdfDocumentOpenMode mode)
+    private static PdfDocument Open(string sourceId, string path, PdfDocumentOpenMode mode, string? password)
     {
-        var document = PdfReader.Open(path, mode);
-        if (document.SecuritySettings.IsEncrypted)
+        var document = password is null ? PdfReader.Open(path, mode) : PdfReader.Open(path, password, mode);
+        if (document.SecuritySettings.IsEncrypted && password is null)
         {
             document.Dispose();
             throw new MaterializationException(MaterializationFailure.SourceEncrypted, sourceId);

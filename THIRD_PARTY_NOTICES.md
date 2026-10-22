@@ -26,6 +26,7 @@ Before adding a package: state its name, license and reason, and add it below.
 | [PDFium](https://pdfium.googlesource.com/pdfium/) | chromium/8100 | BSD-3-Clause, Apache-2.0 | PDF rendering, text, document structure |
 | [PDFsharp](https://github.com/empira/PDFsharp) | 6.2.4 | MIT | Writes page plans to PDF (page tree, rotation, CropBox, imported pages) in `PdfPro.Operations`; also generates `samples/`. **6.5.0+ is AGPL-3.0 — never upgrade beyond 6.2.x** (guarded by `LicenseGuardTests`). |
 | [System.Security.Cryptography.Pkcs](https://github.com/dotnet/runtime) | 10.0.13 | MIT | Pinned transitive dependency of PDFsharp (security fixes) |
+| [Noto Sans](https://github.com/notofonts/latin-greek-cyrillic) Regular + Bold (`assets/fonts/NotoSans`, from [notofonts.github.io](https://github.com/notofonts/notofonts.github.io)) | hinted TTF, 2026-10 | SIL OFL 1.1 (`assets/fonts/NotoSans/OFL.txt`) | Vietnamese text PDF_Pro writes into documents (merge table of contents; later labels, stamps), embedded as subsets; shipped inside `PdfPro.Operations.dll` |
 
 ### Libraries bundled inside PDFium
 
@@ -56,4 +57,4 @@ The complete license texts will be collected in this file before the first relea
 
 PdfPig, SkiaSharp, OpenCvSharp4, Tesseract + tessdata, qpdf,
 DiffPlex, tabula-sharp, ClosedXML, Velopack, BenchmarkDotNet,
-fonts Noto Sans / Noto Serif / Be Vietnam Pro (SIL OFL 1.1).
+fonts Noto Serif / Be Vietnam Pro (SIL OFL 1.1).

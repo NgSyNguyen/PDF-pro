@@ -18,6 +18,12 @@ public sealed record MaterializeRequest
 
     /// <summary>Folder for intermediate files, e.g. repaired copies of sources that cannot be read as they are.</summary>
     public required string WorkingDirectory { get; init; }
+
+    /// <summary>
+    /// Passwords of protected sources by source id (merging protected files), in memory only. Checking that the
+    /// author allows taking their pages is the caller's job; the output is never encrypted.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? SourcePasswords { get; init; }
 }
 
 /// <summary>Turns a page plan into a real PDF file (SPEC "PagePlan — tài liệu ảo": done on save and before content operations).</summary>

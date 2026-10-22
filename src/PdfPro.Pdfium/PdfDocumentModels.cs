@@ -32,6 +32,7 @@ public sealed record PdfDocumentFeatures(
 {
     private const uint PrintPermission = 1 << 2;
     private const uint CopyPermission = 1 << 4;
+    private const uint AssemblePermission = 1 << 10;
 
     public bool IsEncrypted => SecurityHandlerRevision >= 0;
 
@@ -40,6 +41,9 @@ public sealed record PdfDocumentFeatures(
     public bool CanPrint => (Permissions & PrintPermission) != 0;
 
     public bool CanCopyContent => (Permissions & CopyPermission) != 0;
+
+    /// <summary>Pages may be inserted, rotated, deleted or taken into another document (bit 11, "assemble").</summary>
+    public bool CanAssemble => (Permissions & AssemblePermission) != 0;
 }
 
 /// <summary>Target of a bookmark or link. Coordinates are in PDF user space; null means "keep current".</summary>
