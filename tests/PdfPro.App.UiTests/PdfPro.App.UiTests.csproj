@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Acceptance tests that drive the built application through UI Automation (FlaUI) — no real mouse or keyboard:
+    only UIA patterns and messages posted to the app's windows. They are skipped unless PDFPRO_UI_TESTS=1, so they
+    never run on CI; every test runs the app on its own data folder (PDFPRO_DATA_DIR).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="FlaUI.UIA3" />
+    <PackageReference Include="PDFsharp" />
+    <Using Include="Xunit" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+  <!-- Built first so the tests can start it; not referenced as an assembly (the app is tested as a black box). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PdfPro.App\PdfPro.App.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
+  </ItemGroup>
+
+</Project>

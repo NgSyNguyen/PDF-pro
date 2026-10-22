@@ -41,10 +41,15 @@ public sealed class SingleInstanceChannel : IAsyncDisposable
     /// <summary>True for the first instance of the session: it should listen; otherwise it should send.</summary>
     public bool IsPrimary => _mutex is not null;
 
-    /// <summary>"PdfPro-{hash of the user}-{session}": distinct per user and logon session, without the user name.</summary>
-    public static string DefaultName()
+    /// <summary>
+    /// "PdfPro-{hash}-{session}": distinct per user, data folder and logon session, without the user name (an instance
+    /// with its own data folder, such as a UI test run, never hands files to the user's instance).
+    /// </summary>
+    /// <param name="dataRoot">The instance's data folder.</param>
+    public static string DefaultName(string dataRoot)
     {
-        var user = $"{Environment.UserDomainName}\\{Environment.UserName}";
+        ArgumentException.ThrowIfNullOrWhiteSpace(dataRoot);
+        var user = $"{Environment.UserDomainName}\\{Environment.UserName}|{Path.GetFullPath(dataRoot).TrimEnd('\\')}";
         var hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(user.ToUpperInvariant())))[..16];
         using var process = Process.GetCurrentProcess();
         return $"PdfPro-{hash}-{process.SessionId}";

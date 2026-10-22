@@ -48,10 +48,12 @@ The complete license texts will be collected in this file before the first relea
 | [xunit.v3](https://github.com/xunit/xunit) | 4.0.2 | Apache-2.0 | Unit tests (Microsoft.Testing.Platform runner) |
 | [Shouldly](https://github.com/shouldly/shouldly) | 4.3.0 | BSD-3-Clause | Test assertions |
 | [NSubstitute](https://github.com/nsubstitute/NSubstitute) | 6.2.0 | BSD-3-Clause | Test doubles |
+| [FlaUI.UIA3 / FlaUI.Core](https://github.com/FlaUI/FlaUI) | 5.0.0 | MIT | UI acceptance tests that drive the built app through UI Automation (`tests/PdfPro.App.UiTests`, run by hand) |
+| [Interop.UIAutomationClient](https://github.com/Roemer/UIAutomation-Interop) | 10.19041.0 | MIT | UI Automation COM interop (dependency of FlaUI.UIA3) |
 | Arial, Times New Roman (Windows fonts) | — | Monotype (embedding allowed) | Subsets embedded in the generated sample PDFs only |
 
 ## Planned (added in later phases, listed here once added)
 
 PdfPig, SkiaSharp, OpenCvSharp4, Tesseract + tessdata, qpdf,
-DiffPlex, tabula-sharp, ClosedXML, Velopack, BenchmarkDotNet, FlaUI,
+DiffPlex, tabula-sharp, ClosedXML, Velopack, BenchmarkDotNet,
 fonts Noto Sans / Noto Serif / Be Vietnam Pro (SIL OFL 1.1).

@@ -42,7 +42,7 @@ public partial class App : Application
 
             Log.Logger = LoggingSetup.CreateLogger(paths.LogsDirectory);
             var startup = StartupArguments.Parse(e.Args, Environment.CurrentDirectory);
-            if (TryHandOverToRunningInstance(startup))
+            if (TryHandOverToRunningInstance(startup, paths.DataRoot))
             {
                 Shutdown(0);
                 return;
@@ -139,7 +139,7 @@ public partial class App : Application
     /// to the running window and returns true so this process exits. If the running instance does not answer
     /// (hung or closing), this launch opens its own window instead.
     /// </summary>
-    private bool TryHandOverToRunningInstance(StartupArguments startup)
+    private bool TryHandOverToRunningInstance(StartupArguments startup, string dataRoot)
     {
         var log = Log.ForContext<App>();
         if (startup.WaitForProcessId is { } previous && !StartupArguments.WaitForProcessExit(previous, RestartWaitTimeout))
@@ -148,7 +148,7 @@ public partial class App : Application
         }
 
         var loggers = new SerilogLoggerFactory(Log.Logger);
-        var channel = SingleInstanceChannel.Create(SingleInstanceChannel.DefaultName(), loggers.CreateLogger<SingleInstanceChannel>());
+        var channel = SingleInstanceChannel.Create(SingleInstanceChannel.DefaultName(dataRoot), loggers.CreateLogger<SingleInstanceChannel>());
         if (channel.IsPrimary)
         {
             _instance = channel;

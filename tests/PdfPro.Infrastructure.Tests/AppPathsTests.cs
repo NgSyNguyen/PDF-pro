@@ -25,6 +25,25 @@ public sealed class AppPathsTests : IDisposable
     }
 
     [Fact]
+    public void DataRootVariable_MovesEveryDataFolder()
+    {
+        var previous = Environment.GetEnvironmentVariable(AppPaths.DataRootVariable);
+        Environment.SetEnvironmentVariable(AppPaths.DataRootVariable, _temp.Combine("ui-test-data"));
+        try
+        {
+            var paths = new AppPaths();
+
+            paths.DataRoot.ShouldBe(_temp.Combine("ui-test-data"));
+            paths.SessionsDirectory.ShouldBe(_temp.Combine("ui-test-data", "sessions"));
+            paths.SettingsFile.ShouldBe(_temp.Combine("ui-test-data", "settings.json"));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(AppPaths.DataRootVariable, previous);
+        }
+    }
+
+    [Fact]
     public void EnsureCreated_CreatesAllDataFolders()
     {
         var paths = new AppPaths(_temp.Combine("data"), _temp.Combine("tools"));

@@ -163,12 +163,17 @@ public sealed class SingleInstanceChannelTests : IAsyncDisposable
     [Fact]
     public void DefaultName_DoesNotContainTheUserName()
     {
-        var name = SingleInstanceChannel.DefaultName();
+        var name = SingleInstanceChannel.DefaultName(@"C:\Users\a\AppData\Local\PdfPro");
 
-        // A hash of the user and the logon session id, nothing readable.
+        // A hash of the user, the data folder and the logon session id, nothing readable.
         name.ShouldMatch("^PdfPro-[0-9a-f]{16}-[0-9]+$");
-        SingleInstanceChannel.DefaultName().ShouldBe(name);
+        name.ShouldNotContain(Environment.UserName, Case.Insensitive);
+        SingleInstanceChannel.DefaultName(@"c:\users\A\AppData\Local\PdfPro\").ShouldBe(name);
     }
+
+    [Fact]
+    public void DefaultName_DiffersPerDataFolder()
+        => SingleInstanceChannel.DefaultName(@"C:\ui-tests\data").ShouldNotBe(SingleInstanceChannel.DefaultName(@"C:\Users\a\AppData\Local\PdfPro"));
 
     private static byte[] Header(int length)
     {

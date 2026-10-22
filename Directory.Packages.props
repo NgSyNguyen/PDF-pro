@@ -46,6 +46,8 @@
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <!-- UI automation of the built app (tests/PdfPro.App.UiTests, run by hand only). MIT. -->
+    <PackageVersion Include="FlaUI.UIA3" Version="5.0.0" />
   </ItemGroup>
 
 </Project>

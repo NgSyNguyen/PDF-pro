@@ -1,14 +1,20 @@
 namespace PdfPro.Infrastructure;
 
 /// <summary>
-/// Well-known folders of the application. User data lives under %LOCALAPPDATA%\PdfPro;
-/// bundled external tools (qpdf, tesseract) live next to the executable in "tools".
+/// Well-known folders of the application. User data lives under %LOCALAPPDATA%\PdfPro (or the folder named by
+/// <see cref="DataRootVariable"/>); bundled external tools (qpdf, tesseract) live next to the executable in "tools".
 /// </summary>
 public sealed class AppPaths
 {
     public const string AppFolderName = "PdfPro";
 
-    /// <summary>Uses %LOCALAPPDATA%\PdfPro and the "tools" folder next to the executable.</summary>
+    /// <summary>
+    /// Environment variable naming another data folder (UI tests, portable use): sessions, settings, logs and caches
+    /// then stay apart from the user's own.
+    /// </summary>
+    public const string DataRootVariable = "PDFPRO_DATA_DIR";
+
+    /// <summary>Uses %LOCALAPPDATA%\PdfPro (or <see cref="DataRootVariable"/>) and the "tools" folder next to the executable.</summary>
     public AppPaths()
         : this(DefaultDataRoot(), Path.Combine(AppContext.BaseDirectory, "tools"))
     {
@@ -52,6 +58,11 @@ public sealed class AppPaths
 
     private static string DefaultDataRoot()
     {
+        if (Environment.GetEnvironmentVariable(DataRootVariable) is { Length: > 0 } custom)
+        {
+            return custom;
+        }
+
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         if (string.IsNullOrEmpty(localAppData))
         {

@@ -95,6 +95,7 @@ PdfPro/
    ├─ PdfPro.Infrastructure.Tests/ // tiến trình ngoài, settings, ghi file nguyên tử
    ├─ PdfPro.Pdfium.Tests/       // wrapper PDFium: gate, handle, render so ảnh tham chiếu (Golden/)
    ├─ PdfPro.App.Tests/          // test ViewModel, trình xem, in (ghi XPS), bảng chuỗi vi/en
+   ├─ PdfPro.App.UiTests/        // (P3) nghiệm thu trên app thật bằng FlaUI; chỉ chạy tay (PDFPRO_UI_TESTS=1)
    ├─ PdfPro.SampleGenerator/    // sinh lại samples/ (PDFsharp), không phải project test
    ├─ PdfPro.TestTools.FakeTool/ // exe giả lập công cụ ngoài, chỉ dùng cho test
    └─ PdfPro.Benchmarks/
@@ -112,7 +113,7 @@ Quy tắc phụ thuộc một chiều: **App / Cli → Operations, Ocr, Infrastr
 
 ```csharp
 // PdfPro.Core/Operations/IPdfOperation.cs
-public enum OperationKind { PlanOnly, Content }
+public enum OperationKind { PlanOnly, Content, Export }
 
 public interface IPdfOperation
 {
@@ -191,6 +192,65 @@ public interface IUndoableCommand<in TContext>
 
 **Quyền riêng tư trong log**: log không bao giờ chứa đường dẫn, tên tệp, mật khẩu hay nội dung tài liệu — chỉ số trang, số lượng, phiên bản PDF, cờ mã hóa, mã lỗi. Danh sách tệp gần đây chỉ nằm trong `settings.json`.
 
+### Phiên tài liệu, PagePlan & sắp xếp trang (Phase 3)
+
+**Thư mục phiên (`SessionStore`, Infrastructure)**
+
+```text
+sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; tiến trình chết thì khóa tự nhả
+              manifest.json       ghi nguyên tử sau mỗi thay đổi (ghi nền, gộp các lần ghi dồn dập)
+              sources\s0.pdf      bản sao file đã mở; s1.pdf, s2.pdf… là các tệp được chèn trang
+              revisions\r0001.pdf kết quả các thao tác nội dung (Phase 3: Đổi khổ giấy)
+              work\               tệp tạm (plan đã vật chất hóa, bản sửa của nguồn hỏng)
+```
+
+- Mở tệp = sao chép vào `sources\s0.pdf` rồi mở bản sao; file gốc không bị giữ mở và chỉ được ghi khi bấm Lưu.
+- Tên tệp revision lấy theo số của id nguồn (`r2` → `r0002.pdf`), không theo số revision: hoàn tác một thao tác nội dung rồi làm thao tác khác không ghi đè tệp mà bước làm lại (redo) còn cần.
+- Nguồn không bao giờ bị gỡ khỏi phiên (tệp chèn rồi hoàn tác vẫn ở đó để làm lại và để khôi phục sau crash).
+- Biến môi trường `PDFPRO_DATA_DIR` đổi thư mục dữ liệu (test UI, bản portable). Tên kênh "một phiên bản" băm cả thư mục dữ liệu, nên một lần chạy với thư mục riêng không bao giờ gửi tệp sang app người dùng đang mở.
+
+**Manifest và khôi phục sau crash**
+- `manifest.json`: đường dẫn gốc + `FileStamp` (kích thước, thời điểm sửa), danh sách nguồn, state hiện tại (plan, nguồn cơ sở, số revision), state gốc của lịch sử, các bước undo/redo (`HistoryRecord`: id thao tác + tham số JSON + khóa các trang bước đó tạo + nguồn revision nó tạo), điểm lưu, cờ "chưa lưu cưỡng bức", `pendingSave`. Không chứa mật khẩu; log chỉ ghi id phiên.
+- Khi khởi động, phiên "mồ côi" (lấy được khóa): không có thay đổi → xóa im lặng; còn `pendingSave` → sửa trước (file đích mất thì trả bản backup về, xóa tệp tạm); có thay đổi → hộp thoại 3 nút "Khôi phục mục đã chọn" (mục bỏ chọn bị xóa) / "Bỏ tất cả" (có xác nhận) / "Để sau".
+- Khôi phục = phát lại các bước từ state gốc với đúng các khóa trang đã ghi (`ReplayPageKeys`), đặt lại điểm lưu rồi hoàn tác các bước redo, nên được lại cả tài liệu lẫn lịch sử Hoàn tác/Làm lại. Bước của thao tác nội dung được dựng lại thành plan đồng nhất trên revision đã ghi. Không phát lại khớp (thao tác lạ, quy tắc đổi) → khôi phục state hiện tại, mất lịch sử, đánh dấu chưa lưu — không bao giờ mất tài liệu.
+
+**Core**
+- `PageRef(SourceId, SourcePageIndex, RotationDelta, CropBoxOverride?, PageKey)`; trang trắng có `BlankSize` và nguồn `"blank"`. `PageCrop` là vùng giữ lại, đo bằng point từ góc trên-trái của trang **như đang hiển thị với /Rotate của chính nó** (chưa tính xoay của plan); cắt thêm lần nữa thì lề tính trên phần đang hiển thị.
+- `PagePlan` bất biến: `Move`, `Rotate`, `Delete`, `Duplicate`, `InsertBlank`, `InsertFromSource`, `Crop` trả plan mới (trả chính nó khi không đổi gì → không có bước lịch sử). Vùng chọn, ảnh cache và trạng thái view theo `PageKey`, nên đi theo trang khi sắp xếp và khi hoàn tác.
+- `PageRanges`: "1-5, 8, 10-", "-3", "5-3", "odd"/"lẻ", "even"/"chẵn", "all"/"tất cả"; chuẩn hóa NFC.
+- `DocumentSession` (chỉ dùng trên UI thread): `SessionState(Plan, BaseSourceId, Revision)`; `PlanCommand` (sửa plan) và `RevisionCommand` (thao tác nội dung: revision +1, plan = mọi trang của revision) chỉ đổi qua lại hai state bất biến nên hoàn tác tức thì ở mọi kích thước.
+- `OperationKind`: `PlanOnly`, `Content`, `Export`. `IPlanOperation.ApplyToPlan` (thuần, không I/O) và `IContentOperation.ApplyToFileAsync` (đọc tệp đầy đủ, ghi ra stream).
+
+**Operations (PDFsharp 6.2.4)**
+- `organize.rotate | move | delete | duplicate | insertBlank | insertPages | crop` (PlanOnly), `organize.extract` (Export), `organize.pageSize` (Content). Chạy trên tệp (CLI, lô) thì tệp vào thành nguồn s0, s1… và kết quả ghi vào thư mục ra, không bao giờ đè tệp vào.
+- `PdfSharpPlanMaterializer`: mở nguồn cơ sở ở chế độ Modify và sắp lại cây trang (`MovePage`), nên giữ metadata, bookmark, đích có tên, form, link nội bộ (chúng trỏ tới đối tượng trang). Trang bị xóa: cắt mọi tham chiếu; link/bookmark/open action trỏ tới nó bị bỏ, bookmark có con giữ lại làm tiêu đề không đích. Nhân bản: dùng chung nội dung, annotation chép riêng (ô form không chép — Phase 7). Trang từ tệp khác: gỡ tham chiếu trang khỏi link trước khi import, nối lại link nếu trang đích cũng được chèn. `/PageLabels` bị bỏ khi thứ tự hoặc số trang đổi. Crop → CropBox qua `PageCoordinateMapper`. Nguồn PDFsharp không đọc được → PDFium ghi bản sạch (`SaveAsCopy`) rồi thử lại.
+- Đổi khổ giấy (`PageResizer`): MediaBox mới (các box khác bị bỏ), nội dung cũ bọc trong `q s 0 0 s e f cm <vùng đang hiển thị> re W n … Q` ở một mảng `/Contents` riêng của trang (stream có thể dùng chung không bị sửa), nên chữ vẫn chọn/tìm được. Hai cách đặt: co giãn cho vừa (giữ tỉ lệ, căn giữa) hoặc giữ kích thước, căn giữa (trang nhỏ hơn thì bị cắt mép). "Theo hướng từng trang" xoay khổ mới cho khớp trang ngang/dọc. Annotation (`/Rect`, `/QuadPoints`, `/InkList`, `/Vertices`, `/L`, `/CL`, `/RD`) và đích (`/XYZ`, `/FitH`, `/FitBH`, `/FitV`, `/FitBV`, `/FitR` của link, bookmark, đích có tên, open action) đi theo phép biến đổi.
+
+**Lưu an toàn (Ctrl+S / Ctrl+Shift+S)**
+1. Cảnh báo trước: tệp có chữ ký số, hoặc tệp đã bị chương trình khác sửa từ lúc mở (so `FileStamp`).
+2. Manifest ghi `pendingSave` (đích, tệp tạm, backup) **trước khi** ghi gì ra đĩa.
+3. Vật chất hóa plan vào `.{tên}.{guid}.tmp` cạnh tệp đích → flush → PDFium mở lại kiểm tra số trang → `File.Replace` kèm backup tạm → xóa backup → xóa `pendingSave`.
+4. Trong lúc lưu tài liệu không sửa được, để điểm lưu khớp đúng nội dung đã ghi. Lỗi được phân loại: đang bị chương trình khác mở (đề xuất Lưu thành), không có quyền ghi, đầy đĩa, không đọc được nguồn, tệp vừa ghi không mở lại được; trong mọi trường hợp tệp gốc nguyên vẹn và không sót tệp tạm.
+5. Tài liệu có mật khẩu chỉ xem và in (lưu lại phải mã hóa lại bằng mật khẩu chủ — Phase 8).
+- Đóng thẻ, đóng cửa sổ, thoát, khởi động lại: hỏi Lưu / Không lưu / Hủy lần lượt từng tài liệu. Windows tắt máy: giữ phiên để khôi phục.
+
+**App**
+- `VirtualDocument`/`VirtualPage`: plan → danh sách trang (tài liệu nguồn, trang nguồn, xoay, crop, kích thước hiển thị, tùy chọn render). Viewer, sidebar, lưới sắp xếp, in và Thuộc tính đều đọc nó. Khóa cache render gồm cả xoay và crop, nên di chuyển trang không mất ảnh và xoay chỉ render lại trang bị xoay.
+- Lệnh trang (tab Trang, menu chuột phải, phím tắt) áp cho **trang hiện tại** ở chế độ Xem và cho **các trang đang chọn** ở chế độ Sắp xếp. Ctrl+R / Ctrl+Shift+R xoay, Delete xóa (trong lưới), Ctrl+A chọn hết, Ctrl+Z / Ctrl+Y.
+- **Lưới "Sắp xếp trang"** thay viewer và ẩn sidebar. `VirtualizingTilePanel` (tự viết, `IScrollInfo`, tái chế container; chỉ hàng đang thấy + 1 hàng mỗi phía có element; đổi cỡ ô giữ ô đầu đang thấy). Hai bẫy WPF: đọc `InternalChildren` trước khi lấy `ItemContainerGenerator` (nếu không generator là null), và container tái chế được `GenerateNext` trả về với `isNewlyRealized = false` dù không còn là con của panel. `PageTileListBox`: chọn mở rộng, kéo khung chọn trên vùng trống (Ctrl để cộng thêm, tự cuộn sát mép), đúp chuột/Enter mở trang trong viewer, đồng bộ vùng chọn với view model. Cỡ ô 120–360 DIP bước 40 (thanh trượt, Ctrl + lăn chuột); ảnh ô có mục cache bộ nhớ riêng theo cỡ, không ghi cache đĩa.
+- Quy tắc vùng chọn sau mỗi thay đổi: các trang mới xuất hiện (bản nhân bản, trang chèn, trang được hoàn tác xóa); không có thì các trang đang chọn còn lại; không còn thì trang đã thế chỗ trang chọn đầu tiên; mọi trang đều mới (thao tác nội dung) thì giữ nguyên vị trí. Xoay/cắt lề giữ nguyên danh sách ô (không dựng lại).
+- Kéo-thả bằng gong-wpf-dragdrop 4.0.0: kéo các trang đang chọn để di chuyển (vạch chèn, tự cuộn); thả tệp PDF từ Explorer vào lưới để chèn tại chỗ thả.
+- Hộp thoại: Chèn trang trắng (giống trang kề / A4 / A3 / Letter / Legal, dọc/ngang, 1–1000 trang, trước/sau trang đầu/cuối/trang N), Chèn từ tệp (cả tệp hoặc khoảng trang; tệp được chép vào phiên thành nguồn sN; tệp có mật khẩu bị từ chối ở P3), Cắt lề (mm, bốn lề bằng nhau, bỏ cắt lề, xem trước trang đầu được chọn với phần bị cắt tô mờ), Đổi khổ giấy (A3/A4/A5/Letter/Legal/tùy chỉnh, hướng, cách đặt nội dung). Cắt lề và Đổi khổ áp cho trang chọn / tất cả / lẻ / chẵn / khoảng trang.
+- Trích trang ra tệp mới và Đổi khổ giấy chạy nền với tiến độ và nút Hủy ở thanh trạng thái (mỗi lúc một tác vụ); đóng tài liệu chờ tác vụ đang đọc tệp của nó. Đổi khổ: vật chất hóa plan vào `work\`, thao tác ghi `revisions\rNNNN.pdf.tmp` → flush → đổi tên → mở và kiểm số trang → ghi `RevisionCommand`; lỗi hoặc hủy thì xóa tệp và tài liệu giữ nguyên.
+
+**Số đo nghiệm thu (máy phát triển, bản Release)**
+- Xoay / di chuyển / nhân bản / xóa 200 trang của tài liệu 1.000 trang, từ lệnh tới khi mọi view model (viewer, thumbnail, lưới) cập nhật: trung vị 4–5 ms (`PageOperationTimingTests`, mục tiêu < 50 ms). Đo qua UI Automation từ ngoài (gồm cả độ trễ UIA): 450–560 ms.
+- Lưới 1.000 trang: mở chế độ Sắp xếp ~0,45 s; cuộn hết lưới, bộ nhớ riêng ổn định ~170 MB.
+- Đổi khổ A5 cho 3 trang của `basic-vi.pdf`: ~0,6 s.
+- 30 thao tác rồi hoàn tác hết: tài liệu về đúng trạng thái đã mở (không còn dấu "*"). SHA-256 tệp gốc không đổi cho tới khi Lưu. Tắt cứng app ở 5 thời điểm trong lúc lưu `big-1000.pdf`: tệp luôn mở được (bản cũ hoặc mới), tệp tạm được dọn ở lần mở sau. Tắt cứng khi còn thay đổi chưa lưu (kể cả revision): khôi phục đủ thay đổi và lịch sử. Tệp đã lưu mở đúng trong Microsoft Edge.
+
+**Kiểm thử giao diện**: `tests/PdfPro.App.UiTests` (FlaUI 5.0, MIT) chạy app thật qua UI Automation và thông điệp gửi tới cửa sổ (không dùng chuột/bàn phím thật), mỗi test một thư mục dữ liệu riêng qua `PDFPRO_DATA_DIR`. Chỉ chạy tay: đặt `PDFPRO_UI_TESTS=1` rồi `dotnet test --project tests/PdfPro.App.UiTests -c Release`; không đặt biến thì mọi test được bỏ qua (CI). Lưu ý: UI Automation đặt cửa sổ có chủ (hộp thoại) dưới cửa sổ chủ chứ không dưới desktop, và hộp thoại của WPF-UI lấy nội dung làm tên — tìm hộp thoại bằng `EnumWindows` + tiêu đề Win32. Kéo-thả và kéo khung chọn không tự động hóa được nếu không dùng chuột thật (WPF đọc vị trí con trỏ thật), nên được kiểm bằng unit test hình học và kiểm tay.
+
 ### Hệ tọa độ — nguồn bug số một
 
 PDF dùng đơn vị point (1/72 inch), gốc ở góc **dưới-trái**, trang có thể có `/Rotate` 90/180/270 và CropBox không bắt đầu từ (0,0). WPF dùng DIP (1/96 inch), gốc ở góc **trên-trái**. Mọi chuyển đổi bắt buộc đi qua một lớp duy nhất, có unit test cho cả 4 góc xoay × CropBox lệch gốc × nhiều mức zoom.
@@ -228,6 +288,7 @@ Bộ "đề thi" để agent tự kiểm tra. Có thể nhờ agent viết proje
 | `form.pdf` | AcroForm đủ loại field | Điền, thiết kế, flatten form |
 | `signed.pdf` | Đã ký số bằng chứng thư test | Incremental save, xác minh chữ ký |
 | `rotated-cropbox.pdf` | Trang /Rotate 90 và 270, CropBox lệch gốc | Hệ tọa độ, overlay, annotation |
+| `links-annots.pdf` | Link nội bộ (đích trực tiếp, đích có tên, action GoTo), link web, ghi chú, highlight, bookmark, page label | Giữ liên kết/chú thích khi sắp xếp, đổi khổ trang |
 | `broken.pdf` | Bị cắt cụt đuôi file (hỏng xref) | Sửa file, chống crash |
 | `tables.pdf` | Bảng có kẻ và không kẻ, tiếng Việt | Trích bảng ra Excel |
 | `contract-v1.pdf`, `contract-v2.pdf` | Bản 2 chèn 1 trang và sửa 3 chỗ | So sánh tài liệu |
