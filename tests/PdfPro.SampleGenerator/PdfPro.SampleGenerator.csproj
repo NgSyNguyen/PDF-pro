@@ -6,12 +6,22 @@
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- WPF only encodes the grey JPEG pages of scan-vi.pdf. -->
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
     <RootNamespace>PdfPro.SampleGenerator</RootNamespace>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="PDFsharp" />
+    <!-- WPF projects drop System.IO from the implicit usings. -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- PDFium rasterizes vanban-vi.pdf into the "scanned" pages of scan-vi.pdf. -->
+    <ProjectReference Include="..\..\src\PdfPro.Pdfium\PdfPro.Pdfium.csproj" />
   </ItemGroup>
 
 </Project>

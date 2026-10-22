@@ -19,6 +19,8 @@ ISample[] samples =
     new BrokenSample(),
     new RotatedCropBoxSample(),
     new LinksAnnotsSample(),
+    new VanBanSample(),
+    new ScanSample(Path.Combine(outputDirectory, "vanban-vi.pdf")),
 ];
 
 Console.WriteLine($"Writing samples to {outputDirectory}");

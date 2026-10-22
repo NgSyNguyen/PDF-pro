@@ -34,6 +34,10 @@ internal static class Samples
 
     public static string LinksAnnots => Path("links-annots.pdf");
 
+    public static string VanBanVi => Path("vanban-vi.pdf");
+
+    public static string ScanVi => Path("scan-vi.pdf");
+
     private static string Path(string fileName)
     {
         var path = System.IO.Path.Combine(RepositoryRoot, "samples", fileName);

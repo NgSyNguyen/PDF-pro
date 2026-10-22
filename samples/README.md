@@ -1,6 +1,6 @@
 # samples/ — tài liệu mẫu để kiểm thử
 
-Mọi tệp ở đây là **dữ liệu giả**, được sinh bởi `tests/PdfPro.SampleGenerator` (PDFsharp 6.2.4 + font Arial/Times New Roman của Windows). Không đưa tài liệu thật vào thư mục này — nó được commit lên git.
+Mọi tệp ở đây là **dữ liệu giả**, được sinh bởi `tests/PdfPro.SampleGenerator` (PDFsharp 6.2.4 + font Arial/Times New Roman của Windows; `scan-vi.pdf` được PDFium render từ `vanban-vi.pdf` rồi WPF nén JPEG). Không đưa tài liệu thật vào thư mục này — nó được commit lên git.
 
 Sinh lại (chỉ cần khi sửa bộ sinh; mỗi lần sinh khác byte vì `/ID` ngẫu nhiên nhưng nội dung giống hệt):
 
@@ -16,5 +16,7 @@ dotnet run --project tests/PdfPro.SampleGenerator
 | `broken.pdf` | Tài liệu 3 trang bị cắt bỏ bảng xref + trailer ở cuối (các object vẫn còn) | Tệp hỏng, sửa tệp (P9) |
 | `links-annots.pdf` | 6 trang A4 ("Trang 1"…"Trang 6"): trang 1 có link tới trang 4 (`/Dest` trực tiếp), tới trang 6 (đích có tên `phu-luc` qua action GoTo), tới trang 3 (action GoTo) và link web `example.com`; trang 3 link về trang 1; trang 2 có ghi chú dán và vùng tô sáng; bookmark, nhãn trang (i, 1–5), `/OpenAction` | Giữ link, chú thích, bookmark khi sắp xếp / xóa / nhân bản / chèn trang (P3) |
 | `rotated-cropbox.pdf` | 4 trang `/Rotate` 0/90/180/270, CropBox hoặc MediaBox không bắt đầu từ (0,0); ô màu đánh dấu 4 góc vùng hiển thị (đỏ = trên-trái, xanh lá = trên-phải, xanh dương = dưới-trái, đen = dưới-phải) | Hệ tọa độ, xoay trang |
+| `vanban-vi.pdf` | 14 trang A4: 5 văn bản hành chính GIẢ (quyết định, công văn, tờ trình, biên bản, hợp đồng) liền nhau; trang đầu mỗi văn bản có quốc hiệu và dòng "Số: …" (trang 1, 4, 6, 8, 11), các trang sau không có; mỗi văn bản một bookmark cấp 1 có dấu và ký tự "/" | Tách theo văn bản (regex), theo bookmark tiếng Việt, đặt tên tệp (P4) |
+| `scan-vi.pdf` | 18 trang ảnh JPEG xám 90 DPI giả lập bản scan `vanban-vi.pdf` (không có lớp chữ): nền giấy, bụi, trang hơi nghiêng, trang 12 lộn ngược; tờ trắng phân cách ở trang 4, 7, 10, 14 (trang 7 có chữ thấm mờ từ mặt sau); văn bản bắt đầu ở trang 1, 5, 8, 11, 15 | Tách theo trang đánh dấu, theo trang trắng phân cách (P4); OCR, chỉnh nghiêng, nén (P10) |
 
-Các tệp còn lại trong SPEC (scan, form, chữ ký số, bảng, so sánh, annotation, PII) được bổ sung ở các phase cần đến chúng.
+Các tệp còn lại trong SPEC (form, chữ ký số, bảng, so sánh, annotation, PII) được bổ sung ở các phase cần đến chúng.

@@ -91,7 +91,7 @@ internal static class SessionReplay
             var operation = operations.FindPlanOperation(record.OperationId)
                 ?? throw new InvalidOperationException($"Unknown operation '{record.OperationId}'.");
             var plan = operation.ApplyToPlan(before.Plan, record.Parameters, new PlanEditContext(sourcePageSizes, keys));
-            session.History.Execute(PlanCommand.Create(description, before, plan, record));
+            session.History.Execute(PlanCommand.Create(description, before, plan, record, operation.ChangesContent));
         }
 
         if (!keys.IsExhausted)

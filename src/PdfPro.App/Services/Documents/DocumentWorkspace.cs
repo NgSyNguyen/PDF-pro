@@ -148,7 +148,7 @@ public sealed class DocumentWorkspace : IAsyncDisposable
         }
 
         var record = new HistoryRecord(operation.Id, parameters, [.. keys.Keys]);
-        Session.History.Execute(PlanCommand.Create(Describe(record, before), Session.State, plan, record));
+        Session.History.Execute(PlanCommand.Create(Describe(record, before), Session.State, plan, record, operation.ChangesContent));
         return true;
     }
 

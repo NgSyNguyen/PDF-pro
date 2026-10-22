@@ -15,6 +15,9 @@ public abstract class PlanOperation<TParams>(IPlanMaterializer materializer, IPd
 {
     public sealed override OperationKind Kind => OperationKind.PlanOnly;
 
+    /// <inheritdoc cref="IPlanOperation.ChangesContent"/>
+    public virtual bool ChangesContent => true;
+
     public PagePlan ApplyToPlan(PagePlan plan, object parameters, PlanEditContext context)
     {
         ArgumentNullException.ThrowIfNull(plan);
