@@ -32,6 +32,9 @@ public sealed class CompositeCommand<TContext> : IUndoableCommand<TContext>
 
     public IReadOnlyList<IUndoableCommand<TContext>> Commands => _commands;
 
+    /// <summary>True when any of the grouped commands changes content.</summary>
+    public bool ChangesContent => Array.Exists(_commands, c => c.ChangesContent);
+
     public void Do(TContext context)
     {
         var applied = 0;

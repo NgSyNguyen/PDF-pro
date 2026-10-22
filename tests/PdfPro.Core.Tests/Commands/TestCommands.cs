@@ -28,6 +28,18 @@ internal sealed class AddItemCommand(string item) : IUndoableCommand<FakeDocumen
     }
 }
 
+/// <summary>Appends a note that is not saved content (like a split mark): it does not move the save point.</summary>
+internal sealed class AddNoteCommand(string note) : IUndoableCommand<FakeDocument>
+{
+    public string Description => $"Note {note}";
+
+    public bool ChangesContent => false;
+
+    public void Do(FakeDocument context) => context.Log.Add($"note:{note}");
+
+    public void Undo(FakeDocument context) => context.Log.Remove($"note:{note}");
+}
+
 /// <summary>Command whose Do and/or Undo throws, to test failure handling.</summary>
 internal sealed class FailingCommand(bool failOnDo, bool failOnUndo = false) : IUndoableCommand<FakeDocument>
 {

@@ -14,11 +14,11 @@ namespace PdfPro.Core.Organizing;
 public sealed record PageRef
 {
     public PageRef(string sourceId, int sourcePageIndex, int rotationDelta, PageCrop? cropBoxOverride, Guid pageKey)
-        : this(sourceId, sourcePageIndex, rotationDelta, cropBoxOverride, pageKey, blankSize: null)
+        : this(sourceId, sourcePageIndex, rotationDelta, cropBoxOverride, pageKey, blankSize: null, splitMark: null)
     {
     }
 
-    private PageRef(string sourceId, int sourcePageIndex, int rotationDelta, PageCrop? cropBoxOverride, Guid pageKey, PdfSize? blankSize)
+    private PageRef(string sourceId, int sourcePageIndex, int rotationDelta, PageCrop? cropBoxOverride, Guid pageKey, PdfSize? blankSize, SplitMark? splitMark)
     {
         if (!SourceIds.IsValid(sourceId))
         {
@@ -53,6 +53,7 @@ public sealed record PageRef
         CropBoxOverride = cropBoxOverride;
         PageKey = pageKey;
         BlankSize = blankSize;
+        SplitMark = splitMark;
     }
 
     public string SourceId { get; }
@@ -73,10 +74,16 @@ public sealed record PageRef
 
     public bool IsBlank => BlankSize.HasValue;
 
+    /// <summary>
+    /// Set when the page starts a new file in a split by marks; null otherwise. Not page content: it does not change
+    /// how the page looks or what is saved.
+    /// </summary>
+    public SplitMark? SplitMark { get; }
+
     /// <summary><see cref="RotationDelta"/> in clockwise quarter turns (0–3).</summary>
     public int QuarterTurns => RotationDelta / 90;
 
-    public static PageRef Blank(PdfSize size, Guid pageKey) => new(SourceIds.Blank, 0, 0, null, pageKey, size);
+    public static PageRef Blank(PdfSize size, Guid pageKey) => new(SourceIds.Blank, 0, 0, null, pageKey, size, splitMark: null);
 
     /// <summary>The same page with a different extra rotation (any multiple of 90 degrees).</summary>
     public PageRef WithRotation(int rotationDelta)
@@ -88,15 +95,28 @@ public sealed record PageRef
 
         return PageGeometry.NormalizeRotation(rotationDelta) == RotationDelta
             ? this
-            : new PageRef(SourceId, SourcePageIndex, rotationDelta, CropBoxOverride, PageKey, BlankSize);
+            : new PageRef(SourceId, SourcePageIndex, rotationDelta, CropBoxOverride, PageKey, BlankSize, SplitMark);
     }
 
     public PageRef WithCrop(PageCrop? crop)
-        => crop == CropBoxOverride ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, crop, PageKey, BlankSize);
+        => crop == CropBoxOverride ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, crop, PageKey, BlankSize, SplitMark);
 
-    /// <summary>A copy of this page under another key (duplicating a page).</summary>
+    /// <summary>A copy of this page under another key (duplicating a page); the copy has no split mark.</summary>
     public PageRef WithKey(Guid pageKey)
-        => pageKey == PageKey ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, CropBoxOverride, pageKey, BlankSize);
+        => pageKey == PageKey ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, CropBoxOverride, pageKey, BlankSize, splitMark: null);
+
+    /// <summary>The same page with another split mark (null removes it).</summary>
+    public PageRef WithSplitMark(SplitMark? mark)
+        => mark == SplitMark ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, CropBoxOverride, PageKey, BlankSize, mark);
+
+    /// <summary>True when both show the same page the same way (split marks aside).</summary>
+    public bool HasSameContent(PageRef other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        return PageKey == other.PageKey && SourcePageIndex == other.SourcePageIndex && RotationDelta == other.RotationDelta
+            && CropBoxOverride == other.CropBoxOverride && BlankSize == other.BlankSize
+            && string.Equals(SourceId, other.SourceId, StringComparison.Ordinal);
+    }
 
     /// <summary>The page size before the plan's edits: the blank size, or the source page as displayed.</summary>
     /// <param name="sourcePageSize">The source page's displayed size (with its own /Rotate); unused for blank pages.</param>

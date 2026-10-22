@@ -206,8 +206,8 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
     }
 
     /// <summary>
-    /// Copies pages (with their rotation and crop) under new keys. The copies are inserted as one block, in page order,
-    /// right after the last selected page.
+    /// Copies pages (with their rotation and crop, without split marks) under new keys. The copies are inserted as one
+    /// block, in page order, right after the last selected page.
     /// </summary>
     public PagePlan Duplicate(IReadOnlyCollection<int> indices, IPageKeyGenerator keys)
     {
@@ -274,6 +274,99 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             {
                 pages ??= (PageRef[])_pages.Clone();
                 pages[index] = cropped;
+            }
+        }
+
+        return pages is null ? this : new PagePlan(pages);
+    }
+
+    /// <summary>True when at least one page carries a split mark.</summary>
+    public bool HasSplitMarks => Array.Exists(_pages, p => p.SplitMark is not null);
+
+    /// <summary>
+    /// Positions of the pages that start a file in a split by marks, ascending: always 0 (the first page starts the
+    /// first file), then every marked page.
+    /// </summary>
+    public IReadOnlyList<int> GetSplitStarts()
+    {
+        var starts = new List<int> { 0 };
+        for (var i = 1; i < _pages.Length; i++)
+        {
+            if (_pages[i].SplitMark is not null)
+            {
+                starts.Add(i);
+            }
+        }
+
+        return starts;
+    }
+
+    /// <summary>
+    /// Marks pages as first pages of split files (a page already marked keeps its file name), or removes their marks.
+    /// </summary>
+    public PagePlan MarkSplit(IReadOnlyCollection<int> indices, bool marked)
+    {
+        var selected = Selection(indices);
+        return ReplaceMarks(selected, (_, page) => marked ? page.SplitMark ?? SplitMark.Unnamed : null);
+    }
+
+    /// <summary>Replaces every split mark: exactly the pages listed in <paramref name="marks"/> are marked.</summary>
+    public PagePlan WithSplitMarks(IReadOnlyDictionary<int, SplitMark> marks)
+    {
+        ArgumentNullException.ThrowIfNull(marks);
+        if (marks.Count > 0)
+        {
+            _ = Selection(marks.Keys.ToArray(), nameof(marks));
+        }
+
+        return ReplaceMarks(Enumerable.Range(0, Count), (index, _) => marks.GetValueOrDefault(index));
+    }
+
+    /// <summary>
+    /// This plan with the split marks of <paramref name="previous"/>, page for page: a content change (new revision)
+    /// that kept the page count keeps the marks. This same instance when the page counts differ.
+    /// </summary>
+    public PagePlan WithSplitMarksOf(PagePlan previous)
+    {
+        ArgumentNullException.ThrowIfNull(previous);
+        return previous.Count != Count ? this : ReplaceMarks(Enumerable.Range(0, Count), (index, _) => previous[index].SplitMark);
+    }
+
+    /// <summary>True when both plans show the same pages, in the same order and the same way (split marks aside).</summary>
+    public bool HasSameContent(PagePlan other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        if (ReferenceEquals(other, this))
+        {
+            return true;
+        }
+
+        if (other.Count != Count)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < _pages.Length; i++)
+        {
+            if (!_pages[i].HasSameContent(other._pages[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private PagePlan ReplaceMarks(IEnumerable<int> indices, Func<int, PageRef, SplitMark?> markOf)
+    {
+        PageRef[]? pages = null;
+        foreach (var index in indices)
+        {
+            var marked = _pages[index].WithSplitMark(markOf(index, _pages[index]));
+            if (!ReferenceEquals(marked, _pages[index]))
+            {
+                pages ??= (PageRef[])_pages.Clone();
+                pages[index] = marked;
             }
         }
 

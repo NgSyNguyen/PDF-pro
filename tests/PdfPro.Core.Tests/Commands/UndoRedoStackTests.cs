@@ -215,6 +215,70 @@ public sealed class UndoRedoStackTests
     }
 
     [Fact]
+    public void StepsThatDoNotChangeContent_LeaveTheSavePointWhereItIs()
+    {
+        _stack.Execute(new AddNoteCommand("n1"));
+        _stack.IsAtSavePoint.ShouldBeTrue();
+        _stack.CanUndo.ShouldBeTrue();
+
+        _stack.Execute(new AddItemCommand("a"));
+        _stack.IsAtSavePoint.ShouldBeFalse();
+        _stack.Execute(new AddNoteCommand("n2"));
+        _stack.MarkSavePoint();
+        _stack.Execute(new AddNoteCommand("n3"));
+        _stack.IsAtSavePoint.ShouldBeTrue();
+
+        _stack.Undo();
+        _stack.Undo();
+        _stack.IsAtSavePoint.ShouldBeTrue("the note saved with 'a' is not content");
+        _stack.Undo();
+        _stack.IsAtSavePoint.ShouldBeFalse();
+        _stack.Redo();
+        _stack.Redo();
+        _stack.Redo();
+        _stack.IsAtSavePoint.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SavePointPosition_GivesTheFirstEquivalentPosition()
+    {
+        _stack.Execute(new AddItemCommand("a"));
+        _stack.MarkSavePoint();
+        _stack.Execute(new AddNoteCommand("n"));
+        _stack.SavePointPosition.ShouldBe(1);
+
+        var other = new UndoRedoStack<FakeDocument>(new FakeDocument(), maxDepth: 5);
+        other.Execute(new AddNoteCommand("n"));
+        other.SavePointPosition.ShouldBe(0);
+        other.Execute(new AddItemCommand("a"));
+        other.SavePointPosition.ShouldBe(0);
+    }
+
+    [Fact]
+    public void DroppingOldNotes_KeepsTheSavePointReachable()
+    {
+        for (var i = 0; i < 7; i++)
+        {
+            _stack.Execute(new AddNoteCommand($"n{i}"));
+        }
+
+        _stack.UndoCount.ShouldBe(5);
+        _stack.IsAtSavePoint.ShouldBeTrue();
+        _stack.SavePointPosition.ShouldBe(0);
+        _stack.Execute(new AddItemCommand("a"));
+        _stack.Undo();
+        _stack.IsAtSavePoint.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void CompositeCommand_ChangesContentWhenAnyPartDoes()
+    {
+        new CompositeCommand<FakeDocument>("notes", [new AddNoteCommand("a"), new AddNoteCommand("b")]).ChangesContent.ShouldBeFalse();
+        new CompositeCommand<FakeDocument>("mixed", [new AddNoteCommand("a"), new AddItemCommand("b")]).ChangesContent.ShouldBeTrue();
+        ((IUndoableCommand<FakeDocument>)new AddItemCommand("c")).ChangesContent.ShouldBeTrue();
+    }
+
+    [Fact]
     public void SavePoint_InDiscardedRedoBranch_IsNeverReachedAgain()
     {
         _stack.Execute(new AddItemCommand("a"));

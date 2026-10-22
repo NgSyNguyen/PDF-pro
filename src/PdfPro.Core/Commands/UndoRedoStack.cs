@@ -10,7 +10,8 @@ namespace PdfPro.Core.Commands;
 /// <item>Executing a new command clears the redo branch.</item>
 /// <item>When the history exceeds <see cref="MaxDepth"/>, the oldest steps are dropped.</item>
 /// <item>If <c>Do</c>, <c>Undo</c> or <c>Redo</c> throws, the history is left unchanged.</item>
-/// <item>A save point tracks whether the context matches what was last saved (<see cref="IsAtSavePoint"/>).</item>
+/// <item>A save point tracks whether the context matches what was last saved (<see cref="IsAtSavePoint"/>). Steps
+/// whose <see cref="IUndoableCommand{TContext}.ChangesContent"/> is false do not move it.</item>
 /// </list>
 /// </remarks>
 public sealed class UndoRedoStack<TContext> : INotifyPropertyChanged
@@ -21,8 +22,9 @@ public sealed class UndoRedoStack<TContext> : INotifyPropertyChanged
     private readonly LinkedList<Entry> _undo = new(); // Last = most recent step.
     private readonly Stack<Entry> _redo = new();
 
-    // Every executed command gets a unique sequence number; the "state id" is the sequence of the newest
-    // applied step, or _baseStateId when nothing is left to undo. Comparing state ids gives the save point.
+    // Every executed command gets a unique sequence number. A step's content id is its own sequence, or for a step that
+    // does not change content the content id of the state it was executed on. The "state id" is the content id of the
+    // newest applied step, or _baseStateId when nothing is left to undo. Comparing state ids gives the save point.
     private long _nextSequence = 1;
     private long _baseStateId;
     private long _savedStateId;
@@ -72,8 +74,9 @@ public sealed class UndoRedoStack<TContext> : INotifyPropertyChanged
     /// <summary>
     /// Where the saved state lies in the history, in steps from the oldest reachable state: 0 is the state before the
     /// oldest undoable command, <see cref="UndoCount"/> the current state and UndoCount + k the state after the k-th
-    /// redo. Null when the saved state can no longer be reached (dropped by <see cref="MaxDepth"/> or
-    /// <see cref="Clear"/>, or left on a discarded redo branch).
+    /// redo. When steps that do not change content follow the save, the first of the equivalent positions is given.
+    /// Null when the saved state can no longer be reached (dropped by <see cref="MaxDepth"/> or <see cref="Clear"/>,
+    /// or left on a discarded redo branch).
     /// </summary>
     public int? SavePointPosition
     {
@@ -88,7 +91,7 @@ public sealed class UndoRedoStack<TContext> : INotifyPropertyChanged
             foreach (var entry in _undo.Concat(_redo))
             {
                 position++;
-                if (entry.Sequence == _savedStateId)
+                if (entry.ContentId == _savedStateId)
                 {
                     return position;
                 }
@@ -98,7 +101,7 @@ public sealed class UndoRedoStack<TContext> : INotifyPropertyChanged
         }
     }
 
-    private long CurrentStateId => _undo.Last?.Value.Sequence ?? _baseStateId;
+    private long CurrentStateId => _undo.Last?.Value.ContentId ?? _baseStateId;
 
     /// <summary>Runs <paramref name="command"/> and records it as a new undo step.</summary>
     public void Execute(IUndoableCommand<TContext> command)
@@ -107,11 +110,12 @@ public sealed class UndoRedoStack<TContext> : INotifyPropertyChanged
         Mutate(() =>
         {
             command.Do(_context);
-            _undo.AddLast(new Entry(command, _nextSequence++));
+            var sequence = _nextSequence++;
+            _undo.AddLast(new Entry(command, sequence, command.ChangesContent ? sequence : CurrentStateId));
             _redo.Clear();
             while (_undo.Count > MaxDepth)
             {
-                _baseStateId = _undo.First!.Value.Sequence;
+                _baseStateId = _undo.First!.Value.ContentId;
                 _undo.RemoveFirst();
             }
         });
@@ -194,7 +198,7 @@ public sealed class UndoRedoStack<TContext> : INotifyPropertyChanged
         }
     }
 
-    private readonly record struct Entry(IUndoableCommand<TContext> Command, long Sequence);
+    private readonly record struct Entry(IUndoableCommand<TContext> Command, long Sequence, long ContentId);
 
     private readonly record struct Snapshot(
         bool CanUndo,

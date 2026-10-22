@@ -291,6 +291,67 @@ public sealed class DocumentSessionTests
     }
 
     [Fact]
+    public void NextRevision_KeepsSplitMarksPageForPage()
+    {
+        var state = new SessionState(Plans.Identity(3).MarkSplit([2], marked: true), "s0", 0);
+
+        var same = state.NextRevision("r1", PagePlan.Identity("r1", 3, RandomPageKeys.Instance));
+        var shorter = state.NextRevision("r1", PagePlan.Identity("r1", 2, RandomPageKeys.Instance));
+
+        same.Plan.GetSplitStarts().ShouldBe([0, 2]);
+        same.Plan[2].SourceId.ShouldBe("r1");
+        shorter.Plan.HasSplitMarks.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MarkingFirstPages_IsUndoableButNeverMakesTheDocumentUnsaved()
+    {
+        var dirtyChanges = 0;
+        _session.DirtyChanged += (_, _) => dirtyChanges++;
+
+        _session.History.Execute(Mark(_session, [2]));
+        _session.History.Execute(Mark(_session, [4]));
+
+        _session.Plan.GetSplitStarts().ShouldBe([0, 2, 4]);
+        _session.IsDirty.ShouldBeFalse();
+        _session.History.UndoCount.ShouldBe(2);
+        _session.History.Undo();
+        _session.Plan.GetSplitStarts().ShouldBe([0, 2]);
+        _session.History.Execute(Rotate(_session, [0]));
+        _session.IsDirty.ShouldBeTrue();
+        _session.History.Execute(Mark(_session, [1]));
+        _session.History.Undo();
+        _session.History.Undo();
+        _session.IsDirty.ShouldBeFalse("only marks differ from the opened file");
+        dirtyChanges.ShouldBe(2);
+    }
+
+    [Fact]
+    public void MarksAfterASave_KeepTheSavePointInTheSnapshot()
+    {
+        _session.History.Execute(Rotate(_session, [0]));
+        _session.MarkSaved();
+        _session.History.Execute(Mark(_session, [3]));
+
+        var snapshot = _session.CreateSnapshot();
+
+        _session.IsDirty.ShouldBeFalse();
+        snapshot.SavePoint.ShouldBe(1);
+        snapshot.Undo.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void ContentNeutralPlanCommand_MayOnlyChangeMarks()
+    {
+        var before = _session.State;
+
+        Should.Throw<ArgumentException>(() => PlanCommand.Create("x", before, before.Plan.Rotate([0], 90), Record("organize.markSplit"), changesContent: false));
+        PlanCommand.Create("x", before, before.Plan.MarkSplit([1], marked: true), Record("organize.markSplit"), changesContent: false)
+            .ChangesContent.ShouldBeFalse();
+        Rotate(_session, [0]).ChangesContent.ShouldBeTrue();
+    }
+
+    [Fact]
     public void HistoryRecord_ValidatesItsParts()
     {
         Should.Throw<ArgumentException>(() => new HistoryRecord("rotate", new object(), []));
@@ -304,6 +365,9 @@ public sealed class DocumentSessionTests
 
     private static PlanCommand Rotate(DocumentSession session, int[] pages)
         => PlanCommand.Create("Rotate", session.State, session.Plan.Rotate(pages, 90), Record("organize.rotate"));
+
+    private static PlanCommand Mark(DocumentSession session, int[] pages)
+        => PlanCommand.Create("Mark", session.State, session.Plan.MarkSplit(pages, marked: true), Record("organize.markSplit"), changesContent: false);
 
     private static PlanCommand Move(DocumentSession session, int[] pages, int target)
         => PlanCommand.Create("Move", session.State, session.Plan.Move(pages, target), Record("organize.move"));

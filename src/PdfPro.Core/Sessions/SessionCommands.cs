@@ -29,6 +29,9 @@ public abstract class SessionStateCommand : IUndoableCommand<DocumentSession>
 
     public HistoryRecord Record { get; }
 
+    /// <inheritdoc cref="IUndoableCommand{TContext}.ChangesContent"/>
+    public virtual bool ChangesContent => true;
+
     public void Do(DocumentSession context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -52,10 +55,18 @@ public abstract class SessionStateCommand : IUndoableCommand<DocumentSession>
     }
 }
 
-/// <summary>A page plan edit (reorder, rotate, delete, insert, crop): the base source and revision stay the same.</summary>
+/// <summary>
+/// A page plan edit (reorder, rotate, delete, insert, crop, split marks): the base source and revision stay the same.
+/// </summary>
 public sealed class PlanCommand : SessionStateCommand
 {
-    public PlanCommand(string description, SessionState before, SessionState after, HistoryRecord record)
+    private readonly bool _changesContent;
+
+    /// <param name="changesContent">False for an edit that only changes split marks: it does not make the document
+    /// unsaved.</param>
+    /// <exception cref="ArgumentException">The edit changes more than split marks although
+    /// <paramref name="changesContent"/> is false.</exception>
+    public PlanCommand(string description, SessionState before, SessionState after, HistoryRecord record, bool changesContent = true)
         : base(description, before, after, record)
     {
         if (!string.Equals(before.BaseSourceId, after.BaseSourceId, StringComparison.Ordinal) || before.Revision != after.Revision)
@@ -67,13 +78,22 @@ public sealed class PlanCommand : SessionStateCommand
         {
             throw new ArgumentException("A plan edit does not produce a source.", nameof(record));
         }
+
+        if (!changesContent && !before.Plan.HasSameContent(after.Plan))
+        {
+            throw new ArgumentException("Only an edit of split marks can leave the content unchanged.", nameof(changesContent));
+        }
+
+        _changesContent = changesContent;
     }
 
+    public override bool ChangesContent => _changesContent;
+
     /// <summary>The edit from <paramref name="before"/> to the same state with <paramref name="plan"/>.</summary>
-    public static PlanCommand Create(string description, SessionState before, PagePlan plan, HistoryRecord record)
+    public static PlanCommand Create(string description, SessionState before, PagePlan plan, HistoryRecord record, bool changesContent = true)
     {
         ArgumentNullException.ThrowIfNull(before);
-        return new PlanCommand(description, before, before.WithPlan(plan), record);
+        return new PlanCommand(description, before, before.WithPlan(plan), record, changesContent);
     }
 }
 
