@@ -627,4 +627,5 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Layout_Error_Title" xml:space="preserve"><value>The file could not be created</value></data>
   <data name="Welcome_Merge" xml:space="preserve"><value>Merge PDF files</value></data>
   <data name="Welcome_Merge_ToolTip" xml:space="preserve"><value>Combine several PDF files into one</value></data>
+  <data name="Layout_BookletSheetCount" xml:space="preserve"><value>{0} printed sides on {1} sheets (two-sided)</value></data>
 </root>

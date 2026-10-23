@@ -1,6 +1,6 @@
 # PDF_Pro — Đặc tả kỹ thuật (SPEC)
 
-> Nguồn sự thật của dự án. Cập nhật lần cuối: 14/10/2026. Khi thiết kế thay đổi, cập nhật file này trước rồi mới code.
+> Nguồn sự thật của dự án. Cập nhật lần cuối: 23/10/2026. Khi thiết kế thay đổi, cập nhật file này trước rồi mới code.
 
 ## Sản phẩm & ma trận tính năng
 
@@ -18,7 +18,7 @@ Mức: **MVP** = bản dùng được đầu tiên · **Pro** = ngang app trả 
 |---|---|---|---|
 | Xem & điều hướng | Đa tab, cuộn liên tục, zoom giữ điểm dưới chuột, thumbnail, bookmark, mở file có mật khẩu, kéo-thả, file gần đây, single-instance, in ấn | MVP | P2 |
 | Tổ chức trang | Kéo-thả sắp xếp nhiều trang, xoay, xóa, nhân bản, chèn trang trắng, chèn trang từ file khác, trích trang, cắt lề (crop), đổi khổ giấy, undo/redo, khôi phục sau crash | MVP | P3 |
-| Gộp & tách | Gộp nhiều file giữ bookmark + mục lục tự động; tách theo khoảng, mỗi N trang, theo bookmark, theo dung lượng, theo trang trắng phân cách, theo văn bản (regex); trộn trang lẻ/chẵn; N-up; booklet; poster | Pro | P4 |
+| Gộp & tách | Gộp nhiều file giữ bookmark + mục lục tự động; tách theo khoảng, mỗi N trang, theo bookmark, theo dung lượng, theo trang trắng phân cách, theo văn bản (regex), theo trang đầu được đánh dấu của từng văn bản; trộn trang lẻ/chẵn; N-up; booklet; poster | Pro | P4 |
 | Chèn & đóng dấu | Thêm chữ tiếng Việt, ảnh, hình, che trắng, chữ ký tay dạng ảnh; watermark chữ/ảnh (layer gỡ được); header/footer; đánh số trang; đánh số Bates nhiều file; nền trang | Pro | P5 |
 | Chú thích & tìm kiếm | Chọn/copy chữ; tìm kiếm có/không dấu, regex; highlight, gạch chân, gạch ngang, ghi chú, hộp chữ, vẽ tay, hình học, con dấu; panel bình luận có trả lời & trạng thái; flatten | Pro | P6 |
 | Sửa nội dung gốc | Sửa khối chữ có sẵn (giữ font khi đủ glyph), thay/xóa/trích ảnh, xóa đối tượng vector | Adv | P7 |
@@ -79,6 +79,7 @@ PdfPro/
 ├─ THIRD_PARTY_NOTICES.md        // license mọi thư viện, font, tessdata
 ├─ docs/      SPEC.md · PROMPTS.md · adr/
 ├─ samples/                      // PDF mẫu để test (dữ liệu giả)
+├─ assets/fonts/                 // font Unicode đóng gói (P4: Noto Sans + OFL.txt), nhúng vào PdfPro.Operations
 ├─ tools/                        // qpdf, tesseract + tessdata (tải bằng script)
 ├─ src/
 │  ├─ PdfPro.Core/               // domain thuần: Session, PagePlan, Command, Operation
@@ -95,7 +96,7 @@ PdfPro/
    ├─ PdfPro.Infrastructure.Tests/ // tiến trình ngoài, settings, ghi file nguyên tử
    ├─ PdfPro.Pdfium.Tests/       // wrapper PDFium: gate, handle, render so ảnh tham chiếu (Golden/)
    ├─ PdfPro.App.Tests/          // test ViewModel, trình xem, in (ghi XPS), bảng chuỗi vi/en
-   ├─ PdfPro.App.UiTests/        // (P3) nghiệm thu trên app thật bằng FlaUI; chỉ chạy tay (PDFPRO_UI_TESTS=1)
+   ├─ PdfPro.App.UiTests/        // (P3, P4) nghiệm thu trên app thật bằng FlaUI; chỉ chạy tay (PDFPRO_UI_TESTS=1)
    ├─ PdfPro.SampleGenerator/    // sinh lại samples/ (PDFsharp), không phải project test
    ├─ PdfPro.TestTools.FakeTool/ // exe giả lập công cụ ngoài, chỉ dùng cho test
    └─ PdfPro.Benchmarks/
@@ -251,6 +252,38 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 
 **Kiểm thử giao diện**: `tests/PdfPro.App.UiTests` (FlaUI 5.0, MIT) chạy app thật qua UI Automation và thông điệp gửi tới cửa sổ (không dùng chuột/bàn phím thật), mỗi test một thư mục dữ liệu riêng qua `PDFPRO_DATA_DIR`. Chỉ chạy tay: đặt `PDFPRO_UI_TESTS=1` rồi `dotnet test --project tests/PdfPro.App.UiTests -c Release`; không đặt biến thì mọi test được bỏ qua (CI). Lưu ý: UI Automation đặt cửa sổ có chủ (hộp thoại) dưới cửa sổ chủ chứ không dưới desktop, và hộp thoại của WPF-UI lấy nội dung làm tên — tìm hộp thoại bằng `EnumWindows` + tiêu đề Win32. Kéo-thả và kéo khung chọn không tự động hóa được nếu không dùng chuột thật (WPF đọc vị trí con trỏ thật), nên được kiểm bằng unit test hình học và kiểm tay.
 
+### Gộp, tách & bố cục trang (Phase 4)
+
+**Dấu trang đầu (tách một tập scan gồm nhiều văn bản)**
+- Người dùng đánh dấu trang đầu của từng văn bản; khi tách, mỗi trang có dấu mở đầu một tệp mới, các trang sau nó tới trước dấu kế tiếp thuộc tệp đó. Trang 1 luôn mở đầu tệp thứ nhất (không cần dấu).
+- `SplitMark(FileName?)` nằm trên `PageRef`, nên đi theo trang khi sắp xếp, xoay, xóa; bản nhân bản và trang chèn không mang dấu (`WithKey` bỏ dấu). `PagePlan.MarkSplit / WithSplitMarks / GetSplitStarts`.
+- Đặt/bỏ dấu là bước Hoàn tác/Làm lại được nhưng **trung tính với nội dung** (`PlanCommand(changesContent: false)`, `IPlanOperation.ChangesContent`): không làm tài liệu "chưa lưu", điểm lưu so theo nội dung (`PagePlan.HasSameContent`) chứ không theo vị trí lịch sử. Dấu không ghi vào PDF.
+- Ghi nhớ theo tệp ngoài PDF: `data\split-marks\{32 hex của SHA-256 đường dẫn đầy đủ}.json` (không chứa đường dẫn) gồm `FileStamp`, số trang và các dấu; tệp bị sửa nơi khác thì dấu bị bỏ qua; giữ 500 tài liệu mới nhất. Manifest phiên cũng chứa dấu (`PageDto.Split`) để khôi phục sau crash.
+- Giao diện: Ctrl+M (trang hiện tại ở chế độ Xem, các trang chọn ở chế độ Sắp xếp), menu chuột phải, tab Trang; huy hiệu "Tệp n" trên ô lưới và thumbnail, dải màu xen kẽ theo tệp trong lưới, thanh trạng thái hiện tệp của trang hiện tại, dòng tóm tắt "n dấu → m tệp" và nút "Tách theo dấu…".
+
+**Tách (`organize.split`, Export) — 7 chế độ**: theo khoảng ("1-3, 4-10, 11-"), mỗi N trang, theo bookmark cấp k, theo dung lượng tối đa, theo trang trắng phân cách, theo văn bản (regex, NFC, tùy chọn phân biệt hoa thường), theo trang đánh dấu.
+- `SplitPlanner` (Core, thuần) chia plan thành `SplitSegment`; `SplitAnalysis` chỉ đọc thứ chế độ cần (bookmark, text từng trang, ảnh trang) và báo tiến độ; `SplitWriter` ghi mọi tệp vào `.{guid}.pdfpro-split.tmp` trong thư mục đích, xong hết mới đổi tên (ghi đè có backup tạm), lỗi hoặc hủy thì xóa sạch và trả lại tệp cũ — **được tất cả hoặc không gì**.
+- `BlankPageDetector`: tỉ lệ điểm tối trên ảnh xám, bỏ 5% lề, ngưỡng mặc định 0,1% (tờ phân cách của `scan-vi.pdf` ~0,02%, trang chữ thưa nhất ~0,36%); trang phân cách bị loại khỏi kết quả; chế độ khác có tùy chọn "bỏ trang trắng".
+- Theo dung lượng: ước lượng theo trang (`PageSizeEstimator`) rồi kiểm dung lượng thật sau khi ghi, tệp vượt thì chia lại; một trang lớn hơn giới hạn thành tệp riêng kèm cảnh báo.
+- Tên tệp: mẫu `{name}`, `{index}`/`{index:000}`, `{bookmark}`, `{match}`, `{first}`, `{last}`; tên theo bookmark/văn bản qua `FileNames.Sanitize` (NFC, `/ \ |` → `-`, bỏ `: * ? " < >`, tránh tên thiết bị, ≤ 120 ký tự); trùng tên → "(2)", hoặc chọn ghi đè. Từng dòng xem trước sửa được tên; tên đặt cho dấu được nhớ cùng dấu.
+- Hộp thoại xem trước: danh sách tệp (tên, khoảng trang, số trang), tóm tắt, cảnh báo; thư mục đích mặc định `{tên tệp} - tách` cạnh tệp nguồn; "Mở thư mục khi xong"; "Chuyển thành dấu" biến kết quả của chế độ khác thành dấu để chỉnh tay. Tài liệu đang sửa được tách từ bản vật chất hóa của plan; tệp gốc không bị ghi. Kết quả không bao giờ được mã hóa (P8); tài liệu có mật khẩu: tách và bố cục bị tắt tới P8.
+
+**Gộp (`organize.merge`)**: danh sách tệp (thêm, kéo sắp xếp, thả từ Explorer, sắp theo tên tự nhiên, xóa), mỗi tệp chọn khoảng trang và tên hiển thị trong bookmark/mục lục; tùy chọn bookmark mang tên tệp, giữ bookmark gốc (lồng dưới bookmark tên tệp), trang mục lục có liên kết ở đầu, mỗi tệp bắt đầu ở trang lẻ (chèn trang trắng), khổ giấy (giữ nguyên / theo trang đầu / A4, giữ hướng, co cho vừa).
+- Các tệp thành nguồn s0…sN của một plan, vật chất hóa bằng `PdfSharpPlanMaterializer` (giữ link nội bộ, chú thích); bookmark dựng lại từ bookmark PDFium của từng nguồn theo vị trí trang mới; mục lục vẽ bằng Noto Sans (OFL, nhúng subset, đóng gói trong `PdfPro.Operations.dll`) với link qua `PageCoordinateMapper`. Tệp kết quả chỉ mang Title (= tên tệp).
+- Tệp có mật khẩu hỏi ngay khi thêm (mật khẩu chỉ trong bộ nhớ: `InputPasswords`, không vào log/manifest); chỉ gộp được khi có quyền "lắp ráp tài liệu" hoặc nhập mật khẩu chủ; tệp hỏng bị từ chối kèm lý do. Kết quả không được trùng một tệp nguồn; ghi qua tệp tạm như Lưu, mở trong thẻ mới. Mở từ Trang chủ hoặc tab Trang, không cần tài liệu đang mở; tài liệu đang mở (kể cả đang sửa, qua bản sao làm việc) được đưa vào danh sách sẵn.
+
+**Bố cục**
+- `organize.interleave` (PlanOnly, hoàn tác được): trộn mặt trước + mặt sau khi scan 2 mặt bằng máy 1 mặt — mặt sau là nửa sau của chính tài liệu (chọn trang bắt đầu) hoặc một tệp khác (thành nguồn mới); tùy chọn mặt sau đảo ngược; cảnh báo khi hai nửa lệch số trang; xem trước thứ tự.
+- `layout.nup` (2/4/6/8/9/16 trang mỗi tờ, thứ tự Z hoặc N, lề, khoảng cách, viền, khổ và hướng tờ), `layout.booklet` (bội số 4, tự thêm trang trắng; đóng gáy trái/phải; lề, khoảng trống hai bên nếp gập; in 2 mặt lật cạnh ngắn), `layout.tile` (chia trang lớn thành nhiều tờ theo tỉ lệ % hoặc số cột × hàng, vùng chồng mép, dấu cắt, nhãn ô A1, A2…).
+- Ba thao tác bố cục ghi tệp mới (`ImpositionOperation`): trang nguồn thành form XObject riêng (`PageForms`, BBox = vùng hiển thị, ma trận theo /Rotate; `XPdfForm` của PDFsharp bỏ qua CropBox nên không dùng), vẽ lên tờ bằng `SheetPainter`. Chú thích và liên kết không được giữ trên tờ in (hộp thoại có ghi chú). Hộp thoại xem trước tờ đầu tiên và số tờ (sổ gập: "n mặt in trên m tờ giấy"); kết quả mở trong thẻ mới.
+
+**Số đo nghiệm thu (máy phát triển, bản Release)**
+- Tách `scan-vi.pdf` (18 trang ảnh) theo 4 dấu, bỏ trang trắng → 5 tệp 3/2/2/3/4 trang: 0,97 s từ lúc bấm Tách tới thông báo xong (đo qua UI Automation).
+- Gộp 20 tệp (168 trang) kèm bookmark và mục lục, tới khi kết quả mở trong thẻ: 1,37 s; đủ 20 bookmark tên tệp + toàn bộ bookmark gốc đúng trang, 20 link mục lục đúng trang đầu từng tệp.
+- Tách `big-1000.pdf` thành 100 tệp 10 trang: 9,7 s (~95 ms/tệp, có tiến độ, hủy được). Tách theo bookmark `vanban-vi.pdf`: 5 tệp tên đúng dấu tiếng Việt ("Quyết định số 12-QĐ-UBND.pdf", "Hợp đồng 128-2026-HĐ-MT.pdf"…).
+- Sổ gập 10 trang → 12 trang (6 mặt A4 ngang trên 3 tờ), thứ tự in kiểm bằng golden test; in thử gập đôi là bước kiểm tay.
+- Kịch bản FlaUI: `Phase4AcceptanceTests` (tách theo dấu + dấu được nhớ khi mở lại, gộp 20 tệp, tách theo bookmark tiếng Việt, sổ gập từ tài liệu đang sửa).
+
 ### Hệ tọa độ — nguồn bug số một
 
 PDF dùng đơn vị point (1/72 inch), gốc ở góc **dưới-trái**, trang có thể có `/Rotate` 90/180/270 và CropBox không bắt đầu từ (0,0). WPF dùng DIP (1/96 inch), gốc ở góc **trên-trái**. Mọi chuyển đổi bắt buộc đi qua một lớp duy nhất, có unit test cho cả 4 góc xoay × CropBox lệch gốc × nhiều mức zoom.
@@ -283,7 +316,8 @@ Bộ "đề thi" để agent tự kiểm tra. Có thể nhờ agent viết proje
 |---|---|---|
 | `basic-vi.pdf` | Văn bản tiếng Việt xuất từ Word, có bookmark nhiều cấp | Chọn chữ, tìm kiếm, sửa chữ, bookmark |
 | `big-1000.pdf` | 1.000 trang, có ảnh | Hiệu năng, bộ nhớ, ảo hóa |
-| `scan-vi.pdf` | 20–50 trang scan 300 DPI, có trang nghiêng, lộn ngược, trang trắng | OCR, nén, công cụ scan |
+| `scan-vi.pdf` | Hiện có (P4): 18 trang ảnh xám 90 DPI giả lập bản scan của `vanban-vi.pdf` — trang nghiêng, trang lộn ngược, tờ trắng phân cách (một tờ có chữ thấm mờ); bản 300 DPI dày hơn bổ sung ở P10 | Tách theo trang đánh dấu / trang trắng; OCR, nén, công cụ scan |
+| `vanban-vi.pdf` | 14 trang: 5 văn bản hành chính giả liền nhau, trang đầu mỗi văn bản có quốc hiệu và "Số: …", bookmark cấp 1 có dấu và "/" | Tách theo văn bản (regex), theo bookmark tiếng Việt, đặt tên tệp |
 | `encrypted.pdf` | Mật khẩu mở `test123`, giới hạn quyền in/copy | Mật khẩu, quyền |
 | `form.pdf` | AcroForm đủ loại field | Điền, thiết kế, flatten form |
 | `signed.pdf` | Đã ký số bằng chứng thư test | Incremental save, xác minh chữ ký |

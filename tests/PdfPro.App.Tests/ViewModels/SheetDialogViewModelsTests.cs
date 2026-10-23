@@ -106,7 +106,7 @@ public sealed class SheetDialogViewModelsTests
     {
         var dialog = Layout(SheetLayoutKind.Booklet, 10);
 
-        dialog.SheetCountText.ShouldBe(Format(Strings.Layout_SheetCount, 6));
+        dialog.SheetCountText.ShouldBe(Format(Strings.Layout_BookletSheetCount, 6, 3), "12 pages are 6 printed sides of 3 sheets");
         dialog.PreviewItems.Select(i => i.Label).ShouldBe(["1"], "page 12 (left of page 1) is blank");
         dialog.PreviewItems[0].Left.ShouldBeGreaterThan(SheetLayoutViewModel.PreviewSize / 2 - 1);
         dialog.IsRightBinding = true;

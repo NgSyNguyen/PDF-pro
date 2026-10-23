@@ -18,6 +18,7 @@ internal sealed partial class AppUnderTest : IDisposable
     private const int WmSetText = 0x000C;
     private const int WmClose = 0x0010;
     private const int BmClick = 0x00F5;
+    private const int VirtualKeyEnter = 0x0D;
 
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(20);
 
@@ -139,6 +140,35 @@ internal sealed partial class AppUnderTest : IDisposable
 
     public void Toggle(string automationId, AutomationElement? root = null) => Find(automationId, root).Patterns.Toggle.Pattern.Toggle();
 
+    /// <summary>Checks or clears a check box.</summary>
+    public void SetChecked(string automationId, bool isChecked, AutomationElement? root = null)
+    {
+        var toggle = Find(automationId, root).Patterns.Toggle.Pattern;
+        if ((toggle.ToggleState.Value == ToggleState.On) != isChecked)
+        {
+            toggle.Toggle();
+        }
+    }
+
+    /// <summary>Opens "Sắp xếp trang" (the organizer grid).</summary>
+    public void OpenOrganizer()
+    {
+        Ribbon("page", "organize.mode");
+        Find("OrganizerGrid");
+    }
+
+    /// <summary>Selects pages in the organizer by typing a range ("1-3, 8") and pressing Enter.</summary>
+    public void SelectRange(string range)
+    {
+        SetText("OrganizerRange", range);
+        PressKey(VirtualKeyEnter);
+        WaitUntil(() => Text("OrganizerRange") == range, TimeSpan.FromSeconds(10), $"the range '{range}' to be selected");
+    }
+
+    /// <summary>Waits until the status bar's task text starts with <paramref name="prefix"/>; returns how long it took.</summary>
+    public TimeSpan WaitForStatus(string prefix, TimeSpan? timeout = null)
+        => WaitUntil(() => Name("StatusTask").StartsWith(prefix, StringComparison.Ordinal), timeout ?? DefaultTimeout, $"the status '{prefix}…' (now '{Name("StatusTask")}')");
+
     /// <summary>Presses a key in the app (WM_KEYDOWN/WM_KEYUP posted to the main window; WPF routes it to the focus).</summary>
     public void PressKey(int virtualKey)
     {
@@ -150,6 +180,11 @@ internal sealed partial class AppUnderTest : IDisposable
     /// <summary>The names of the document tabs ("a.pdf *").</summary>
     public string[] DocumentTabs()
         => [.. Find("DocumentTabs").FindAllChildren(cf => cf.ByControlType(ControlType.TabItem)).Select(t => t.Name)];
+
+    /// <summary>Brings the document tab with this name to the front.</summary>
+    public void SelectTab(string name)
+        => WaitFor(() => Find("DocumentTabs").FindAllChildren(cf => cf.ByControlType(ControlType.TabItem)).FirstOrDefault(t => t.Name == name), DefaultTimeout, $"the tab '{name}'")
+            .AsTabItem().Select();
 
     /// <summary>Waits until a document tab has this name; returns how long it took.</summary>
     public TimeSpan WaitForTab(string name, TimeSpan? timeout = null)

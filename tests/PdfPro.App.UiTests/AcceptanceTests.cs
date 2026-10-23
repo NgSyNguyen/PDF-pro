@@ -11,7 +11,6 @@ namespace PdfPro.App.UiTests;
 /// </summary>
 public sealed class AcceptanceTests(ITestOutputHelper output) : IDisposable
 {
-    private const int Enter = 0x0D;
     private static readonly TimeSpan Long = TimeSpan.FromSeconds(60);
 
     private readonly UiTestFolder _folder = new();
@@ -53,12 +52,12 @@ public sealed class AcceptanceTests(ITestOutputHelper output) : IDisposable
         var path = _folder.Copy("basic-vi.pdf");
         using var app = AppUnderTest.Start(_folder, path);
         app.WaitForTab("basic-vi.pdf", Long);
-        OpenOrganizer(app);
+        app.OpenOrganizer();
 
         var commands = new[] { "organize.rotateRight", "organize.duplicate", "organize.rotateLeft", "organize.delete", "organize.rotateRight" };
         for (var i = 0; i < 30; i++)
         {
-            SelectRange(app, ((i % 5) + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            app.SelectRange(((i % 5) + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
             app.Invoke(commands[i % commands.Length]);
         }
 
@@ -179,8 +178,8 @@ public sealed class AcceptanceTests(ITestOutputHelper output) : IDisposable
         var path = _folder.Copy("big-1000.pdf");
         using var app = AppUnderTest.Start(_folder, path);
         app.WaitForTab("big-1000.pdf", Long);
-        OpenOrganizer(app);
-        SelectRange(app, "1-200");
+        app.OpenOrganizer();
+        app.SelectRange("1-200");
         WaitForSummary(app, 200, 1000);
 
         // End-to-end through UI Automation (polling included); the operations themselves are measured in-process
@@ -194,19 +193,6 @@ public sealed class AcceptanceTests(ITestOutputHelper output) : IDisposable
         {
             time.ShouldBeLessThan(TimeSpan.FromSeconds(2));
         }
-    }
-
-    private static void OpenOrganizer(AppUnderTest app)
-    {
-        app.Ribbon("page", "organize.mode");
-        app.Find("OrganizerGrid");
-    }
-
-    private static void SelectRange(AppUnderTest app, string range)
-    {
-        app.SetText("OrganizerRange", range);
-        app.PressKey(Enter);
-        AppUnderTest.WaitUntil(() => app.Text("OrganizerRange") == range, TimeSpan.FromSeconds(10), $"the range '{range}' to be selected");
     }
 
     private static string Summary(AppUnderTest app) => app.Name("OrganizerSelection");

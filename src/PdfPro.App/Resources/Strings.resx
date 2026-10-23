@@ -627,4 +627,5 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Layout_Error_Title" xml:space="preserve"><value>Không tạo được tệp</value></data>
   <data name="Welcome_Merge" xml:space="preserve"><value>Gộp tệp PDF</value></data>
   <data name="Welcome_Merge_ToolTip" xml:space="preserve"><value>Ghép nhiều tệp PDF thành một tệp</value></data>
+  <data name="Layout_BookletSheetCount" xml:space="preserve"><value>{0} mặt in trên {1} tờ giấy (in 2 mặt)</value></data>
 </root>

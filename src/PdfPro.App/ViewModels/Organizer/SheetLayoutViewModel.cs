@@ -331,7 +331,10 @@ public sealed partial class SheetLayoutViewModel : ObservableObject
             SheetLayoutKind.Booklet => _booklet.SheetCount(_pageSizes, (BookletParams)parameters),
             _ => _tile.SheetCount(_pageSizes, (TileParams)parameters),
         };
-        SheetCountText = string.Format(CultureInfo.CurrentCulture, Strings.Layout_SheetCount, sheets);
+        // A booklet's output pages are the two sides of each paper sheet.
+        SheetCountText = Kind == SheetLayoutKind.Booklet
+            ? string.Format(CultureInfo.CurrentCulture, Strings.Layout_BookletSheetCount, sheets, (sheets + 1) / 2)
+            : string.Format(CultureInfo.CurrentCulture, Strings.Layout_SheetCount, sheets);
         DrawPreview(parameters);
         ErrorText = IsUsablePath(OutputPath) ? null : Strings.Layout_Error_Output;
     }
