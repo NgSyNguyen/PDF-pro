@@ -22,7 +22,8 @@ public sealed record BookletParams(
     [property: Range(0.0, 500.0)] double Gutter = 0)
 {
     /// <summary>A landscape sheet with two cells, left and right of the fold.</summary>
-    internal NUpGrid Grid
+    [System.Text.Json.Serialization.JsonIgnore]
+    public NUpGrid Grid
     {
         get
         {

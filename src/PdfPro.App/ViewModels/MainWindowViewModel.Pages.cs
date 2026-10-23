@@ -1,7 +1,9 @@
 using System.IO;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.ViewModels.Merging;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfPro.Operations.Materializing;
@@ -216,6 +218,228 @@ public sealed partial class MainWindowViewModel
         IOException { HResult: ErrorSharingViolation or ErrorLockViolation } => Strings.Split_Error_FileInUse,
         _ => Strings.Split_Error_Failed,
     };
+
+    /// <summary>
+    /// "Gộp": the merge dialog (with the active document first, as displayed), then the merge in the background with
+    /// progress and cancel; the result opens in a new tab when asked.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanMerge))]
+    private async Task MergeAsync()
+    {
+        var initial = new List<MergeItemViewModel>();
+        string? suggested = null;
+        if (ActiveDocument is { IsReadOnly: false } document)
+        {
+            if (await OpenDocumentForMergeAsync(document) is { } item)
+            {
+                initial.Add(item);
+            }
+
+            if (Path.GetDirectoryName(document.FilePath) is { Length: > 0 } folder)
+            {
+                suggested = Path.Combine(folder, Format(Strings.Merge_DefaultName, Path.GetFileNameWithoutExtension(document.FileName)) + ".pdf");
+            }
+        }
+
+        var dialog = new MergeViewModel(_merge, _fileDialogs, initial, suggested);
+        if (!_pageDialogs.ShowMerge(dialog) || dialog.Result is not { } result)
+        {
+            return;
+        }
+
+        var fileName = Path.GetFileName(result.OutputPath);
+        if (Documents.Any(d => d.IsSameFile(result.OutputPath)))
+        {
+            await _messages.ShowErrorAsync(Strings.Merge_Error_Title, Format(Strings.Save_AlreadyOpen, fileName));
+            return;
+        }
+
+        await WaitForBackgroundWorkAsync(cancelPrint: false);
+        var text = Format(Strings.Merge_Progress, result.Sources.Count);
+        var task = StatusBar.StartTask(text);
+        var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, text));
+        var write = _merge.WriteAsync(result.Sources, result.Parameters, result.OutputPath, progress, task.Token);
+        _activeSave = write;
+        NotifySaveCommands();
+        string? error = null;
+        try
+        {
+            await write;
+            task.Complete(Format(Strings.Merge_Done, result.Sources.Count, fileName));
+        }
+        catch (OperationCanceledException)
+        {
+            task.Complete(Strings.Merge_Cancelled);
+            return;
+        }
+        catch (Exception ex) when (ex is MaterializationException or IOException or UnauthorizedAccessException or OperationValidationException)
+        {
+            _logger.LogWarning("Merging failed: {ErrorType} (HResult {HResult:X8})", ex.GetType().Name, ex.HResult);
+            task.Complete(Strings.Merge_FailedStatus);
+            error = ex switch
+            {
+                MaterializationException { Failure: MaterializationFailure.SourceMissing } => Strings.Merge_Error_SourceMissing,
+                MaterializationException => Strings.Merge_Error_SourceUnreadable,
+                OperationValidationException => Strings.Edit_Error_Invalid,
+                _ => Format(Strings.Merge_Error_Failed, fileName),
+            };
+        }
+        finally
+        {
+            _activeSave = null;
+            NotifySaveCommands();
+        }
+
+        if (error is null)
+        {
+            if (result.OpenWhenDone)
+            {
+                await OpenFilesAsync([result.OutputPath]);
+            }
+
+            return;
+        }
+
+        await _messages.ShowErrorAsync(Strings.Merge_Error_Title, error);
+    }
+
+    private bool CanMerge() => _activeSave is null;
+
+    /// <summary>
+    /// The open document as a file to merge: its own file when nothing is unsaved, otherwise a copy of what it shows
+    /// written into its session folder. Null when it cannot be read (the merge then starts without it).
+    /// </summary>
+    private async Task<MergeItemViewModel?> OpenDocumentForMergeAsync(DocumentTabViewModel document)
+    {
+        var name = Path.GetFileNameWithoutExtension(document.FileName);
+        try
+        {
+            string path;
+            string displayName;
+            if (!document.IsDirty && File.Exists(document.FilePath) && !document.Workspace.HasChangedOnDisk())
+            {
+                path = document.FilePath;
+                displayName = document.FileName;
+            }
+            else
+            {
+                Directory.CreateDirectory(document.Workspace.WorkDirectory);
+                path = Path.Combine(document.Workspace.WorkDirectory, $"merge-{Guid.NewGuid():N}.pdf");
+                var task = StatusBar.StartTask(Strings.Merge_Preparing);
+                try
+                {
+                    await _saver.ExportAsync(document.Workspace, [.. Enumerable.Range(0, document.Viewer.PageCount)], path, new Progress<OperationProgress>(), task.Token);
+                }
+                finally
+                {
+                    task.Complete(string.Empty);
+                }
+
+                displayName = Format(Strings.Merge_CurrentDocument, document.FileName);
+            }
+
+            return await _merge.AddAsync(path, document.FileName) is { } source ? new MergeItemViewModel(source, displayName, name) : null;
+        }
+        catch (Exception ex) when (ex is DocumentSaveException or OperationCanceledException or IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning("The open document could not be prepared for merging: {ErrorType}", ex.GetType().Name);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Writes a sheet layout (N-up, booklet, poster) of the document as displayed into a new file in the background:
+    /// the document is first written to its session folder, then laid out. The new file opens when asked.
+    /// </summary>
+    internal async Task<bool> LayoutAsync(DocumentTabViewModel document, LayoutRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(request);
+        var fileName = Path.GetFileName(request.OutputPath);
+        if (Documents.Any(d => d.IsSameFile(request.OutputPath)))
+        {
+            await _messages.ShowErrorAsync(Strings.Layout_Error_Title, Format(Strings.Save_AlreadyOpen, fileName));
+            return false;
+        }
+
+        await WaitForBackgroundWorkAsync(cancelPrint: false);
+        if (!Tabs.Contains(document))
+        {
+            return false;
+        }
+
+        var text = Format(Strings.Layout_Progress, fileName);
+        var task = StatusBar.StartTask(text);
+        var input = Path.Combine(document.Workspace.WorkDirectory, $"layout-{Guid.NewGuid():N}.pdf");
+        var pages = Enumerable.Range(0, document.Viewer.PageCount).ToArray();
+
+        async Task RunAsync(CancellationToken token)
+        {
+            Directory.CreateDirectory(document.Workspace.WorkDirectory);
+            await _saver.ExportAsync(document.Workspace, pages, input, new Progress<OperationProgress>(p => task.Report(p.Fraction / 2, text)), token);
+            await request.Write(input, new Progress<OperationProgress>(p => task.Report(0.5 + (p.Fraction / 2), text)), token);
+        }
+
+        var job = RunAsync(task.Token);
+        _activeSave = job;
+        NotifySaveCommands();
+        string? error = null;
+        try
+        {
+            await job;
+            task.Complete(Format(Strings.Layout_Done, fileName));
+        }
+        catch (OperationCanceledException)
+        {
+            task.Complete(Strings.Layout_Cancelled);
+            return false;
+        }
+        catch (DocumentSaveException ex)
+        {
+            task.Complete(Strings.Layout_FailedStatus);
+            error = Format(SaveFailureMessage(ex.Failure), document.FileName);
+        }
+        catch (Exception ex) when (ex is MaterializationException or IOException or UnauthorizedAccessException or OperationValidationException)
+        {
+            _logger.LogWarning("A sheet layout failed: {ErrorType} (HResult {HResult:X8})", ex.GetType().Name, ex.HResult);
+            task.Complete(Strings.Layout_FailedStatus);
+            error = ex is MaterializationException ? Strings.Merge_Error_SourceUnreadable : Format(Strings.Merge_Error_Failed, fileName);
+        }
+        finally
+        {
+            _activeSave = null;
+            NotifySaveCommands();
+            try
+            {
+                File.Delete(input);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogDebug("A working copy could not be removed: {ErrorType}", ex.GetType().Name);
+            }
+        }
+
+        if (error is not null)
+        {
+            await _messages.ShowErrorAsync(Strings.Layout_Error_Title, error);
+            return false;
+        }
+
+        if (request.OpenWhenDone)
+        {
+            await OpenFilesAsync([request.OutputPath]);
+        }
+
+        return true;
+    }
+
+    private async void OnLayoutRequested(object? sender, LayoutRequest request)
+    {
+        if (sender is DocumentTabViewModel document && Tabs.Contains(document))
+        {
+            await LayoutAsync(document, request);
+        }
+    }
 
     private async void OnSplitRequested(object? sender, SplitRequest request)
     {

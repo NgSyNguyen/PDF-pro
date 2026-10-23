@@ -33,6 +33,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IDocumentSaver _saver;
     private readonly IRecoveryService _recovery;
     private readonly IContentChanger _contentChanger;
+    private readonly IPageDialogService _pageDialogs;
+    private readonly IMergeService _merge;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -53,6 +55,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IDocumentSaver saver,
         IRecoveryService recovery,
         IContentChanger contentChanger,
+        IPageDialogService pageDialogs,
+        IMergeService merge,
         ILogger<MainWindowViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
@@ -70,6 +74,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _saver = saver;
         _recovery = recovery;
         _contentChanger = contentChanger;
+        _pageDialogs = pageDialogs;
+        _merge = merge;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -87,7 +93,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         MarkSplitCommand = new ActiveDocumentCommand(d => d.MarkSplitCommand);
         ClearSplitMarksCommand = new ActiveDocumentCommand(d => d.ClearSplitMarksCommand);
         SplitCommand = new ActiveDocumentCommand(d => d.SplitCommand);
-        Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand);
+        InterleaveCommand = new ActiveDocumentCommand(d => d.InterleaveCommand);
+        NUpCommand = new ActiveDocumentCommand(d => d.NUpCommand);
+        BookletCommand = new ActiveDocumentCommand(d => d.BookletCommand);
+        TileCommand = new ActiveDocumentCommand(d => d.TileCommand);
+        Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
         Tabs = [Home];
@@ -151,6 +161,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     /// <summary>"Tách": the split dialog of the active document.</summary>
     public ActiveDocumentCommand SplitCommand { get; }
+
+    public ActiveDocumentCommand InterleaveCommand { get; }
+
+    public ActiveDocumentCommand NUpCommand { get; }
+
+    public ActiveDocumentCommand BookletCommand { get; }
+
+    public ActiveDocumentCommand TileCommand { get; }
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -347,6 +365,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.ExtractRequested -= OnExtractRequested;
             _trackedDocument.ContentChangeRequested -= OnContentChangeRequested;
             _trackedDocument.SplitRequested -= OnSplitRequested;
+            _trackedDocument.LayoutRequested -= OnLayoutRequested;
         }
 
         _trackedDocument = value as DocumentTabViewModel;
@@ -356,13 +375,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.ExtractRequested += OnExtractRequested;
             _trackedDocument.ContentChangeRequested += OnContentChangeRequested;
             _trackedDocument.SplitRequested += OnSplitRequested;
+            _trackedDocument.LayoutRequested += OnLayoutRequested;
         }
 
         foreach (var command in new[]
         {
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
-            MarkSplitCommand, ClearSplitMarksCommand, SplitCommand,
+            MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -505,13 +525,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("organize.crop", Strings.Cmd_Crop, SymbolRegular.Crop24, CropPagesCommand),
                     new("organize.pageSize", Strings.Cmd_PageSize, SymbolRegular.DocumentLandscape24, ChangePageSizeCommand),
+                    new("layout.nup", Strings.Cmd_NUp, SymbolRegular.Grid24, NUpCommand, Strings.Cmd_NUp_ToolTip),
+                    new("layout.booklet", Strings.Cmd_Booklet, SymbolRegular.Book24, BookletCommand, Strings.Cmd_Booklet_ToolTip),
+                    new("layout.tile", Strings.Cmd_Tile, SymbolRegular.TableSimple24, TileCommand, Strings.Cmd_Tile_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_MergeSplit,
                 [
-                    new("organize.merge", Strings.Cmd_Merge, SymbolRegular.Merge24),
+                    new("organize.merge", Strings.Cmd_Merge, SymbolRegular.Merge24, MergeCommand),
                     new("organize.split", Strings.Cmd_Split, SymbolRegular.SplitVertical24, SplitCommand),
                     new("organize.markSplit", Strings.Cmd_MarkSplit, SymbolRegular.DocumentSplitHint24, MarkSplitCommand, Strings.Cmd_MarkSplit_ToolTip),
                     new("organize.clearSplitMarks", Strings.Cmd_ClearSplitMarks, SymbolRegular.DocumentDismiss24, ClearSplitMarksCommand, Strings.Cmd_ClearSplitMarks_ToolTip),
+                    new("organize.interleave", Strings.Cmd_Interleave, SymbolRegular.ArrowSwap24, InterleaveCommand, Strings.Cmd_Interleave_ToolTip),
                 ]),
             ]),
             new("edit", Strings.Ribbon_Tab_Edit,

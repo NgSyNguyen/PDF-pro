@@ -44,6 +44,15 @@
         Content="{loc:Tr Welcome_OpenFile}"
         Icon="{ui:SymbolIcon FolderOpen24}"
         ToolTip="{loc:Tr Welcome_OpenFile_ToolTip}" />
+      <ui:Button
+        Margin="0,8,0,0"
+        Padding="20,8"
+        HorizontalAlignment="Center"
+        AutomationProperties.AutomationId="WelcomeMerge"
+        Command="{Binding MergeCommand}"
+        Content="{loc:Tr Welcome_Merge}"
+        Icon="{ui:SymbolIcon Merge24}"
+        ToolTip="{loc:Tr Welcome_Merge_ToolTip}" />
 
       <!-- Drop zone: the whole window accepts dropped files; this area just invites the gesture. -->
       <Grid Height="160" Margin="0,24,0,0">

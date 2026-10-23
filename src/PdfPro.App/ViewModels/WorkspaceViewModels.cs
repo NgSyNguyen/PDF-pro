@@ -24,10 +24,11 @@ public abstract class WorkspaceTabViewModel : ObservableObject
 /// <summary>Start page: open button, drop zone, recent files.</summary>
 public sealed class HomeTabViewModel : WorkspaceTabViewModel
 {
-    public HomeTabViewModel(ICommand openFileCommand, ICommand openRecentFileCommand)
+    public HomeTabViewModel(ICommand openFileCommand, ICommand openRecentFileCommand, ICommand mergeCommand)
     {
         OpenFileCommand = openFileCommand;
         OpenRecentFileCommand = openRecentFileCommand;
+        MergeCommand = mergeCommand;
         RecentFiles.CollectionChanged += OnRecentFilesChanged;
     }
 
@@ -39,6 +40,9 @@ public sealed class HomeTabViewModel : WorkspaceTabViewModel
 
     /// <summary>Takes the full path of a recent file as parameter.</summary>
     public ICommand OpenRecentFileCommand { get; }
+
+    /// <summary>"Gộp tệp PDF" without opening a document first.</summary>
+    public ICommand MergeCommand { get; }
 
     public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = [];
 

@@ -41,6 +41,7 @@ internal static class TestOperations
     {
         var materializer = Substitute.For<Core.Organizing.IPlanMaterializer>();
         var loader = Substitute.For<IPdfDocumentLoader>();
+        var repairer = Substitute.For<Operations.Materializing.ISourceRepairer>();
         return new OperationCatalog(
         [
             new RotatePagesOperation(materializer, loader),
@@ -56,6 +57,9 @@ internal static class TestOperations
             new SetSplitMarksOperation(materializer, loader),
             new InterleaveOperation(materializer, loader),
             new Operations.Splitting.SplitOperation(materializer, loader),
+            new Operations.Layout.NUpOperation(repairer),
+            new Operations.Layout.BookletOperation(repairer),
+            new Operations.Layout.TileOperation(repairer),
         ]);
     }
 }

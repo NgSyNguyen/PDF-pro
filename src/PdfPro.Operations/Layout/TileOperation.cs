@@ -140,7 +140,7 @@ public sealed class TileOperation(ISourceRepairer repairer) : ImpositionOperatio
     }
 
     /// <summary>"B3": row letter and column number, with the page number in front when several pages are printed.</summary>
-    internal static string Label(PosterTile tile, int? pageNumber)
+    public static string Label(PosterTile tile, int? pageNumber)
     {
         var row = tile.Row < 26 ? ((char)('A' + tile.Row)).ToString() : (tile.Row + 1).ToString(CultureInfo.InvariantCulture) + "-";
         var position = row + (tile.Column + 1).ToString(CultureInfo.InvariantCulture);

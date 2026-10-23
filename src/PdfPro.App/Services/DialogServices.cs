@@ -182,6 +182,24 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new SplitWindow(viewModel));
     }
 
+    public bool ShowMerge(ViewModels.Merging.MergeViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new MergeWindow(viewModel));
+    }
+
+    public bool ShowInterleave(InterleaveViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new InterleaveWindow(viewModel));
+    }
+
+    public bool ShowSheetLayout(SheetLayoutViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SheetLayoutWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

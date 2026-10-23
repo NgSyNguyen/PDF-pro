@@ -1,0 +1,117 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.InterleaveWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:organizer="clr-namespace:PdfPro.App.ViewModels.Organizer"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=organizer:InterleaveViewModel}"
+  Title="{loc:Tr Interleave_Title}"
+  Width="520"
+  MinHeight="0"
+  AutomationProperties.AutomationId="InterleaveWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr Interleave_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <RadioButton
+        AutomationProperties.AutomationId="InterleaveSameDocument"
+        Content="{loc:Tr Interleave_SameDocument}"
+        GroupName="InterleaveBacks"
+        IsChecked="{Binding IsSameDocument}" />
+      <StackPanel
+        Margin="28,6,0,0"
+        IsEnabled="{Binding IsSameDocument}"
+        Orientation="Horizontal">
+        <TextBlock VerticalAlignment="Center" Text="{loc:Tr Interleave_BackStart}" />
+        <TextBox
+          Width="80"
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="InterleaveBackStart"
+          AutomationProperties.Name="{loc:Tr Interleave_BackStart}"
+          Text="{Binding BackStartText, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <RadioButton
+        Margin="0,14,0,0"
+        AutomationProperties.AutomationId="InterleaveOtherFile"
+        Content="{loc:Tr Interleave_OtherFile}"
+        GroupName="InterleaveBacks"
+        IsChecked="{Binding IsOtherFile}" />
+      <StackPanel Margin="28,6,0,0" Orientation="Horizontal">
+        <ui:Button
+          AutomationProperties.AutomationId="InterleavePickFile"
+          Command="{Binding PickBackFileCommand}"
+          Content="{loc:Tr Interleave_PickFile}" />
+        <TextBlock
+          Margin="10,0,0,0"
+          VerticalAlignment="Center"
+          AutomationProperties.AutomationId="InterleaveBackFile"
+          Text="{Binding BackFileText}"
+          TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+
+      <CheckBox
+        Margin="0,16,0,0"
+        AutomationProperties.AutomationId="InterleaveReverse"
+        IsChecked="{Binding ReverseBacks}">
+        <TextBlock Text="{loc:Tr Interleave_Reverse}" TextWrapping="Wrap" />
+      </CheckBox>
+
+      <TextBlock
+        Margin="0,16,0,0"
+        AutomationProperties.AutomationId="InterleavePreview"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{Binding PreviewText}"
+        TextWrapping="Wrap" />
+      <TextBlock
+        Margin="0,8,0,0"
+        Foreground="{DynamicResource SystemFillColorCautionBrush}"
+        Text="{Binding WarningText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding WarningText, Converter={StaticResource NullToCollapsed}}" />
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="InterleaveError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+
+      <StackPanel
+        Margin="0,24,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="InterleaveApply"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr Interleave_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="InterleaveCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

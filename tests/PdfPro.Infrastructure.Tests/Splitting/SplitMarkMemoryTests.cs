@@ -60,6 +60,15 @@ public sealed class SplitMarkMemoryTests : IDisposable
     }
 
     [Fact]
+    public async Task ForgettingBeforeAnythingWasRemembered_IsQuiet()
+    {
+        await _memory.RememberAsync(Document, Stamp, 18, [], Token);
+
+        Directory.Exists(_paths.SplitMarksDirectory).ShouldBeFalse();
+        _logger.Entries.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task TheMemoryFile_DoesNotContainThePath()
     {
         await _memory.RememberAsync(Document, Stamp, 18, [new(4)], Token);

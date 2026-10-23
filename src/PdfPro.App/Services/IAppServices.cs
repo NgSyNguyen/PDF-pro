@@ -137,4 +137,10 @@ public interface IPageDialogService
     bool ShowPageSize(ViewModels.Organizer.PageSizeViewModel viewModel);
 
     bool ShowSplit(ViewModels.Splitting.SplitViewModel viewModel);
+
+    bool ShowMerge(ViewModels.Merging.MergeViewModel viewModel);
+
+    bool ShowInterleave(ViewModels.Organizer.InterleaveViewModel viewModel);
+
+    bool ShowSheetLayout(ViewModels.Organizer.SheetLayoutViewModel viewModel);
 }

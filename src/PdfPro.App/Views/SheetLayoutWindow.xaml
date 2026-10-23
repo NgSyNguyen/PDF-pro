@@ -1,0 +1,322 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.SheetLayoutWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:organizer="clr-namespace:PdfPro.App.ViewModels.Organizer"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=organizer:SheetLayoutViewModel}"
+  Title="{Binding Title}"
+  Width="780"
+  MinHeight="0"
+  AutomationProperties.AutomationId="SheetLayoutWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,10,0,4" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{Binding Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <Grid Margin="24,0,24,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="24" />
+        <ColumnDefinition Width="300" />
+      </Grid.ColumnDefinitions>
+
+      <!-- Settings -->
+      <StackPanel>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Layout_Paper}" />
+        <ComboBox
+          AutomationProperties.AutomationId="LayoutPaper"
+          AutomationProperties.Name="{loc:Tr Layout_Paper}"
+          ItemsSource="{Binding Papers}"
+          SelectedItem="{Binding Paper}" />
+
+        <!-- N-up -->
+        <StackPanel Visibility="{Binding IsNUp, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Layout_PagesPerSheet}" />
+          <ComboBox
+            AutomationProperties.AutomationId="LayoutPagesPerSheet"
+            AutomationProperties.Name="{loc:Tr Layout_PagesPerSheet}"
+            ItemsSource="{Binding PagesPerSheetOptions}"
+            SelectedItem="{Binding PagesPerSheet}" />
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Layout_Order}" />
+          <StackPanel Orientation="Horizontal">
+            <RadioButton
+              AutomationProperties.AutomationId="LayoutOrderZ"
+              Content="{loc:Tr Layout_Order_Z}"
+              GroupName="LayoutOrder"
+              IsChecked="{Binding IsRowsFirst}" />
+            <RadioButton
+              Margin="16,0,0,0"
+              AutomationProperties.AutomationId="LayoutOrderN"
+              Content="{loc:Tr Layout_Order_N}"
+              GroupName="LayoutOrder"
+              IsChecked="{Binding IsColumnsFirst}" />
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel Visibility="{Binding IsBooklet, Converter={StaticResource InverseBoolToVisibility}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Layout_Orientation}" />
+          <ComboBox
+            AutomationProperties.AutomationId="LayoutOrientation"
+            AutomationProperties.Name="{loc:Tr Layout_Orientation}"
+            ItemsSource="{Binding Orientations}"
+            SelectedItem="{Binding Orientation}" />
+        </StackPanel>
+
+        <Grid Margin="0,10,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Margin="0,0,0,4" FontWeight="SemiBold" Text="{loc:Tr Layout_Margin}" />
+            <TextBox
+              AutomationProperties.AutomationId="LayoutMargin"
+              AutomationProperties.Name="{loc:Tr Layout_Margin}"
+              Text="{Binding MarginText, UpdateSourceTrigger=PropertyChanged}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Visibility="{Binding IsNUp, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Margin="0,0,0,4" FontWeight="SemiBold" Text="{loc:Tr Layout_Gap}" TextTrimming="CharacterEllipsis" />
+            <TextBox
+              AutomationProperties.AutomationId="LayoutGap"
+              AutomationProperties.Name="{loc:Tr Layout_Gap}"
+              Text="{Binding GapText, UpdateSourceTrigger=PropertyChanged}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Visibility="{Binding IsBooklet, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Margin="0,0,0,4" FontWeight="SemiBold" Text="{loc:Tr Layout_Gutter}" TextTrimming="CharacterEllipsis" />
+            <TextBox
+              AutomationProperties.AutomationId="LayoutGutter"
+              AutomationProperties.Name="{loc:Tr Layout_Gutter}"
+              Text="{Binding GutterText, UpdateSourceTrigger=PropertyChanged}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Visibility="{Binding IsTile, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Margin="0,0,0,4" FontWeight="SemiBold" Text="{loc:Tr Layout_Overlap}" TextTrimming="CharacterEllipsis" />
+            <TextBox
+              AutomationProperties.AutomationId="LayoutOverlap"
+              AutomationProperties.Name="{loc:Tr Layout_Overlap}"
+              Text="{Binding OverlapText, UpdateSourceTrigger=PropertyChanged}" />
+          </StackPanel>
+        </Grid>
+
+        <CheckBox
+          Margin="0,12,0,0"
+          AutomationProperties.AutomationId="LayoutBorder"
+          Content="{loc:Tr Layout_Border}"
+          IsChecked="{Binding Border}"
+          Visibility="{Binding IsNUp, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- Booklet -->
+        <StackPanel Visibility="{Binding IsBooklet, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Layout_Binding}" />
+          <StackPanel Orientation="Horizontal">
+            <RadioButton
+              AutomationProperties.AutomationId="LayoutBindingLeft"
+              Content="{loc:Tr Layout_Binding_Left}"
+              GroupName="LayoutBinding"
+              IsChecked="{Binding IsLeftBinding}" />
+            <RadioButton
+              Margin="16,0,0,0"
+              AutomationProperties.AutomationId="LayoutBindingRight"
+              Content="{loc:Tr Layout_Binding_Right}"
+              GroupName="LayoutBinding"
+              IsChecked="{Binding IsRightBinding}" />
+          </StackPanel>
+          <TextBlock
+            Margin="0,10,0,0"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr Layout_BookletHint}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- Poster -->
+        <StackPanel Visibility="{Binding IsTile, Converter={StaticResource BoolToVisibility}}">
+          <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+            <RadioButton
+              AutomationProperties.AutomationId="LayoutUseScale"
+              Content="{loc:Tr Layout_UseScale}"
+              GroupName="LayoutScale"
+              IsChecked="{Binding UsesScale}" />
+            <TextBox
+              Width="70"
+              Margin="8,0,24,0"
+              AutomationProperties.AutomationId="LayoutScale"
+              AutomationProperties.Name="{loc:Tr Layout_Scale}"
+              IsEnabled="{Binding UsesScale}"
+              Text="{Binding ScaleText, UpdateSourceTrigger=PropertyChanged}" />
+          </StackPanel>
+          <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+            <RadioButton
+              AutomationProperties.AutomationId="LayoutUseFit"
+              Content="{loc:Tr Layout_FitSheets}"
+              GroupName="LayoutScale"
+              IsChecked="{Binding UsesFit}" />
+            <TextBox
+              Width="56"
+              Margin="8,0,4,0"
+              AutomationProperties.AutomationId="LayoutColumns"
+              AutomationProperties.Name="{loc:Tr Layout_Columns}"
+              IsEnabled="{Binding UsesFit}"
+              Text="{Binding ColumnsText, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock VerticalAlignment="Center" Text="×" />
+            <TextBox
+              Width="56"
+              Margin="4,0,0,0"
+              AutomationProperties.AutomationId="LayoutRows"
+              AutomationProperties.Name="{loc:Tr Layout_Rows}"
+              IsEnabled="{Binding UsesFit}"
+              Text="{Binding RowsText, UpdateSourceTrigger=PropertyChanged}" />
+          </StackPanel>
+          <CheckBox
+            Margin="0,12,0,0"
+            AutomationProperties.AutomationId="LayoutCutMarks"
+            Content="{loc:Tr Layout_CutMarks}"
+            IsChecked="{Binding CutMarks}" />
+          <CheckBox
+            Margin="0,6,0,0"
+            AutomationProperties.AutomationId="LayoutLabels"
+            Content="{loc:Tr Layout_Labels}"
+            IsChecked="{Binding Labels}" />
+        </StackPanel>
+
+        <StackPanel Visibility="{Binding IsBooklet, Converter={StaticResource InverseBoolToVisibility}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Layout_Pages}" />
+          <TextBox
+            AutomationProperties.AutomationId="LayoutPages"
+            AutomationProperties.Name="{loc:Tr Layout_Pages}"
+            Text="{Binding PagesText, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Preview of the first sheet -->
+      <StackPanel Grid.Column="2">
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Layout_Preview}" />
+        <Border
+          Width="280"
+          Height="280"
+          Background="{DynamicResource ControlFillColorSecondaryBrush}"
+          CornerRadius="6">
+          <Grid
+            Width="{Binding PreviewWidth}"
+            Height="{Binding PreviewHeight}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+            <Border Background="White" BorderBrush="Gray" BorderThickness="1" />
+            <ItemsControl AutomationProperties.AutomationId="LayoutPreview" ItemsSource="{Binding PreviewItems}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <Canvas />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                  <Setter Property="Canvas.Left" Value="{Binding Left}" />
+                  <Setter Property="Canvas.Top" Value="{Binding Top}" />
+                </Style>
+              </ItemsControl.ItemContainerStyle>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type organizer:SheetPreviewItem}">
+                  <Border
+                    Width="{Binding Width}"
+                    Height="{Binding Height}"
+                    Background="#FFF3F6FB"
+                    BorderBrush="#FF5B7BB5"
+                    BorderThickness="1">
+                    <TextBlock
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      FontSize="13"
+                      Foreground="#FF2B3A55"
+                      Text="{Binding Label}" />
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Grid>
+        </Border>
+        <TextBlock
+          Margin="0,8,0,0"
+          HorizontalAlignment="Center"
+          AutomationProperties.AutomationId="LayoutSheetCount"
+          Text="{Binding SheetCountText}" />
+        <TextBlock
+          Margin="0,6,0,0"
+          FontSize="12"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{loc:Tr Layout_NoAnnotations}"
+          TextAlignment="Center"
+          TextWrapping="Wrap" />
+      </StackPanel>
+    </Grid>
+
+    <StackPanel Margin="24,16,24,24">
+      <DockPanel>
+        <TextBlock
+          Margin="0,0,12,0"
+          VerticalAlignment="Center"
+          Text="{loc:Tr Layout_Output_Label}" />
+        <ui:Button
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="LayoutPickOutput"
+          Command="{Binding PickOutputCommand}"
+          Content="{loc:Tr Merge_Output_Pick}"
+          DockPanel.Dock="Right" />
+        <TextBox
+          AutomationProperties.AutomationId="LayoutOutput"
+          AutomationProperties.Name="{loc:Tr Layout_Output_Label}"
+          Text="{Binding OutputPath, UpdateSourceTrigger=PropertyChanged}" />
+      </DockPanel>
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="LayoutError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+      <DockPanel Margin="0,16,0,0" LastChildFill="False">
+        <CheckBox
+          AutomationProperties.AutomationId="LayoutOpenWhenDone"
+          Content="{loc:Tr Layout_OpenWhenDone}"
+          DockPanel.Dock="Left"
+          IsChecked="{Binding OpenWhenDone}" />
+        <ui:Button
+          MinWidth="96"
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="LayoutCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}"
+          DockPanel.Dock="Right" />
+        <ui:Button
+          MinWidth="96"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="LayoutRun"
+          Command="{Binding RunCommand}"
+          Content="{loc:Tr Layout_Run}"
+          DockPanel.Dock="Right"
+          IsDefault="True" />
+      </DockPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

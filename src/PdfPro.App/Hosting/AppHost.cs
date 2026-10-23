@@ -99,6 +99,7 @@ internal static class AppHost
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();
         services.AddSingleton<IContentChanger, ContentChanger>();
+        services.AddSingleton<IMergeService, MergeService>();
         services.AddSingleton<IRecoveryDialog, RecoveryDialog>();
         services.AddSingleton<IRecoveryService, RecoveryService>();
 

@@ -31,6 +31,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
     private readonly IRecoveryService _recovery = Substitute.For<IRecoveryService>();
     private readonly IContentChanger _contentChanger = Substitute.For<IContentChanger>();
     private readonly IPageDialogService _pageDialogs = Substitute.For<IPageDialogService>();
+    private readonly IMergeService _merge = Substitute.For<IMergeService>();
     private readonly FakeSettingsService _settings = new(AppSettings.Default);
     private readonly AppPaths _paths = new(@"C:\data\PdfPro", @"C:\app\tools");
     private readonly RenderCache _cache;
@@ -94,7 +95,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException",
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
-                "organize.split", "organize.markSplit", "organize.clearSplitMarks"],
+                "organize.split", "organize.markSplit", "organize.clearSplitMarks",
+                "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -532,5 +534,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _saver,
             _recovery,
             _contentChanger,
+            _pageDialogs,
+            _merge,
             NullLogger<MainWindowViewModel>.Instance);
 }

@@ -79,7 +79,11 @@ public sealed class SplitMarkMemory(AppPaths paths, ILogger<SplitMarkMemory> log
         {
             if (marks.Count == 0)
             {
-                File.Delete(file);
+                if (File.Exists(file))
+                {
+                    File.Delete(file);
+                }
+
                 return;
             }
 

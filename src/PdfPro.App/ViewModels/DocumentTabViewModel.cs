@@ -15,6 +15,7 @@ using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfPro.Operations;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Layout;
 using PdfPro.Operations.Splitting;
 using PdfPro.Pdfium;
 using Wpf.Ui.Controls;
@@ -55,6 +56,15 @@ public sealed record ContentChangeRequest(IContentOperation Operation, object Pa
 /// <param name="Document">The document as it was split (plan and sources).</param>
 /// <param name="Choice">The files, names, folder and options.</param>
 public sealed record SplitRequest(SplitOperation Operation, SplitDocument Document, SplitDialogResult Choice);
+
+/// <summary>A sheet layout (N-up, booklet, poster) confirmed in its dialog, written by the window in the background.</summary>
+/// <param name="Write">Lays out a file holding the document as displayed (the input) into <paramref name="OutputPath"/>.</param>
+/// <param name="OutputPath">The new file.</param>
+/// <param name="OpenWhenDone">Open the new file in a tab once written.</param>
+public sealed record LayoutRequest(
+    Func<string, IProgress<OperationProgress>, CancellationToken, Task<string>> Write,
+    string OutputPath,
+    bool OpenWhenDone);
 
 /// <summary>
 /// An open document tab: its workspace (session, sources), viewer, sidebar panels and page organizer, undo/redo and the
@@ -208,6 +218,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>A split was confirmed: the window writes the files with progress and cancel.</summary>
     public event EventHandler<SplitRequest>? SplitRequested;
+
+    /// <summary>A sheet layout was confirmed: the window writes the new file with progress and cancel.</summary>
+    public event EventHandler<LayoutRequest>? LayoutRequested;
 
     public bool IsSameFile(string path)
         => FilePath.Length > 0 && string.Equals(Path.GetFullPath(path), Path.GetFullPath(FilePath), StringComparison.OrdinalIgnoreCase);
@@ -520,6 +533,74 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// <summary>Password protected documents are view-only until Phase 8 (security).</summary>
     private bool CanSplit() => !IsReadOnly && Viewer.PageCount > 0 && !_inserting;
 
+    /// <summary>
+    /// "Trộn mặt trước/sau": the dialog (backs at the end of this document or in another file, which is copied into the
+    /// session like an inserted file), then one undoable step.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanInsert))]
+    private void Interleave()
+    {
+        var dialog = new InterleaveViewModel(Viewer.PageCount, PickBackFileAsync);
+        if (_services.PageDialogs.ShowInterleave(dialog) && dialog.Result is { } parameters && CanEditPages)
+        {
+            Apply(_operations.Get<InterleaveOperation>(), parameters);
+        }
+    }
+
+    private async Task<InterleaveBackFile?> PickBackFileAsync()
+    {
+        if (_services.FileDialogs.PickPdfFile(Strings.Interleave_PickFile_Title) is not { } path)
+        {
+            return null;
+        }
+
+        return await AddSourceAsync(path) is { } source
+            ? new InterleaveBackFile(source.Source.Id, Path.GetFileName(path), source.Document.PageCount)
+            : null;
+    }
+
+    /// <summary>"Nhiều trang/tờ": N pages per sheet, written to a new file.</summary>
+    [RelayCommand(CanExecute = nameof(CanSplit))]
+    private void NUp() => ShowSheetLayout(SheetLayoutKind.NUp);
+
+    /// <summary>"Sổ gập": a booklet to print on both sides and fold, written to a new file.</summary>
+    [RelayCommand(CanExecute = nameof(CanSplit))]
+    private void Booklet() => ShowSheetLayout(SheetLayoutKind.Booklet);
+
+    /// <summary>"Chia ô": large pages on several sheets, written to a new file.</summary>
+    [RelayCommand(CanExecute = nameof(CanSplit))]
+    private void Tile() => ShowSheetLayout(SheetLayoutKind.Tile);
+
+    private void ShowSheetLayout(SheetLayoutKind kind)
+    {
+        var nUp = _operations.Get<NUpOperation>();
+        var booklet = _operations.Get<BookletOperation>();
+        var tile = _operations.Get<TileOperation>();
+        var name = Path.GetFileNameWithoutExtension(FileName);
+        var fileName = kind switch
+        {
+            SheetLayoutKind.NUp => string.Format(CultureInfo.CurrentCulture, Strings.Layout_DefaultName_NUp, name, 2),
+            SheetLayoutKind.Booklet => string.Format(CultureInfo.CurrentCulture, Strings.Layout_DefaultName_Booklet, name),
+            _ => string.Format(CultureInfo.CurrentCulture, Strings.Layout_DefaultName_Tile, name),
+        };
+        var folder = Path.GetDirectoryName(FilePath) is { Length: > 0 } directory ? directory : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var dialog = new SheetLayoutViewModel(kind, Workspace.Pages.PageSizes, Path.Combine(folder, fileName + ".pdf"), _services.FileDialogs, nUp, booklet, tile);
+        if (!_services.PageDialogs.ShowSheetLayout(dialog) || dialog.Result is not { } choice)
+        {
+            return;
+        }
+
+        var workDirectory = Workspace.WorkDirectory;
+        Func<string, IProgress<OperationProgress>, CancellationToken, Task<string>> write = choice.Parameters switch
+        {
+            NUpParams p => (input, progress, token) => nUp.WriteAsync(input, null, p, choice.OutputPath, workDirectory, progress, token),
+            BookletParams p => (input, progress, token) => booklet.WriteAsync(input, null, p, choice.OutputPath, workDirectory, progress, token),
+            TileParams p => (input, progress, token) => tile.WriteAsync(input, null, p, choice.OutputPath, workDirectory, progress, token),
+            _ => throw new InvalidOperationException("Unknown sheet layout."),
+        };
+        LayoutRequested?.Invoke(this, new LayoutRequest(write, choice.OutputPath, choice.OpenWhenDone));
+    }
+
     /// <summary>The document as displayed, for splitting: its plan and every source.</summary>
     private SplitDocument CreateSplitDocument() => new()
     {
@@ -690,6 +771,10 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         MarkSplitCommand.NotifyCanExecuteChanged();
         ClearSplitMarksCommand.NotifyCanExecuteChanged();
         SplitCommand.NotifyCanExecuteChanged();
+        InterleaveCommand.NotifyCanExecuteChanged();
+        NUpCommand.NotifyCanExecuteChanged();
+        BookletCommand.NotifyCanExecuteChanged();
+        TileCommand.NotifyCanExecuteChanged();
     }
 }
 

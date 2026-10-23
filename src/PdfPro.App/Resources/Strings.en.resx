@@ -511,4 +511,120 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Split_Error_AccessDenied" xml:space="preserve"><value>You may not write to the folder {0}. No file was created.</value></data>
   <data name="Split_Error_Failed" xml:space="preserve"><value>The files could not be written. No file was created.</value></data>
   <data name="Organizer_SplitByMarks" xml:space="preserve"><value>Split by marks…</value></data>
+  <data name="Merge_Title" xml:space="preserve"><value>Merge PDF files</value></data>
+  <data name="Merge_Files_Header" xml:space="preserve"><value>Files to merge (drag to reorder, drop files from Explorer here)</value></data>
+  <data name="Merge_AddFiles" xml:space="preserve"><value>Add files…</value></data>
+  <data name="Merge_SortByName" xml:space="preserve"><value>Sort by name</value></data>
+  <data name="Merge_MoveUp" xml:space="preserve"><value>Up</value></data>
+  <data name="Merge_MoveDown" xml:space="preserve"><value>Down</value></data>
+  <data name="Merge_Remove" xml:space="preserve"><value>Remove from the list</value></data>
+  <data name="Merge_Column_File" xml:space="preserve"><value>File</value></data>
+  <data name="Merge_Column_Pages" xml:space="preserve"><value>Pages (empty: all)</value></data>
+  <data name="Merge_Column_Title" xml:space="preserve"><value>Name in bookmarks and contents</value></data>
+  <data name="Merge_PageCount" xml:space="preserve"><value>{0} pages</value></data>
+  <data name="Merge_Encrypted" xml:space="preserve"><value>Password protected</value></data>
+  <data name="Merge_Options_Header" xml:space="preserve"><value>Options</value></data>
+  <data name="Merge_KeepBookmarks" xml:space="preserve"><value>Keep each file's bookmarks</value></data>
+  <data name="Merge_BookmarkPerFile" xml:space="preserve"><value>Add a bookmark named after each file</value></data>
+  <data name="Merge_TableOfContents" xml:space="preserve"><value>Add a table of contents with links at the start</value></data>
+  <data name="Merge_TocHeading" xml:space="preserve"><value>Contents</value></data>
+  <data name="Merge_PageSize_Label" xml:space="preserve"><value>Page size</value></data>
+  <data name="Merge_PageSize_Unchanged" xml:space="preserve"><value>Keep as is</value></data>
+  <data name="Merge_PageSize_LikeFirst" xml:space="preserve"><value>Like the first page</value></data>
+  <data name="Merge_PageSize_A4" xml:space="preserve"><value>A4</value></data>
+  <data name="Merge_StartOnOdd" xml:space="preserve"><value>Start each file on an odd page (two-sided printing)</value></data>
+  <data name="Merge_Output_Label" xml:space="preserve"><value>Save as</value></data>
+  <data name="Merge_Output_Pick" xml:space="preserve"><value>Browse…</value></data>
+  <data name="Merge_OpenWhenDone" xml:space="preserve"><value>Open the result when done</value></data>
+  <data name="Merge_Run" xml:space="preserve"><value>Merge</value></data>
+  <data name="Merge_Summary" xml:space="preserve"><value>{0} files · {1} pages</value></data>
+  <data name="Merge_Summary_Extra" xml:space="preserve"><value> (adds {0} contents pages, {1} blank pages)</value></data>
+  <data name="Merge_Error_TooFew" xml:space="preserve"><value>Add at least 2 files.</value></data>
+  <data name="Merge_Error_Pages" xml:space="preserve"><value>The pages of "{0}" are not valid.</value></data>
+  <data name="Merge_Error_Output" xml:space="preserve"><value>Choose where to save the result.</value></data>
+  <data name="Merge_Error_OutputIsInput" xml:space="preserve"><value>The result must not be one of the files being merged.</value></data>
+  <data name="Merge_Error_NotPermitted" xml:space="preserve"><value>The author of "{0}" does not allow taking pages out of it. Enter the owner password if you have it.</value></data>
+  <data name="Merge_Error_AddTitle" xml:space="preserve"><value>The file could not be added</value></data>
+  <data name="Merge_DefaultName" xml:space="preserve"><value>{0} (merged)</value></data>
+  <data name="Merge_CurrentDocument" xml:space="preserve"><value>{0} (open)</value></data>
+  <data name="Merge_Preparing" xml:space="preserve"><value>Preparing the open document…</value></data>
+  <data name="Merge_Progress" xml:space="preserve"><value>Merging {0} files…</value></data>
+  <data name="Merge_Done" xml:space="preserve"><value>Merged {0} files into {1}</value></data>
+  <data name="Merge_Cancelled" xml:space="preserve"><value>Merging was cancelled</value></data>
+  <data name="Merge_FailedStatus" xml:space="preserve"><value>Merging failed</value></data>
+  <data name="Merge_Error_Title" xml:space="preserve"><value>The files could not be merged</value></data>
+  <data name="Merge_Error_SourceUnreadable" xml:space="preserve"><value>One of the files could not be read. The result was not created.</value></data>
+  <data name="Merge_Error_SourceMissing" xml:space="preserve"><value>One of the files was deleted or is locked by another program. The result was not created.</value></data>
+  <data name="Merge_Error_Failed" xml:space="preserve"><value>The result {0} could not be written.</value></data>
+  <data name="Cmd_Interleave" xml:space="preserve"><value>Interleave fronts/backs</value></data>
+  <data name="Cmd_Interleave_ToolTip" xml:space="preserve"><value>Put pages in order when fronts and backs were scanned separately (one-sided scanner)</value></data>
+  <data name="Interleave_Title" xml:space="preserve"><value>Interleave fronts and backs</value></data>
+  <data name="Interleave_SameDocument" xml:space="preserve"><value>The backs are at the end of this document</value></data>
+  <data name="Interleave_BackStart" xml:space="preserve"><value>Backs start at page</value></data>
+  <data name="Interleave_OtherFile" xml:space="preserve"><value>The backs are in another file</value></data>
+  <data name="Interleave_PickFile" xml:space="preserve"><value>Choose the backs file…</value></data>
+  <data name="Interleave_PickFile_Title" xml:space="preserve"><value>Choose the file with the backs</value></data>
+  <data name="Interleave_BackFile" xml:space="preserve"><value>{0} ({1} pages)</value></data>
+  <data name="Interleave_Reverse" xml:space="preserve"><value>Backs are in reverse order (the stack was turned over)</value></data>
+  <data name="Interleave_Preview" xml:space="preserve"><value>New order: {0}</value></data>
+  <data name="Interleave_PreviewLegend" xml:space="preserve"><value>s = page of the backs file</value></data>
+  <data name="Interleave_Unbalanced" xml:space="preserve"><value>There are {0} fronts and {1} backs: pages without a partner go to the end.</value></data>
+  <data name="Interleave_Error_BackStart" xml:space="preserve"><value>The backs must start between page 2 and {0}.</value></data>
+  <data name="Interleave_Error_NoFile" xml:space="preserve"><value>Choose the file with the backs.</value></data>
+  <data name="Interleave_Apply" xml:space="preserve"><value>Interleave</value></data>
+  <data name="Cmd_NUp" xml:space="preserve"><value>Pages per sheet</value></data>
+  <data name="Cmd_NUp_ToolTip" xml:space="preserve"><value>Put 2–16 pages on one sheet (makes a new file)</value></data>
+  <data name="Cmd_Booklet" xml:space="preserve"><value>Booklet</value></data>
+  <data name="Cmd_Booklet_ToolTip" xml:space="preserve"><value>Order pages to print on both sides and fold into a booklet (makes a new file)</value></data>
+  <data name="Cmd_Tile" xml:space="preserve"><value>Poster</value></data>
+  <data name="Cmd_Tile_ToolTip" xml:space="preserve"><value>Print a large page on several sheets to tape together (makes a new file)</value></data>
+  <data name="Layout_NUp_Title" xml:space="preserve"><value>Several pages per sheet</value></data>
+  <data name="Layout_Booklet_Title" xml:space="preserve"><value>Booklet</value></data>
+  <data name="Layout_Tile_Title" xml:space="preserve"><value>Poster</value></data>
+  <data name="Layout_PagesPerSheet" xml:space="preserve"><value>Pages per sheet</value></data>
+  <data name="Layout_Order" xml:space="preserve"><value>Order</value></data>
+  <data name="Layout_Order_Z" xml:space="preserve"><value>Rows first (Z)</value></data>
+  <data name="Layout_Order_N" xml:space="preserve"><value>Columns first (N)</value></data>
+  <data name="Layout_Paper" xml:space="preserve"><value>Paper</value></data>
+  <data name="Layout_Orientation" xml:space="preserve"><value>Sheet orientation</value></data>
+  <data name="Layout_Orientation_Auto" xml:space="preserve"><value>Automatic</value></data>
+  <data name="Layout_Orientation_Portrait" xml:space="preserve"><value>Portrait</value></data>
+  <data name="Layout_Orientation_Landscape" xml:space="preserve"><value>Landscape</value></data>
+  <data name="Layout_Margin" xml:space="preserve"><value>Sheet margin (mm)</value></data>
+  <data name="Layout_Gap" xml:space="preserve"><value>Space between pages (mm)</value></data>
+  <data name="Layout_Border" xml:space="preserve"><value>Frame each page</value></data>
+  <data name="Layout_Binding" xml:space="preserve"><value>Binding</value></data>
+  <data name="Layout_Binding_Left" xml:space="preserve"><value>On the left</value></data>
+  <data name="Layout_Binding_Right" xml:space="preserve"><value>On the right</value></data>
+  <data name="Layout_Gutter" xml:space="preserve"><value>Space on each side of the fold (mm)</value></data>
+  <data name="Layout_BookletHint" xml:space="preserve"><value>Print on both sides flipping on the short edge, stack the sheets and fold them.</value></data>
+  <data name="Layout_Overlap" xml:space="preserve"><value>Overlap to glue (mm)</value></data>
+  <data name="Layout_Scale" xml:space="preserve"><value>Scale (%)</value></data>
+  <data name="Layout_FitSheets" xml:space="preserve"><value>Fit to sheets</value></data>
+  <data name="Layout_UseScale" xml:space="preserve"><value>By scale</value></data>
+  <data name="Layout_Columns" xml:space="preserve"><value>Across (sheets)</value></data>
+  <data name="Layout_Rows" xml:space="preserve"><value>Down (sheets)</value></data>
+  <data name="Layout_CutMarks" xml:space="preserve"><value>Cut marks at the corners</value></data>
+  <data name="Layout_Labels" xml:space="preserve"><value>Print the sheet position (A1, A2…)</value></data>
+  <data name="Layout_Pages" xml:space="preserve"><value>Pages (empty: all)</value></data>
+  <data name="Layout_Preview" xml:space="preserve"><value>Preview of the first sheet</value></data>
+  <data name="Layout_SheetCount" xml:space="preserve"><value>{0} sheets</value></data>
+  <data name="Layout_NoAnnotations" xml:space="preserve"><value>Comments and links are not kept on the printed sheets.</value></data>
+  <data name="Layout_Output_Label" xml:space="preserve"><value>Save as</value></data>
+  <data name="Layout_OpenWhenDone" xml:space="preserve"><value>Open the result when done</value></data>
+  <data name="Layout_Run" xml:space="preserve"><value>Create file</value></data>
+  <data name="Layout_Error_Number" xml:space="preserve"><value>Enter a valid number.</value></data>
+  <data name="Layout_Error_Room" xml:space="preserve"><value>The margins leave no room for the pages.</value></data>
+  <data name="Layout_Error_Pages" xml:space="preserve"><value>The page list is not valid.</value></data>
+  <data name="Layout_Error_Output" xml:space="preserve"><value>Choose where to save the result.</value></data>
+  <data name="Layout_DefaultName_NUp" xml:space="preserve"><value>{0} - {1} per sheet</value></data>
+  <data name="Layout_DefaultName_Booklet" xml:space="preserve"><value>{0} - booklet</value></data>
+  <data name="Layout_DefaultName_Tile" xml:space="preserve"><value>{0} - poster</value></data>
+  <data name="Layout_Progress" xml:space="preserve"><value>Creating {0}…</value></data>
+  <data name="Layout_Done" xml:space="preserve"><value>Created {0}</value></data>
+  <data name="Layout_Cancelled" xml:space="preserve"><value>Creating the file was cancelled</value></data>
+  <data name="Layout_FailedStatus" xml:space="preserve"><value>Creating the file failed</value></data>
+  <data name="Layout_Error_Title" xml:space="preserve"><value>The file could not be created</value></data>
+  <data name="Welcome_Merge" xml:space="preserve"><value>Merge PDF files</value></data>
+  <data name="Welcome_Merge_ToolTip" xml:space="preserve"><value>Combine several PDF files into one</value></data>
 </root>

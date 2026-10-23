@@ -511,4 +511,120 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Split_Error_AccessDenied" xml:space="preserve"><value>Không có quyền ghi vào thư mục {0}. Không có tệp nào được tạo.</value></data>
   <data name="Split_Error_Failed" xml:space="preserve"><value>Không ghi được các tệp. Không có tệp nào được tạo.</value></data>
   <data name="Organizer_SplitByMarks" xml:space="preserve"><value>Tách theo dấu…</value></data>
+  <data name="Merge_Title" xml:space="preserve"><value>Gộp tệp PDF</value></data>
+  <data name="Merge_Files_Header" xml:space="preserve"><value>Các tệp sẽ gộp (kéo để đổi thứ tự, thả tệp từ Explorer vào đây)</value></data>
+  <data name="Merge_AddFiles" xml:space="preserve"><value>Thêm tệp…</value></data>
+  <data name="Merge_SortByName" xml:space="preserve"><value>Sắp theo tên</value></data>
+  <data name="Merge_MoveUp" xml:space="preserve"><value>Lên</value></data>
+  <data name="Merge_MoveDown" xml:space="preserve"><value>Xuống</value></data>
+  <data name="Merge_Remove" xml:space="preserve"><value>Bỏ khỏi danh sách</value></data>
+  <data name="Merge_Column_File" xml:space="preserve"><value>Tệp</value></data>
+  <data name="Merge_Column_Pages" xml:space="preserve"><value>Trang (để trống: tất cả)</value></data>
+  <data name="Merge_Column_Title" xml:space="preserve"><value>Tên trong bookmark, mục lục</value></data>
+  <data name="Merge_PageCount" xml:space="preserve"><value>{0} trang</value></data>
+  <data name="Merge_Encrypted" xml:space="preserve"><value>Có mật khẩu</value></data>
+  <data name="Merge_Options_Header" xml:space="preserve"><value>Tùy chọn</value></data>
+  <data name="Merge_KeepBookmarks" xml:space="preserve"><value>Giữ bookmark của từng tệp</value></data>
+  <data name="Merge_BookmarkPerFile" xml:space="preserve"><value>Thêm bookmark mang tên mỗi tệp</value></data>
+  <data name="Merge_TableOfContents" xml:space="preserve"><value>Thêm trang mục lục có liên kết ở đầu</value></data>
+  <data name="Merge_TocHeading" xml:space="preserve"><value>Mục lục</value></data>
+  <data name="Merge_PageSize_Label" xml:space="preserve"><value>Khổ giấy</value></data>
+  <data name="Merge_PageSize_Unchanged" xml:space="preserve"><value>Giữ nguyên</value></data>
+  <data name="Merge_PageSize_LikeFirst" xml:space="preserve"><value>Theo trang đầu tiên</value></data>
+  <data name="Merge_PageSize_A4" xml:space="preserve"><value>A4</value></data>
+  <data name="Merge_StartOnOdd" xml:space="preserve"><value>Mỗi tệp bắt đầu ở trang lẻ (in 2 mặt)</value></data>
+  <data name="Merge_Output_Label" xml:space="preserve"><value>Lưu thành</value></data>
+  <data name="Merge_Output_Pick" xml:space="preserve"><value>Chọn…</value></data>
+  <data name="Merge_OpenWhenDone" xml:space="preserve"><value>Mở tệp kết quả khi xong</value></data>
+  <data name="Merge_Run" xml:space="preserve"><value>Gộp</value></data>
+  <data name="Merge_Summary" xml:space="preserve"><value>{0} tệp · {1} trang</value></data>
+  <data name="Merge_Summary_Extra" xml:space="preserve"><value> (thêm {0} trang mục lục, {1} trang trắng)</value></data>
+  <data name="Merge_Error_TooFew" xml:space="preserve"><value>Hãy thêm ít nhất 2 tệp.</value></data>
+  <data name="Merge_Error_Pages" xml:space="preserve"><value>Trang của tệp "{0}" không hợp lệ.</value></data>
+  <data name="Merge_Error_Output" xml:space="preserve"><value>Hãy chọn nơi lưu tệp kết quả.</value></data>
+  <data name="Merge_Error_OutputIsInput" xml:space="preserve"><value>Tệp kết quả không được trùng một tệp đang gộp.</value></data>
+  <data name="Merge_Error_NotPermitted" xml:space="preserve"><value>Tác giả của "{0}" không cho phép lấy trang ra khỏi tệp. Hãy nhập mật khẩu chủ (owner) nếu bạn có.</value></data>
+  <data name="Merge_Error_AddTitle" xml:space="preserve"><value>Không thêm được tệp</value></data>
+  <data name="Merge_DefaultName" xml:space="preserve"><value>{0} (gộp)</value></data>
+  <data name="Merge_CurrentDocument" xml:space="preserve"><value>{0} (đang mở)</value></data>
+  <data name="Merge_Preparing" xml:space="preserve"><value>Đang chuẩn bị tài liệu đang mở…</value></data>
+  <data name="Merge_Progress" xml:space="preserve"><value>Đang gộp {0} tệp…</value></data>
+  <data name="Merge_Done" xml:space="preserve"><value>Đã gộp {0} tệp vào {1}</value></data>
+  <data name="Merge_Cancelled" xml:space="preserve"><value>Đã hủy gộp tệp</value></data>
+  <data name="Merge_FailedStatus" xml:space="preserve"><value>Gộp tệp không thành công</value></data>
+  <data name="Merge_Error_Title" xml:space="preserve"><value>Không gộp được tệp</value></data>
+  <data name="Merge_Error_SourceUnreadable" xml:space="preserve"><value>Không đọc được một trong các tệp cần gộp. Tệp kết quả không được tạo.</value></data>
+  <data name="Merge_Error_SourceMissing" xml:space="preserve"><value>Một tệp cần gộp đã bị xóa hoặc đang bị chương trình khác khóa. Tệp kết quả không được tạo.</value></data>
+  <data name="Merge_Error_Failed" xml:space="preserve"><value>Không ghi được tệp kết quả {0}.</value></data>
+  <data name="Cmd_Interleave" xml:space="preserve"><value>Trộn mặt trước/sau</value></data>
+  <data name="Cmd_Interleave_ToolTip" xml:space="preserve"><value>Xếp lại các trang khi mặt trước và mặt sau được scan riêng (máy scan 1 mặt)</value></data>
+  <data name="Interleave_Title" xml:space="preserve"><value>Trộn mặt trước và mặt sau</value></data>
+  <data name="Interleave_SameDocument" xml:space="preserve"><value>Mặt sau nằm ở cuối tài liệu này</value></data>
+  <data name="Interleave_BackStart" xml:space="preserve"><value>Mặt sau bắt đầu từ trang</value></data>
+  <data name="Interleave_OtherFile" xml:space="preserve"><value>Mặt sau nằm ở một tệp khác</value></data>
+  <data name="Interleave_PickFile" xml:space="preserve"><value>Chọn tệp mặt sau…</value></data>
+  <data name="Interleave_PickFile_Title" xml:space="preserve"><value>Chọn tệp chứa các mặt sau</value></data>
+  <data name="Interleave_BackFile" xml:space="preserve"><value>{0} ({1} trang)</value></data>
+  <data name="Interleave_Reverse" xml:space="preserve"><value>Mặt sau theo thứ tự ngược (đã lật cả xấp giấy khi scan)</value></data>
+  <data name="Interleave_Preview" xml:space="preserve"><value>Thứ tự mới: {0}</value></data>
+  <data name="Interleave_PreviewLegend" xml:space="preserve"><value>s = trang của tệp mặt sau</value></data>
+  <data name="Interleave_Unbalanced" xml:space="preserve"><value>Có {0} mặt trước và {1} mặt sau: các trang không có cặp được đặt ở cuối.</value></data>
+  <data name="Interleave_Error_BackStart" xml:space="preserve"><value>Trang bắt đầu mặt sau phải từ 2 đến {0}.</value></data>
+  <data name="Interleave_Error_NoFile" xml:space="preserve"><value>Hãy chọn tệp chứa các mặt sau.</value></data>
+  <data name="Interleave_Apply" xml:space="preserve"><value>Trộn</value></data>
+  <data name="Cmd_NUp" xml:space="preserve"><value>Nhiều trang/tờ</value></data>
+  <data name="Cmd_NUp_ToolTip" xml:space="preserve"><value>In 2–16 trang trên một tờ giấy (tạo tệp mới)</value></data>
+  <data name="Cmd_Booklet" xml:space="preserve"><value>Sổ gập</value></data>
+  <data name="Cmd_Booklet_ToolTip" xml:space="preserve"><value>Sắp trang để in 2 mặt rồi gập đôi thành sổ (tạo tệp mới)</value></data>
+  <data name="Cmd_Tile" xml:space="preserve"><value>Chia ô</value></data>
+  <data name="Cmd_Tile_ToolTip" xml:space="preserve"><value>In một trang khổ lớn trên nhiều tờ giấy rồi ghép lại (tạo tệp mới)</value></data>
+  <data name="Layout_NUp_Title" xml:space="preserve"><value>Nhiều trang trên một tờ</value></data>
+  <data name="Layout_Booklet_Title" xml:space="preserve"><value>In sổ gập</value></data>
+  <data name="Layout_Tile_Title" xml:space="preserve"><value>Chia trang lớn ra nhiều tờ</value></data>
+  <data name="Layout_PagesPerSheet" xml:space="preserve"><value>Số trang mỗi tờ</value></data>
+  <data name="Layout_Order" xml:space="preserve"><value>Thứ tự</value></data>
+  <data name="Layout_Order_Z" xml:space="preserve"><value>Theo hàng (Z)</value></data>
+  <data name="Layout_Order_N" xml:space="preserve"><value>Theo cột (N)</value></data>
+  <data name="Layout_Paper" xml:space="preserve"><value>Khổ giấy in</value></data>
+  <data name="Layout_Orientation" xml:space="preserve"><value>Hướng tờ</value></data>
+  <data name="Layout_Orientation_Auto" xml:space="preserve"><value>Tự chọn</value></data>
+  <data name="Layout_Orientation_Portrait" xml:space="preserve"><value>Dọc</value></data>
+  <data name="Layout_Orientation_Landscape" xml:space="preserve"><value>Ngang</value></data>
+  <data name="Layout_Margin" xml:space="preserve"><value>Lề tờ (mm)</value></data>
+  <data name="Layout_Gap" xml:space="preserve"><value>Khoảng cách giữa trang (mm)</value></data>
+  <data name="Layout_Border" xml:space="preserve"><value>Kẻ viền quanh mỗi trang</value></data>
+  <data name="Layout_Binding" xml:space="preserve"><value>Đóng gáy</value></data>
+  <data name="Layout_Binding_Left" xml:space="preserve"><value>Bên trái</value></data>
+  <data name="Layout_Binding_Right" xml:space="preserve"><value>Bên phải</value></data>
+  <data name="Layout_Gutter" xml:space="preserve"><value>Khoảng trống hai bên nếp gập (mm)</value></data>
+  <data name="Layout_BookletHint" xml:space="preserve"><value>In 2 mặt, lật theo cạnh ngắn; xếp chồng các tờ rồi gập đôi.</value></data>
+  <data name="Layout_Overlap" xml:space="preserve"><value>Phần chồng mép để dán (mm)</value></data>
+  <data name="Layout_Scale" xml:space="preserve"><value>Tỉ lệ (%)</value></data>
+  <data name="Layout_FitSheets" xml:space="preserve"><value>Vừa khít số tờ</value></data>
+  <data name="Layout_UseScale" xml:space="preserve"><value>Theo tỉ lệ</value></data>
+  <data name="Layout_Columns" xml:space="preserve"><value>Ngang (tờ)</value></data>
+  <data name="Layout_Rows" xml:space="preserve"><value>Dọc (tờ)</value></data>
+  <data name="Layout_CutMarks" xml:space="preserve"><value>Dấu cắt ở góc</value></data>
+  <data name="Layout_Labels" xml:space="preserve"><value>Ghi vị trí tờ (A1, A2…)</value></data>
+  <data name="Layout_Pages" xml:space="preserve"><value>Trang (để trống: tất cả)</value></data>
+  <data name="Layout_Preview" xml:space="preserve"><value>Xem trước tờ đầu tiên</value></data>
+  <data name="Layout_SheetCount" xml:space="preserve"><value>{0} tờ in</value></data>
+  <data name="Layout_NoAnnotations" xml:space="preserve"><value>Chú thích và liên kết không được giữ trên các tờ in.</value></data>
+  <data name="Layout_Output_Label" xml:space="preserve"><value>Lưu thành</value></data>
+  <data name="Layout_OpenWhenDone" xml:space="preserve"><value>Mở tệp kết quả khi xong</value></data>
+  <data name="Layout_Run" xml:space="preserve"><value>Tạo tệp</value></data>
+  <data name="Layout_Error_Number" xml:space="preserve"><value>Hãy nhập số hợp lệ.</value></data>
+  <data name="Layout_Error_Room" xml:space="preserve"><value>Lề quá lớn, không còn chỗ cho trang.</value></data>
+  <data name="Layout_Error_Pages" xml:space="preserve"><value>Danh sách trang không hợp lệ.</value></data>
+  <data name="Layout_Error_Output" xml:space="preserve"><value>Hãy chọn nơi lưu tệp kết quả.</value></data>
+  <data name="Layout_DefaultName_NUp" xml:space="preserve"><value>{0} - {1} trang mỗi tờ</value></data>
+  <data name="Layout_DefaultName_Booklet" xml:space="preserve"><value>{0} - sổ gập</value></data>
+  <data name="Layout_DefaultName_Tile" xml:space="preserve"><value>{0} - chia ô</value></data>
+  <data name="Layout_Progress" xml:space="preserve"><value>Đang tạo {0}…</value></data>
+  <data name="Layout_Done" xml:space="preserve"><value>Đã tạo {0}</value></data>
+  <data name="Layout_Cancelled" xml:space="preserve"><value>Đã hủy tạo tệp</value></data>
+  <data name="Layout_FailedStatus" xml:space="preserve"><value>Tạo tệp không thành công</value></data>
+  <data name="Layout_Error_Title" xml:space="preserve"><value>Không tạo được tệp</value></data>
+  <data name="Welcome_Merge" xml:space="preserve"><value>Gộp tệp PDF</value></data>
+  <data name="Welcome_Merge_ToolTip" xml:space="preserve"><value>Ghép nhiều tệp PDF thành một tệp</value></data>
 </root>
