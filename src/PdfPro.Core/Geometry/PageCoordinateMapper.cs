@@ -72,6 +72,16 @@ public sealed class PageCoordinateMapper
         };
     }
 
+    /// <summary>
+    /// <see cref="ScreenToPdf"/> as a matrix acting on view coordinates written as (x, y): what content drawn in view
+    /// space (top-left origin, y down, <see cref="Scale"/> units per point) needs as its "cm" to land on the page.
+    /// </summary>
+    public PdfMatrix ScreenToPdfMatrix
+        => PdfMatrix.FromPoints(ScreenToPdf(new ViewPoint(0, 0)), ScreenToPdf(new ViewPoint(1, 0)), ScreenToPdf(new ViewPoint(0, 1)));
+
+    /// <summary><see cref="PdfToScreen"/> as a matrix: view coordinates come out as (x, y).</summary>
+    public PdfMatrix PdfToScreenMatrix => ScreenToPdfMatrix.Invert();
+
     public ViewRect PdfRectToScreen(PdfRect rect)
         => ViewRect.FromCorners(PdfToScreen(new PdfPoint(rect.Left, rect.Bottom)), PdfToScreen(new PdfPoint(rect.Right, rect.Top)));
 
