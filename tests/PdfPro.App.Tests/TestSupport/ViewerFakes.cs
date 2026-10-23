@@ -73,7 +73,21 @@ internal sealed class FakePdfDocument(IReadOnlyList<PdfSize> pageSizes) : IPdfDo
     public Task<PdfDocumentMetadata> GetMetadataAsync(CancellationToken cancellationToken = default)
         => MetadataError is { } error ? Task.FromException<PdfDocumentMetadata>(error) : Task.FromResult(Metadata);
 
-    public Task<string> GetPageTextAsync(int pageIndex, CancellationToken cancellationToken = default) => Task.FromResult(string.Empty);
+    /// <summary>The text of each page (empty by default).</summary>
+    public Func<int, string>? Texts { get; set; }
+
+    /// <summary>When set, reading text waits for it (to test progress and stopping).</summary>
+    public TaskCompletionSource? TextGate { get; set; }
+
+    public async Task<string> GetPageTextAsync(int pageIndex, CancellationToken cancellationToken = default)
+    {
+        if (TextGate is { } gate)
+        {
+            await gate.Task.WaitAsync(cancellationToken);
+        }
+
+        return Texts?.Invoke(pageIndex) ?? string.Empty;
+    }
 }
 
 /// <summary>Records render requests; each one completes when the test says so (or immediately with AutoComplete).</summary>

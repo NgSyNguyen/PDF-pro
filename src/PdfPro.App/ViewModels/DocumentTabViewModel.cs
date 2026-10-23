@@ -9,11 +9,13 @@ using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.ViewModels.Organizer;
+using PdfPro.App.ViewModels.Splitting;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfPro.Operations;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Splitting;
 using PdfPro.Pdfium;
 using Wpf.Ui.Controls;
 
@@ -47,6 +49,12 @@ public sealed record DocumentTabServices(
 /// <param name="Parameters">Its parameters.</param>
 /// <param name="Description">The step's name ("Đổi khổ giấy 3 trang"), for the status bar.</param>
 public sealed record ContentChangeRequest(IContentOperation Operation, object Parameters, string Description);
+
+/// <summary>A split confirmed in the dialog, written by the window in the background.</summary>
+/// <param name="Operation">Writes the files.</param>
+/// <param name="Document">The document as it was split (plan and sources).</param>
+/// <param name="Choice">The files, names, folder and options.</param>
+public sealed record SplitRequest(SplitOperation Operation, SplitDocument Document, SplitDialogResult Choice);
 
 /// <summary>
 /// An open document tab: its workspace (session, sources), viewer, sidebar panels and page organizer, undo/redo and the
@@ -197,6 +205,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>A content change ("Đổi khổ giấy") was confirmed: the window runs it with progress and cancel.</summary>
     public event EventHandler<ContentChangeRequest>? ContentChangeRequested;
+
+    /// <summary>A split was confirmed: the window writes the files with progress and cancel.</summary>
+    public event EventHandler<SplitRequest>? SplitRequested;
 
     public bool IsSameFile(string path)
         => FilePath.Length > 0 && string.Equals(Path.GetFullPath(path), Path.GetFullPath(FilePath), StringComparison.OrdinalIgnoreCase);
@@ -476,6 +487,74 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     private bool CanClearSplitMarks() => CanEditPages && !_inserting && Workspace.Session.Plan.HasSplitMarks;
 
+    /// <summary>
+    /// "Tách": the split dialog (mode, preview, names, folder) on the document as displayed. Marks typed or named in the
+    /// dialog become the document's marks (one undoable step); "Chuyển thành dấu" shows them in the organizer; a
+    /// confirmed split is written by the window in the background. The document itself does not change.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanSplit))]
+    private void Split()
+    {
+        var operation = _operations.Get<SplitOperation>();
+        var document = CreateSplitDocument();
+        using var dialog = new SplitViewModel(document, operation, DefaultSplitFolder(), FilePath.Length > 0 ? FilePath : null, LoadPagePreviewAsync, _services.FileDialogs);
+        if (!_services.PageDialogs.ShowSplit(dialog) || dialog.Result is not { } choice)
+        {
+            return;
+        }
+
+        if (choice.Marks is { } marks && !HasMarks(marks) && CanEditPages)
+        {
+            Apply(_operations.Get<SetSplitMarksOperation>(), new SetSplitMarksParams(marks));
+        }
+
+        if (choice.Action == SplitDialogAction.ConvertToMarks)
+        {
+            IsOrganizing = true;
+            return;
+        }
+
+        SplitRequested?.Invoke(this, new SplitRequest(operation, document, choice));
+    }
+
+    /// <summary>Password protected documents are view-only until Phase 8 (security).</summary>
+    private bool CanSplit() => !IsReadOnly && Viewer.PageCount > 0 && !_inserting;
+
+    /// <summary>The document as displayed, for splitting: its plan and every source.</summary>
+    private SplitDocument CreateSplitDocument() => new()
+    {
+        Plan = Workspace.Session.Plan,
+        BaseSourceId = Workspace.Session.BaseSourceId,
+        Documents = Workspace.Sources.ToDictionary(s => s.Source.Id, s => s.Document, StringComparer.Ordinal),
+        SourcePaths = Workspace.SourcePaths,
+        Name = Path.GetFileNameWithoutExtension(FileName),
+        WorkingDirectory = Workspace.WorkDirectory,
+    };
+
+    /// <summary>"…\Hồ sơ - tách" next to the document's file.</summary>
+    private string DefaultSplitFolder()
+    {
+        var folder = Path.GetDirectoryName(FilePath) is { Length: > 0 } directory
+            ? directory
+            : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        return Path.Combine(folder, string.Format(CultureInfo.CurrentCulture, Strings.Split_Folder_Default, Path.GetFileNameWithoutExtension(FileName)));
+    }
+
+    /// <summary>True when the document already has exactly these marks.</summary>
+    private bool HasMarks(IReadOnlyList<SplitMarkEntry> marks)
+    {
+        var plan = Workspace.Session.Plan;
+        var current = Enumerable.Range(0, plan.Count)
+            .Where(i => plan[i].SplitMark is not null)
+            .Select(i => new SplitMarkEntry(i + 1, plan[i].SplitMark!.FileName));
+        return current.SequenceEqual(marks);
+    }
+
+    private Task<ImageSource?> LoadPagePreviewAsync(int pageIndex, CancellationToken cancellationToken)
+        => pageIndex >= 0 && pageIndex < Workspace.Pages.PageCount
+            ? _services.LoadPreview(Workspace.Pages.Pages[pageIndex], cancellationToken)
+            : Task.FromResult<ImageSource?>(null);
+
     /// <summary>The crop and page size dialogs can also be used without a selection (they offer every page).</summary>
     private bool CanEditTargetsOrAll() => CanEditPages && !_inserting;
 
@@ -610,6 +689,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         ChangePageSizeCommand.NotifyCanExecuteChanged();
         MarkSplitCommand.NotifyCanExecuteChanged();
         ClearSplitMarksCommand.NotifyCanExecuteChanged();
+        SplitCommand.NotifyCanExecuteChanged();
     }
 }
 

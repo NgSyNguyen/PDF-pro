@@ -101,6 +101,23 @@ internal sealed class FileDialogService : IFileDialogService
 
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
+
+    public string? PickFolder(string title, string? initialDirectory)
+    {
+        var dialog = new OpenFolderDialog { Title = title, Multiselect = false };
+        var existing = initialDirectory;
+        while (!string.IsNullOrEmpty(existing) && !System.IO.Directory.Exists(existing))
+        {
+            existing = System.IO.Path.GetDirectoryName(existing);
+        }
+
+        if (!string.IsNullOrEmpty(existing))
+        {
+            dialog.InitialDirectory = existing;
+        }
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FolderName : null;
+    }
 }
 
 internal sealed class RecoveryDialog : IRecoveryDialog
@@ -157,6 +174,12 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new PageSizeWindow(viewModel));
+    }
+
+    public bool ShowSplit(ViewModels.Splitting.SplitViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SplitWindow(viewModel));
     }
 
     private static bool Show(Window window)

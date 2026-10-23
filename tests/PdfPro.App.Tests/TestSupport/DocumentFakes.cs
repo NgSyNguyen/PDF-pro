@@ -55,6 +55,7 @@ internal static class TestOperations
             new MarkSplitOperation(materializer, loader),
             new SetSplitMarksOperation(materializer, loader),
             new InterleaveOperation(materializer, loader),
+            new Operations.Splitting.SplitOperation(materializer, loader),
         ]);
     }
 }
@@ -79,6 +80,9 @@ internal sealed class WorkspaceFixture : IDisposable
     public AppPaths Paths { get; }
 
     public SessionStore Store { get; }
+
+    /// <summary>The path of a folder in the test's temporary folder (not created).</summary>
+    public string CreateFolder(string name) => _temp.Combine(name);
 
     /// <summary>A file that exists on disk.</summary>
     public string CreateFile(string fileName, byte[]? content = null)

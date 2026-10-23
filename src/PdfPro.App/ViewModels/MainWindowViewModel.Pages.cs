@@ -4,12 +4,18 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services.Documents;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.App.ViewModels;
 
 /// <summary>Page organizer state of the active document and "Trích trang" (written in the background like a save).</summary>
 public sealed partial class MainWindowViewModel
 {
+    private const int ErrorSharingViolation = unchecked((int)0x80070020);
+    private const int ErrorLockViolation = unchecked((int)0x80070021);
+    private const int ErrorHandleDiskFull = unchecked((int)0x80070027);
+    private const int ErrorDiskFull = unchecked((int)0x80070070);
+
     /// <summary>The active document shows its organizer grid: the sidebar and the viewer's status controls are hidden.</summary>
     public bool IsOrganizing => ActiveDocument?.IsOrganizing == true;
 
@@ -145,6 +151,78 @@ public sealed partial class MainWindowViewModel
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Writes the files of a confirmed split in the background (all or nothing), with progress and cancel in the status
+    /// bar, then opens their folder when asked. Returns true once every file is written.
+    /// </summary>
+    internal async Task<bool> SplitAsync(DocumentTabViewModel document, SplitRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(request);
+        await WaitForBackgroundWorkAsync(cancelPrint: false);
+        if (!Tabs.Contains(document))
+        {
+            return false;
+        }
+
+        var choice = request.Choice;
+        var folderName = Path.GetFileName(choice.OutputFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var task = StatusBar.StartTask(Format(Strings.Split_Progress, document.FileName));
+        var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, Format(Strings.Split_Progress, document.FileName)));
+        IReadOnlyCollection<string> protectedPaths = document.FilePath.Length > 0 ? [document.FilePath] : [];
+        var write = request.Operation.WriteAsync(request.Document, choice.Segments, choice.Parameters, choice.OutputFolder, protectedPaths, progress, task.Token);
+        _activeSave = write;
+        NotifySaveCommands();
+        string error;
+        try
+        {
+            var files = await write;
+            task.Complete(Format(Strings.Split_Done, files.Count, folderName));
+            if (choice.OpenFolder)
+            {
+                _shell.OpenFolder(choice.OutputFolder);
+            }
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            task.Complete(Strings.Split_Cancelled);
+            return false;
+        }
+        catch (Exception ex) when (ex is MaterializationException or IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning("Splitting a document failed: {ErrorType} (HResult {HResult:X8})", ex.GetType().Name, ex.HResult);
+            task.Complete(Strings.Split_FailedStatus);
+            error = SplitFailureMessage(ex, choice.OutputFolder);
+        }
+        finally
+        {
+            _activeSave = null;
+            NotifySaveCommands();
+        }
+
+        await _messages.ShowErrorAsync(Strings.Split_Error_Title, error);
+        return false;
+    }
+
+    private static string SplitFailureMessage(Exception error, string folder) => error switch
+    {
+        MaterializationException => Strings.Split_Error_SourceUnreadable,
+        UnauthorizedAccessException => Format(Strings.Split_Error_AccessDenied, folder),
+        IOException { HResult: ErrorDiskFull or ErrorHandleDiskFull } => Strings.Split_Error_DiskFull,
+        IOException { HResult: ErrorSharingViolation or ErrorLockViolation } => Strings.Split_Error_FileInUse,
+        _ => Strings.Split_Error_Failed,
+    };
+
+    private async void OnSplitRequested(object? sender, SplitRequest request)
+    {
+        if (sender is DocumentTabViewModel document && Tabs.Contains(document))
+        {
+            await SplitAsync(document, request);
+        }
     }
 
     private async void OnContentChangeRequested(object? sender, ContentChangeRequest request)

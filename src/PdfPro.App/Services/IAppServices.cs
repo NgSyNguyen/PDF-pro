@@ -117,6 +117,12 @@ public interface IFileDialogService
     /// <param name="initialDirectory">Folder shown first, or null.</param>
     /// <returns>The chosen path, or null when cancelled.</returns>
     string? PickSavePath(string suggestedFileName, string? initialDirectory);
+
+    /// <summary>Asks for a folder (where split files go).</summary>
+    /// <param name="title">The dialog title.</param>
+    /// <param name="initialDirectory">Folder shown first (or its nearest existing parent), or null.</param>
+    /// <returns>The chosen folder, or null when cancelled.</returns>
+    string? PickFolder(string title, string? initialDirectory);
 }
 
 /// <summary>The page organizer's dialogs. Each returns true when the user confirmed; the result is in the view model.</summary>
@@ -129,4 +135,6 @@ public interface IPageDialogService
     bool ShowCropPages(ViewModels.Organizer.CropPagesViewModel viewModel);
 
     bool ShowPageSize(ViewModels.Organizer.PageSizeViewModel viewModel);
+
+    bool ShowSplit(ViewModels.Splitting.SplitViewModel viewModel);
 }

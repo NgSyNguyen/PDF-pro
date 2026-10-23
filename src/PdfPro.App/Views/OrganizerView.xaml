@@ -200,6 +200,14 @@
           DataContext="{Binding Organizer}"
           DockPanel.Dock="Right"
           Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,8,0"
+            Padding="10,4"
+            AutomationProperties.AutomationId="OrganizerSplitByMarks"
+            Command="{Binding DataContext.SplitCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr Organizer_SplitByMarks}"
+            Icon="{ui:SymbolIcon SplitVertical24}"
+            Visibility="{Binding DataContext.SplitSummary, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource NullToCollapsed}}" />
           <TextBlock
             Margin="0,0,16,0"
             VerticalAlignment="Center"

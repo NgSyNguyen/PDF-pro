@@ -86,6 +86,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ChangePageSizeCommand = new ActiveDocumentCommand(d => d.ChangePageSizeCommand);
         MarkSplitCommand = new ActiveDocumentCommand(d => d.MarkSplitCommand);
         ClearSplitMarksCommand = new ActiveDocumentCommand(d => d.ClearSplitMarksCommand);
+        SplitCommand = new ActiveDocumentCommand(d => d.SplitCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
@@ -147,6 +148,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand MarkSplitCommand { get; }
 
     public ActiveDocumentCommand ClearSplitMarksCommand { get; }
+
+    /// <summary>"Tách": the split dialog of the active document.</summary>
+    public ActiveDocumentCommand SplitCommand { get; }
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -342,6 +346,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.PropertyChanged -= OnActiveDocumentPropertyChanged;
             _trackedDocument.ExtractRequested -= OnExtractRequested;
             _trackedDocument.ContentChangeRequested -= OnContentChangeRequested;
+            _trackedDocument.SplitRequested -= OnSplitRequested;
         }
 
         _trackedDocument = value as DocumentTabViewModel;
@@ -350,13 +355,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.PropertyChanged += OnActiveDocumentPropertyChanged;
             _trackedDocument.ExtractRequested += OnExtractRequested;
             _trackedDocument.ContentChangeRequested += OnContentChangeRequested;
+            _trackedDocument.SplitRequested += OnSplitRequested;
         }
 
         foreach (var command in new[]
         {
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
-            MarkSplitCommand, ClearSplitMarksCommand,
+            MarkSplitCommand, ClearSplitMarksCommand, SplitCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -503,7 +509,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_MergeSplit,
                 [
                     new("organize.merge", Strings.Cmd_Merge, SymbolRegular.Merge24),
-                    new("organize.split", Strings.Cmd_Split, SymbolRegular.SplitVertical24),
+                    new("organize.split", Strings.Cmd_Split, SymbolRegular.SplitVertical24, SplitCommand),
                     new("organize.markSplit", Strings.Cmd_MarkSplit, SymbolRegular.DocumentSplitHint24, MarkSplitCommand, Strings.Cmd_MarkSplit_ToolTip),
                     new("organize.clearSplitMarks", Strings.Cmd_ClearSplitMarks, SymbolRegular.DocumentDismiss24, ClearSplitMarksCommand, Strings.Cmd_ClearSplitMarks_ToolTip),
                 ]),
