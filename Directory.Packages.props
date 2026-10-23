@@ -32,6 +32,8 @@
       Never upgrade beyond 6.2.x (a test in PdfPro.Operations.Tests guards this).
     -->
     <PackageVersion Include="PDFsharp" Version="6.2.4" />
+    <!-- Text with coordinates (UglyToad/PdfPig). Apache-2.0. Tests only in Phase 5; search and redaction from Phase 6. -->
+    <PackageVersion Include="PdfPig" Version="0.1.16" />
   </ItemGroup>
 
   <!-- Transitive pins (security fixes for dependencies of the packages above) -->

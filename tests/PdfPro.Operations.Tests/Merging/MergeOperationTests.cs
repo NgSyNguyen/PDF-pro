@@ -1,5 +1,4 @@
 using PdfPro.Core.Operations;
-using PdfPro.Operations.Fonts;
 using PdfPro.Operations.Materializing;
 using PdfPro.Operations.Merging;
 using PdfPro.Operations.Tests.TestSupport;
@@ -215,16 +214,6 @@ public sealed class MergeOperationTests(PdfiumFixture pdfium) : IDisposable
             .Errors.Single().MemberName.ShouldBe("Items[1]");
         Should.Throw<OperationValidationException>(() => _operation.Layout(sources, new MergeParams([new(), new()], TableOfContents: true)))
             .Errors.Single().MemberName.ShouldBe("TableOfContentsHeading");
-    }
-
-    [Fact]
-    public void BundledFonts_ProvideNotoSansOnly()
-    {
-        BundledFonts.Instance.ResolveTypeface("noto sans", bold: true, italic: false)!.FaceName.ShouldBe("NotoSans-Bold");
-        BundledFonts.Instance.ResolveTypeface("Noto Sans", bold: false, italic: true)!.MustSimulateItalic.ShouldBeTrue();
-        BundledFonts.Instance.ResolveTypeface("Arial", bold: false, italic: false).ShouldBeNull();
-        BundledFonts.Instance.GetFont("NotoSans-Regular")!.Length.ShouldBe(621_572);
-        BundledFonts.Instance.GetFont("Other").ShouldBeNull();
     }
 
     private async Task<string> MergeAsync(string[] paths, MergeParams parameters)

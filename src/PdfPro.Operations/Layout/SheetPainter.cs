@@ -1,5 +1,6 @@
 using System.Text;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 using PdfPro.Operations.Fonts;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
@@ -93,8 +94,8 @@ internal static class SheetPainter
 
         if (label is not null)
         {
-            BundledFonts.Register();
-            var font = new XFont(BundledFonts.Family, 7, XFontStyleEx.Regular);
+            FontLibrary.Register();
+            var font = new XFont(FontFamilies.NotoSans, 7, XFontStyleEx.Regular);
             graphics.DrawString(label, font, XBrushes.Gray, new XRect(box.X, box.Y + box.Height + 2, box.Width, 10), XStringFormats.TopCenter);
         }
     }

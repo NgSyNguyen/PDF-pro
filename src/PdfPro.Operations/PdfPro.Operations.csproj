@@ -16,9 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Noto Sans (SIL OFL 1.1, assets/fonts/NotoSans/OFL.txt): the Vietnamese-capable font of text PDF_Pro writes. -->
-    <EmbeddedResource Include="..\..\assets\fonts\NotoSans\NotoSans-Regular.ttf" LogicalName="PdfPro.Fonts.NotoSans-Regular.ttf" />
-    <EmbeddedResource Include="..\..\assets\fonts\NotoSans\NotoSans-Bold.ttf" LogicalName="PdfPro.Fonts.NotoSans-Bold.ttf" />
+    <!-- Bundled fonts (SIL OFL 1.1, assets/fonts/*/OFL.txt): the Vietnamese-capable fonts of text PDF_Pro writes. -->
+    <EmbeddedResource Include="..\..\assets\fonts\NotoSans\*.ttf;..\..\assets\fonts\NotoSerif\*.ttf;..\..\assets\fonts\BeVietnamPro\*.ttf" LogicalName="PdfPro.Fonts.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

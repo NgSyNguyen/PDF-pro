@@ -6,4 +6,9 @@
     <ProjectReference Include="..\..\src\PdfPro.Ocr\PdfPro.Ocr.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- A second, independent text extractor: text PDF_Pro writes must read back exactly (SPEC P5). -->
+    <PackageReference Include="PdfPig" />
+  </ItemGroup>
+
 </Project>

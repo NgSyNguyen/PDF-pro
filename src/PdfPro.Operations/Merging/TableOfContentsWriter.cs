@@ -1,4 +1,5 @@
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 using PdfPro.Operations.Fonts;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
@@ -34,9 +35,9 @@ internal static class TableOfContentsWriter
         ArgumentNullException.ThrowIfNull(pages);
         ArgumentNullException.ThrowIfNull(heading);
         ArgumentNullException.ThrowIfNull(entries);
-        BundledFonts.Register();
-        var headingFont = new XFont(BundledFonts.Family, HeadingSize, XFontStyleEx.Bold);
-        var entryFont = new XFont(BundledFonts.Family, EntrySize, XFontStyleEx.Regular);
+        FontLibrary.Register();
+        var headingFont = new XFont(FontFamilies.NotoSans, HeadingSize, XFontStyleEx.Bold);
+        var entryFont = new XFont(FontFamilies.NotoSans, EntrySize, XFontStyleEx.Regular);
         var next = 0;
         for (var p = 0; p < pages.Count; p++)
         {
