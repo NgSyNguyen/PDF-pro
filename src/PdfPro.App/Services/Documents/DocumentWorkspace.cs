@@ -6,6 +6,7 @@ using PdfPro.Core.Organizing;
 using PdfPro.Core.Sessions;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
+using PdfPro.Infrastructure.Splitting;
 using PdfPro.Infrastructure.Threading;
 using PdfPro.Pdfium;
 
@@ -28,6 +29,7 @@ public sealed class DocumentWorkspace : IAsyncDisposable
     private readonly ILogger _logger;
     private readonly CoalescingWorker _manifestWriter;
     private readonly DateTimeOffset _createdUtc;
+    private readonly ISplitMarkMemory? _splitMarks;
     private ManifestState? _latest;
     private PendingSaveDto? _pendingSave;
     private bool _isBusy;
@@ -40,7 +42,8 @@ public sealed class DocumentWorkspace : IAsyncDisposable
         IEnumerable<OpenSource> sources,
         FileStamp? originalStamp,
         DateTimeOffset createdUtc,
-        ILogger logger)
+        ILogger logger,
+        ISplitMarkMemory? splitMarks = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(sources);
@@ -49,6 +52,7 @@ public sealed class DocumentWorkspace : IAsyncDisposable
         _folder = folder;
         _logger = logger;
         _createdUtc = createdUtc;
+        _splitMarks = splitMarks;
         OriginalStamp = originalStamp;
         foreach (var source in sources)
         {
@@ -299,6 +303,10 @@ public sealed class DocumentWorkspace : IAsyncDisposable
         {
             ScheduleManifest(); // the last state must be on disk
         }
+        else
+        {
+            await RememberSplitMarksAsync().ConfigureAwait(false);
+        }
 
         _disposed = true;
         Session.StateChanged -= OnSessionStateChanged;
@@ -369,6 +377,26 @@ public sealed class DocumentWorkspace : IAsyncDisposable
         Session.MarkSaved();
         ScheduleManifest();
         StatusChanged?.Invoke(this, EventArgs.Empty);
+        _ = RememberSplitMarksAsync();
+    }
+
+    /// <summary>
+    /// Remembers the first-page marks for the document's file, so they come back when the unchanged file is opened
+    /// again. Only while the document matches its file (nothing unsaved): plan positions are then the file's pages.
+    /// </summary>
+    private Task RememberSplitMarksAsync()
+    {
+        if (_splitMarks is not { } memory || IsDirty || IsReadOnly || FilePath is not { } path || OriginalStamp is not { } stamp)
+        {
+            return Task.CompletedTask;
+        }
+
+        var plan = Session.Plan;
+        var marks = Enumerable.Range(0, plan.Count)
+            .Where(i => plan[i].SplitMark is not null)
+            .Select(i => new RememberedSplitMark(i, plan[i].SplitMark!.FileName))
+            .ToArray();
+        return memory.RememberAsync(path, stamp, plan.Count, marks);
     }
 
     private Dictionary<string, IPdfDocument> Documents() => _sources.ToDictionary(s => s.Key, s => s.Value.Document, StringComparer.Ordinal);

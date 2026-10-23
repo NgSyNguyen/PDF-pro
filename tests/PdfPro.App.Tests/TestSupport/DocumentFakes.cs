@@ -52,6 +52,9 @@ internal static class TestOperations
             new CropPagesOperation(materializer, loader),
             new ExtractPagesOperation(materializer, loader),
             new ChangePageSizeOperation(),
+            new MarkSplitOperation(materializer, loader),
+            new SetSplitMarksOperation(materializer, loader),
+            new InterleaveOperation(materializer, loader),
         ]);
     }
 }

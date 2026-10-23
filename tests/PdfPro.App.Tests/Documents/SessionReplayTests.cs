@@ -57,6 +57,33 @@ public sealed class SessionReplayTests
     }
 
     [Fact]
+    public void Rebuild_SplitMarksMadeAfterTheSave_ComeBackAndTheDocumentStaysSaved()
+    {
+        var session = NewSession();
+        Apply(session, new RotatePagesParams("1", 90));
+        session.MarkSaved();
+        Apply(session, new MarkSplitParams("3, 5"));
+        Apply(session, new SetSplitMarksParams([new(1, "Tờ trình"), new(3), new(5, "Hợp đồng")]));
+
+        // Through the manifest, as after a crash: parameters are written as JSON and read back.
+        var manifest = Infrastructure.Sessions.SessionManifestSerializer.ToManifest(session.CreateSnapshot(), DateTimeOffset.UtcNow);
+        var json = Infrastructure.Sessions.SessionManifestSerializer.Serialize(manifest);
+        var snapshot = Infrastructure.Sessions.SessionManifestSerializer.ToSnapshot(Infrastructure.Sessions.SessionManifestSerializer.Deserialize(json), _operations.ParameterType);
+        var rebuilt = SessionReplay.Rebuild(snapshot, Directory, Sizes, _operations, out var historyLost);
+
+        historyLost.ShouldBeFalse();
+        SamePlan(rebuilt, session).ShouldBeTrue();
+        rebuilt.Plan[0].SplitMark!.FileName.ShouldBe("Tờ trình");
+        rebuilt.IsDirty.ShouldBeFalse("marks are not content");
+        rebuilt.History.NextUndoDescription.ShouldBe(Strings.History_SetSplitMarks);
+        rebuilt.History.Undo();
+        rebuilt.Plan.GetSplitStarts().ShouldBe([0, 2, 4]);
+        rebuilt.History.Undo();
+        rebuilt.Plan.HasSplitMarks.ShouldBeFalse();
+        rebuilt.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Rebuild_ForcedUnsaved_StaysUnsavedEverywhere()
     {
         var session = NewSession();
@@ -158,6 +185,6 @@ public sealed class SessionReplayTests
         var keys = new RecordingPageKeys(RandomPageKeys.Instance);
         var plan = operation.ApplyToPlan(session.Plan, parameters, new PlanEditContext(Sizes, keys));
         var record = new HistoryRecord(operation.Id, parameters, [.. keys.Keys]);
-        session.History.Execute(PlanCommand.Create("step", session.State, plan, record));
+        session.History.Execute(PlanCommand.Create("step", session.State, plan, record, operation.ChangesContent));
     }
 }

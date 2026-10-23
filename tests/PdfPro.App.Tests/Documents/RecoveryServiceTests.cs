@@ -9,6 +9,7 @@ using PdfPro.App.Services.Documents;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.Core.Sessions;
 using PdfPro.Infrastructure.Sessions;
+using PdfPro.Infrastructure.Splitting;
 using PdfPro.Operations.Organizing;
 using PdfPro.Pdfium;
 
@@ -24,7 +25,7 @@ public sealed class RecoveryServiceTests : IDisposable
 
     public RecoveryServiceTests()
     {
-        _service = new RecoveryService(_fixture.Store, _loader, TestOperations.Catalog(), _dialog, _messages, NullLoggerFactory.Instance);
+        _service = new RecoveryService(_fixture.Store, _loader, TestOperations.Catalog(), _dialog, _messages, Substitute.For<ISplitMarkMemory>(), NullLoggerFactory.Instance);
         _loader.LoadAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(_ => Task.FromResult<IPdfDocument>(FakePdfDocument.WithPages(3)));
     }

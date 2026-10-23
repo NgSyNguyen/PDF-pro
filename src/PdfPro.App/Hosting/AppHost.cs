@@ -13,7 +13,10 @@ using PdfPro.Core.Organizing;
 using PdfPro.Infrastructure;
 using PdfPro.Operations;
 using PdfPro.Operations.Materializing;
+using PdfPro.Operations.Layout;
+using PdfPro.Operations.Merging;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Splitting;
 using PdfPro.Pdfium;
 using Serilog;
 
@@ -73,7 +76,8 @@ internal static class AppHost
 
         // Document sessions, page operations and writing PDF files
         services.AddSingleton<ISourceRepairer, PdfiumSourceRepairer>();
-        services.AddSingleton<IPlanMaterializer, PdfSharpPlanMaterializer>();
+        services.AddSingleton<PdfSharpPlanMaterializer>();
+        services.AddSingleton<IPlanMaterializer>(sp => sp.GetRequiredService<PdfSharpPlanMaterializer>());
         services.AddOperation<RotatePagesOperation>();
         services.AddOperation<MovePagesOperation>();
         services.AddOperation<DeletePagesOperation>();
@@ -83,6 +87,14 @@ internal static class AppHost
         services.AddOperation<CropPagesOperation>();
         services.AddOperation<ExtractPagesOperation>();
         services.AddOperation<ChangePageSizeOperation>();
+        services.AddOperation<MarkSplitOperation>();
+        services.AddOperation<SetSplitMarksOperation>();
+        services.AddOperation<InterleaveOperation>();
+        services.AddOperation<SplitOperation>();
+        services.AddOperation<MergeOperation>();
+        services.AddOperation<NUpOperation>();
+        services.AddOperation<BookletOperation>();
+        services.AddOperation<TileOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();

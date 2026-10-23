@@ -427,4 +427,18 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Content_Error_SourceUnreadable" xml:space="preserve"><value>Không đọc được dữ liệu của tài liệu để thay đổi. Tài liệu vẫn như cũ; chi tiết đã được ghi vào nhật ký.</value></data>
   <data name="Content_Error_DiskFull" xml:space="preserve"><value>Ổ đĩa không đủ chỗ cho bản thay đổi. Hãy giải phóng dung lượng rồi thử lại; tài liệu vẫn như cũ.</value></data>
   <data name="Content_Error_Failed" xml:space="preserve"><value>Đã xảy ra lỗi khi thay đổi nội dung trang. Tài liệu vẫn như cũ; chi tiết đã được ghi vào nhật ký.</value></data>
+  <data name="Cmd_MarkSplit" xml:space="preserve"><value>Trang đầu tệp</value></data>
+  <data name="Cmd_MarkSplit_ToolTip" xml:space="preserve"><value>Đánh dấu trang là trang đầu của một tệp khi tách (Ctrl+M). Bấm lần nữa để bỏ dấu.</value></data>
+  <data name="Cmd_ClearSplitMarks" xml:space="preserve"><value>Bỏ mọi dấu</value></data>
+  <data name="Cmd_ClearSplitMarks_ToolTip" xml:space="preserve"><value>Bỏ mọi dấu trang đầu tệp của tài liệu này</value></data>
+  <data name="Menu_MarkSplit" xml:space="preserve"><value>Trang đầu tệp mới</value></data>
+  <data name="Split_Badge" xml:space="preserve"><value>Tệp {0}</value></data>
+  <data name="Split_BadgeToolTip" xml:space="preserve"><value>Tệp {0} bắt đầu ở trang này</value></data>
+  <data name="Split_BadgeToolTipNamed" xml:space="preserve"><value>Tệp {0} bắt đầu ở trang này: {1}</value></data>
+  <data name="Split_Summary" xml:space="preserve"><value>{0} dấu → {1} tệp</value></data>
+  <data name="Split_CurrentFile" xml:space="preserve"><value>Tệp {0}/{1}</value></data>
+  <data name="History_MarkSplit" xml:space="preserve"><value>Đánh dấu trang đầu tệp ({0} trang)</value></data>
+  <data name="History_UnmarkSplit" xml:space="preserve"><value>Bỏ dấu trang đầu tệp ({0} trang)</value></data>
+  <data name="History_SetSplitMarks" xml:space="preserve"><value>Cập nhật dấu tách tệp</value></data>
+  <data name="History_Interleave" xml:space="preserve"><value>Trộn mặt trước/sau</value></data>
 </root>

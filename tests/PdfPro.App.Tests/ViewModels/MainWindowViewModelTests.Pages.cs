@@ -247,6 +247,23 @@ public sealed partial class MainWindowViewModelTests
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task MarkSplitRibbonCommand_MarksTheActiveDocumentsCurrentPage()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        var document = viewModel.ActiveDocument!;
+        var mark = Command(viewModel, "organize.markSplit");
+        mark.Command.CanExecute(null).ShouldBeFalse("the first page always starts the first file");
+        mark.ToolTip.ShouldBe(Strings.Cmd_MarkSplit_ToolTip);
+
+        document.Viewer.NavigateTo(document.Viewer.PageCount - 1);
+        viewModel.MarkSplitCommand.Execute(null);
+
+        document.Workspace.Session.Plan.GetSplitStarts().ShouldBe([0, document.Viewer.PageCount - 1]);
+        document.IsDirty.ShouldBeFalse();
+        Command(viewModel, "organize.clearSplitMarks").Command.CanExecute(null).ShouldBeTrue();
+    }
+
     private static ContentChangeRequest PageSizeRequest() => new(new ChangePageSizeOperation(), new ChangePageSizeParams("1", 420, 595), "x");
 
     private Task AnyContentChange()

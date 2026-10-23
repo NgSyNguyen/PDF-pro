@@ -159,6 +159,39 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// <summary>The history menu: redoable steps (furthest first), then undoable steps (most recent first).</summary>
     public IReadOnlyList<HistoryEntryViewModel> HistoryEntries { get; private set; }
 
+    /// <summary>"12 dấu → 13 tệp" while the document has first-page marks for a split; null otherwise.</summary>
+    public string? SplitSummary
+    {
+        get
+        {
+            var plan = Workspace.Session.Plan;
+            if (!plan.HasSplitMarks)
+            {
+                return null;
+            }
+
+            var starts = plan.GetSplitStarts();
+            return string.Format(CultureInfo.CurrentCulture, Strings.Split_Summary, starts.Count - 1, starts.Count);
+        }
+    }
+
+    /// <summary>"Tệp 3/13": the file of the viewer's current page while the document has first-page marks; null otherwise.</summary>
+    public string? CurrentSplitFile
+    {
+        get
+        {
+            var plan = Workspace.Session.Plan;
+            if (!plan.HasSplitMarks || Viewer.PageCount == 0)
+            {
+                return null;
+            }
+
+            var starts = plan.GetSplitStarts();
+            var current = Math.Clamp(Viewer.CurrentPageIndex, 0, plan.Count - 1);
+            return string.Format(CultureInfo.CurrentCulture, Strings.Split_CurrentFile, starts.Count(s => s <= current), starts.Count);
+        }
+    }
+
     /// <summary>"Trích trang…" was chosen: the pages to write to a new file (0-based, in document order).</summary>
     public event EventHandler<IReadOnlyList<int>>? ExtractRequested;
 
@@ -416,6 +449,33 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
     }
 
+    /// <summary>
+    /// "Trang đầu tệp" (Ctrl+M): marks the target pages as first pages of split files, or unmarks them when all of them
+    /// are marked already. The first page always starts the first file, so it is left out. The step can be undone and
+    /// leaves the document saved (marks are not written into the PDF).
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanMarkSplit))]
+    private void MarkSplit()
+    {
+        var targets = TargetPageIndices.Where(i => i > 0).ToArray();
+        if (targets.Length == 0)
+        {
+            return;
+        }
+
+        var plan = Workspace.Session.Plan;
+        var unmark = targets.All(i => plan[i].SplitMark is not null);
+        Apply(_operations.Get<MarkSplitOperation>(), new MarkSplitParams(PageRanges.Format(targets), Marked: !unmark));
+    }
+
+    private bool CanMarkSplit() => CanEditTargets() && TargetPageIndices.Any(i => i > 0);
+
+    /// <summary>"Bỏ mọi dấu": removes every first-page mark (one undoable step).</summary>
+    [RelayCommand(CanExecute = nameof(CanClearSplitMarks))]
+    private void ClearSplitMarks() => Apply(_operations.Get<SetSplitMarksOperation>(), new SetSplitMarksParams([]));
+
+    private bool CanClearSplitMarks() => CanEditPages && !_inserting && Workspace.Session.Plan.HasSplitMarks;
+
     /// <summary>The crop and page size dialogs can also be used without a selection (they offer every page).</summary>
     private bool CanEditTargetsOrAll() => CanEditPages && !_inserting;
 
@@ -488,6 +548,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         Viewer.SetDocument(Workspace.Pages);
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
+        OnPropertyChanged(nameof(SplitSummary));
+        OnPropertyChanged(nameof(CurrentSplitFile));
         OnTargetsChanged();
     }
 
@@ -508,9 +570,13 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     private void OnViewerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(DocumentViewerViewModel.PageCount) or nameof(DocumentViewerViewModel.CurrentPageIndex) && !IsOrganizing)
+        if (e.PropertyName is nameof(DocumentViewerViewModel.PageCount) or nameof(DocumentViewerViewModel.CurrentPageIndex))
         {
-            OnTargetsChanged();
+            OnPropertyChanged(nameof(CurrentSplitFile));
+            if (!IsOrganizing)
+            {
+                OnTargetsChanged();
+            }
         }
     }
 
@@ -542,6 +608,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         ExtractPagesCommand.NotifyCanExecuteChanged();
         CropPagesCommand.NotifyCanExecuteChanged();
         ChangePageSizeCommand.NotifyCanExecuteChanged();
+        MarkSplitCommand.NotifyCanExecuteChanged();
+        ClearSplitMarksCommand.NotifyCanExecuteChanged();
     }
 }
 

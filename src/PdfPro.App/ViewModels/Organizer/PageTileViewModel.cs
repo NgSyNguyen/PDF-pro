@@ -15,11 +15,11 @@ public sealed partial class PageTileViewModel : ObservableObject, IRealizable, I
 {
     private readonly PageOrganizerViewModel _owner;
 
-    internal PageTileViewModel(PageOrganizerViewModel owner, VirtualPage page, int index, double boxWidth)
+    internal PageTileViewModel(PageOrganizerViewModel owner, VirtualPage page, int index, double boxWidth, SplitMarkBadge badge)
     {
         _owner = owner;
         Key = page.Key;
-        Update(page, index, boxWidth);
+        Update(page, index, boxWidth, badge);
     }
 
     public Guid Key { get; }
@@ -62,6 +62,21 @@ public sealed partial class PageTileViewModel : ObservableObject, IRealizable, I
     [ObservableProperty]
     public partial bool LoadFailed { get; internal set; }
 
+    /// <summary>"Tệp 3" when the page starts a file of a split by marks; null otherwise.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSplitStart))]
+    public partial string? SplitBadge { get; private set; }
+
+    /// <summary>The page starts a file of a split by marks (the document has marks).</summary>
+    public bool IsSplitStart => SplitBadge is not null;
+
+    [ObservableProperty]
+    public partial string? SplitToolTip { get; private set; }
+
+    /// <summary>The page belongs to an even-numbered file of the split (tinted, to tell files apart).</summary>
+    [ObservableProperty]
+    public partial bool IsAlternateFile { get; private set; }
+
     internal VirtualPage Page { get; private set; } = null!;
 
     internal ThumbnailRequest? ImageRequest { get; set; }
@@ -76,12 +91,15 @@ public sealed partial class PageTileViewModel : ObservableObject, IRealizable, I
 
     public void Release() => _owner.Release(this);
 
-    internal void Update(VirtualPage page, int index, double boxWidth)
+    internal void Update(VirtualPage page, int index, double boxWidth, SplitMarkBadge badge)
     {
         Page = page;
         Index = index;
         Angle = page.QuarterTurns * 90;
         IsBlank = page.IsBlank;
+        SplitBadge = badge.Text;
+        SplitToolTip = badge.ToolTip;
+        IsAlternateFile = badge.IsAlternate;
         Resize(boxWidth);
     }
 

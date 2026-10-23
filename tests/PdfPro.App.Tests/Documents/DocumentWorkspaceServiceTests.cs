@@ -7,6 +7,9 @@ using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.Infrastructure.Sessions;
+using PdfPro.Operations.Organizing;
+using PdfPro.Infrastructure.IO;
+using PdfPro.Infrastructure.Splitting;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.Documents;
@@ -16,10 +19,14 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     private readonly WorkspaceFixture _fixture = new();
     private readonly IDocumentOpener _opener = Substitute.For<IDocumentOpener>();
     private readonly IMessageService _messages = Substitute.For<IMessageService>();
+    private readonly SplitMarkMemory _splitMarks;
     private readonly DocumentWorkspaceService _service;
 
     public DocumentWorkspaceServiceTests()
-        => _service = new DocumentWorkspaceService(_fixture.Store, _opener, _messages, NullLoggerFactory.Instance);
+    {
+        _splitMarks = new SplitMarkMemory(_fixture.Paths, NullLogger<SplitMarkMemory>.Instance);
+        _service = new DocumentWorkspaceService(_fixture.Store, _opener, _splitMarks, _messages, NullLoggerFactory.Instance);
+    }
 
     private static CancellationToken TestToken => TestContext.Current.CancellationToken;
 
@@ -44,6 +51,58 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
         workspace.Pages.PageCount.ShouldBe(3);
         workspace.OriginalStamp.ShouldNotBeNull().Length.ShouldBe(5);
         workspace.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Open_BringsBackTheMarksRememberedForTheUnchangedFile()
+    {
+        var file = _fixture.CreateFile("Hồ sơ scan.pdf", [1, 2, 3]);
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(6));
+        await _splitMarks.RememberAsync(file, FileStamp.Read(file)!.Value, 6, [new(0, "Tờ trình"), new(3)], TestToken);
+
+        await using var workspace = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
+
+        workspace.Session.Plan.GetSplitStarts().ShouldBe([0, 3]);
+        workspace.Session.Plan[0].SplitMark!.FileName.ShouldBe("Tờ trình");
+        workspace.IsDirty.ShouldBeFalse();
+        workspace.Session.History.CanUndo.ShouldBeFalse("the marks are where the document starts");
+    }
+
+    [Fact]
+    public async Task ClosingAnUnchangedDocument_RemembersItsMarks_AndAChangedFileForgetsThem()
+    {
+        var file = _fixture.CreateFile("Hồ sơ scan.pdf", [1, 2, 3]);
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(6));
+        var workspace = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
+        workspace.Apply(TestOperations.Catalog().Get<MarkSplitOperation>(), new MarkSplitParams("3, 5"));
+
+        await workspace.CloseAsync(keepSession: false);
+
+        var stamp = FileStamp.Read(file)!.Value;
+        (await _splitMarks.RecallAsync(file, stamp, 6, TestToken)).Select(m => m.Page).ShouldBe([2, 4]);
+        await using var reopened = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
+        reopened.Session.Plan.GetSplitStarts().ShouldBe([0, 2, 4]);
+
+        await File.WriteAllBytesAsync(file, [9, 9, 9, 9], TestToken);
+        await using var changed = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
+        changed.Session.Plan.HasSplitMarks.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ClosingWithUnsavedChanges_KeepsWhatWasRememberedBefore()
+    {
+        var file = _fixture.CreateFile("Hồ sơ scan.pdf", [1, 2, 3]);
+        var stamp = FileStamp.Read(file)!.Value;
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(6));
+        await _splitMarks.RememberAsync(file, stamp, 6, [new(1)], TestToken);
+        var workspace = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
+        var operations = TestOperations.Catalog();
+        workspace.Apply(operations.Get<MarkSplitOperation>(), new MarkSplitParams("4"));
+        workspace.Apply(operations.Get<DeletePagesOperation>(), new DeletePagesParams("1"));
+
+        await workspace.CloseAsync(keepSession: false);
+
+        (await _splitMarks.RecallAsync(file, stamp, 6, TestToken)).Select(m => m.Page).ShouldBe([1], "page positions of an unsaved plan are not the file's pages");
     }
 
     [Fact]

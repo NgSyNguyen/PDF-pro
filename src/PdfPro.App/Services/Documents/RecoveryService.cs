@@ -5,6 +5,7 @@ using PdfPro.App.Resources;
 using PdfPro.Core.Sessions;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
+using PdfPro.Infrastructure.Splitting;
 using PdfPro.Operations;
 using PdfPro.Pdfium;
 
@@ -62,6 +63,7 @@ internal sealed class RecoveryService(
     OperationCatalog operations,
     IRecoveryDialog dialog,
     IMessageService messages,
+    ISplitMarkMemory splitMarks,
     ILoggerFactory loggers) : IRecoveryService
 {
     private readonly ILogger _logger = loggers.CreateLogger<RecoveryService>();
@@ -192,7 +194,7 @@ internal sealed class RecoveryService(
 
             var stamp = manifest.OriginalStamp is { } s ? new FileStamp(s.Length, s.LastWriteTimeUtc) : (FileStamp?)null;
             _logger.LogInformation("Session {SessionId} restored: {PageCount} pages, {Steps} undo step(s)", orphan.Folder.Id, session.Plan.Count, session.History.UndoCount);
-            return new DocumentWorkspace(session, store, orphan.Folder, sources, stamp, manifest.CreatedUtc, loggers.CreateLogger<DocumentWorkspace>());
+            return new DocumentWorkspace(session, store, orphan.Folder, sources, stamp, manifest.CreatedUtc, loggers.CreateLogger<DocumentWorkspace>(), splitMarks);
         }
         catch
         {

@@ -82,6 +82,23 @@
               Symbol="DocumentError24"
               ToolTip="{loc:Tr Thumbnail_LoadFailed}"
               Visibility="{Binding LoadFailed, Converter={StaticResource BoolToVisibility}}" />
+            <!-- "Tệp 3": this page starts a file when the document is split by marks. -->
+            <Border
+              Margin="2"
+              Padding="4,0"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Top"
+              AutomationProperties.Name="{Binding SplitBadge}"
+              Background="{DynamicResource AccentFillColorDefaultBrush}"
+              CornerRadius="3"
+              ToolTip="{Binding SplitToolTip}"
+              Visibility="{Binding SplitBadge, Converter={StaticResource NullToCollapsed}}">
+              <TextBlock
+                FontSize="11"
+                FontWeight="SemiBold"
+                Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
+                Text="{Binding SplitBadge}" />
+            </Border>
           </Grid>
         </Border>
         <TextBlock

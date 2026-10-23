@@ -84,6 +84,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ExtractPagesCommand = new ActiveDocumentCommand(d => d.ExtractPagesCommand);
         CropPagesCommand = new ActiveDocumentCommand(d => d.CropPagesCommand);
         ChangePageSizeCommand = new ActiveDocumentCommand(d => d.ChangePageSizeCommand);
+        MarkSplitCommand = new ActiveDocumentCommand(d => d.MarkSplitCommand);
+        ClearSplitMarksCommand = new ActiveDocumentCommand(d => d.ClearSplitMarksCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
@@ -128,7 +130,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public ActiveDocumentCommand DuplicatePagesCommand { get; }
 
-    /// <summary>"Sáº¯p xáº¿p trang": switches the active document between the viewer and the organizer grid.</summary>
+    /// <summary>"Sắp xếp trang": switches the active document between the viewer and the organizer grid.</summary>
     public ActiveDocumentCommand OrganizeModeCommand { get; }
 
     public ActiveDocumentCommand InsertBlankPagesCommand { get; }
@@ -140,6 +142,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand CropPagesCommand { get; }
 
     public ActiveDocumentCommand ChangePageSizeCommand { get; }
+
+    /// <summary>Ctrl+M, "Trang đầu tệp": marks (or unmarks) the target pages as first pages of split files.</summary>
+    public ActiveDocumentCommand MarkSplitCommand { get; }
+
+    public ActiveDocumentCommand ClearSplitMarksCommand { get; }
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -349,6 +356,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
+            MarkSplitCommand, ClearSplitMarksCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -496,6 +504,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("organize.merge", Strings.Cmd_Merge, SymbolRegular.Merge24),
                     new("organize.split", Strings.Cmd_Split, SymbolRegular.SplitVertical24),
+                    new("organize.markSplit", Strings.Cmd_MarkSplit, SymbolRegular.DocumentSplitHint24, MarkSplitCommand, Strings.Cmd_MarkSplit_ToolTip),
+                    new("organize.clearSplitMarks", Strings.Cmd_ClearSplitMarks, SymbolRegular.DocumentDismiss24, ClearSplitMarksCommand, Strings.Cmd_ClearSplitMarks_ToolTip),
                 ]),
             ]),
             new("edit", Strings.Ribbon_Tab_Edit,

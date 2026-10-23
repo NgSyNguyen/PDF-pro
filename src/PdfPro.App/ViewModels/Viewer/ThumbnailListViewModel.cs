@@ -8,6 +8,7 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.ViewModels.Organizer;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.ViewModels.Viewer;
@@ -20,11 +21,11 @@ public sealed partial class ThumbnailViewModel : ObservableObject, IRealizable, 
 {
     private readonly ThumbnailListViewModel _owner;
 
-    internal ThumbnailViewModel(ThumbnailListViewModel owner, VirtualPage page, int index)
+    internal ThumbnailViewModel(ThumbnailListViewModel owner, VirtualPage page, int index, SplitMarkBadge badge)
     {
         _owner = owner;
         Key = page.Key;
-        Update(page, index);
+        Update(page, index, badge);
     }
 
     public Guid Key { get; }
@@ -60,6 +61,13 @@ public sealed partial class ThumbnailViewModel : ObservableObject, IRealizable, 
     [ObservableProperty]
     public partial bool LoadFailed { get; internal set; }
 
+    /// <summary>"Tệp 3" when the page starts a file of a split by marks; null otherwise.</summary>
+    [ObservableProperty]
+    public partial string? SplitBadge { get; private set; }
+
+    [ObservableProperty]
+    public partial string? SplitToolTip { get; private set; }
+
     internal VirtualPage Page { get; private set; } = null!;
 
     /// <summary>The request the current <see cref="Image"/> was made for.</summary>
@@ -75,10 +83,12 @@ public sealed partial class ThumbnailViewModel : ObservableObject, IRealizable, 
 
     public void Release() => _owner.Release(this);
 
-    internal void Update(VirtualPage page, int index)
+    internal void Update(VirtualPage page, int index, SplitMarkBadge badge)
     {
         Page = page;
         Index = index;
+        SplitBadge = badge.Text;
+        SplitToolTip = badge.ToolTip;
         var size = ThumbnailGeometry.SizeFor(page.DisplaySize);
         Width = size.Width;
         Height = size.Height;
@@ -122,7 +132,8 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
         _viewer = viewer;
         _ui = ui;
         _loader = new ThumbnailLoader(provider, ui, logger);
-        Items = document.Pages.Select((page, i) => new ThumbnailViewModel(this, page, i)).ToArray();
+        var badges = SplitMarkBadge.For(document.Plan);
+        Items = document.Pages.Select((page, i) => new ThumbnailViewModel(this, page, i, badges[i])).ToArray();
         _loader.Remember(document);
         _viewer.PropertyChanged += OnViewerPropertyChanged;
         SyncSelection();
@@ -143,17 +154,18 @@ public sealed partial class ThumbnailListViewModel : ObservableObject, IDisposab
     {
         ArgumentNullException.ThrowIfNull(document);
         var existing = Items.ToDictionary(i => i.Key);
+        var badges = SplitMarkBadge.For(document.Plan);
         var items = new ThumbnailViewModel[document.PageCount];
         for (var i = 0; i < items.Length; i++)
         {
             var page = document.Pages[i];
             if (existing.Remove(page.Key, out var item))
             {
-                item.Update(page, i);
+                item.Update(page, i, badges[i]);
             }
             else
             {
-                item = new ThumbnailViewModel(this, page, i);
+                item = new ThumbnailViewModel(this, page, i, badges[i]);
             }
 
             items[i] = item;

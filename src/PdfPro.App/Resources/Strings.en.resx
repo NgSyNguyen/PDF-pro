@@ -427,4 +427,18 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Content_Error_SourceUnreadable" xml:space="preserve"><value>The document's data could not be read to make the change. The document is unchanged; details were written to the log.</value></data>
   <data name="Content_Error_DiskFull" xml:space="preserve"><value>There is not enough disk space for the change. Free some space and try again; the document is unchanged.</value></data>
   <data name="Content_Error_Failed" xml:space="preserve"><value>An error occurred while changing the page content. The document is unchanged; details were written to the log.</value></data>
+  <data name="Cmd_MarkSplit" xml:space="preserve"><value>First page of a file</value></data>
+  <data name="Cmd_MarkSplit_ToolTip" xml:space="preserve"><value>Mark the page as the first page of a file when splitting (Ctrl+M). Press again to remove the mark.</value></data>
+  <data name="Cmd_ClearSplitMarks" xml:space="preserve"><value>Clear all marks</value></data>
+  <data name="Cmd_ClearSplitMarks_ToolTip" xml:space="preserve"><value>Remove every first-page mark of this document</value></data>
+  <data name="Menu_MarkSplit" xml:space="preserve"><value>First page of a new file</value></data>
+  <data name="Split_Badge" xml:space="preserve"><value>File {0}</value></data>
+  <data name="Split_BadgeToolTip" xml:space="preserve"><value>File {0} starts on this page</value></data>
+  <data name="Split_BadgeToolTipNamed" xml:space="preserve"><value>File {0} starts on this page: {1}</value></data>
+  <data name="Split_Summary" xml:space="preserve"><value>{0} marks → {1} files</value></data>
+  <data name="Split_CurrentFile" xml:space="preserve"><value>File {0}/{1}</value></data>
+  <data name="History_MarkSplit" xml:space="preserve"><value>Mark first pages of files ({0} pages)</value></data>
+  <data name="History_UnmarkSplit" xml:space="preserve"><value>Remove first-page marks ({0} pages)</value></data>
+  <data name="History_SetSplitMarks" xml:space="preserve"><value>Update split marks</value></data>
+  <data name="History_Interleave" xml:space="preserve"><value>Interleave fronts and backs</value></data>
 </root>

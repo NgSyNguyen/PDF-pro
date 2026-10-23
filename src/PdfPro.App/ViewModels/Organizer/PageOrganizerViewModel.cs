@@ -83,7 +83,8 @@ public sealed partial class PageOrganizerViewModel : ObservableObject, IItemSele
         _filePathOf = filePathOf;
         _host = host;
         _loader = new ThumbnailLoader(provider, ui, logger);
-        Tiles = document.Pages.Select((page, i) => new PageTileViewModel(this, page, i, _tileSize)).ToArray();
+        var badges = SplitMarkBadge.For(document.Plan);
+        Tiles = document.Pages.Select((page, i) => new PageTileViewModel(this, page, i, _tileSize, badges[i])).ToArray();
         _tilesByKey = Tiles.ToDictionary(t => t.Key);
         _loader.Remember(document);
         RangeText = string.Empty;
@@ -170,17 +171,18 @@ public sealed partial class PageOrganizerViewModel : ObservableObject, IItemSele
         var previousFirst = _selectedIndices.Count > 0 ? _selectedIndices[0] : (int?)null;
         var existing = new Dictionary<Guid, PageTileViewModel>(_tilesByKey);
         var tiles = new PageTileViewModel[document.PageCount];
+        var badges = SplitMarkBadge.For(document.Plan);
         var added = new List<int>();
         for (var i = 0; i < tiles.Length; i++)
         {
             var page = document.Pages[i];
             if (existing.Remove(page.Key, out var tile))
             {
-                tile.Update(page, i, _tileSize);
+                tile.Update(page, i, _tileSize, badges[i]);
             }
             else
             {
-                tile = new PageTileViewModel(this, page, i, _tileSize);
+                tile = new PageTileViewModel(this, page, i, _tileSize, badges[i]);
                 added.Add(i);
             }
 
@@ -211,8 +213,8 @@ public sealed partial class PageOrganizerViewModel : ObservableObject, IItemSele
             selection = previousFirst is { } first && tiles.Length > 0 ? [Math.Min(first, tiles.Length - 1)] : [];
         }
 
-        // Turning or cropping pages keeps the order: the list keeps its items and its selection (no reset, which
-        // would make it select a thousand pages again).
+        // Turning, cropping or marking pages keeps the order: the list keeps its items and its selection (no reset,
+        // which would make it select a thousand pages again).
         var sameOrder = added.Count == 0 && tiles.Length == previous.Count && tiles.Zip(previous).All(p => ReferenceEquals(p.First, p.Second));
         var selectedKeys = selection.Select(i => tiles[i].Key).ToHashSet();
         var sameSelection = sameOrder && selectedKeys.SetEquals(_selectedKeys);

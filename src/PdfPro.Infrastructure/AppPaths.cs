@@ -46,6 +46,9 @@ public sealed class AppPaths
 
     public string SettingsFile => Path.Combine(DataRoot, "settings.json");
 
+    /// <summary>First-page marks remembered per document (one small file per document, named by a hash of its path).</summary>
+    public string SplitMarksDirectory => Path.Combine(DataRoot, "split-marks");
+
     /// <summary>Creates the user data folders if they do not exist yet.</summary>
     public void EnsureCreated()
     {

@@ -47,6 +47,7 @@
     <KeyBinding Key="Z" Command="{Binding RedoCommand}" Modifiers="Control+Shift" />
     <KeyBinding Key="R" Command="{Binding RotateRightCommand}" Modifiers="Control" />
     <KeyBinding Key="R" Command="{Binding RotateLeftCommand}" Modifiers="Control+Shift" />
+    <KeyBinding Key="M" Command="{Binding MarkSplitCommand}" Modifiers="Control" />
   </ui:FluentWindow.InputBindings>
 
   <ui:FluentWindow.CommandBindings>
@@ -335,6 +336,15 @@
             VerticalAlignment="Center"
             AutomationProperties.AutomationId="PageCountText"
             Text="{Binding PageCount, StringFormat={loc:Tr Status_PageCount}}" />
+          <!-- "Tệp 3/13" while the document has first-page marks for a split. -->
+          <TextBlock
+            Margin="16,0,0,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="CurrentSplitFile"
+            DataContext="{Binding DataContext.ActiveDocument, RelativeSource={RelativeSource AncestorType=Window}}"
+            Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+            Text="{Binding CurrentSplitFile}"
+            Visibility="{Binding CurrentSplitFile, Converter={StaticResource NullToCollapsed}}" />
         </StackPanel>
 
         <StackPanel

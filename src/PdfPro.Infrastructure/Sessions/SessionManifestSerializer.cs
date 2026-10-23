@@ -114,7 +114,8 @@ public static class SessionManifestSerializer
         page.RotationDelta,
         page.PageKey,
         page.CropBoxOverride is { } crop ? [crop.Left, crop.Top, crop.Width, crop.Height] : null,
-        page.BlankSize is { } size ? [size.Width, size.Height] : null);
+        page.BlankSize is { } size ? [size.Width, size.Height] : null,
+        page.SplitMark is { } mark ? new SplitMarkDto(mark.FileName) : null);
 
     private static RecordDto ToDto(HistoryRecord record) => new(
         record.OperationId,
@@ -128,12 +129,13 @@ public static class SessionManifestSerializer
     private static PageRef FromDto(PageDto page)
     {
         var crop = page.Crop is { Count: 4 } c ? new PageCrop(c[0], c[1], c[2], c[3]) : (PageCrop?)null;
+        var mark = page.Split is { } split ? new SplitMark(split.FileName) : null;
         if (page.BlankSize is { Count: 2 } size)
         {
-            return PageRef.Blank(new PdfSize(size[0], size[1]), page.Key).WithRotation(page.Rotation).WithCrop(crop);
+            return PageRef.Blank(new PdfSize(size[0], size[1]), page.Key).WithRotation(page.Rotation).WithCrop(crop).WithSplitMark(mark);
         }
 
-        return new PageRef(page.Source, page.Page, page.Rotation, crop, page.Key);
+        return new PageRef(page.Source, page.Page, page.Rotation, crop, page.Key).WithSplitMark(mark);
     }
 
     private static HistoryRecord FromDto(RecordDto record, Func<string, Type?> parameterTypes)

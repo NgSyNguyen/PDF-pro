@@ -75,7 +75,7 @@
       Severity="Informational"
       Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVisibility}}" />
 
-    <!-- "Sáº¯p xáº¿p trang": the organizer grid replaces the viewer. -->
+    <!-- "Sắp xếp trang": the organizer grid replaces the viewer. -->
     <views:OrganizerView Visibility="{Binding IsOrganizing, Converter={StaticResource BoolToVisibility}}" />
 
     <ScrollViewer

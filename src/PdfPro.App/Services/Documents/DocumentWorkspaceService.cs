@@ -6,6 +6,7 @@ using PdfPro.Core.Organizing;
 using PdfPro.Core.Sessions;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
+using PdfPro.Infrastructure.Splitting;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Services.Documents;
@@ -22,12 +23,13 @@ public interface IDocumentWorkspaceService
 
 /// <summary>
 /// Open flow (SPEC "DocumentSession và Revision"): copy the file into %LOCALAPPDATA%\PdfPro\sessions\{id}\sources\s0.pdf,
-/// open the copy with PDFium (the original is never held open or written), then start a session on an identity plan.
-/// Logs name the session by id only.
+/// open the copy with PDFium (the original is never held open or written), then start a session on an identity plan
+/// carrying the first-page marks remembered for the unchanged file. Logs name the session by id only.
 /// </summary>
 internal sealed class DocumentWorkspaceService(
     SessionStore store,
     IDocumentOpener opener,
+    ISplitMarkMemory splitMarks,
     IMessageService messages,
     ILoggerFactory loggers) : IDocumentWorkspaceService
 {
@@ -75,9 +77,21 @@ internal sealed class DocumentWorkspaceService(
             }
 
             var source = new SessionSource(SourceIds.Original, SessionStore.SourceFileName(SourceIds.Original), SessionSourceKind.Original, document.PageCount, fileName);
-            var plan = PagePlan.Identity(SourceIds.Original, document.PageCount, RandomPageKeys.Instance);
+            var remembered = stamp is { } known && !document.Features.IsEncrypted
+                ? await splitMarks.RecallAsync(fullPath, known, document.PageCount, cancellationToken)
+                : [];
+            var plan = PagePlan.Identity(SourceIds.Original, document.PageCount, RandomPageKeys.Instance)
+                .WithSplitMarks(remembered.ToDictionary(m => m.Page, m => new SplitMark(m.FileName)));
             var session = new DocumentSession(folder.Id, folder.Directory, fullPath, [source], new SessionState(plan, SourceIds.Original, 0));
-            return new DocumentWorkspace(session, store, folder, [new OpenSource(source, copy, document)], stamp, DateTimeOffset.UtcNow, loggers.CreateLogger<DocumentWorkspace>());
+            return new DocumentWorkspace(
+                session,
+                store,
+                folder,
+                [new OpenSource(source, copy, document)],
+                stamp,
+                DateTimeOffset.UtcNow,
+                loggers.CreateLogger<DocumentWorkspace>(),
+                splitMarks);
         }
         catch
         {

@@ -69,6 +69,31 @@ public sealed class SessionManifestSerializerTests
     }
 
     [Fact]
+    public void RoundTrip_KeepsSplitMarksAndTheirFileNames()
+    {
+        var plan = PagePlan.Identity("s0", 4, RandomPageKeys.Instance)
+            .WithSplitMarks(new Dictionary<int, SplitMark> { [0] = new("Tờ trình"), [2] = SplitMark.Unnamed });
+        var state = new SessionState(plan, "s0", 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [new SessionSource("s0", "sources/s0.pdf", SessionSourceKind.Original, 4)],
+            State = state,
+            HistoryBase = state,
+            Undo = [],
+            Redo = [],
+        };
+
+        var json = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot, DateTimeOffset.UtcNow));
+        var restored = SessionManifestSerializer.ToSnapshot(SessionManifestSerializer.Deserialize(json), ParameterType);
+
+        restored.State.Plan.ToArray().ShouldBe(plan.ToArray());
+        restored.State.Plan[0].SplitMark!.FileName.ShouldBe("Tờ trình");
+        restored.State.Plan.GetSplitStarts().ShouldBe([0, 2]);
+        json.ShouldNotContain("\"split\":null", Case.Sensitive, "pages without marks write nothing");
+    }
+
+    [Fact]
     public void Deserialize_RejectsInvalidJsonAndNewerSchemas()
     {
         Should.Throw<SessionManifestException>(() => SessionManifestSerializer.Deserialize("{ broken"));

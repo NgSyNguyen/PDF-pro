@@ -27,16 +27,38 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="ListBoxItem">
-            <Border
-              x:Name="Root"
-              Padding="{TemplateBinding Padding}"
-              Background="Transparent"
-              BorderBrush="Transparent"
-              BorderThickness="1"
-              CornerRadius="6">
-              <ContentPresenter />
-            </Border>
+            <Grid>
+              <!-- Files of a split by marks: every other file is tinted, and a bar marks a file's first page. -->
+              <Border
+                x:Name="FileTint"
+                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                CornerRadius="6"
+                Opacity="0" />
+              <Border
+                x:Name="Root"
+                Padding="{TemplateBinding Padding}"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="1"
+                CornerRadius="6">
+                <ContentPresenter />
+              </Border>
+              <Border
+                x:Name="StartBar"
+                Width="4"
+                Margin="0,6"
+                HorizontalAlignment="Left"
+                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                CornerRadius="2"
+                Visibility="Collapsed" />
+            </Grid>
             <ControlTemplate.Triggers>
+              <DataTrigger Binding="{Binding IsAlternateFile}" Value="True">
+                <Setter TargetName="FileTint" Property="Opacity" Value="0.2" />
+              </DataTrigger>
+              <DataTrigger Binding="{Binding IsSplitStart}" Value="True">
+                <Setter TargetName="StartBar" Property="Visibility" Value="Visible" />
+              </DataTrigger>
               <Trigger Property="IsMouseOver" Value="True">
                 <Setter TargetName="Root" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
               </Trigger>
@@ -87,6 +109,24 @@
                 ToolTip="{loc:Tr Thumbnail_LoadFailed}"
                 Visibility="{Binding LoadFailed, Converter={StaticResource BoolToVisibility}}" />
             </Grid>
+          </Border>
+          <!-- "Tệp 3": this page starts a file when the document is split by marks. -->
+          <Border
+            Margin="0,4,0,0"
+            Padding="6,1"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            AutomationProperties.AutomationId="SplitBadge"
+            AutomationProperties.Name="{Binding SplitBadge}"
+            Background="{DynamicResource AccentFillColorDefaultBrush}"
+            CornerRadius="4"
+            ToolTip="{Binding SplitToolTip}"
+            Visibility="{Binding SplitBadge, Converter={StaticResource NullToCollapsed}}">
+            <TextBlock
+              FontSize="12"
+              FontWeight="SemiBold"
+              Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
+              Text="{Binding SplitBadge}" />
           </Border>
         </Grid>
         <TextBlock
@@ -160,6 +200,14 @@
           DataContext="{Binding Organizer}"
           DockPanel.Dock="Right"
           Orientation="Horizontal">
+          <TextBlock
+            Margin="0,0,16,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="OrganizerSplitSummary"
+            DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+            Text="{Binding SplitSummary}"
+            Visibility="{Binding SplitSummary, Converter={StaticResource NullToCollapsed}}" />
           <TextBlock
             Margin="0,0,16,0"
             VerticalAlignment="Center"
@@ -274,6 +322,16 @@
             Command="{Binding ExtractPagesCommand}"
             Header="{loc:Tr Menu_ExtractPages}"
             Icon="{ui:SymbolIcon DocumentArrowRight24}" />
+          <Separator />
+          <MenuItem
+            Command="{Binding MarkSplitCommand}"
+            Header="{loc:Tr Menu_MarkSplit}"
+            Icon="{ui:SymbolIcon DocumentSplitHint24}"
+            InputGestureText="Ctrl+M" />
+          <MenuItem
+            Command="{Binding ClearSplitMarksCommand}"
+            Header="{loc:Tr Cmd_ClearSplitMarks}"
+            Icon="{ui:SymbolIcon DocumentDismiss24}" />
           <Separator />
           <MenuItem
             Command="{Binding CropPagesCommand}"

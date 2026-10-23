@@ -93,7 +93,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
             ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException",
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
-                "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize"],
+                "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
+                "organize.markSplit", "organize.clearSplitMarks"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>

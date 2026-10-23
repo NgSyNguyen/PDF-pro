@@ -16,7 +16,8 @@ public sealed record RibbonGroupViewModel(string Header, IReadOnlyList<RibbonCom
 /// </summary>
 public sealed partial class RibbonCommandViewModel : ObservableObject
 {
-    public RibbonCommandViewModel(string id, string label, SymbolRegular icon, ICommand? command = null)
+    /// <param name="toolTip">What the button does, when the label alone does not say it; null shows the label.</param>
+    public RibbonCommandViewModel(string id, string label, SymbolRegular icon, ICommand? command = null, string? toolTip = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         ArgumentException.ThrowIfNullOrWhiteSpace(label);
@@ -26,7 +27,7 @@ public sealed partial class RibbonCommandViewModel : ObservableObject
         Icon = icon;
         IsAvailable = command is not null;
         Command = command ?? UnavailableCommand.Instance;
-        ToolTip = IsAvailable ? label : $"{label} — {Strings.Cmd_NotAvailableYet}";
+        ToolTip = IsAvailable ? toolTip ?? label : $"{label} — {Strings.Cmd_NotAvailableYet}";
     }
 
     /// <summary>Stable identifier ("file.open"), used by tests and later by the command palette.</summary>

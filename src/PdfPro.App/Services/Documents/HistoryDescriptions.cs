@@ -27,6 +27,10 @@ internal static class HistoryDescriptions
             CropPagesParams { Reset: true } p => Format(Strings.History_CropReset, Count(p.Pages, before)),
             CropPagesParams p => Format(Strings.History_Crop, Count(p.Pages, before)),
             ChangePageSizeParams p => Format(Strings.History_PageSize, Count(p.Pages, before)),
+            MarkSplitParams { Marked: true } p => Format(Strings.History_MarkSplit, Count(p.Pages, before)),
+            MarkSplitParams p => Format(Strings.History_UnmarkSplit, Count(p.Pages, before)),
+            SetSplitMarksParams => Strings.History_SetSplitMarks,
+            InterleaveParams => Strings.History_Interleave,
             _ => Strings.History_Other,
         };
     }

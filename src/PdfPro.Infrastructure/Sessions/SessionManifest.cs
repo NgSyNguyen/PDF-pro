@@ -61,7 +61,18 @@ public sealed record StateDto(string BaseSourceId, int Revision, IReadOnlyList<P
 /// <param name="Crop">Kept area (left, top, width, height) in points on the displayed page, or null.</param>
 /// <param name="Key">Page key.</param>
 /// <param name="BlankSize">Width and height of a blank page, or null.</param>
-public sealed record PageDto(string Source, int Page, int Rotation, Guid Key, IReadOnlyList<double>? Crop = null, IReadOnlyList<double>? BlankSize = null);
+/// <param name="Split">Set when the page starts a file in a split by marks.</param>
+public sealed record PageDto(
+    string Source,
+    int Page,
+    int Rotation,
+    Guid Key,
+    IReadOnlyList<double>? Crop = null,
+    IReadOnlyList<double>? BlankSize = null,
+    SplitMarkDto? Split = null);
+
+/// <param name="FileName">The file name the user chose for the file the page starts, or null.</param>
+public sealed record SplitMarkDto(string? FileName = null);
 
 /// <param name="Operation">Operation id, e.g. "organize.rotate".</param>
 /// <param name="Parameters">The operation's parameter record as JSON.</param>
