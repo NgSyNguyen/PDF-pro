@@ -60,6 +60,13 @@ internal static class TestOperations
             new Operations.Layout.NUpOperation(repairer),
             new Operations.Layout.BookletOperation(repairer),
             new Operations.Layout.TileOperation(repairer),
+            new Operations.Stamping.OverlayOperation(),
+            new Operations.Stamping.WatermarkOperation(),
+            new Operations.Stamping.BackgroundOperation(),
+            new Operations.Stamping.HeaderFooterOperation(),
+            new Operations.Stamping.PageNumbersOperation(),
+            new Operations.Stamping.BatesOperation(),
+            new Operations.Stamping.RemoveStampsOperation(),
         ]);
     }
 }

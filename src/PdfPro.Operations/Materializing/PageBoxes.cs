@@ -29,32 +29,26 @@ internal static class PageBoxes
         }
 
         var crop = ToRect(page.CropBoxReadOnly);
-        var clipped = Intersect(crop, media);
+        var clipped = PdfRect.Intersect(crop, media);
         return clipped.IsEmpty ? media : clipped;
     }
 
     /// <summary>The page's own /Rotate, normalized (0 for invalid values, as PDFium does).</summary>
     public static int Rotation(PdfPage page) => page.Rotate % 90 == 0 ? PageGeometry.NormalizeRotation(page.Rotate) : 0;
 
-    /// <summary>Applies the plan's crop (converted to a CropBox) and extra rotation.</summary>
+    /// <summary>Applies the plan's crop (converted to a CropBox) and extra rotation: the page gets <see cref="MaterializedGeometry"/>.</summary>
     public static void ApplyEdits(PdfPage page, PageRef pageRef)
     {
-        var rotation = Rotation(page);
-        if (pageRef.CropBoxOverride is { } crop)
+        var current = new PageGeometry(VisibleBox(page), Rotation(page));
+        var result = MaterializedGeometry.Of(pageRef, current);
+        if (pageRef.CropBoxOverride is not null && result.Box != current.Box)
         {
-            // The crop is measured on the page as displayed with its own /Rotate (AGENTS rule 6: through the mapper).
-            var box = VisibleBox(page);
-            var mapper = new PageCoordinateMapper(box, rotation, scale: 1);
-            var area = Intersect(mapper.ScreenRectToPdf(new ViewRect(crop.Left, crop.Top, crop.Width, crop.Height)), box);
-            if (!area.IsEmpty)
-            {
-                page.CropBox = new PdfRectangle(new XPoint(area.Left, area.Bottom), new XPoint(area.Right, area.Top));
-            }
+            page.CropBox = new PdfRectangle(new XPoint(result.Box.Left, result.Box.Bottom), new XPoint(result.Box.Right, result.Box.Top));
         }
 
         if (pageRef.RotationDelta != 0)
         {
-            page.Rotate = (rotation + pageRef.RotationDelta) % 360;
+            page.Rotate = result.RotationDegrees;
         }
     }
 
@@ -63,13 +57,4 @@ internal static class PageBoxes
         => new() { MediaBox = new PdfRectangle(new XPoint(0, 0), new XPoint(size.Width, size.Height)) };
 
     private static PdfRect ToRect(PdfRectangle rectangle) => new(rectangle.X1, rectangle.Y1, rectangle.X2, rectangle.Y2);
-
-    private static PdfRect Intersect(PdfRect a, PdfRect b)
-    {
-        var left = Math.Max(a.Left, b.Left);
-        var bottom = Math.Max(a.Bottom, b.Bottom);
-        var right = Math.Min(a.Right, b.Right);
-        var top = Math.Min(a.Top, b.Top);
-        return right > left && top > bottom ? new PdfRect(left, bottom, right, top) : default;
-    }
 }

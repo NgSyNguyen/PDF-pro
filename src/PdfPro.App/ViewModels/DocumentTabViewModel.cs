@@ -7,7 +7,9 @@ using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Editing;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.ViewModels.Editing;
 using PdfPro.App.ViewModels.Organizer;
 using PdfPro.App.ViewModels.Splitting;
 using PdfPro.App.ViewModels.Viewer;
@@ -17,6 +19,7 @@ using PdfPro.Operations;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Layout;
 using PdfPro.Operations.Splitting;
+using PdfPro.Operations.Stamping;
 using PdfPro.Pdfium;
 using Wpf.Ui.Controls;
 
@@ -36,6 +39,8 @@ public sealed record HistoryEntryViewModel(string Description, bool IsRedo, int 
 /// <param name="Loader">Opens inserted files.</param>
 /// <param name="CreateOrganizer">Builds the organizer grid the first time it is shown.</param>
 /// <param name="LoadPreview">Loads a page image for the crop dialog's preview (upright, as displayed), or null.</param>
+/// <param name="ScreenFonts">Faces the page editor draws text with (null where nothing is drawn).</param>
+/// <param name="ScreenImages">Pictures the page editor draws.</param>
 public sealed record DocumentTabServices(
     OperationCatalog Operations,
     IMessageService Messages,
@@ -43,13 +48,16 @@ public sealed record DocumentTabServices(
     IFileDialogService FileDialogs,
     IPdfDocumentLoader Loader,
     Func<DocumentWorkspace, IPageOrganizerHost, PageOrganizerViewModel> CreateOrganizer,
-    Func<VirtualPage, CancellationToken, Task<ImageSource?>> LoadPreview);
+    Func<VirtualPage, CancellationToken, Task<ImageSource?>> LoadPreview,
+    ScreenFonts? ScreenFonts = null,
+    ScreenImages? ScreenImages = null);
 
 /// <summary>A content change the user asked for, run by the window in the background.</summary>
 /// <param name="Operation">The content operation.</param>
 /// <param name="Parameters">Its parameters.</param>
 /// <param name="Description">The step's name ("Đổi khổ giấy 3 trang"), for the status bar.</param>
-public sealed record ContentChangeRequest(IContentOperation Operation, object Parameters, string Description);
+/// <param name="Completed">Told whether the change was made (false: refused, failed or cancelled).</param>
+public sealed record ContentChangeRequest(IContentOperation Operation, object Parameters, string Description, Action<bool>? Completed = null);
 
 /// <summary>A split confirmed in the dialog, written by the window in the background.</summary>
 /// <param name="Operation">Writes the files.</param>
@@ -79,6 +87,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     private readonly IMessageService _messages;
     private readonly ILogger _logger;
     private bool _inserting;
+    private bool _closeEditorWhenApplied;
     private int _disposed;
 
     public DocumentTabViewModel(
@@ -102,6 +111,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         _messages = services.Messages;
         _logger = logger;
         HistoryEntries = BuildHistory();
+        Editor = new PageEditorViewModel(() => Workspace.Pages, services.ScreenFonts, services.ScreenImages ?? new ScreenImages(), logger);
+        Editor.ApplyRequested += OnEditorApplyRequested;
+        Editor.PropertyChanged += OnEditorPropertyChanged;
         workspace.PagesChanged += OnPagesChanged;
         workspace.StatusChanged += OnStatusChanged;
         Viewer.PropertyChanged += OnViewerPropertyChanged;
@@ -122,6 +134,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     public ThumbnailListViewModel Thumbnails { get; }
 
     public BookmarkTreeViewModel Bookmarks { get; }
+
+    /// <summary>The page editor: text, pictures, shapes and lines placed on pages until applied.</summary>
+    public PageEditorViewModel Editor { get; }
 
     /// <summary>The page organizer grid, created the first time the organizer is shown.</summary>
     [ObservableProperty]
@@ -299,6 +314,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         Workspace.PagesChanged -= OnPagesChanged;
         Workspace.StatusChanged -= OnStatusChanged;
         Viewer.PropertyChanged -= OnViewerPropertyChanged;
+        Editor.ApplyRequested -= OnEditorApplyRequested;
+        Editor.PropertyChanged -= OnEditorPropertyChanged;
         if (Organizer is { } organizer)
         {
             organizer.SelectionChanged -= OnOrganizerSelectionChanged;
@@ -317,15 +334,74 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         await Workspace.CloseAsync(keepSession: IsDirty && !DiscardChanges).ConfigureAwait(false);
     }
 
+    /// <summary>In the page editor, undoes its last edit; otherwise the document's last step (not while objects wait to be applied).</summary>
     [RelayCommand(CanExecute = nameof(CanUndo))]
-    private void Undo() => Workspace.Undo();
+    private void Undo()
+    {
+        if (Editor.IsActive && Editor.CanUndo)
+        {
+            Editor.UndoCommand.Execute(null);
+        }
+        else if (!Editor.HasObjects)
+        {
+            Workspace.Undo();
+        }
+    }
 
-    private bool CanUndo() => Workspace.CanEdit && Workspace.Session.History.CanUndo;
+    private bool CanUndo() => (Editor.IsActive && Editor.CanUndo) || (!Editor.HasObjects && Workspace.CanEdit && Workspace.Session.History.CanUndo);
 
     [RelayCommand(CanExecute = nameof(CanRedo))]
-    private void Redo() => Workspace.Redo();
+    private void Redo()
+    {
+        if (Editor.IsActive && Editor.CanRedo)
+        {
+            Editor.RedoCommand.Execute(null);
+        }
+        else if (!Editor.HasObjects)
+        {
+            Workspace.Redo();
+        }
+    }
 
-    private bool CanRedo() => Workspace.CanEdit && Workspace.Session.History.CanRedo;
+    private bool CanRedo() => (Editor.IsActive && Editor.CanRedo) || (!Editor.HasObjects && Workspace.CanEdit && Workspace.Session.History.CanRedo);
+
+    /// <summary>"Thêm chữ": opens the page editor with the text tool.</summary>
+    [RelayCommand(CanExecute = nameof(CanEditContent))]
+    private void AddText() => StartEditing(OverlayTool.Text);
+
+    /// <summary>"Thêm hình": opens the page editor with the rectangle tool (the editor's bar has the other shapes).</summary>
+    [RelayCommand(CanExecute = nameof(CanEditContent))]
+    private void AddShape() => StartEditing(OverlayTool.Rectangle);
+
+    /// <summary>Opens the page editor (in the viewer) with a tool.</summary>
+    public void StartEditing(OverlayTool tool)
+    {
+        if (!CanEditContent())
+        {
+            return;
+        }
+
+        IsOrganizing = false;
+        Editor.IsActive = true;
+        Editor.Tool = tool;
+    }
+
+    /// <summary>"Xong": applies what was placed (if anything) and closes the page editor.</summary>
+    [RelayCommand]
+    private void FinishEditing()
+    {
+        if (Editor.HasObjects)
+        {
+            _closeEditorWhenApplied = true;
+            Editor.ApplyCommand.Execute(null);
+        }
+        else
+        {
+            Editor.IsActive = false;
+        }
+    }
+
+    private bool CanEditContent() => CanEditPages && !_inserting;
 
     /// <summary>History menu: jumps back or forward to the chosen step.</summary>
     [RelayCommand]
@@ -381,6 +457,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     partial void OnIsOrganizingChanged(bool value)
     {
+        if (value && Editor.IsActive)
+        {
+            // The organizer replaces the viewer: what was placed is applied, as when leaving the editor.
+            FinishEditing();
+        }
+
         if (value)
         {
             if (Organizer is null)
@@ -460,7 +542,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     }
 
     /// <summary>"Đổi khổ giấy…": the dialog, then the window rewrites the pages in the background (a new revision).</summary>
-    [RelayCommand(CanExecute = nameof(CanEditTargetsOrAll))]
+    [RelayCommand(CanExecute = nameof(CanChangeContent))]
     private void ChangePageSize()
     {
         var targets = TargetPageIndices;
@@ -639,6 +721,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// <summary>The crop and page size dialogs can also be used without a selection (they offer every page).</summary>
     private bool CanEditTargetsOrAll() => CanEditPages && !_inserting;
 
+    /// <summary>Another content change would move the page space under objects waiting in the editor: apply them first.</summary>
+    private bool CanChangeContent() => CanEditTargetsOrAll() && !Editor.HasObjects;
+
     /// <summary>The page the insert dialogs propose: the last selected page, or the current page (1-based).</summary>
     private int AnchorPageNumber() => (TargetPageIndices.Count > 0 ? TargetPageIndices[^1] : Viewer.CurrentPageIndex) + 1;
 
@@ -708,6 +793,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         Viewer.SetDocument(Workspace.Pages);
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
+        Editor.Refresh();
         OnPropertyChanged(nameof(SplitSummary));
         OnPropertyChanged(nameof(CurrentSplitFile));
         OnTargetsChanged();
@@ -748,6 +834,38 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
     }
 
+    /// <summary>"Áp dụng": the window writes the objects as one content change; the editor empties once it is made.</summary>
+    private void OnEditorApplyRequested(object? sender, OverlayParams parameters)
+    {
+        if (!CanEditPages)
+        {
+            return;
+        }
+
+        var description = string.Format(CultureInfo.CurrentCulture, Strings.History_Overlay, parameters.Items.Count);
+        ContentChangeRequested?.Invoke(this, new ContentChangeRequest(_operations.Get<OverlayOperation>(), parameters, description, applied =>
+        {
+            if (applied)
+            {
+                Editor.Clear();
+                if (_closeEditorWhenApplied)
+                {
+                    Editor.IsActive = false;
+                }
+            }
+
+            _closeEditorWhenApplied = false;
+        }));
+    }
+
+    private void OnEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(PageEditorViewModel.HasObjects) or nameof(PageEditorViewModel.CanUndo) or nameof(PageEditorViewModel.CanRedo) or nameof(PageEditorViewModel.IsActive))
+        {
+            NotifyCommands();
+        }
+    }
+
     private void OnTargetsChanged()
     {
         OnPropertyChanged(nameof(TargetPageIndices));
@@ -775,6 +893,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         NUpCommand.NotifyCanExecuteChanged();
         BookletCommand.NotifyCanExecuteChanged();
         TileCommand.NotifyCanExecuteChanged();
+        AddTextCommand.NotifyCanExecuteChanged();
+        AddShapeCommand.NotifyCanExecuteChanged();
     }
 }
 
@@ -795,7 +915,9 @@ internal sealed class DocumentTabFactory(
     IPageDialogService pageDialogs,
     IFileDialogService fileDialogs,
     IPdfDocumentLoader loader,
-    ILoggerFactory loggers) : IDocumentTabFactory
+    ILoggerFactory loggers,
+    ScreenFonts? screenFonts = null,
+    ScreenImages? screenImages = null) : IDocumentTabFactory
 {
     /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
     public DocumentTabViewModel Create(DocumentWorkspace workspace)
@@ -812,7 +934,9 @@ internal sealed class DocumentTabFactory(
             fileDialogs,
             loader,
             (w, host) => new PageOrganizerViewModel(w.Pages, w.SourcePathOf, host, thumbnails, ui, loggers.CreateLogger<PageOrganizerViewModel>()),
-            (page, token) => LoadPreviewAsync(workspace, page, token));
+            (page, token) => LoadPreviewAsync(workspace, page, token),
+            screenFonts,
+            screenImages);
         return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
     }
 

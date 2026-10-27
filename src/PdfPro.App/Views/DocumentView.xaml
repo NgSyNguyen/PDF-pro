@@ -60,8 +60,16 @@
             TextAlignment="Center"
             TextWrapping="Wrap" />
         </StackPanel>
+        <!-- The page editor's objects, selection and guides; inactive (and transparent to the mouse) outside the editor. -->
+        <controls:OverlayLayer Editor="{Binding DataContext.Editor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
       </Grid>
     </DataTemplate>
+
+    <Style x:Key="EditorToolButton" BasedOn="{StaticResource {x:Type ToggleButton}}" TargetType="RadioButton">
+      <Setter Property="Margin" Value="0,0,4,0" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="GroupName" Value="EditorTools" />
+    </Style>
   </UserControl.Resources>
 
   <DockPanel>
@@ -77,6 +85,110 @@
 
     <!-- "Sắp xếp trang": the organizer grid replaces the viewer. -->
     <views:OrganizerView Visibility="{Binding IsOrganizing, Converter={StaticResource BoolToVisibility}}" />
+
+    <!-- The page editor's bar: tools, then apply / done / cancel. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="EditorBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding Editor}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="EditorDelete"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Tr Editor_Delete}"
+            Icon="{ui:SymbolIcon Delete24}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="EditorCancel"
+            Command="{Binding CancelCommand}"
+            Content="{loc:Tr Editor_Cancel}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            Appearance="Primary"
+            AutomationProperties.AutomationId="EditorApply"
+            Command="{Binding ApplyCommand}"
+            Content="{loc:Tr Editor_Apply}"
+            ToolTip="{loc:Tr Editor_Apply_ToolTip}" />
+          <ui:Button
+            AutomationProperties.AutomationId="EditorDone"
+            Command="{Binding DataContext.FinishEditingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr Editor_Done}"
+            ToolTip="{loc:Tr Editor_Done_ToolTip}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <RadioButton
+            AutomationProperties.AutomationId="EditorTool_Select"
+            AutomationProperties.Name="{loc:Tr Editor_Tool_Select}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Select}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Editor_Tool_Select}">
+            <ui:SymbolIcon Symbol="Cursor24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="EditorTool_Text"
+            AutomationProperties.Name="{loc:Tr Editor_Tool_Text}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Text}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Editor_Tool_Text}">
+            <ui:SymbolIcon Symbol="TextAddT24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="EditorTool_Rectangle"
+            AutomationProperties.Name="{loc:Tr Editor_Tool_Rectangle}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Rectangle}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Editor_Tool_Rectangle}">
+            <ui:SymbolIcon Symbol="RectangleLandscape24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="EditorTool_Ellipse"
+            AutomationProperties.Name="{loc:Tr Editor_Tool_Ellipse}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Ellipse}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Editor_Tool_Ellipse}">
+            <ui:SymbolIcon Symbol="Circle24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="EditorTool_Line"
+            AutomationProperties.Name="{loc:Tr Editor_Tool_Line}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Line}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Editor_Tool_Line}">
+            <ui:SymbolIcon Symbol="Line24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="EditorTool_Arrow"
+            AutomationProperties.Name="{loc:Tr Editor_Tool_Arrow}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Arrow}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Editor_Tool_Arrow}">
+            <ui:SymbolIcon Symbol="ArrowRight24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="EditorTool_Whiteout"
+            AutomationProperties.Name="{loc:Tr Editor_Tool_Whiteout}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Whiteout}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Editor_Tool_Whiteout_ToolTip}">
+            <ui:SymbolIcon Symbol="Eraser24" />
+          </RadioButton>
+          <TextBlock
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr Editor_Hint}"
+            TextTrimming="CharacterEllipsis"
+            ToolTip="{loc:Tr Editor_Hint}" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
 
     <ScrollViewer
       x:Name="Scroller"

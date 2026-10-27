@@ -453,7 +453,8 @@ public sealed partial class MainWindowViewModel
     {
         if (sender is DocumentTabViewModel document && Tabs.Contains(document))
         {
-            await ChangeContentAsync(document, request);
+            var changed = await ChangeContentAsync(document, request);
+            request.Completed?.Invoke(changed);
         }
     }
 

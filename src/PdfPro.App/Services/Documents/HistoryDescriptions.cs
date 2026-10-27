@@ -3,6 +3,7 @@ using PdfPro.App.Resources;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Sessions;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Stamping;
 
 namespace PdfPro.App.Services.Documents;
 
@@ -31,6 +32,12 @@ internal static class HistoryDescriptions
             MarkSplitParams p => Format(Strings.History_UnmarkSplit, Count(p.Pages, before)),
             SetSplitMarksParams => Strings.History_SetSplitMarks,
             InterleaveParams => Strings.History_Interleave,
+            OverlayParams p => Format(Strings.History_Overlay, p.Items.Count),
+            WatermarkParams => Strings.History_Watermark,
+            BackgroundParams => Strings.History_Background,
+            HeaderFooterParams => Strings.History_HeaderFooter,
+            PageNumbersParams => Strings.History_PageNumbers,
+            RemoveStampsParams => Strings.History_RemoveStamps,
             _ => Strings.History_Other,
         };
     }

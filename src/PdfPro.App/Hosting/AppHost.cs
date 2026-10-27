@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PdfPro.App.Localization;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Editing;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.ViewModels;
@@ -71,6 +72,8 @@ internal static class AppHost
         services.AddSingleton<IPageImageRenderer, PageImageRenderer>();
         services.AddSingleton<IThumbnailProvider, ThumbnailProvider>();
         services.AddHostedService<ThumbnailCacheMaintenance>();
+        services.AddSingleton<ScreenFonts>();
+        services.AddSingleton<ScreenImages>();
         services.AddSingleton<IDocumentTabFactory, DocumentTabFactory>();
         services.AddSingleton<IPrintDialogService, PrintDialogService>();
         services.AddSingleton<IDocumentPrinter, DocumentPrinter>();

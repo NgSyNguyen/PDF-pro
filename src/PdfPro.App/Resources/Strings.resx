@@ -628,4 +628,25 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Welcome_Merge" xml:space="preserve"><value>Gộp tệp PDF</value></data>
   <data name="Welcome_Merge_ToolTip" xml:space="preserve"><value>Ghép nhiều tệp PDF thành một tệp</value></data>
   <data name="Layout_BookletSheetCount" xml:space="preserve"><value>{0} mặt in trên {1} tờ giấy (in 2 mặt)</value></data>
+  <data name="History_Overlay" xml:space="preserve"><value>Thêm {0} đối tượng</value></data>
+  <data name="History_Watermark" xml:space="preserve"><value>Thêm watermark</value></data>
+  <data name="History_Background" xml:space="preserve"><value>Thêm nền trang</value></data>
+  <data name="History_HeaderFooter" xml:space="preserve"><value>Thêm đầu trang, chân trang</value></data>
+  <data name="History_PageNumbers" xml:space="preserve"><value>Đánh số trang</value></data>
+  <data name="History_RemoveStamps" xml:space="preserve"><value>Gỡ dấu đã đóng</value></data>
+  <data name="Editor_Delete" xml:space="preserve"><value>Xóa</value></data>
+  <data name="Editor_Cancel" xml:space="preserve"><value>Hủy</value></data>
+  <data name="Editor_Apply" xml:space="preserve"><value>Áp dụng</value></data>
+  <data name="Editor_Apply_ToolTip" xml:space="preserve"><value>Ghi mọi đối tượng vào tài liệu (một bước hoàn tác)</value></data>
+  <data name="Editor_Done" xml:space="preserve"><value>Xong</value></data>
+  <data name="Editor_Done_ToolTip" xml:space="preserve"><value>Áp dụng rồi đóng thanh chỉnh sửa</value></data>
+  <data name="Editor_Tool_Select" xml:space="preserve"><value>Chọn và di chuyển</value></data>
+  <data name="Editor_Tool_Text" xml:space="preserve"><value>Chữ</value></data>
+  <data name="Editor_Tool_Rectangle" xml:space="preserve"><value>Hình chữ nhật</value></data>
+  <data name="Editor_Tool_Ellipse" xml:space="preserve"><value>Hình elip</value></data>
+  <data name="Editor_Tool_Line" xml:space="preserve"><value>Đường thẳng</value></data>
+  <data name="Editor_Tool_Arrow" xml:space="preserve"><value>Mũi tên</value></data>
+  <data name="Editor_Tool_Whiteout" xml:space="preserve"><value>Che trắng</value></data>
+  <data name="Editor_Tool_Whiteout_ToolTip" xml:space="preserve"><value>Che trắng: chỉ che phần nhìn thấy, chữ bên dưới vẫn còn trong tệp (xóa vĩnh viễn ở tab Bảo mật)</value></data>
+  <data name="Editor_Hint" xml:space="preserve"><value>Kéo trên trang để vẽ · Shift: giữ tỉ lệ, xoay từng 15° · Alt: không hít cạnh · Mũi tên: dịch 1 pt (Shift 10 pt)</value></data>
 </root>

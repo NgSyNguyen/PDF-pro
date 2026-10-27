@@ -42,6 +42,9 @@ public sealed class AppPaths
     /// <summary>Disk cache (thumbnails…). Safe to delete at any time.</summary>
     public string CacheDirectory => Path.Combine(DataRoot, "cache");
 
+    /// <summary>Bundled fonts written out as files so the screen can draw with exactly the faces PDFs embed.</summary>
+    public string ScreenFontsDirectory => Path.Combine(CacheDirectory, "fonts");
+
     public string WorkflowsDirectory => Path.Combine(DataRoot, "workflows");
 
     public string SettingsFile => Path.Combine(DataRoot, "settings.json");

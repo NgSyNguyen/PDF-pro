@@ -628,4 +628,25 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Welcome_Merge" xml:space="preserve"><value>Merge PDF files</value></data>
   <data name="Welcome_Merge_ToolTip" xml:space="preserve"><value>Combine several PDF files into one</value></data>
   <data name="Layout_BookletSheetCount" xml:space="preserve"><value>{0} printed sides on {1} sheets (two-sided)</value></data>
+  <data name="History_Overlay" xml:space="preserve"><value>Add {0} objects</value></data>
+  <data name="History_Watermark" xml:space="preserve"><value>Add watermark</value></data>
+  <data name="History_Background" xml:space="preserve"><value>Add page background</value></data>
+  <data name="History_HeaderFooter" xml:space="preserve"><value>Add header and footer</value></data>
+  <data name="History_PageNumbers" xml:space="preserve"><value>Add page numbers</value></data>
+  <data name="History_RemoveStamps" xml:space="preserve"><value>Remove stamps</value></data>
+  <data name="Editor_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Editor_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Editor_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Editor_Apply_ToolTip" xml:space="preserve"><value>Write every object into the document (one undo step)</value></data>
+  <data name="Editor_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Editor_Done_ToolTip" xml:space="preserve"><value>Apply, then close the editing bar</value></data>
+  <data name="Editor_Tool_Select" xml:space="preserve"><value>Select and move</value></data>
+  <data name="Editor_Tool_Text" xml:space="preserve"><value>Text</value></data>
+  <data name="Editor_Tool_Rectangle" xml:space="preserve"><value>Rectangle</value></data>
+  <data name="Editor_Tool_Ellipse" xml:space="preserve"><value>Ellipse</value></data>
+  <data name="Editor_Tool_Line" xml:space="preserve"><value>Line</value></data>
+  <data name="Editor_Tool_Arrow" xml:space="preserve"><value>Arrow</value></data>
+  <data name="Editor_Tool_Whiteout" xml:space="preserve"><value>Whiteout</value></data>
+  <data name="Editor_Tool_Whiteout_ToolTip" xml:space="preserve"><value>Whiteout: hides what is shown only; the text under it stays in the file (remove it for good in the Security tab)</value></data>
+  <data name="Editor_Hint" xml:space="preserve"><value>Drag on the page to draw · Shift: keep proportions, turn in 15° steps · Alt: no snapping · Arrows: move 1 pt (Shift 10 pt)</value></data>
 </root>

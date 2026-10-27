@@ -41,6 +41,16 @@ public readonly record struct PdfRect
 
     public bool Contains(PdfPoint point)
         => point.X >= Left && point.X <= Right && point.Y >= Bottom && point.Y <= Top;
+
+    /// <summary>The overlapping part of two rectangles, or an empty rectangle.</summary>
+    public static PdfRect Intersect(PdfRect a, PdfRect b)
+    {
+        var left = Math.Max(a.Left, b.Left);
+        var bottom = Math.Max(a.Bottom, b.Bottom);
+        var right = Math.Min(a.Right, b.Right);
+        var top = Math.Min(a.Top, b.Top);
+        return right > left && top > bottom ? new PdfRect(left, bottom, right, top) : default;
+    }
 }
 
 /// <summary>Converts page sizes to whole device pixels; renderer and viewer must agree on this rounding.</summary>

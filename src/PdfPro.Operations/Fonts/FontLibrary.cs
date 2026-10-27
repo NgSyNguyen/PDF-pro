@@ -4,6 +4,12 @@ using PdfSharp.Fonts;
 
 namespace PdfPro.Operations.Fonts;
 
+/// <summary>The face used for a family and style, for drawing it on screen with the same file the PDF embeds.</summary>
+/// <param name="Name">A file-name-safe name of the face ("NotoSans-Bold", "arialbd").</param>
+/// <param name="InstalledPath">The installed font file, or null for a bundled face (its bytes come from <see cref="FontLibrary.FontData"/>).</param>
+/// <param name="SimulateItalic">The face is upright and must be slanted to look italic.</param>
+public sealed record FontFaceFile(string Name, string? InstalledPath, bool SimulateItalic);
+
 /// <summary>A font family that can write into documents: bundled with PDF_Pro or installed on the computer.</summary>
 /// <param name="HasBold">A real bold face exists (PDFsharp 6.2 cannot simulate bold, so without one bold is not offered).</param>
 /// <param name="HasItalic">A real italic face exists (otherwise italic is simulated by slanting).</param>
@@ -34,7 +40,7 @@ public sealed class FontLibrary : IFontResolver
     ];
 
     private readonly IReadOnlyList<string> _installedFolders;
-    private readonly Lazy<Dictionary<string, Face[]>> _faces;
+    private readonly Lazy<Dictionary<string, FaceEntry[]>> _faces;
     private readonly ConcurrentDictionary<string, byte[]> _data = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, TrueTypeFont> _metrics = new(StringComparer.Ordinal);
 
@@ -43,7 +49,7 @@ public sealed class FontLibrary : IFontResolver
     {
         ArgumentNullException.ThrowIfNull(installedFolders);
         _installedFolders = installedFolders;
-        _faces = new Lazy<Dictionary<string, Face[]>>(LoadFaces, LazyThreadSafetyMode.ExecutionAndPublication);
+        _faces = new Lazy<Dictionary<string, FaceEntry[]>>(LoadFaces, LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
     /// <summary>The library of this computer: bundled fonts and those of the system and user font folders.</summary>
@@ -85,6 +91,16 @@ public sealed class FontLibrary : IFontResolver
     /// <summary>The font file of the face used for <paramref name="family"/> in this style (for the screen to draw with).</summary>
     /// <exception cref="KeyNotFoundException">The family is not in the library.</exception>
     public byte[] FontData(string family, bool bold, bool italic) => Load(Choose(family, bold, italic).Face.Key);
+
+    /// <summary>Which face <see cref="Metrics"/> and the PDF use for this style, for the screen.</summary>
+    /// <exception cref="KeyNotFoundException">The family is not in the library.</exception>
+    public FontFaceFile Face(string family, bool bold, bool italic)
+    {
+        var (face, simulateItalic) = Choose(family, bold, italic);
+        return face.Key.StartsWith(BundledPrefix, StringComparison.Ordinal)
+            ? new FontFaceFile(face.Key[BundledPrefix.Length..], null, simulateItalic)
+            : new FontFaceFile(Path.GetFileNameWithoutExtension(face.Key[FilePrefix.Length..]), face.Key[FilePrefix.Length..], simulateItalic);
+    }
 
     public FontResolverInfo? ResolveTypeface(string familyName, bool bold, bool italic)
     {
@@ -128,7 +144,7 @@ public sealed class FontLibrary : IFontResolver
     }
 
     /// <summary>The face for a style: the exact one, else without the missing bold or italic (italic is then slanted).</summary>
-    private (Face Face, bool SimulateItalic) Choose(string family, bool bold, bool italic)
+    private (FaceEntry Face, bool SimulateItalic) Choose(string family, bool bold, bool italic)
     {
         if (!_faces.Value.TryGetValue(family, out var faces))
         {
@@ -165,17 +181,17 @@ public sealed class FontLibrary : IFontResolver
         return File.ReadAllBytes(k[FilePrefix.Length..]);
     });
 
-    private Dictionary<string, Face[]> LoadFaces()
+    private Dictionary<string, FaceEntry[]> LoadFaces()
     {
-        var faces = new Dictionary<string, List<Face>>(StringComparer.OrdinalIgnoreCase);
+        var faces = new Dictionary<string, List<FaceEntry>>(StringComparer.OrdinalIgnoreCase);
         foreach (var (family, prefix) in BundledFamilies)
         {
             faces[family] =
             [
-                new Face(BundledPrefix + prefix + "-Regular", false, false, true),
-                new Face(BundledPrefix + prefix + "-Bold", true, false, true),
-                new Face(BundledPrefix + prefix + "-Italic", false, true, true),
-                new Face(BundledPrefix + prefix + "-BoldItalic", true, true, true),
+                new FaceEntry(BundledPrefix + prefix + "-Regular", false, false, true),
+                new FaceEntry(BundledPrefix + prefix + "-Bold", true, false, true),
+                new FaceEntry(BundledPrefix + prefix + "-Italic", false, true, true),
+                new FaceEntry(BundledPrefix + prefix + "-BoldItalic", true, true, true),
             ];
         }
 
@@ -194,7 +210,7 @@ public sealed class FontLibrary : IFontResolver
             // The first file of a style wins (the system folder comes before the user's).
             if (!list.Any(f => f.Bold == font.IsBold && f.Italic == font.IsItalic))
             {
-                list.Add(new Face(FilePrefix + file, font.IsBold, font.IsItalic, false));
+                list.Add(new FaceEntry(FilePrefix + file, font.IsBold, font.IsItalic, false));
             }
         }
 
@@ -228,5 +244,5 @@ public sealed class FontLibrary : IFontResolver
         }
     }
 
-    private sealed record Face(string Key, bool Bold, bool Italic, bool IsBundled);
+    private sealed record FaceEntry(string Key, bool Bold, bool Italic, bool IsBundled);
 }
