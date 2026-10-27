@@ -109,6 +109,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         StampHeaderFooterCommand = new ActiveDocumentCommand(d => d.StampHeaderFooterCommand);
         StampPageNumbersCommand = new ActiveDocumentCommand(d => d.StampPageNumbersCommand);
         RemoveStampsCommand = new ActiveDocumentCommand(d => d.RemoveStampsCommand);
+        HighlightCommand = new ActiveDocumentCommand(d => d.HighlightCommand);
+        UnderlineCommand = new ActiveDocumentCommand(d => d.UnderlineCommand);
+        StrikeOutCommand = new ActiveDocumentCommand(d => d.StrikeOutCommand);
+        SquigglyCommand = new ActiveDocumentCommand(d => d.SquigglyCommand);
+        StickyNoteCommand = new ActiveDocumentCommand(d => d.StickyNoteCommand);
         FindNextCommand = new ActiveDocumentCommand(d => d.Search.NextCommand);
         FindPreviousCommand = new ActiveDocumentCommand(d => d.Search.PreviousCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
@@ -201,6 +206,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand StampPageNumbersCommand { get; }
 
     public ActiveDocumentCommand RemoveStampsCommand { get; }
+
+    public ActiveDocumentCommand HighlightCommand { get; }
+
+    public ActiveDocumentCommand UnderlineCommand { get; }
+
+    public ActiveDocumentCommand StrikeOutCommand { get; }
+
+    public ActiveDocumentCommand SquigglyCommand { get; }
+
+    public ActiveDocumentCommand StickyNoteCommand { get; }
 
     /// <summary>F3: the next match of the search.</summary>
     public ActiveDocumentCommand FindNextCommand { get; }
@@ -439,6 +454,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
+            HighlightCommand, UnderlineCommand, StrikeOutCommand, SquigglyCommand, StickyNoteCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -644,13 +660,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
             [
                 new(Strings.Ribbon_Group_Markup,
                 [
-                    new("annotate.highlight", Strings.Cmd_Highlight, SymbolRegular.Highlight24),
-                    new("annotate.underline", Strings.Cmd_Underline, SymbolRegular.TextUnderline24),
-                    new("annotate.strikeout", Strings.Cmd_Strikeout, SymbolRegular.TextStrikethrough24),
+                    new("annotate.highlight", Strings.Cmd_Highlight, SymbolRegular.Highlight24, HighlightCommand, Strings.Cmd_Highlight_ToolTip),
+                    new("annotate.underline", Strings.Cmd_Underline, SymbolRegular.TextUnderline24, UnderlineCommand, Strings.Cmd_Underline_ToolTip),
+                    new("annotate.strikeout", Strings.Cmd_Strikeout, SymbolRegular.TextStrikethrough24, StrikeOutCommand, Strings.Cmd_Strikeout_ToolTip),
+                    new("annotate.squiggly", Strings.Cmd_Squiggly, SymbolRegular.TextWordCount24, SquigglyCommand, Strings.Cmd_Squiggly_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Notes,
                 [
-                    new("annotate.note", Strings.Cmd_StickyNote, SymbolRegular.Note24),
+                    new("annotate.note", Strings.Cmd_StickyNote, SymbolRegular.Note24, StickyNoteCommand, Strings.Cmd_StickyNote_ToolTip),
                     new("annotate.textBox", Strings.Cmd_TextBox, SymbolRegular.Textbox24),
                 ]),
                 new(Strings.Ribbon_Group_Draw,

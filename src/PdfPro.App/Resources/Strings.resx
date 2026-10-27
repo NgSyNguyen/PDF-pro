@@ -637,6 +637,18 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="History_AddAnnotations" xml:space="preserve"><value>Thêm {0} chú thích</value></data>
   <data name="History_UpdateAnnotations" xml:space="preserve"><value>Sửa {0} chú thích</value></data>
   <data name="History_DeleteAnnotations" xml:space="preserve"><value>Xóa {0} chú thích</value></data>
+  <data name="Cmd_Squiggly" xml:space="preserve"><value>Lượn sóng</value></data>
+  <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Tô sáng chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ (Esc để tắt)</value></data>
+  <data name="Cmd_Underline_ToolTip" xml:space="preserve"><value>Gạch chân chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ</value></data>
+  <data name="Cmd_Strikeout_ToolTip" xml:space="preserve"><value>Gạch ngang chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ</value></data>
+  <data name="Cmd_Squiggly_ToolTip" xml:space="preserve"><value>Gạch lượn sóng dưới chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ</value></data>
+  <data name="Cmd_StickyNote_ToolTip" xml:space="preserve"><value>Bấm vào trang để đặt ghi chú và viết bình luận</value></data>
+  <data name="Cmd_DeleteAnnotation" xml:space="preserve"><value>Xóa chú thích</value></data>
+  <data name="Annotation_Header" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Annotation_NoAuthor" xml:space="preserve"><value>Không rõ tác giả</value></data>
+  <data name="Annotation_Done" xml:space="preserve"><value>Xong</value></data>
+  <data name="Annotation_Contents_Name" xml:space="preserve"><value>Nội dung bình luận</value></data>
+  <data name="Annotation_ToolActive" xml:space="preserve"><value>Đang dùng: {0} — Esc để tắt</value></data>
   <data name="Editor_Delete" xml:space="preserve"><value>Xóa</value></data>
   <data name="Editor_Cancel" xml:space="preserve"><value>Hủy</value></data>
   <data name="Editor_Apply" xml:space="preserve"><value>Áp dụng</value></data>

@@ -157,12 +157,15 @@ public sealed record PageRef
 
     /// <summary>True when both show the same page the same way, with the same annotations (split marks aside).</summary>
     public bool HasSameContent(PageRef other)
+        => HasSamePage(other) && (ReferenceEquals(Annotations, other.Annotations) || Annotations.SequenceEqual(other.Annotations));
+
+    /// <summary>True when both show the same page the same way, annotations and split marks aside (its text is the same).</summary>
+    public bool HasSamePage(PageRef other)
     {
         ArgumentNullException.ThrowIfNull(other);
         return PageKey == other.PageKey && SourcePageIndex == other.SourcePageIndex && RotationDelta == other.RotationDelta
             && CropBoxOverride == other.CropBoxOverride && BlankSize == other.BlankSize
-            && string.Equals(SourceId, other.SourceId, StringComparison.Ordinal)
-            && (ReferenceEquals(Annotations, other.Annotations) || Annotations.SequenceEqual(other.Annotations));
+            && string.Equals(SourceId, other.SourceId, StringComparison.Ordinal);
     }
 
     /// <summary>The page size before the plan's edits: the blank size, or the source page as displayed.</summary>

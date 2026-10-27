@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using PdfPro.Core.Annotations;
 using PdfPro.Core.Documents;
 using PdfPro.Core.Operations;
@@ -10,7 +11,18 @@ namespace PdfPro.Operations.Annotating;
 
 /// <param name="Page">1-based page number.</param>
 /// <param name="Items">The annotations to add, drawn above the page's other annotations; names new on the page.</param>
-public sealed record AddAnnotationsParams([property: Range(1, int.MaxValue)] int Page, [property: Required] IReadOnlyList<AnnotationItem> Items);
+public sealed record PageAnnotations([property: Range(1, int.MaxValue)] int Page, [property: Required] IReadOnlyList<AnnotationItem> Items);
+
+/// <param name="Pages">The annotations to add, by page (text marked across pages is added in one step).</param>
+public sealed record AddAnnotationsParams([property: Required] IReadOnlyList<PageAnnotations> Pages)
+{
+    /// <summary>Annotations for one page.</summary>
+    public static AddAnnotationsParams On(int page, IReadOnlyList<AnnotationItem> items) => new([new PageAnnotations(page, items)]);
+
+    /// <summary>How many annotations are added.</summary>
+    [JsonIgnore]
+    public int Count => Pages.Sum(p => p.Items?.Count ?? 0);
+}
 
 /// <param name="Page">1-based page number.</param>
 /// <param name="Items">The changed annotations, replacing those of the same names (moved, recoloured, answered…).</param>
@@ -33,21 +45,58 @@ public sealed class AddAnnotationsOperation(IPlanMaterializer materializer, IPdf
     public override string Id => OperationId;
 
     protected override OperationValidationResult ValidateCore(AddAnnotationsParams parameters, DocumentInfo document)
-        => AnnotationChecks.Items(parameters.Page, parameters.Items, document.PageCount);
+    {
+        if (parameters.Pages is null || parameters.Pages.Count == 0)
+        {
+            return AnnotationChecks.Failed(nameof(parameters.Pages), "At least one page is needed.");
+        }
+
+        var results = new List<OperationValidationResult>();
+        var pages = new HashSet<int>();
+        foreach (var entry in parameters.Pages)
+        {
+            if (entry is null)
+            {
+                results.Add(AnnotationChecks.Failed(nameof(parameters.Pages), "A page is missing."));
+                continue;
+            }
+
+            if (!pages.Add(entry.Page))
+            {
+                results.Add(AnnotationChecks.Failed(nameof(parameters.Pages), $"Page {entry.Page} is listed twice."));
+            }
+
+            results.Add(AnnotationChecks.Items(entry.Page, entry.Items, document.PageCount));
+        }
+
+        return Combine([.. results]);
+    }
 
     protected override OperationValidationResult ValidateForPlan(AddAnnotationsParams parameters, PagePlan plan, PlanEditContext context)
     {
-        var page = plan[parameters.Page - 1];
-        var taken = parameters.Items.Where(i => page.FindAnnotation(i.Id) is not null).Select(i => i.Id).ToArray();
-        return taken.Length == 0
-            ? OperationValidationResult.Success
-            : AnnotationChecks.Failed(nameof(parameters.Items), $"Page {parameters.Page} already has annotations named {string.Join(", ", taken)}.");
+        var results = new List<OperationValidationResult>();
+        foreach (var entry in parameters.Pages)
+        {
+            var page = plan[entry.Page - 1];
+            var taken = entry.Items.Where(i => page.FindAnnotation(i.Id) is not null).Select(i => i.Id).ToArray();
+            if (taken.Length > 0)
+            {
+                results.Add(AnnotationChecks.Failed(nameof(parameters.Pages), $"Page {entry.Page} already has annotations named {string.Join(", ", taken)}."));
+            }
+        }
+
+        return Combine([.. results]);
     }
 
     protected override PagePlan Apply(PagePlan plan, AddAnnotationsParams parameters, PlanEditContext context)
     {
-        var index = parameters.Page - 1;
-        return plan.WithAnnotations(index, [.. plan[index].Annotations, .. parameters.Items]);
+        foreach (var entry in parameters.Pages)
+        {
+            var index = entry.Page - 1;
+            plan = plan.WithAnnotations(index, [.. plan[index].Annotations, .. entry.Items]);
+        }
+
+        return plan;
     }
 }
 
@@ -113,14 +162,14 @@ internal static class AnnotationChecks
         Page(page, pageCount, errors);
         if (items is null || items.Count == 0)
         {
-            errors.Add(new OperationValidationError(nameof(AddAnnotationsParams.Items), "At least one annotation is needed."));
+            errors.Add(new OperationValidationError(nameof(PageAnnotations.Items), "At least one annotation is needed."));
             return OperationValidationResult.Failed(errors);
         }
 
         var names = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < items.Count; i++)
         {
-            var member = $"{nameof(AddAnnotationsParams.Items)}[{i}]";
+            var member = $"{nameof(PageAnnotations.Items)}[{i}]";
             if (items[i] is not { } item)
             {
                 errors.Add(new OperationValidationError(member, "An annotation is missing."));

@@ -51,6 +51,12 @@ public sealed record AppSettings
 
     /// <summary>Memory budget for rendered pages, in megabytes.</summary>
     public int RenderCacheMegabytes { get; init; } = DefaultRenderCacheMegabytes;
+
+    /// <summary>
+    /// The name annotations are signed with (shown to the readers of the document); blank: the Windows user name.
+    /// Personal data: never written to the log.
+    /// </summary>
+    public string AnnotationAuthor { get; init; } = string.Empty;
 }
 
 /// <summary>Most-recently-used list of documents (pure list operations; no file system access).</summary>

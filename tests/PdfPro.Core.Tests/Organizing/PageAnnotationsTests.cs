@@ -58,6 +58,18 @@ public sealed class PageAnnotationsTests
     }
 
     [Fact]
+    public void HasSamePages_LooksAtThePagesOnly()
+    {
+        var annotated = _plan.WithAnnotations(2, [Note("a")]).MarkSplit([1], marked: true);
+
+        annotated.HasSamePages(_plan).ShouldBeTrue("annotations and marks leave the pages and their text as they were");
+        annotated.Rotate([0], 90).HasSamePages(_plan).ShouldBeFalse();
+        annotated.Move([3], 0).HasSamePages(_plan).ShouldBeFalse();
+        annotated.Delete([3]).HasSamePages(_plan).ShouldBeFalse();
+        annotated.Crop([1], new PageCrop(0, 0, 10, 10)).HasSamePages(_plan).ShouldBeFalse();
+    }
+
+    [Fact]
     public void Names_AreUniqueOnAPage_AndFindTheirAnnotation()
     {
         Should.Throw<ArgumentException>(() => _plan.WithAnnotations(0, [Note("a"), Note("a")]));

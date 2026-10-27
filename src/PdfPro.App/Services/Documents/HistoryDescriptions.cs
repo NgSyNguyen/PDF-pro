@@ -39,7 +39,7 @@ internal static class HistoryDescriptions
             HeaderFooterParams => Strings.History_HeaderFooter,
             PageNumbersParams => Strings.History_PageNumbers,
             RemoveStampsParams => Strings.History_RemoveStamps,
-            AddAnnotationsParams p => Format(Strings.History_AddAnnotations, p.Items.Count),
+            AddAnnotationsParams p => Format(Strings.History_AddAnnotations, p.Count),
             UpdateAnnotationsParams p => Format(Strings.History_UpdateAnnotations, p.Items.Count),
             DeleteAnnotationsParams p => Format(Strings.History_DeleteAnnotations, p.Ids.Count),
             _ => Strings.History_Other,

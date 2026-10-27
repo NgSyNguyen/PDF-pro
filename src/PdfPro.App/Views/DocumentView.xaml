@@ -65,6 +65,8 @@
           PageKey="{Binding Key}"
           Search="{Binding DataContext.Search, RelativeSource={RelativeSource AncestorType=UserControl}}"
           Selection="{Binding DataContext.TextSelection, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <!-- Annotations added in the session (the page image does not have them yet); only draws. -->
+        <controls:AnnotationLayer Annotations="{Binding DataContext.Annotations, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- The page editor's objects, selection and guides; inactive (and transparent to the mouse) outside the editor. -->
         <controls:OverlayLayer Editor="{Binding DataContext.Editor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
       </Grid>
@@ -212,6 +214,80 @@
         </StackPanel>
       </DockPanel>
     </Border>
+
+    <!-- An annotation tool is on: which one, and "Xong" to turn it off. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="AnnotationToolBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding Annotations}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsToolActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <ui:Button
+          AutomationProperties.AutomationId="AnnotationToolDone"
+          Command="{Binding StopToolCommand}"
+          Content="{loc:Tr Annotation_Done}"
+          DockPanel.Dock="Right" />
+        <TextBlock
+          VerticalAlignment="Center"
+          Text="{Binding ToolText}"
+          TextTrimming="CharacterEllipsis" />
+      </DockPanel>
+    </Border>
+
+    <!-- The comment of a note: opens where it was clicked; clicking elsewhere keeps what was written. -->
+    <Popup
+      x:Name="ContentsPopup"
+      AllowsTransparency="True"
+      Closed="OnContentsPopupClosed"
+      DataContext="{Binding Annotations}"
+      IsOpen="{Binding IsEditingContents, Mode=OneWay}"
+      Opened="OnContentsPopupOpened"
+      Placement="MousePoint"
+      StaysOpen="False">
+      <Border
+        Padding="10"
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="6">
+        <StackPanel Width="280">
+          <TextBlock
+            Margin="0,0,0,6"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{Binding ContentsHeader}"
+            TextTrimming="CharacterEllipsis" />
+          <TextBox
+            x:Name="ContentsBox"
+            MinHeight="80"
+            MaxHeight="240"
+            AcceptsReturn="True"
+            AutomationProperties.AutomationId="AnnotationContents"
+            AutomationProperties.Name="{loc:Tr Annotation_Contents_Name}"
+            PreviewKeyDown="OnContentsKeyDown"
+            Text="{Binding ContentsDraft, UpdateSourceTrigger=PropertyChanged}"
+            TextWrapping="Wrap"
+            VerticalScrollBarVisibility="Auto" />
+          <StackPanel
+            Margin="0,8,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <ui:Button
+              Margin="0,0,6,0"
+              Command="{Binding CancelContentsCommand}"
+              Content="{loc:Tr Common_Cancel}" />
+            <ui:Button
+              Appearance="Primary"
+              AutomationProperties.AutomationId="AnnotationContentsDone"
+              Command="{Binding CommitContentsCommand}"
+              Content="{loc:Tr Annotation_Done}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Popup>
 
     <ScrollViewer
       x:Name="Scroller"

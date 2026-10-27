@@ -26,7 +26,7 @@ public sealed class AnnotationWorkspaceTests : IDisposable
         await using var workspace = await _fixture.CreateAsync(FakePdfDocument.WithPages(3));
         var operations = TestOperations.Catalog();
 
-        workspace.Apply(operations.Get<AddAnnotationsOperation>(), new AddAnnotationsParams(2, [Note("a"), Note("b")]));
+        workspace.Apply(operations.Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(2, [Note("a"), Note("b")]));
         workspace.IsDirty.ShouldBeTrue();
         workspace.Session.History.NextUndoDescription.ShouldBe(Format(Strings.History_AddAnnotations, 2));
         workspace.Apply(operations.Get<UpdateAnnotationsOperation>(), new UpdateAnnotationsParams(2, [Note("a") with { Contents = "Đã sửa" }]));
@@ -49,7 +49,7 @@ public sealed class AnnotationWorkspaceTests : IDisposable
     {
         var plan = PagePlan.Identity("s0", 2, RandomPageKeys.Instance);
 
-        Describe(new AddAnnotationsParams(1, [Note("a"), Note("b"), Note("c")])).ShouldBe(Format(Strings.History_AddAnnotations, 3));
+        Describe(AddAnnotationsParams.On(1, [Note("a"), Note("b"), Note("c")])).ShouldBe(Format(Strings.History_AddAnnotations, 3));
         Describe(new UpdateAnnotationsParams(1, [Note("a")])).ShouldBe(Format(Strings.History_UpdateAnnotations, 1));
         Describe(new DeleteAnnotationsParams(1, ["a", "b"])).ShouldBe(Format(Strings.History_DeleteAnnotations, 2));
 

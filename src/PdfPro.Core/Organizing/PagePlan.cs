@@ -378,6 +378,34 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         return true;
     }
 
+    /// <summary>
+    /// True when both plans show the same pages in the same order and the same way, annotations and split marks aside:
+    /// what depends on the pages and their text (selections, search results) still holds.
+    /// </summary>
+    public bool HasSamePages(PagePlan other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        if (ReferenceEquals(other, this))
+        {
+            return true;
+        }
+
+        if (other.Count != Count)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < _pages.Length; i++)
+        {
+            if (!_pages[i].HasSamePage(other._pages[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private PagePlan ReplaceMarks(IEnumerable<int> indices, Func<int, PageRef, SplitMark?> markOf)
     {
         PageRef[]? pages = null;

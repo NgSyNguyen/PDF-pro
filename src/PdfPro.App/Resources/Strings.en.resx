@@ -637,6 +637,18 @@ The original file was not changed and your changes are still here.</value></data
   <data name="History_AddAnnotations" xml:space="preserve"><value>Add {0} annotations</value></data>
   <data name="History_UpdateAnnotations" xml:space="preserve"><value>Edit {0} annotations</value></data>
   <data name="History_DeleteAnnotations" xml:space="preserve"><value>Delete {0} annotations</value></data>
+  <data name="Cmd_Squiggly" xml:space="preserve"><value>Squiggly</value></data>
+  <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Highlight the selected text; with nothing selected, turn the tool on and drag over text (Esc turns it off)</value></data>
+  <data name="Cmd_Underline_ToolTip" xml:space="preserve"><value>Underline the selected text; with nothing selected, turn the tool on and drag over text</value></data>
+  <data name="Cmd_Strikeout_ToolTip" xml:space="preserve"><value>Strike out the selected text; with nothing selected, turn the tool on and drag over text</value></data>
+  <data name="Cmd_Squiggly_ToolTip" xml:space="preserve"><value>Squiggly underline for the selected text; with nothing selected, turn the tool on and drag over text</value></data>
+  <data name="Cmd_StickyNote_ToolTip" xml:space="preserve"><value>Click on the page to place a note and write a comment</value></data>
+  <data name="Cmd_DeleteAnnotation" xml:space="preserve"><value>Delete annotation</value></data>
+  <data name="Annotation_Header" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Annotation_NoAuthor" xml:space="preserve"><value>Unknown author</value></data>
+  <data name="Annotation_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Annotation_Contents_Name" xml:space="preserve"><value>Comment</value></data>
+  <data name="Annotation_ToolActive" xml:space="preserve"><value>Tool: {0} — Esc turns it off</value></data>
   <data name="Editor_Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Editor_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Editor_Apply" xml:space="preserve"><value>Apply</value></data>

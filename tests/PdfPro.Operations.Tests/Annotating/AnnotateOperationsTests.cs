@@ -52,8 +52,8 @@ public sealed class AnnotateOperationsTests : IDisposable
     [Fact]
     public void Add_Update_Delete_EditThePagesAnnotations_InDrawingOrder()
     {
-        var added = _add.ApplyToPlan(Plan, new AddAnnotationsParams(2, [Note("a"), Note("b")]), Context);
-        var more = _add.ApplyToPlan(added, new AddAnnotationsParams(2, [Note("c")]), Context);
+        var added = _add.ApplyToPlan(Plan, AddAnnotationsParams.On(2, [Note("a"), Note("b")]), Context);
+        var more = _add.ApplyToPlan(added, AddAnnotationsParams.On(2, [Note("c")]), Context);
         var moved = (NoteAnnotation)Note("a").MoveBy(10, 0);
         var updated = _update.ApplyToPlan(more, new UpdateAnnotationsParams(2, [moved with { Contents = "Đã sửa" }]), Context);
         var deleted = _delete.ApplyToPlan(updated, new DeleteAnnotationsParams(2, ["b"]), Context);
@@ -68,11 +68,23 @@ public sealed class AnnotateOperationsTests : IDisposable
     }
 
     [Fact]
+    public void Add_PutsAnnotationsOnSeveralPages_InOneStep()
+    {
+        var added = _add.ApplyToPlan(Plan, new AddAnnotationsParams([new PageAnnotations(1, [Note("a")]), new PageAnnotations(3, [Note("b"), Note("c")])]), Context);
+
+        added.Select(p => p.Annotations.Count).ShouldBe([1, 0, 2]);
+        new AddAnnotationsParams([new PageAnnotations(1, [Note("a")]), new PageAnnotations(3, [Note("b"), Note("c")])]).Count.ShouldBe(3);
+        Errors(() => _add.ApplyToPlan(Plan, new AddAnnotationsParams([new PageAnnotations(2, [Note("a")]), new PageAnnotations(2, [Note("b")])]), Context))
+            .ShouldContain(e => e.Contains("listed twice", StringComparison.Ordinal));
+        Errors(() => _add.ApplyToPlan(Plan, new AddAnnotationsParams([]), Context)).ShouldNotBeEmpty();
+    }
+
+    [Fact]
     public void Edits_ThatDoNotFitThePlan_AreRefused()
     {
-        var plan = _add.ApplyToPlan(Plan, new AddAnnotationsParams(1, [Note("a")]), Context);
+        var plan = _add.ApplyToPlan(Plan, AddAnnotationsParams.On(1, [Note("a")]), Context);
 
-        Errors(() => _add.ApplyToPlan(plan, new AddAnnotationsParams(1, [Note("a")]), Context)).ShouldContain(e => e.Contains("already has", StringComparison.Ordinal));
+        Errors(() => _add.ApplyToPlan(plan, AddAnnotationsParams.On(1, [Note("a")]), Context)).ShouldContain(e => e.Contains("already has", StringComparison.Ordinal));
         Errors(() => _update.ApplyToPlan(plan, new UpdateAnnotationsParams(1, [Note("x")]), Context)).ShouldContain(e => e.Contains("no annotations named x", StringComparison.Ordinal));
         Errors(() => _delete.ApplyToPlan(plan, new DeleteAnnotationsParams(2, ["a"]), Context)).ShouldContain(e => e.Contains("no annotations named a", StringComparison.Ordinal));
     }
@@ -86,12 +98,12 @@ public sealed class AnnotateOperationsTests : IDisposable
         var picture = _temp.Combine("missing.png");
         object parameters = problem switch
         {
-            "page 0" => new AddAnnotationsParams(0, [Note("a")]),
-            "page 4" => new AddAnnotationsParams(4, [Note("a")]),
-            "no items" => new AddAnnotationsParams(1, []),
-            "twice" => new AddAnnotationsParams(1, [Note("a"), Note("a")]),
-            "invalid" => new AddAnnotationsParams(1, [Note("a") with { Opacity = 2 }]),
-            "no picture" => new AddAnnotationsParams(1, [new StampAnnotation("s", Red, 1, "Lan", Created, Created, "", new PdfRect(0, 0, 50, 50), null, picture)]),
+            "page 0" => AddAnnotationsParams.On(0, [Note("a")]),
+            "page 4" => AddAnnotationsParams.On(4, [Note("a")]),
+            "no items" => AddAnnotationsParams.On(1, []),
+            "twice" => AddAnnotationsParams.On(1, [Note("a"), Note("a")]),
+            "invalid" => AddAnnotationsParams.On(1, [Note("a") with { Opacity = 2 }]),
+            "no picture" => AddAnnotationsParams.On(1, [new StampAnnotation("s", Red, 1, "Lan", Created, Created, "", new PdfRect(0, 0, 50, 50), null, picture)]),
             "delete nothing" => new DeleteAnnotationsParams(1, []),
             _ => throw new ArgumentOutOfRangeException(nameof(problem)),
         };
@@ -111,9 +123,9 @@ public sealed class AnnotateOperationsTests : IDisposable
             .InsertBlank(3, new PdfSize(300, 300), RandomPageKeys.Instance);
         var turned = MaterializedGeometry.Of(plan[1], geometry);
         var shownBox = new PageCoordinateMapper(turned, 1).ScreenRectToPdf(new ViewRect(40, 40, 60, 30));
-        plan = _add.ApplyToPlan(plan, new AddAnnotationsParams(2, [Square("sq", shownBox), Note("n")]), Context);
-        plan = _add.ApplyToPlan(plan, new AddAnnotationsParams(3, [Note("imported")]), Context);
-        plan = _add.ApplyToPlan(plan, new AddAnnotationsParams(4, [Square("blank", new PdfRect(100, 100, 200, 150))]), Context);
+        plan = _add.ApplyToPlan(plan, AddAnnotationsParams.On(2, [Square("sq", shownBox), Note("n")]), Context);
+        plan = _add.ApplyToPlan(plan, AddAnnotationsParams.On(3, [Note("imported")]), Context);
+        plan = _add.ApplyToPlan(plan, AddAnnotationsParams.On(4, [Square("blank", new PdfRect(100, 100, 200, 150))]), Context);
 
         var output = await WriteAsync(plan, Samples.RotatedCropBox, Samples.BasicVi);
 
@@ -137,7 +149,7 @@ public sealed class AnnotateOperationsTests : IDisposable
     public async Task Materializing_KeepsTheAnnotationsAlreadyInTheFile()
     {
         var before = PdfInspector.Annotations(Samples.LinksAnnots);
-        var plan = _add.ApplyToPlan(PagePlan.Identity("s0", 6, RandomPageKeys.Instance), new AddAnnotationsParams(1, [Note("n")]), Context);
+        var plan = _add.ApplyToPlan(PagePlan.Identity("s0", 6, RandomPageKeys.Instance), AddAnnotationsParams.On(1, [Note("n")]), Context);
 
         var output = await WriteAsync(plan, Samples.LinksAnnots);
 
@@ -152,7 +164,7 @@ public sealed class AnnotateOperationsTests : IDisposable
     {
         var context = new OperationContext { InputPaths = [Samples.BasicVi], OutputDirectory = _temp.Combine("out"), WorkingDirectory = _temp.Combine("work") };
 
-        var result = await _add.ExecuteAsync(context, new AddAnnotationsParams(2, [Note("n"), Square("s", new PdfRect(100, 100, 200, 150))]), new RecordingProgress(), Token);
+        var result = await _add.ExecuteAsync(context, AddAnnotationsParams.On(2, [Note("n"), Square("s", new PdfRect(100, 100, 200, 150))]), new RecordingProgress(), Token);
 
         result.Succeeded.ShouldBeTrue();
         var annotations = PdfInspector.Annotations(result.OutputPaths.ShouldHaveSingleItem());

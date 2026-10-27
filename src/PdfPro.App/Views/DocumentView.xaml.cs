@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using PdfPro.App.ViewModels;
+using PdfPro.App.ViewModels.Annotating;
 using PdfPro.App.ViewModels.Editing;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Geometry;
@@ -45,6 +46,12 @@ public partial class DocumentView : UserControl
             return;
         }
 
+        if (Document is { Editor.IsActive: false } annotating && HandleAnnotationKey(annotating.Annotations, e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (Document is { Editor.IsActive: false } reader && HandleSelectionKey(reader.TextSelection, e.Key))
         {
             e.Handled = true;
@@ -68,6 +75,65 @@ public partial class DocumentView : UserControl
         if (command is not null)
         {
             command.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Delete removes the selected annotation; Esc closes a comment, turns a tool off, or drops the selection.</summary>
+    private static bool HandleAnnotationKey(AnnotationToolsViewModel annotations, Key key)
+    {
+        if (Keyboard.Modifiers != ModifierKeys.None)
+        {
+            return false;
+        }
+
+        switch (key)
+        {
+            case Key.Delete when annotations.CanDelete:
+                annotations.DeleteCommand.Execute(null);
+                return true;
+            case Key.Escape:
+                return annotations.Escape();
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>The comment box takes the keyboard as soon as it opens.</summary>
+    private void OnContentsPopupOpened(object? sender, EventArgs e)
+        => Dispatcher.BeginInvoke(() =>
+        {
+            ContentsBox.Focus();
+            ContentsBox.CaretIndex = ContentsBox.Text.Length;
+        }, System.Windows.Threading.DispatcherPriority.Input);
+
+    /// <summary>Clicking away from the comment keeps what was written (as other PDF editors do).</summary>
+    private void OnContentsPopupClosed(object? sender, EventArgs e)
+    {
+        if (Document is { Annotations.IsEditingContents: true } document)
+        {
+            document.Annotations.CommitContentsCommand.Execute(null);
+        }
+
+        Scroller.Focus();
+    }
+
+    /// <summary>Esc closes the comment without keeping it; Ctrl+Enter keeps it.</summary>
+    private void OnContentsKeyDown(object sender, KeyEventArgs e)
+    {
+        if (Document is not { } document)
+        {
+            return;
+        }
+
+        if (e.Key == Key.Escape)
+        {
+            document.Annotations.CancelContentsCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            document.Annotations.CommitContentsCommand.Execute(null);
             e.Handled = true;
         }
     }
@@ -114,8 +180,20 @@ public partial class DocumentView : UserControl
     {
         if (Document is { Editor.IsActive: false } document)
         {
-            var point = e.GetPosition(Surface);
-            _ = PressAsync(document.TextSelection, new ViewPoint(point.X, point.Y), e.ClickCount);
+            var position = e.GetPosition(Surface);
+            var point = new ViewPoint(position.X, position.Y);
+            if (document.Annotations.Press(point, e.ClickCount))
+            {
+                // A note was placed or an annotation picked (and maybe grabbed to move it).
+                if (document.Annotations.IsMoving)
+                {
+                    Surface.CaptureMouse();
+                }
+
+                return;
+            }
+
+            _ = PressAsync(document.TextSelection, point, e.ClickCount);
         }
     }
 
@@ -137,13 +215,23 @@ public partial class DocumentView : UserControl
 
         var position = e.GetPosition(Surface);
         var point = new ViewPoint(position.X, position.Y);
+        if (document.Annotations.IsMoving && e.LeftButton == MouseButtonState.Pressed)
+        {
+            document.Annotations.DragTo(point);
+            return;
+        }
+
         if (document.TextSelection.IsDragging && e.LeftButton == MouseButtonState.Pressed)
         {
             document.TextSelection.DragTo(point);
             return;
         }
 
-        if (document.TextSelection.IsOverText(point))
+        if (document.Annotations.Tool == AnnotationTool.Note)
+        {
+            Surface.Cursor = Cursors.Cross;
+        }
+        else if (document.TextSelection.IsOverText(point))
         {
             Surface.Cursor = Cursors.IBeam;
         }
@@ -155,9 +243,15 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (Document is { } document && document.TextSelection.IsDragging)
+        if (Document is { } document)
         {
-            document.TextSelection.Release();
+            if (document.TextSelection.IsDragging)
+            {
+                document.TextSelection.Release();
+                _ = document.Annotations.SelectionReleasedAsync(); // marked at once while a markup tool is on
+            }
+
+            document.Annotations.Release();
         }
 
         if (Surface.IsMouseCaptured)

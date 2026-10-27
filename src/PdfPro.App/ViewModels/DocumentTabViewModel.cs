@@ -9,12 +9,14 @@ using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Editing;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.ViewModels.Annotating;
 using PdfPro.App.ViewModels.Editing;
 using PdfPro.App.ViewModels.Organizer;
 using PdfPro.App.ViewModels.Splitting;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Infrastructure.Settings;
 using PdfPro.Operations;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Layout;
@@ -43,6 +45,7 @@ public sealed record HistoryEntryViewModel(string Description, bool IsRedo, int 
 /// <param name="ScreenImages">Pictures the page editor draws.</param>
 /// <param name="Signatures">The saved hand signatures (null: none are kept).</param>
 /// <param name="Stamps">Previews and scans for the stamp dialogs (null: the stamp commands are off).</param>
+/// <param name="AnnotationAuthor">The name new annotations are signed with (null: the Windows user name).</param>
 public sealed record DocumentTabServices(
     OperationCatalog Operations,
     IMessageService Messages,
@@ -54,7 +57,8 @@ public sealed record DocumentTabServices(
     ScreenFonts? ScreenFonts = null,
     ScreenImages? ScreenImages = null,
     SignatureLibrary? Signatures = null,
-    StampServices? Stamps = null);
+    StampServices? Stamps = null,
+    Func<string>? AnnotationAuthor = null);
 
 /// <summary>What the stamp dialogs use besides the operations.</summary>
 /// <param name="CreatePreview">Shows page n (0-based) of the document with a stamp, until disposed.</param>
@@ -101,6 +105,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     private readonly ILogger _logger;
     private bool _inserting;
     private bool _closeEditorWhenApplied;
+    private PagePlan _shownPlan;
     private int _disposed;
 
     public DocumentTabViewModel(
@@ -127,6 +132,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         Editor = new PageEditorViewModel(() => Workspace.Pages, services.ScreenFonts, services.ScreenImages ?? new ScreenImages(), logger);
         TextSelection = new TextSelectionViewModel(viewer, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
         Search = new SearchViewModel(viewer, TextLayers, TextSelection, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
+        Annotations = new AnnotationToolsViewModel(viewer, TextSelection, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), logger)
+        {
+            Fonts = Editor.Fonts,
+            Images = Editor.Images,
+        };
+        _shownPlan = workspace.Session.Plan;
         Editor.ApplyRequested += OnEditorApplyRequested;
         Editor.PropertyChanged += OnEditorPropertyChanged;
         workspace.PagesChanged += OnPagesChanged;
@@ -161,6 +172,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>"Tìm kiếm" (Ctrl+F, F3, Shift+F3).</summary>
     public SearchViewModel Search { get; }
+
+    /// <summary>Annotating: marking text, notes, selecting, moving and deleting annotations of the session.</summary>
+    public AnnotationToolsViewModel Annotations { get; }
 
     /// <summary>Objects wait in the page editor: saving, printing and closing apply them first.</summary>
     public bool HasPendingEdits => Editor.HasObjects;
@@ -576,6 +590,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
         if (value)
         {
+            Annotations.StopTool();
             if (Organizer is null)
             {
                 var organizer = _services.CreateOrganizer(Workspace, this);
@@ -994,9 +1009,22 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     private void OnPagesChanged(object? sender, EventArgs e)
     {
-        TextSelection.Clear();
+        // Annotations and split marks leave the pages and their text alone: the selection and the search still hold.
+        var plan = Workspace.Session.Plan;
+        var samePages = plan.HasSamePages(_shownPlan);
+        _shownPlan = plan;
+        if (!samePages)
+        {
+            TextSelection.Clear();
+        }
+
         Viewer.SetDocument(Workspace.Pages);
-        Search.Invalidate();
+        if (!samePages)
+        {
+            Search.Invalidate();
+        }
+
+        Annotations.Refresh();
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
         Editor.Refresh();
@@ -1082,6 +1110,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         if (e.PropertyName == nameof(PageEditorViewModel.IsActive) && Editor.IsActive)
         {
             EditorProperties ??= new OverlayPropertiesViewModel(Editor);
+            Annotations.StopTool(); // the page editor takes the mouse
         }
 
         if (e.PropertyName == nameof(PageEditorViewModel.HasObjects))
@@ -1131,6 +1160,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         StampHeaderFooterCommand.NotifyCanExecuteChanged();
         StampPageNumbersCommand.NotifyCanExecuteChanged();
         RemoveStampsCommand.NotifyCanExecuteChanged();
+        NotifyAnnotationCommands();
     }
 }
 
@@ -1155,7 +1185,8 @@ internal sealed class DocumentTabFactory(
     ScreenFonts? screenFonts = null,
     ScreenImages? screenImages = null,
     SignatureLibrary? signatures = null,
-    IDocumentSaver? saver = null) : IDocumentTabFactory
+    IDocumentSaver? saver = null,
+    ISettingsService? settings = null) : IDocumentTabFactory
 {
     /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
     public DocumentTabViewModel Create(DocumentWorkspace workspace)
@@ -1176,9 +1207,14 @@ internal sealed class DocumentTabFactory(
             screenFonts,
             screenImages,
             signatures,
-            Stamps());
+            Stamps(),
+            AnnotationAuthor);
         return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
     }
+
+    /// <summary>The name in the settings, or the Windows user name when it is blank.</summary>
+    private string AnnotationAuthor()
+        => settings?.Current.AnnotationAuthor is { } name && !string.IsNullOrWhiteSpace(name) ? name.Trim() : Environment.UserName;
 
     /// <summary>Previews and scans for the stamp dialogs; none (the stamp commands off) without a saver to write pages.</summary>
     private StampServices? Stamps()
