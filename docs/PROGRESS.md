@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 7, sau lát 1.
+Cập nhật lần cuối: 27/10/2026 — Phase 7, sau lát 2.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -119,8 +119,8 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | Lát | Nội dung | Commit | Trạng thái |
 |---|---|---|---|
 | 1 | Core `Editing/PageObjects.cs` (`PageObjectKind`, `PageObjectInfo`: chỉ số, loại, hộp bao, 4 góc, ma trận, màu tô; `PageTextObject`: chữ, tên phông, cỡ, nhúng, đậm/nghiêng/serif theo cờ phông, chữ ẩn; `PageImageObject`: cỡ điểm ảnh) + PDFium `PdfiumPage.Objects.cs` (`GetObjects()`), `IPdfDocument.GetPageObjectsAsync`; test trên `basic-vi.pdf`, `big-1000.pdf` | commit `feat(pdfium): read the drawings of a page…` | Xong |
-| 2 | `edit.content` (Operations, PDFium): thay chữ (giữ phông / thay phông đóng gói, xuống dòng), xóa, di chuyển object; golden test (PdfPig thấy chữ mới, không còn chữ cũ; vùng khác render y nguyên) | — | Tiếp theo |
-| 3 | Ảnh: thay ảnh giữ khung, xoay, xóa, trích ảnh độ phân giải gốc | — | |
+| 2 | `edit.content`: Core `Editing/ContentEdits.cs` (`PageObjectRef` nhận diện chỉ số + loại + hộp ±1 pt; `ReplaceTextEdit` có `TextOverflow` Tràn/Xuống dòng, `DeleteObjectEdit`, `MoveObjectEdit`; JSON đa hình); Pdfium `PdfiumDocument.Editing.cs` (`ApplyContentEdits`: tìm hết đối tượng trước, `FPDFTextSetText` / tạo text object mới bằng `FPDFTextLoadFont` (CID, nhúng đủ) với cùng ma trận/cỡ/màu/chế độ vẽ, xuống dòng đo bằng `FPDFFontGetGlyphWidth`, xóa, `FPDFPageObjTransform`, `FPDFPageGenerateContent` từng trang đổi); Operations `Editing/FontCoverage.cs` (ToUnicode bfchar/bfrange, WinAnsi khi không nhúng; còn lại = không tin), `EditContentOperation` (PDFsharp đọc độ phủ phông → PDFium sửa → `SaveCopy`; `MissingCharacters` cho App báo trước), lớp nền chung `FileContentOperation`; tên bước "Sửa chữ / Xóa đối tượng / Di chuyển đối tượng" | commit `feat: edit.content…` | Xong, chờ CI |
+| 3 | Ảnh: thay ảnh giữ khung, xoay, xóa, trích ảnh độ phân giải gốc | — | Tiếp theo |
 | 4 | App: chế độ "Sửa nội dung" (khung khi rê chuột, chọn, đúp chữ → ô nhập tại chỗ, Delete, kéo, menu ảnh) | — | |
 | 5 | Biểu mẫu — đọc field (PDFium) + Core `FormField`; điền trên viewer (giá trị trong phiên, ghi PDFsharp), Tab, field bắt buộc khi lưu, XFA | — | |
 | 6 | `forms.design` (đặt field mới, panel thuộc tính, ghi PDFsharp tầng dictionary) | — | |

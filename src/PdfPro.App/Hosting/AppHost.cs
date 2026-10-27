@@ -14,6 +14,7 @@ using PdfPro.Core.Organizing;
 using PdfPro.Infrastructure;
 using PdfPro.Operations;
 using PdfPro.Operations.Annotating;
+using PdfPro.Operations.Editing;
 using PdfPro.Operations.Materializing;
 using PdfPro.Operations.Layout;
 using PdfPro.Operations.Merging;
@@ -114,6 +115,7 @@ internal static class AppHost
         services.AddOperation<DeleteAnnotationsOperation>();
         services.AddOperation<EditFileAnnotationsOperation>();
         services.AddOperation<FlattenAnnotationsOperation>();
+        services.AddOperation<EditContentOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();

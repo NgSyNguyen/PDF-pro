@@ -1,4 +1,5 @@
 using PdfPro.Core.Annotations;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Overlay;
@@ -12,6 +13,7 @@ public sealed class SessionManifestSerializerTests
 {
     private const string RotateId = "test.rotate";
     private const string InsertId = "test.insert";
+    private const string EditId = "test.edit";
 
     [Fact]
     public void RoundTrip_RestoresTheSnapshotExactly()
@@ -137,6 +139,26 @@ public sealed class SessionManifestSerializerTests
     }
 
     [Fact]
+    public void RoundTrip_KeepsContentEditsOfEveryKind()
+    {
+        var session = EditedSession();
+        var target = new PageObjectRef(1, 7, PageObjectKind.Text, new PdfRect(72.5, 700, 300, 712.25));
+        ContentEdit[] edits =
+        [
+            new ReplaceTextEdit(target, "Ủy ban nhân dân", TextOverflow.Wrap),
+            new MoveObjectEdit(target with { Index = 8, Kind = PageObjectKind.Image }, 12.5, -3),
+            new DeleteObjectEdit(target with { Index = 9, Kind = PageObjectKind.Path }),
+        ];
+        Execute(session, EditId, new TestEdits(edits), p => p, []);
+
+        var json = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(session.CreateSnapshot(), DateTimeOffset.UtcNow));
+        var restored = SessionManifestSerializer.ToSnapshot(SessionManifestSerializer.Deserialize(json), ParameterType);
+
+        var record = restored.Undo[^1].Parameters.ShouldBeOfType<TestEdits>();
+        record.Edits.ShouldBe(edits, "every kind of edit and its target come back as they were");
+    }
+
+    [Fact]
     public void Deserialize_RejectsInvalidJsonAndNewerSchemas()
     {
         Should.Throw<SessionManifestException>(() => SessionManifestSerializer.Deserialize("{ broken"));
@@ -203,6 +225,7 @@ public sealed class SessionManifestSerializerTests
     {
         RotateId => typeof(TestRotate),
         InsertId => typeof(TestInsert),
+        EditId => typeof(TestEdits),
         _ => null,
     };
 
@@ -212,4 +235,6 @@ public sealed class SessionManifestSerializerTests
     private sealed record TestRotate(string Pages, int Degrees);
 
     private sealed record TestInsert(string SourceId, int Page);
+
+    private sealed record TestEdits(IReadOnlyList<ContentEdit> Edits);
 }

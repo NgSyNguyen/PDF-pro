@@ -12,7 +12,7 @@ namespace PdfPro.Pdfium;
 /// An open PDF document. Gate-affine: every member must be used on the PDFium thread (inside
 /// <see cref="PdfiumGate.RunAsync{T}"/>); <see cref="PdfDocumentHandle"/> is the async, thread-safe facade.
 /// </summary>
-public sealed class PdfiumDocument : IDisposable
+public sealed partial class PdfiumDocument : IDisposable
 {
     /// <summary>Largest bitmap one render may allocate (≈ 400 MB in BGRx).</summary>
     public const long MaxBitmapPixels = 100_000_000;

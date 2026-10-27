@@ -1,8 +1,10 @@
 using System.Globalization;
 using PdfPro.App.Resources;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Sessions;
 using PdfPro.Operations.Annotating;
+using PdfPro.Operations.Editing;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Stamping;
 
@@ -43,9 +45,23 @@ internal static class HistoryDescriptions
             UpdateAnnotationsParams p => Format(Strings.History_UpdateAnnotations, p.Items.Count),
             DeleteAnnotationsParams p => Format(Strings.History_DeleteAnnotations, p.Ids.Count),
             EditFileAnnotationsParams p => Describe(p),
+            EditContentParams p => Describe(p),
             FlattenAnnotationsParams p when string.IsNullOrWhiteSpace(p.Pages) => Strings.History_FlattenAnnotations,
             FlattenAnnotationsParams p => Format(Strings.History_FlattenAnnotationsOn, Count(p.Pages!, before)),
             _ => Strings.History_Other,
+        };
+    }
+
+    /// <summary>"Sửa chữ", "Xóa đối tượng", "Di chuyển đối tượng" or "Sửa nội dung (3 thay đổi)".</summary>
+    public static string Describe(EditContentParams parameters)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        return parameters.Edits switch
+        {
+            [ReplaceTextEdit] => Strings.History_ReplaceText,
+            [DeleteObjectEdit] => Strings.History_DeleteObject,
+            [MoveObjectEdit] => Strings.History_MoveObject,
+            _ => Format(Strings.History_EditContent, parameters.Edits.Count),
         };
     }
 

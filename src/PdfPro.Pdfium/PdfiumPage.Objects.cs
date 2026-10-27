@@ -53,7 +53,7 @@ public sealed partial class PdfiumPage
                 if (kind == PageObjectKind.Text)
                 {
                     text ??= LoadText();
-                    words = ReadTextObject(item, text);
+                    words = ReadTextObject(item, text.Native);
                 }
                 else if (kind == PageObjectKind.Image)
                 {
@@ -91,7 +91,7 @@ public sealed partial class PdfiumPage
             : null;
     }
 
-    internal static PageTextObject ReadTextObject(FpdfPageobjectT item, PdfiumTextPage text)
+    internal static PageTextObject ReadTextObject(FpdfPageobjectT item, FpdfTextpageT text)
     {
         var font = fpdf_edit.FPDFTextObjGetFont(item);
         float size = 0;
@@ -118,17 +118,17 @@ public sealed partial class PdfiumPage
             : [new PdfPoint(bounds.Left, bounds.Bottom), new PdfPoint(bounds.Right, bounds.Bottom), new PdfPoint(bounds.Right, bounds.Top), new PdfPoint(bounds.Left, bounds.Top)];
     }
 
-    private static string ObjectText(FpdfPageobjectT item, PdfiumTextPage text)
+    private static string ObjectText(FpdfPageobjectT item, FpdfTextpageT text)
     {
         ushort probe = 0;
-        var length = (long)fpdf_edit.FPDFTextObjGetText(item, text.Native, ref probe, 0);
+        var length = (long)fpdf_edit.FPDFTextObjGetText(item, text, ref probe, 0);
         if (length <= 2 || length > MaxObjectTextBytes)
         {
             return string.Empty;
         }
 
         var buffer = new ushort[(length + 1) / 2];
-        var written = (long)fpdf_edit.FPDFTextObjGetText(item, text.Native, ref buffer[0], (ulong)length);
+        var written = (long)fpdf_edit.FPDFTextObjGetText(item, text, ref buffer[0], (ulong)length);
         var chars = (int)(Math.Min(written, length) / 2) - 1; // drop the terminator
         if (chars <= 0)
         {

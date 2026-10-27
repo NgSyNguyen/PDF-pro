@@ -654,6 +654,10 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Flatten_Apply" xml:space="preserve"><value>Flatten</value></data>
   <data name="History_FlattenAnnotations" xml:space="preserve"><value>Flatten annotations</value></data>
   <data name="History_FlattenAnnotationsOn" xml:space="preserve"><value>Flatten the annotations of {0} pages</value></data>
+  <data name="History_ReplaceText" xml:space="preserve"><value>Edit text</value></data>
+  <data name="History_DeleteObject" xml:space="preserve"><value>Delete an object</value></data>
+  <data name="History_MoveObject" xml:space="preserve"><value>Move an object</value></data>
+  <data name="History_EditContent" xml:space="preserve"><value>Edit content ({0} changes)</value></data>
   <data name="Cmd_Squiggly" xml:space="preserve"><value>Squiggly</value></data>
   <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Highlight the selected text; with nothing selected, turn the tool on and drag over text (Esc turns it off)</value></data>
   <data name="Cmd_Underline_ToolTip" xml:space="preserve"><value>Underline the selected text; with nothing selected, turn the tool on and drag over text</value></data>

@@ -654,6 +654,10 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Flatten_Apply" xml:space="preserve"><value>Làm phẳng</value></data>
   <data name="History_FlattenAnnotations" xml:space="preserve"><value>Làm phẳng chú thích</value></data>
   <data name="History_FlattenAnnotationsOn" xml:space="preserve"><value>Làm phẳng chú thích của {0} trang</value></data>
+  <data name="History_ReplaceText" xml:space="preserve"><value>Sửa chữ</value></data>
+  <data name="History_DeleteObject" xml:space="preserve"><value>Xóa đối tượng</value></data>
+  <data name="History_MoveObject" xml:space="preserve"><value>Di chuyển đối tượng</value></data>
+  <data name="History_EditContent" xml:space="preserve"><value>Sửa nội dung ({0} thay đổi)</value></data>
   <data name="Cmd_Squiggly" xml:space="preserve"><value>Lượn sóng</value></data>
   <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Tô sáng chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ (Esc để tắt)</value></data>
   <data name="Cmd_Underline_ToolTip" xml:space="preserve"><value>Gạch chân chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ</value></data>
