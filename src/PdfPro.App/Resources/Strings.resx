@@ -659,6 +659,7 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="History_MoveObject" xml:space="preserve"><value>Di chuyển đối tượng</value></data>
   <data name="History_RotateObject" xml:space="preserve"><value>Xoay đối tượng</value></data>
   <data name="History_ReplaceImage" xml:space="preserve"><value>Thay ảnh</value></data>
+  <data name="History_FillForm" xml:space="preserve"><value>Điền {0} trường biểu mẫu</value></data>
   <data name="Cmd_EditContent_ToolTip" xml:space="preserve"><value>Sửa chữ, ảnh và hình vẽ có sẵn trên trang: rê chuột để thấy khung, bấm để chọn, kéo để di chuyển, bấm đúp vào chữ để sửa</value></data>
   <data name="ContentEditor_Hint" xml:space="preserve"><value>Sửa nội dung — chữ chỉ sửa chính xác trong phạm vi một khối chữ</value></data>
   <data name="ContentEditor_TextBlock" xml:space="preserve"><value>Khối chữ · {0} {1} pt</value></data>

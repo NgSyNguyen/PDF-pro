@@ -5,6 +5,7 @@ using PdfPro.Core.Organizing;
 using PdfPro.Core.Sessions;
 using PdfPro.Operations.Annotating;
 using PdfPro.Operations.Editing;
+using PdfPro.Operations.Forms;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Stamping;
 
@@ -46,6 +47,7 @@ internal static class HistoryDescriptions
             DeleteAnnotationsParams p => Format(Strings.History_DeleteAnnotations, p.Ids.Count),
             EditFileAnnotationsParams p => Describe(p),
             EditContentParams p => Describe(p),
+            FillFormParams p => Format(Strings.History_FillForm, p.Values.Count),
             FlattenAnnotationsParams p when string.IsNullOrWhiteSpace(p.Pages) => Strings.History_FlattenAnnotations,
             FlattenAnnotationsParams p => Format(Strings.History_FlattenAnnotationsOn, Count(p.Pages!, before)),
             _ => Strings.History_Other,

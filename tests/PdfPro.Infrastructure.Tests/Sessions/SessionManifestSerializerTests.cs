@@ -1,5 +1,6 @@
 using PdfPro.Core.Annotations;
 using PdfPro.Core.Editing;
+using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Overlay;
@@ -156,6 +157,32 @@ public sealed class SessionManifestSerializerTests
 
         var record = restored.Undo[^1].Parameters.ShouldBeOfType<TestEdits>();
         record.Edits.ShouldBe(edits, "every kind of edit and its target come back as they were");
+    }
+
+    [Fact]
+    public void RoundTrip_KeepsTheValuesGivenToTheForm()
+    {
+        var plan = PagePlan.Identity("s0", 2, RandomPageKeys.Instance)
+            .WithFormValues([new FormValue("ho_ten", "Nguyễn Văn An"), new FormValue("so_thich", "Đọc sách", ["Đọc sách", "Âm nhạc"])]);
+        var state = new SessionState(plan, "s0", 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [new SessionSource("s0", "sources/s0.pdf", SessionSourceKind.Original, 2)],
+            State = state,
+            HistoryBase = state,
+            Undo = [],
+            Redo = [],
+        };
+
+        var json = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot, DateTimeOffset.UtcNow));
+        var restored = SessionManifestSerializer.ToSnapshot(SessionManifestSerializer.Deserialize(json), ParameterType).State.Plan;
+
+        restored.FormValues.Values.ShouldBe(plan.FormValues.Values, ignoreOrder: true);
+        restored.HasSameContent(plan).ShouldBeTrue();
+        var plain = new SessionState(PagePlan.Identity("s0", 2, RandomPageKeys.Instance), "s0", 0);
+        var empty = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot with { State = plain, HistoryBase = plain }, DateTimeOffset.UtcNow));
+        empty.ShouldNotContain("formValues", Case.Sensitive, "nothing is written without values");
     }
 
     [Fact]

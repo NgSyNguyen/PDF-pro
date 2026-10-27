@@ -659,6 +659,7 @@ The original file was not changed and your changes are still here.</value></data
   <data name="History_MoveObject" xml:space="preserve"><value>Move an object</value></data>
   <data name="History_RotateObject" xml:space="preserve"><value>Rotate an object</value></data>
   <data name="History_ReplaceImage" xml:space="preserve"><value>Replace an image</value></data>
+  <data name="History_FillForm" xml:space="preserve"><value>Fill {0} form fields</value></data>
   <data name="Cmd_EditContent_ToolTip" xml:space="preserve"><value>Edit the text, images and drawings already on the page: hover to see their frames, click to select, drag to move, double-click text to edit it</value></data>
   <data name="ContentEditor_Hint" xml:space="preserve"><value>Edit content — text is only edited exactly within one text block</value></data>
   <data name="ContentEditor_TextBlock" xml:space="preserve"><value>Text block · {0} {1} pt</value></data>

@@ -129,6 +129,12 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
             }
         }
 
+        if (plan.HasFormValues)
+        {
+            // Values given in the session to the base document's fields; fields of other sources are not merged.
+            Forms.FormWriter.SetValues(baseDocument, [.. plan.FormValues.Values]);
+        }
+
         if (!plan.IsIdentity(request.BaseSourceId, basePageCount))
         {
             // Labels ("i, ii, 1, 2…") describe the old page sequence; they would now be wrong.

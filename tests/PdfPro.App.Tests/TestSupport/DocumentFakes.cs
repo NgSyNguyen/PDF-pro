@@ -76,6 +76,7 @@ internal static class TestOperations
             new Operations.Annotating.EditFileAnnotationsOperation(),
             new Operations.Annotating.FlattenAnnotationsOperation(),
             new Operations.Editing.EditContentOperation(Gate.Value),
+            new Operations.Forms.FillFormOperation(materializer, loader),
         ]);
     }
 }

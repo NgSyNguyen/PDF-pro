@@ -1,5 +1,6 @@
 using System.Collections;
 using PdfPro.Core.Annotations;
+using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
 
 namespace PdfPro.Core.Organizing;
@@ -16,10 +17,17 @@ namespace PdfPro.Core.Organizing;
 /// </remarks>
 public sealed class PagePlan : IReadOnlyList<PageRef>
 {
+    private static readonly IReadOnlyDictionary<string, FormValue> NoFormValues = new Dictionary<string, FormValue>(StringComparer.Ordinal);
+
     private readonly PageRef[] _pages;
+    private readonly IReadOnlyDictionary<string, FormValue> _formValues;
     private Dictionary<Guid, int>? _indexByKey;
 
-    private PagePlan(PageRef[] pages) => _pages = pages;
+    private PagePlan(PageRef[] pages, IReadOnlyDictionary<string, FormValue> formValues)
+    {
+        _pages = pages;
+        _formValues = formValues;
+    }
 
     public int Count => _pages.Length;
 
@@ -44,7 +52,14 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             }
         }
 
-        return new PagePlan(array);
+        return new PagePlan(array, NoFormValues);
+    }
+
+    /// <summary>A plan from explicit pages and the values given to the form's fields (restoring a saved plan).</summary>
+    public static PagePlan Create(IEnumerable<PageRef> pages, IEnumerable<FormValue> formValues)
+    {
+        ArgumentNullException.ThrowIfNull(formValues);
+        return Create(pages).WithFormValues([.. formValues]);
     }
 
     /// <summary>Every page of a source in its original order, without edits (a freshly opened document).</summary>
@@ -99,10 +114,13 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         return -1;
     }
 
-    /// <summary>True when the plan shows every page of the source once, in order, without rotation, crop or annotations.</summary>
+    /// <summary>
+    /// True when the plan shows every page of the source once, in order, without rotation, crop, annotations or form
+    /// values.
+    /// </summary>
     public bool IsIdentity(string sourceId, int pageCount)
     {
-        if (_pages.Length != pageCount)
+        if (_pages.Length != pageCount || _formValues.Count > 0)
         {
             return false;
         }
@@ -161,7 +179,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         }
 
         result.InsertRange(insertAt, selected.Select(i => _pages[i]));
-        return SameOrder(result) ? this : new PagePlan([.. result]);
+        return SameOrder(result) ? this : new PagePlan([.. result], _formValues);
     }
 
     /// <summary>Turns pages clockwise by <paramref name="delta"/> degrees (any multiple of 90; negative turns left).</summary>
@@ -184,7 +202,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             pages[index] = pages[index].WithRotation(pages[index].RotationDelta + delta);
         }
 
-        return new PagePlan(pages);
+        return new PagePlan(pages, _formValues);
     }
 
     /// <summary>Removes pages. A document keeps at least one page.</summary>
@@ -203,7 +221,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             removed[index] = true;
         }
 
-        return new PagePlan(_pages.Where((_, i) => !removed[i]).ToArray());
+        return new PagePlan(_pages.Where((_, i) => !removed[i]).ToArray(), _formValues);
     }
 
     /// <summary>
@@ -278,10 +296,38 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             }
         }
 
-        return pages is null ? this : new PagePlan(pages);
+        return pages is null ? this : new PagePlan(pages, _formValues);
     }
 
     /// <summary>True when at least one page carries annotations added in the session.</summary>
+    /// <summary>The values given in the session to the fields of the form (by fully qualified name), written when materialized.</summary>
+    public IReadOnlyDictionary<string, FormValue> FormValues => _formValues;
+
+    public bool HasFormValues => _formValues.Count > 0;
+
+    /// <summary>The plan with these field values (each replacing the one of the same field); this plan when nothing changes.</summary>
+    public PagePlan WithFormValues(IReadOnlyCollection<FormValue> values)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        if (values.All(v => v is not null && _formValues.TryGetValue(v.Name, out var current) && current.Equals(v)))
+        {
+            return this;
+        }
+
+        var merged = new Dictionary<string, FormValue>(_formValues, StringComparer.Ordinal);
+        foreach (var value in values)
+        {
+            ArgumentNullException.ThrowIfNull(value, nameof(values));
+            merged[value.Name] = value;
+        }
+
+        return new PagePlan(_pages, merged);
+    }
+
+    private bool SameFormValues(PagePlan other)
+        => _formValues.Count == other._formValues.Count
+            && _formValues.All(v => other._formValues.TryGetValue(v.Key, out var value) && value.Equals(v.Value));
+
     public bool HasAnnotations => Array.Exists(_pages, p => p.Annotations.Count > 0);
 
     /// <summary>Gives the page at <paramref name="index"/> these session annotations.</summary>
@@ -298,7 +344,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
 
         var pages = (PageRef[])_pages.Clone();
         pages[index] = page;
-        return new PagePlan(pages);
+        return new PagePlan(pages, _formValues);
     }
 
     /// <summary>True when at least one page carries a split mark.</summary>
@@ -353,7 +399,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         return previous.Count != Count ? this : ReplaceMarks(Enumerable.Range(0, Count), (index, _) => previous[index].SplitMark);
     }
 
-    /// <summary>True when both plans show the same pages, in the same order and the same way (split marks aside).</summary>
+    /// <summary>True when both plans show the same pages, in the same order and the same way, with the same form values (split marks aside).</summary>
     public bool HasSameContent(PagePlan other)
     {
         ArgumentNullException.ThrowIfNull(other);
@@ -362,7 +408,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             return true;
         }
 
-        if (other.Count != Count)
+        if (other.Count != Count || !SameFormValues(other))
         {
             return false;
         }
@@ -379,7 +425,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
     }
 
     /// <summary>
-    /// True when both plans show the same pages in the same order and the same way, annotations and split marks aside:
+    /// True when both plans show the same pages in the same order and the same way, annotations, form values and split marks aside:
     /// what depends on the pages and their text (selections, search results) still holds.
     /// </summary>
     public bool HasSamePages(PagePlan other)
@@ -419,7 +465,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             }
         }
 
-        return pages is null ? this : new PagePlan(pages);
+        return pages is null ? this : new PagePlan(pages, _formValues);
     }
 
     /// <summary>Validated, sorted, distinct page positions.</summary>
@@ -448,7 +494,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         Array.Copy(_pages, 0, pages, 0, index);
         Array.Copy(inserted, 0, pages, index, inserted.Length);
         Array.Copy(_pages, index, pages, index + inserted.Length, Count - index);
-        return new PagePlan(pages);
+        return new PagePlan(pages, _formValues);
     }
 
     private Guid[] NewUniqueKeys(IPageKeyGenerator keys, int count)

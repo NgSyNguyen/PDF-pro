@@ -106,7 +106,7 @@ public static class SessionManifestSerializer
     }
 
     private static StateDto ToDto(SessionState state)
-        => new(state.BaseSourceId, state.Revision, [.. state.Plan.Select(ToDto)]);
+        => new(state.BaseSourceId, state.Revision, [.. state.Plan.Select(ToDto)], state.Plan.HasFormValues ? [.. state.Plan.FormValues.Values] : null);
 
     private static PageDto ToDto(PageRef page) => new(
         page.SourceId,
@@ -125,7 +125,7 @@ public static class SessionManifestSerializer
         record.NewSourceId);
 
     private static SessionState FromDto(StateDto state)
-        => new(PagePlan.Create(state.Plan.Select(FromDto)), state.BaseSourceId, state.Revision);
+        => new(PagePlan.Create(state.Plan.Select(FromDto), state.FormValues ?? []), state.BaseSourceId, state.Revision);
 
     private static PageRef FromDto(PageDto page)
     {

@@ -72,6 +72,6 @@ public sealed class InterleaveOperation(IPlanMaterializer materializer, IPdfDocu
             .ToArray();
         return result.Length == plan.Count && result.Select((page, i) => ReferenceEquals(page, plan[i])).All(same => same)
             ? plan
-            : PagePlan.Create(result);
+            : PagePlan.Create(result, plan.FormValues.Values);
     }
 }

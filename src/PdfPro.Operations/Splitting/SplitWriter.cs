@@ -87,7 +87,7 @@ internal sealed class SplitWriter(IPlanMaterializer materializer)
 
     private async Task WriteFileAsync(SplitDocument document, SplitSegment segment, string path, CancellationToken cancellationToken)
     {
-        var plan = PagePlan.Create(segment.Pages.Select(i => document.Plan[i]));
+        var plan = PagePlan.Create(segment.Pages.Select(i => document.Plan[i]), document.Plan.FormValues.Values);
         var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81_920, FileOptions.Asynchronous);
         await using (output.ConfigureAwait(false))
         {
