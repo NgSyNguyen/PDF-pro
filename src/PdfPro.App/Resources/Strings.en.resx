@@ -670,6 +670,50 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Cmd_Ink_ToolTip" xml:space="preserve"><value>Draw free-hand on the page (the tool stays on until Esc)</value></data>
   <data name="Cmd_Shapes_ToolTip" xml:space="preserve"><value>Rectangles, ellipses, lines, arrows, polygons — chosen on the tool bar</value></data>
   <data name="Cmd_StampAnnotation_ToolTip" xml:space="preserve"><value>Click on the page to stamp it (APPROVED, REVIEWED…) with the date</value></data>
+  <data name="Comments_Title" xml:space="preserve"><value>Comments</value></data>
+  <data name="Sidebar_Comments" xml:space="preserve"><value>Comments</value></data>
+  <data name="Sidebar_CommentsEmpty" xml:space="preserve"><value>Open a document to see its comments.</value></data>
+  <data name="Comments_Loading" xml:space="preserve"><value>Reading comments…</value></data>
+  <data name="Comments_None" xml:space="preserve"><value>No comments.</value></data>
+  <data name="Comments_Count" xml:space="preserve"><value>{0} comments</value></data>
+  <data name="Comments_CountFiltered" xml:space="preserve"><value>{0}/{1} comments</value></data>
+  <data name="Comments_Search" xml:space="preserve"><value>Search the comments</value></data>
+  <data name="Comments_Filter_Kind" xml:space="preserve"><value>Kind</value></data>
+  <data name="Comments_Filter_Author" xml:space="preserve"><value>Author</value></data>
+  <data name="Comments_Filter_State" xml:space="preserve"><value>Status</value></data>
+  <data name="Comments_Filter_AllKinds" xml:space="preserve"><value>All kinds</value></data>
+  <data name="Comments_Filter_Notes" xml:space="preserve"><value>Notes and text boxes</value></data>
+  <data name="Comments_Filter_Markup" xml:space="preserve"><value>Text markup</value></data>
+  <data name="Comments_Filter_Drawings" xml:space="preserve"><value>Drawings</value></data>
+  <data name="Comments_Filter_Stamps" xml:space="preserve"><value>Stamps</value></data>
+  <data name="Comments_Filter_AllAuthors" xml:space="preserve"><value>All authors</value></data>
+  <data name="Comments_Filter_AllStates" xml:space="preserve"><value>Any status</value></data>
+  <data name="Comments_State_None" xml:space="preserve"><value>No status</value></data>
+  <data name="Comments_State_Accepted" xml:space="preserve"><value>Accepted</value></data>
+  <data name="Comments_State_Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="Comments_State_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="Comments_State_Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="Comments_Kind_Other" xml:space="preserve"><value>Annotation</value></data>
+  <data name="Comments_Kind_Attachment" xml:space="preserve"><value>File attachment</value></data>
+  <data name="Comments_Kind_Caret" xml:space="preserve"><value>Insert text</value></data>
+  <data name="Comments_FromFile" xml:space="preserve"><value>Already in the file — view only</value></data>
+  <data name="Comments_Reply" xml:space="preserve"><value>Reply</value></data>
+  <data name="Comments_ReplyPlaceholder" xml:space="preserve"><value>Write a reply…</value></data>
+  <data name="Comments_Delete" xml:space="preserve"><value>Delete comment</value></data>
+  <data name="Comments_Export" xml:space="preserve"><value>Export…</value></data>
+  <data name="Comments_Export_ToolTip" xml:space="preserve"><value>Export the comments shown to a Markdown or CSV file</value></data>
+  <data name="Comments_Export_Page" xml:space="preserve"><value>Page</value></data>
+  <data name="Comments_Export_Kind" xml:space="preserve"><value>Kind</value></data>
+  <data name="Comments_Export_Author" xml:space="preserve"><value>Author</value></data>
+  <data name="Comments_Export_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Comments_Export_Contents" xml:space="preserve"><value>Comment</value></data>
+  <data name="Comments_Export_MarkedText" xml:space="preserve"><value>Marked text</value></data>
+  <data name="Comments_Export_State" xml:space="preserve"><value>Status</value></data>
+  <data name="Comments_Export_Reply" xml:space="preserve"><value>Reply</value></data>
+  <data name="Comments_Export_ErrorTitle" xml:space="preserve"><value>The comments could not be exported</value></data>
+  <data name="Comments_Export_Error" xml:space="preserve"><value>The file could not be written. Check that the folder has free space and that you may write there.</value></data>
+  <data name="Comments_ExportDialog_Title" xml:space="preserve"><value>Export comments</value></data>
+  <data name="Comments_ExportDialog_Filter" xml:space="preserve"><value>Markdown (*.md)|*.md|CSV — opens in Excel (*.csv)|*.csv</value></data>
   <data name="Settings_AnnotationAuthor" xml:space="preserve"><value>Annotation author</value></data>
   <data name="Settings_AnnotationAuthor_Hint" xml:space="preserve"><value>Shown to the readers of the document next to your annotations. Blank: your Windows user name.</value></data>
   <data name="Editor_Delete" xml:space="preserve"><value>Delete</value></data>

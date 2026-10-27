@@ -9,6 +9,7 @@
   xmlns:controls="clr-namespace:PdfPro.App.Controls"
   xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
   xmlns:viewer="clr-namespace:PdfPro.App.ViewModels.Viewer"
+  xmlns:annotating="clr-namespace:PdfPro.App.ViewModels.Annotating"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
   d:DesignHeight="600"
@@ -130,7 +131,7 @@
       <!-- Segmented switch; icon above label so both fit the narrowest sidebar. -->
       <UniformGrid
         Margin="8"
-        Columns="3"
+        Columns="4"
         DataContext="{Binding Sidebar}"
         DockPanel.Dock="Top">
         <RadioButton
@@ -149,7 +150,9 @@
               Margin="0,2,0,0"
               HorizontalAlignment="Center"
               FontSize="12"
-              Text="{loc:Tr Sidebar_Thumbnails}" />
+              Text="{loc:Tr Sidebar_Thumbnails}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Thumbnails}" />
           </StackPanel>
         </RadioButton>
         <RadioButton
@@ -168,7 +171,9 @@
               Margin="0,2,0,0"
               HorizontalAlignment="Center"
               FontSize="12"
-              Text="{loc:Tr Sidebar_Bookmarks}" />
+              Text="{loc:Tr Sidebar_Bookmarks}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Bookmarks}" />
           </StackPanel>
         </RadioButton>
         <RadioButton
@@ -187,7 +192,30 @@
               Margin="0,2,0,0"
               HorizontalAlignment="Center"
               FontSize="12"
-              Text="{loc:Tr Sidebar_Search}" />
+              Text="{loc:Tr Sidebar_Search}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Search}" />
+          </StackPanel>
+        </RadioButton>
+        <RadioButton
+          Margin="2,0,0,0"
+          Padding="4,6"
+          HorizontalAlignment="Stretch"
+          HorizontalContentAlignment="Center"
+          AutomationProperties.AutomationId="SidebarComments"
+          AutomationProperties.Name="{loc:Tr Sidebar_Comments}"
+          GroupName="SidebarPanel"
+          IsChecked="{Binding IsCommentsSelected}"
+          Style="{StaticResource {x:Type ToggleButton}}">
+          <StackPanel>
+            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="CommentMultiple24" />
+            <TextBlock
+              Margin="0,2,0,0"
+              HorizontalAlignment="Center"
+              FontSize="12"
+              Text="{loc:Tr Sidebar_Comments}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Comments}" />
           </StackPanel>
         </RadioButton>
       </UniformGrid>
@@ -430,6 +458,208 @@
                         FontWeight="SemiBold"
                         Text="{Binding Snippet.Match, Mode=OneWay}" /><Run Text="{Binding Snippet.After, Mode=OneWay}" />
                     </TextBlock>
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+        </Grid>
+
+        <!-- Comments -->
+        <Grid Visibility="{Binding Sidebar.IsCommentsSelected, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock
+            Style="{StaticResource SidebarMessage}"
+            Text="{loc:Tr Sidebar_CommentsEmpty}"
+            Visibility="{Binding HasActiveDocument, Converter={StaticResource InverseBoolToVisibility}}" />
+          <DockPanel
+            Margin="8,0,8,8"
+            DataContext="{Binding ActiveDocument.Comments}"
+            Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <DockPanel DockPanel.Dock="Top">
+              <ui:Button
+                Margin="4,0,0,0"
+                Padding="6"
+                AutomationProperties.AutomationId="CommentsExport"
+                AutomationProperties.Name="{loc:Tr Comments_Export}"
+                Command="{Binding ExportCommand}"
+                DockPanel.Dock="Right"
+                Icon="{ui:SymbolIcon ArrowExportUp24}"
+                ToolTip="{loc:Tr Comments_Export_ToolTip}" />
+              <ui:TextBox
+                AutomationProperties.AutomationId="CommentsSearch"
+                AutomationProperties.Name="{loc:Tr Comments_Search}"
+                PlaceholderText="{loc:Tr Comments_Search}"
+                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+            <StackPanel Margin="0,6,0,0" DockPanel.Dock="Top">
+              <ComboBox
+                Margin="0,0,0,4"
+                AutomationProperties.AutomationId="CommentsKind"
+                AutomationProperties.Name="{loc:Tr Comments_Filter_Kind}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding KindOptions}"
+                SelectedValue="{Binding KindFilter}"
+                SelectedValuePath="Value" />
+              <ComboBox
+                Margin="0,0,0,4"
+                AutomationProperties.AutomationId="CommentsAuthor"
+                AutomationProperties.Name="{loc:Tr Comments_Filter_Author}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding AuthorOptions}"
+                SelectedValue="{Binding AuthorFilter}"
+                SelectedValuePath="Value" />
+              <ComboBox
+                AutomationProperties.AutomationId="CommentsState"
+                AutomationProperties.Name="{loc:Tr Comments_Filter_State}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding StateOptions}"
+                SelectedValue="{Binding StateFilter}"
+                SelectedValuePath="Value" />
+              <TextBlock
+                Margin="0,8,0,0"
+                AutomationProperties.AutomationId="CommentsStatus"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="{Binding StatusText}"
+                TextWrapping="Wrap" />
+              <ProgressBar
+                Margin="0,4,0,4"
+                IsIndeterminate="True"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+            <ListBox
+              AutomationProperties.AutomationId="CommentsList"
+              AutomationProperties.Name="{loc:Tr Comments_Title}"
+              Background="Transparent"
+              BorderThickness="0"
+              ItemsSource="{Binding Items}"
+              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+              SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+              VirtualizingPanel.IsVirtualizing="True"
+              VirtualizingPanel.ScrollUnit="Pixel"
+              VirtualizingPanel.VirtualizationMode="Recycling">
+              <ListBox.ItemContainerStyle>
+                <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                  <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+                  <Setter Property="Padding" Value="6,6" />
+                  <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+              </ListBox.ItemContainerStyle>
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type annotating:CommentItemViewModel}">
+                  <StackPanel>
+                    <DockPanel>
+                      <TextBlock
+                        Margin="6,0,0,0"
+                        DockPanel.Dock="Right"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding PageLabel}" />
+                      <TextBlock
+                        FontWeight="SemiBold"
+                        Text="{Binding KindLabel}"
+                        TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <TextBlock
+                      FontSize="11"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding Byline}"
+                      TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                      Margin="0,2,0,0"
+                      FontSize="11"
+                      FontWeight="SemiBold"
+                      Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                      Text="{Binding StateText}"
+                      Visibility="{Binding StateText, Converter={StaticResource NullToCollapsed}}" />
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      FontStyle="Italic"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding MarkedText}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding HasMarkedText, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      Text="{Binding Contents}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding HasContents, Converter={StaticResource BoolToVisibility}}" />
+                    <ItemsControl
+                      Margin="12,4,0,0"
+                      ItemsSource="{Binding Replies}"
+                      Visibility="{Binding HasReplies, Converter={StaticResource BoolToVisibility}}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <TextBlock Margin="0,2,0,0" TextWrapping="Wrap">
+                            <Run FontWeight="SemiBold" Text="{Binding Author, Mode=OneWay}" /><Run Text=": " /><Run Text="{Binding Contents, Mode=OneWay}" />
+                          </TextBlock>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      FontSize="11"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{loc:Tr Comments_FromFile}"
+                      Visibility="{Binding CanEdit, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <!-- Answering, reviewing and deleting a comment of the session, once it is chosen. -->
+                    <StackPanel Margin="0,6,0,0" Visibility="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource BoolToVisibility}}">
+                      <StackPanel Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibility}}">
+                        <DockPanel>
+                          <ui:Button
+                            Margin="4,0,0,0"
+                            Padding="6"
+                            AutomationProperties.AutomationId="CommentReply"
+                            AutomationProperties.Name="{loc:Tr Comments_Reply}"
+                            Command="{Binding ReplyCommand}"
+                            DockPanel.Dock="Right"
+                            Icon="{ui:SymbolIcon Send24}"
+                            ToolTip="{loc:Tr Comments_Reply}" />
+                          <TextBox
+                            AcceptsReturn="True"
+                            AutomationProperties.AutomationId="CommentReplyText"
+                            AutomationProperties.Name="{loc:Tr Comments_ReplyPlaceholder}"
+                            MaxHeight="120"
+                            Text="{Binding ReplyDraft, UpdateSourceTrigger=PropertyChanged}"
+                            TextWrapping="Wrap"
+                            ToolTip="{loc:Tr Comments_ReplyPlaceholder}"
+                            VerticalScrollBarVisibility="Auto" />
+                        </DockPanel>
+                        <WrapPanel Margin="0,4,0,0">
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentAccept"
+                            Command="{Binding SetStateCommand}"
+                            CommandParameter="Accepted"
+                            Content="{loc:Tr Comments_State_Accepted}"
+                            Icon="{ui:SymbolIcon Checkmark24}" />
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentReject"
+                            Command="{Binding SetStateCommand}"
+                            CommandParameter="Rejected"
+                            Content="{loc:Tr Comments_State_Rejected}"
+                            Icon="{ui:SymbolIcon Dismiss24}" />
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentComplete"
+                            Command="{Binding SetStateCommand}"
+                            CommandParameter="Completed"
+                            Content="{loc:Tr Comments_State_Completed}"
+                            Icon="{ui:SymbolIcon CheckmarkCircle24}" />
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentDelete"
+                            AutomationProperties.Name="{loc:Tr Comments_Delete}"
+                            Command="{Binding DeleteCommand}"
+                            Icon="{ui:SymbolIcon Delete24}"
+                            ToolTip="{loc:Tr Comments_Delete}" />
+                        </WrapPanel>
+                      </StackPanel>
+                    </StackPanel>
                   </StackPanel>
                 </DataTemplate>
               </ListBox.ItemTemplate>

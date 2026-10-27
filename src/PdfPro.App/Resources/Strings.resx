@@ -670,6 +670,50 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Cmd_Ink_ToolTip" xml:space="preserve"><value>Vẽ tay lên trang (công cụ giữ nguyên tới khi Esc)</value></data>
   <data name="Cmd_Shapes_ToolTip" xml:space="preserve"><value>Hình chữ nhật, elip, đường thẳng, mũi tên, đa giác — chọn trên thanh công cụ</value></data>
   <data name="Cmd_StampAnnotation_ToolTip" xml:space="preserve"><value>Bấm vào trang để đóng con dấu (ĐÃ DUYỆT, ĐÃ XEM…) kèm ngày</value></data>
+  <data name="Comments_Title" xml:space="preserve"><value>Bình luận</value></data>
+  <data name="Sidebar_Comments" xml:space="preserve"><value>Bình luận</value></data>
+  <data name="Sidebar_CommentsEmpty" xml:space="preserve"><value>Mở một tài liệu để xem bình luận.</value></data>
+  <data name="Comments_Loading" xml:space="preserve"><value>Đang đọc bình luận…</value></data>
+  <data name="Comments_None" xml:space="preserve"><value>Không có bình luận.</value></data>
+  <data name="Comments_Count" xml:space="preserve"><value>{0} bình luận</value></data>
+  <data name="Comments_CountFiltered" xml:space="preserve"><value>{0}/{1} bình luận</value></data>
+  <data name="Comments_Search" xml:space="preserve"><value>Tìm trong bình luận</value></data>
+  <data name="Comments_Filter_Kind" xml:space="preserve"><value>Loại</value></data>
+  <data name="Comments_Filter_Author" xml:space="preserve"><value>Tác giả</value></data>
+  <data name="Comments_Filter_State" xml:space="preserve"><value>Trạng thái</value></data>
+  <data name="Comments_Filter_AllKinds" xml:space="preserve"><value>Mọi loại</value></data>
+  <data name="Comments_Filter_Notes" xml:space="preserve"><value>Ghi chú và hộp chữ</value></data>
+  <data name="Comments_Filter_Markup" xml:space="preserve"><value>Đánh dấu chữ</value></data>
+  <data name="Comments_Filter_Drawings" xml:space="preserve"><value>Hình vẽ</value></data>
+  <data name="Comments_Filter_Stamps" xml:space="preserve"><value>Con dấu</value></data>
+  <data name="Comments_Filter_AllAuthors" xml:space="preserve"><value>Mọi tác giả</value></data>
+  <data name="Comments_Filter_AllStates" xml:space="preserve"><value>Mọi trạng thái</value></data>
+  <data name="Comments_State_None" xml:space="preserve"><value>Chưa có trạng thái</value></data>
+  <data name="Comments_State_Accepted" xml:space="preserve"><value>Đã chấp nhận</value></data>
+  <data name="Comments_State_Rejected" xml:space="preserve"><value>Từ chối</value></data>
+  <data name="Comments_State_Cancelled" xml:space="preserve"><value>Đã hủy</value></data>
+  <data name="Comments_State_Completed" xml:space="preserve"><value>Hoàn thành</value></data>
+  <data name="Comments_Kind_Other" xml:space="preserve"><value>Chú thích</value></data>
+  <data name="Comments_Kind_Attachment" xml:space="preserve"><value>Tệp đính kèm</value></data>
+  <data name="Comments_Kind_Caret" xml:space="preserve"><value>Chèn chữ</value></data>
+  <data name="Comments_FromFile" xml:space="preserve"><value>Có sẵn trong tệp — chỉ xem</value></data>
+  <data name="Comments_Reply" xml:space="preserve"><value>Trả lời</value></data>
+  <data name="Comments_ReplyPlaceholder" xml:space="preserve"><value>Viết trả lời…</value></data>
+  <data name="Comments_Delete" xml:space="preserve"><value>Xóa bình luận</value></data>
+  <data name="Comments_Export" xml:space="preserve"><value>Xuất…</value></data>
+  <data name="Comments_Export_ToolTip" xml:space="preserve"><value>Xuất các bình luận đang hiện ra tệp Markdown hoặc CSV</value></data>
+  <data name="Comments_Export_Page" xml:space="preserve"><value>Trang</value></data>
+  <data name="Comments_Export_Kind" xml:space="preserve"><value>Loại</value></data>
+  <data name="Comments_Export_Author" xml:space="preserve"><value>Tác giả</value></data>
+  <data name="Comments_Export_Date" xml:space="preserve"><value>Ngày</value></data>
+  <data name="Comments_Export_Contents" xml:space="preserve"><value>Nội dung</value></data>
+  <data name="Comments_Export_MarkedText" xml:space="preserve"><value>Chữ được đánh dấu</value></data>
+  <data name="Comments_Export_State" xml:space="preserve"><value>Trạng thái</value></data>
+  <data name="Comments_Export_Reply" xml:space="preserve"><value>Trả lời</value></data>
+  <data name="Comments_Export_ErrorTitle" xml:space="preserve"><value>Không xuất được bình luận</value></data>
+  <data name="Comments_Export_Error" xml:space="preserve"><value>Không ghi được tệp. Hãy kiểm tra thư mục còn chỗ trống và bạn có quyền ghi vào đó.</value></data>
+  <data name="Comments_ExportDialog_Title" xml:space="preserve"><value>Xuất bình luận</value></data>
+  <data name="Comments_ExportDialog_Filter" xml:space="preserve"><value>Markdown (*.md)|*.md|CSV — mở bằng Excel (*.csv)|*.csv</value></data>
   <data name="Settings_AnnotationAuthor" xml:space="preserve"><value>Tên tác giả chú thích</value></data>
   <data name="Settings_AnnotationAuthor_Hint" xml:space="preserve"><value>Hiện cho người đọc tài liệu bên cạnh chú thích của bạn. Để trống: dùng tên người dùng Windows.</value></data>
   <data name="Editor_Delete" xml:space="preserve"><value>Xóa</value></data>

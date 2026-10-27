@@ -65,13 +65,14 @@ public enum SidebarPanel
     Thumbnails,
     Bookmarks,
     Search,
+    Comments,
 }
 
 /// <summary>Left sidebar: page thumbnails or the bookmark tree.</summary>
 public sealed partial class SidebarViewModel : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsThumbnailsSelected), nameof(IsBookmarksSelected), nameof(IsSearchSelected))]
+    [NotifyPropertyChangedFor(nameof(IsThumbnailsSelected), nameof(IsBookmarksSelected), nameof(IsSearchSelected), nameof(IsCommentsSelected))]
     public partial SidebarPanel SelectedPanel { get; set; }
 
     public bool IsThumbnailsSelected
@@ -106,6 +107,18 @@ public sealed partial class SidebarViewModel : ObservableObject
             if (value)
             {
                 SelectedPanel = SidebarPanel.Search;
+            }
+        }
+    }
+
+    public bool IsCommentsSelected
+    {
+        get => SelectedPanel == SidebarPanel.Comments;
+        set
+        {
+            if (value)
+            {
+                SelectedPanel = SidebarPanel.Comments;
             }
         }
     }

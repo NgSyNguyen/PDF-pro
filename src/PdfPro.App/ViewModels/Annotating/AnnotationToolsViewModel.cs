@@ -499,6 +499,14 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Selects an annotation of the session (chosen in the comments list).</summary>
+    public void Select(AnnotationTarget target)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        Selected = Find(target) is null ? null : target;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
     /// <summary>Turns the tool off ("Xong" on the tool bar).</summary>
     [RelayCommand]
     public void StopTool() => Tool = AnnotationTool.None;

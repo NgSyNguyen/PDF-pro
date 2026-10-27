@@ -115,6 +115,20 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickCommentExportPath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Comments_ExportDialog_Title,
+            Filter = Strings.Comments_ExportDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".md",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickFolder(string title, string? initialDirectory)
     {
         var dialog = new OpenFolderDialog { Title = title, Multiselect = false };

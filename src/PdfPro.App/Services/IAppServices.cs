@@ -123,6 +123,11 @@ public interface IFileDialogService
     /// <returns>The chosen file, or null when cancelled.</returns>
     string? PickImageFile(string title);
 
+    /// <summary>Asks where to write the comments list: Markdown (.md) or CSV (.csv); overwriting asks for confirmation.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickCommentExportPath(string suggestedFileName);
+
     /// <summary>Asks for a folder (where split files go).</summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="initialDirectory">Folder shown first (or its nearest existing parent), or null.</param>

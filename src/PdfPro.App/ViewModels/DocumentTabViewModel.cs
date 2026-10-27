@@ -137,6 +137,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             Fonts = Editor.Fonts,
             Images = Editor.Images,
         };
+        Comments = new CommentsViewModel(viewer, Annotations, Editor.GeometryOf, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), services.FileDialogs, _messages, () => Workspace.FileName, logger);
         _shownPlan = workspace.Session.Plan;
         Editor.ApplyRequested += OnEditorApplyRequested;
         Editor.PropertyChanged += OnEditorPropertyChanged;
@@ -175,6 +176,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>Annotating: marking text, notes, selecting, moving and deleting annotations of the session.</summary>
     public AnnotationToolsViewModel Annotations { get; }
+
+    /// <summary>"Bình luận": every comment of the document, with their conversations.</summary>
+    public CommentsViewModel Comments { get; }
 
     /// <summary>Objects wait in the page editor: saving, printing and closing apply them first.</summary>
     public bool HasPendingEdits => Editor.HasObjects;
@@ -1025,6 +1029,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
 
         Annotations.Refresh();
+        Comments.Invalidate();
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
         Editor.Refresh();

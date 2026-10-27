@@ -126,6 +126,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Tabs = [Home];
         SelectedTab = Home;
         StatusBar.PropertyChanged += OnStatusBarPropertyChanged;
+        Sidebar.PropertyChanged += OnSidebarPropertyChanged;
     }
 
     public IReadOnlyList<RibbonTabViewModel> RibbonTabs { get; }
@@ -441,6 +442,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         if (_trackedDocument is not null)
         {
+            _trackedDocument.Comments.IsActive = false;
             _trackedDocument.PropertyChanged -= OnActiveDocumentPropertyChanged;
             _trackedDocument.ExtractRequested -= OnExtractRequested;
             _trackedDocument.ContentChangeRequested -= OnContentChangeRequested;
@@ -474,6 +476,24 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         UpdateHistoryToolTips();
+        UpdateCommentsPanel();
+    }
+
+    /// <summary>The comments of the active document are read while the "Bình luận" panel shows them.</summary>
+    private void UpdateCommentsPanel()
+    {
+        if (_trackedDocument is { } document)
+        {
+            document.Comments.IsActive = Sidebar.SelectedPanel == SidebarPanel.Comments;
+        }
+    }
+
+    private void OnSidebarPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SidebarViewModel.SelectedPanel))
+        {
+            UpdateCommentsPanel();
+        }
     }
 
     private void OnActiveDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
