@@ -165,6 +165,110 @@ public sealed class DesignFormOperationTests(PdfiumFixture pdfium) : IDisposable
     }
 
     [Fact]
+    public async Task AMovedWidget_KeepsItsLook_AResizedOneIsDrawnAgain()
+    {
+        var first = await ApplyAsync(Samples.BasicVi, new DesignFormParams(Add: Fields()));
+        (double Width, byte[] Content) Look(string path, string name, int widget)
+        {
+            using var document = PdfReader.Open(path, PdfDocumentOpenMode.Import);
+            var (_, _, widgets) = FormReader.Fields(document).Single(f => f.Field.Name == name);
+            var normal = AsDictionary(AsDictionary(widgets[widget].Elements["/AP"])!.Elements["/N"])!;
+            var box = AsArray(normal.Elements["/BBox"])!;
+            return (box.Elements.GetReal(2) - box.Elements.GetReal(0), normal.Stream.UnfilteredValue);
+        }
+
+        var output = await ApplyAsync(first, new DesignFormParams(Widgets:
+        [
+            new FormWidgetChange("so_tien", 0, new PdfRect(120, 230, 320, 250)),
+            new FormWidgetChange("ngay_sinh", 0, new PdfRect(100, 160, 400, 190)),
+        ]));
+
+        using var result = PdfReader.Open(output, PdfDocumentOpenMode.Import);
+        var fields = FormReader.Read(result).ToDictionary(f => f.Name);
+        fields["so_tien"].Widgets[0].Rect.ShouldBe(new PdfRect(120, 230, 320, 250));
+        fields["ngay_sinh"].Widgets[0].Rect.ShouldBe(new PdfRect(100, 160, 400, 190));
+        Look(output, "so_tien", 0).Content.ShouldBe(Look(first, "so_tien", 0).Content, "only moved: the same drawing, fitted to the new box");
+        Look(first, "ngay_sinh", 0).Width.ShouldBe(200, 0.01);
+        Look(output, "ngay_sinh", 0).Width.ShouldBe(300, 0.01, "drawn again at the new width");
+    }
+
+    [Fact]
+    public async Task RemovedWidgets_LeaveTheirField_AndTheLastOneTakesTheFieldWithIt()
+    {
+        var first = await ApplyAsync(Samples.BasicVi, new DesignFormParams(Add: Fields()));
+
+        var output = await ApplyAsync(first, new DesignFormParams(Widgets: [new FormWidgetChange("gioi_tinh", 1, null), new FormWidgetChange("ngay_sinh", 0, null)]));
+
+        using var result = PdfReader.Open(output, PdfDocumentOpenMode.Import);
+        var fields = FormReader.Read(result).ToDictionary(f => f.Name);
+        fields.ContainsKey("ngay_sinh").ShouldBeFalse();
+        fields["gioi_tinh"].Widgets.ShouldHaveSingleItem().OnState.ShouldBe("Nam");
+        Annots(result, 0).ShouldBe(3);
+        await Should.ThrowAsync<InvalidDataException>(() => ApplyAsync(output, new DesignFormParams(Widgets: [new FormWidgetChange("gioi_tinh", 1, new PdfRect(0, 0, 20, 20))])));
+    }
+
+    [Fact]
+    public async Task UpdatedProperties_AreWrittenInPlace_KeepingOtherActions()
+    {
+        var first = await ApplyAsync(Samples.BasicVi, new DesignFormParams(Add: [.. Fields(), new FormFieldSpec("gui", FormFieldKind.PushButton, 0, new PdfRect(100, 50, 180, 80), Caption: "Gửi")]));
+        var withCalculation = _temp.Combine($"calc-{Guid.NewGuid():N}.pdf");
+        using (var document = PdfReader.Open(first, PdfDocumentOpenMode.Modify))
+        {
+            var (_, field, _) = FormReader.Fields(document).Single(f => f.Field.Name == "so_tien");
+            var calculate = new PdfDictionary(document);
+            calculate.Elements.SetName("/S", "/JavaScript");
+            calculate.Elements["/JS"] = new PdfString("AFSimple_Calculate(\"SUM\", new Array (\"a\", \"b\"));");
+            AsDictionary(field.Elements["/AA"])!.Elements["/C"] = calculate;
+            document.Save(withCalculation);
+        }
+
+        var amountSpec = Fields()[0] with
+        {
+            Name = "thanh_toan.so_tien",
+            Flags = FormFieldFlags.Required,
+            ToolTip = "Số tiền",
+            Value = "990000",
+            Format = FormTextFormat.Number(0, NumberSeparators.CommaDot),
+            FontFamily = FontFamilies.BeVietnamPro,
+            FontSize = 11,
+        };
+        var output = await ApplyAsync(withCalculation, new DesignFormParams(Update:
+        [
+            new FormFieldUpdate("so_tien", amountSpec),
+            new FormFieldUpdate("ghi_chu", Fields()[2] with { Flags = FormFieldFlags.None, ToolTip = null, FontFamily = FontFamilies.NotoSans }),
+            new FormFieldUpdate("gui", new FormFieldSpec("gui", FormFieldKind.PushButton, 0, default, Caption: "Nộp hồ sơ")),
+        ]));
+
+        using var result = PdfReader.Open(output, PdfDocumentOpenMode.Import);
+        var all = FormReader.Fields(result);
+        var (amount, dictionary, _) = all.Single(f => f.Field.Name == "thanh_toan.so_tien");
+        amount.IsRequired.ShouldBeTrue();
+        amount.ToolTip.ShouldBe("Số tiền");
+        amount.Value.ShouldBe("990000");
+        amount.DefaultValue.ShouldBe("990000");
+        amount.Format.ShouldBe(FormTextFormat.Number(0, NumberSeparators.CommaDot));
+        amount.FontFamily.ShouldBe(FontFamilies.BeVietnamPro);
+        amount.FontSize.ShouldBe(11);
+        amount.Alignment.ShouldBe(FormTextAlignment.Right);
+        AsDictionary(dictionary.Elements["/AA"])!.Elements.ContainsKey("/C").ShouldBeTrue("a calculation written by another editor stays");
+        var notes = all.Single(f => f.Field.Name == "ghi_chu").Field;
+        notes.Flags.HasFlag(FormFieldFlags.Multiline).ShouldBeFalse();
+        notes.FontFamily.ShouldBe(FontFamilies.NotoSans);
+        all.Single(f => f.Field.Name == "gui").Field.Value.ShouldBe("Nộp hồ sơ");
+        all.Select(f => f.Field.Name).ShouldNotContain("so_tien");
+    }
+
+    [Fact]
+    public async Task AnUpdateChangingTheKindOrTakingAName_IsRefused()
+    {
+        var first = await ApplyAsync(Samples.BasicVi, new DesignFormParams(Add: Fields()));
+
+        await Should.ThrowAsync<OperationValidationException>(() => ApplyAsync(first, new DesignFormParams(Update: [new FormFieldUpdate("so_tien", Fields()[0] with { Kind = FormFieldKind.ComboBox, Options = [new("a", "a")], Format = null })])));
+        await Should.ThrowAsync<OperationValidationException>(() => ApplyAsync(first, new DesignFormParams(Update: [new FormFieldUpdate("so_tien", Fields()[0] with { Name = "ngay_sinh" })])));
+        await Should.ThrowAsync<InvalidDataException>(() => ApplyAsync(first, new DesignFormParams(Update: [new FormFieldUpdate("khong_co", Fields()[0])])));
+    }
+
+    [Fact]
     public void Validation_RefusesEmptyChangesAndBadFields()
     {
         var document = new Core.Documents.DocumentInfo(2);
@@ -175,6 +279,10 @@ public sealed class DesignFormOperationTests(PdfiumFixture pdfium) : IDisposable
         _operation.Validate(new DesignFormParams(Add: [Fields()[0] with { Kind = FormFieldKind.CheckBox }]), document).IsValid.ShouldBeFalse("only text has a format");
         _operation.Validate(new DesignFormParams(Add: [Fields()[0] with { Format = FormTextFormat.Date("yyyy/dd") }]), document).IsValid.ShouldBeFalse();
         _operation.Validate(new DesignFormParams(Add: [Fields()[0] with { FontFamily = "Comic Sans MS" }]), document).IsValid.ShouldBeFalse();
+        _operation.Validate(new DesignFormParams(Widgets: [new FormWidgetChange("a", 0, new PdfRect(0, 0, 1, 10))]), document).IsValid.ShouldBeFalse();
+        _operation.Validate(new DesignFormParams(Widgets: [new FormWidgetChange("a", -1, null)]), document).IsValid.ShouldBeFalse();
+        _operation.Validate(new DesignFormParams(Update: [new FormFieldUpdate("a", Fields()[0] with { Name = "" })]), document).IsValid.ShouldBeFalse();
+        _operation.Validate(new DesignFormParams(Update: [new FormFieldUpdate("a", Fields()[0] with { Page = 99, Rect = default })]), document).IsValid.ShouldBeTrue("the page and box of an update are not used");
         _operation.Validate(new DesignFormParams(Remove: ["so_tien"], Add: Fields()), document).IsValid.ShouldBeTrue();
     }
 

@@ -77,7 +77,7 @@ public sealed record FormOption(string Export, string Display);
 /// <param name="Kind">What it is.</param>
 /// <param name="Value">
 /// Text of a text field or combo box; the on state of a check box or the chosen button of a radio group, "Off" when
-/// none; the first choice of a list box. Null when it has no value.
+/// none; the first choice of a list box; the caption of a push button (/MK /CA). Null when it has no value.
 /// </param>
 /// <param name="Selected">The choices of a list box (several when it allows it); empty otherwise.</param>
 /// <param name="Flags">/Ff.</param>

@@ -97,6 +97,21 @@ public sealed record FormFieldSpec(
     }
 }
 
+/// <summary>A widget of a field moved or resized on its page, or (no box) taken off.</summary>
+/// <param name="Name">The field's fully qualified name.</param>
+/// <param name="Widget">The widget's place among the field's widgets (as <see cref="FormReader"/> lists them).</param>
+/// <param name="Rect">Its new box in the page's PDF user space; null removes the widget (and the field with its last one).</param>
+public sealed record FormWidgetChange(string Name, int Widget, PdfRect? Rect);
+
+/// <summary>
+/// New properties for a field, changed in place (its widgets, actions and colours stay): name, flags, tool tip, text
+/// look and font, length, format, choices, starting value, a button's caption. The kind cannot change; the page,
+/// box and on state of <see cref="Properties"/> are not used.
+/// </summary>
+/// <param name="Name">The field's fully qualified name now.</param>
+/// <param name="Properties">What it becomes (its <see cref="FormFieldSpec.Name"/> renames it).</param>
+public sealed record FormFieldUpdate(string Name, FormFieldSpec Properties);
+
 /// <summary>
 /// Writes AcroForm fields at the dictionary level (12.7): new fields with their widgets (forms.design) and new values
 /// (forms.fill), each widget given an appearance stream (<see cref="FormAppearances"/>) so that it shows the same in
@@ -189,18 +204,7 @@ public static class FormWriter
             throw new InvalidDataException($"The field '{missing}' is not in the document any more.");
         }
 
-        var widgets = found.SelectMany(f => f.Widgets).ToHashSet(ReferenceEqualityComparer.Instance);
-        for (var i = 0; i < document.PageCount; i++)
-        {
-            if (Annotations(document.Pages[i]) is { } annotations && annotations.Elements.Any(a => widgets.Contains(AsDictionary(a))))
-            {
-                var own = AnnotationWriter.OwnAnnotations(document, document.Pages[i]);
-                foreach (var item in own.Elements.Where(a => widgets.Contains(AsDictionary(a))).ToList())
-                {
-                    own.Elements.Remove(item);
-                }
-            }
-        }
+        TakeOffPages(document, [.. found.SelectMany(f => f.Widgets)]);
 
         var form = AsDictionary(document.Internals.Catalog.Elements["/AcroForm"])!;
         foreach (var (_, dictionary, _) in found)
@@ -214,6 +218,166 @@ public static class FormWriter
             foreach (var item in order.Elements.Where(e => removed.Contains(AsDictionary(e))).ToList())
             {
                 order.Elements.Remove(item);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Moves, resizes or removes widgets. A widget only moved keeps its appearance (it is fitted to /Rect); a resized one
+    /// is drawn again. A field whose last widget is removed leaves the form.
+    /// </summary>
+    /// <exception cref="InvalidDataException">A field or widget is not in the document (any more).</exception>
+    public static void ChangeWidgets(PdfDocument document, IReadOnlyList<FormWidgetChange> changes)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(changes);
+        var fields = FormReader.Fields(document).ToDictionary(f => f.Field.Name, StringComparer.Ordinal);
+        var resized = new HashSet<string>(StringComparer.Ordinal);
+        var removed = new List<(PdfDictionary Field, PdfDictionary Widget)>();
+        foreach (var change in changes)
+        {
+            if (!fields.TryGetValue(change.Name, out var entry) || change.Widget < 0 || change.Widget >= entry.Widgets.Count)
+            {
+                throw new InvalidDataException($"The widget {change.Widget} of the field '{change.Name}' is not in the document any more.");
+            }
+
+            var widget = entry.Widgets[change.Widget];
+            if (change.Rect is not { } rect)
+            {
+                removed.Add((entry.Dictionary, widget));
+                continue;
+            }
+
+            var old = FormReader.Rect(widget);
+            var box = new PdfArray(document);
+            foreach (var value in new[] { rect.Left, rect.Bottom, rect.Right, rect.Top })
+            {
+                box.Elements.Add(new PdfReal(Math.Round(value, 4)));
+            }
+
+            widget.Elements["/Rect"] = box;
+            if (Math.Abs(old.Width - rect.Width) > 0.01 || Math.Abs(old.Height - rect.Height) > 0.01)
+            {
+                resized.Add(change.Name);
+            }
+        }
+
+        var form = AcroForm(document);
+        foreach (var (field, widget) in removed)
+        {
+            TakeOffPages(document, [widget]);
+            if (ReferenceEquals(field, widget))
+            {
+                Unlink(form, field);
+                continue;
+            }
+
+            if (AsArray(field.Elements["/Kids"]) is { } kids)
+            {
+                foreach (var item in kids.Elements.Where(k => ReferenceEquals(AsDictionary(k), widget)).ToList())
+                {
+                    kids.Elements.Remove(item);
+                }
+
+                if (kids.Elements.Count == 0)
+                {
+                    Unlink(form, field);
+                }
+            }
+        }
+
+        RefreshAll(document, resized, captions: new Dictionary<string, string>(StringComparer.Ordinal));
+    }
+
+    /// <summary>Changes the properties of fields in place (see <see cref="FormFieldUpdate"/>) and draws them again.</summary>
+    /// <exception cref="InvalidDataException">A field is not in the document (any more).</exception>
+    /// <exception cref="ArgumentException">The kind would change, or a new name is taken.</exception>
+    public static void UpdateFields(PdfDocument document, IReadOnlyList<FormFieldUpdate> updates)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(updates);
+        var form = AcroForm(document);
+        var roots = AsArray(form.Elements["/Fields"])!;
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        var captions = new Dictionary<string, string>(StringComparer.Ordinal);
+        var families = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var update in updates)
+        {
+            var all = FormReader.Fields(document);
+            var entry = all.FirstOrDefault(f => f.Field.Name == update.Name);
+            if (entry.Dictionary is null)
+            {
+                throw new InvalidDataException($"The field '{update.Name}' is not in the document any more.");
+            }
+
+            var (field, dictionary, widgets) = entry;
+            var spec = update.Properties;
+            if (spec.Kind != field.Kind)
+            {
+                throw new ArgumentException($"The field '{update.Name}' cannot change its kind.", nameof(updates));
+            }
+
+            if (spec.Name != update.Name)
+            {
+                var others = all.Where(f => !ReferenceEquals(f.Dictionary, dictionary)).Select(f => f.Field.Name).ToList();
+                if (others.Any(other => other == spec.Name || IsAncestor(other, spec.Name) || IsAncestor(spec.Name, other)))
+                {
+                    throw new ArgumentException($"The name '{spec.Name}' is used by another field.", nameof(updates));
+                }
+
+                Unlink(form, dictionary);
+                Link(document, roots, dictionary, spec.Name);
+            }
+
+            // Only the flags a designer sets; the kind's own bits stay.
+            const FormFieldFlags Settable = FormFieldFlags.ReadOnly | FormFieldFlags.Required | FormFieldFlags.NoExport | FormFieldFlags.Multiline
+                | FormFieldFlags.Password | FormFieldFlags.Comb | FormFieldFlags.Edit | FormFieldFlags.MultiSelect | FormFieldFlags.DoNotSpellCheck
+                | FormFieldFlags.DoNotScroll | FormFieldFlags.Sort | FormFieldFlags.CommitOnSelectionChange;
+            WriteProperties(document, dictionary, spec, (field.Flags & ~Settable) | (spec.Flags & Settable));
+            if (spec.Kind != FormFieldKind.PushButton)
+            {
+                var value = spec.Value is { } given ? TextNormalizer.ToNfc(given) : spec.Kind is FormFieldKind.CheckBox or FormFieldKind.RadioGroup ? FormField.Off : null;
+                SetValue(dictionary, spec.Kind, value, spec.Kind == FormFieldKind.ListBox && value is not null ? [value] : null, spec.Kind is FormFieldKind.ComboBox or FormFieldKind.ListBox ? spec.Options ?? field.Options : []);
+                if (dictionary.Elements["/V"] is { } start)
+                {
+                    dictionary.Elements["/DV"] = start is PdfArray choices ? choices.Clone() : start;
+                }
+                else
+                {
+                    dictionary.Elements.Remove("/DV");
+                }
+            }
+            else if (spec.Caption is { } caption)
+            {
+                captions[spec.Name] = caption;
+                foreach (var widget in widgets)
+                {
+                    var look = AsDictionary(widget.Elements["/MK"]) ?? new PdfDictionary(document);
+                    look.Elements["/CA"] = Text(caption);
+                    widget.Elements["/MK"] = look;
+                }
+            }
+
+            families[spec.Name] = spec.FontFamily ?? FontFamilies.Default;
+            names.Add(spec.Name);
+        }
+
+        RefreshAll(document, names, captions, families);
+    }
+
+    /// <summary>Takes widgets off the /Annots of the pages showing them.</summary>
+    private static void TakeOffPages(PdfDocument document, IReadOnlyCollection<PdfDictionary> widgets)
+    {
+        var set = widgets.ToHashSet(ReferenceEqualityComparer.Instance);
+        for (var i = 0; i < document.PageCount; i++)
+        {
+            if (Annotations(document.Pages[i]) is { } annotations && annotations.Elements.Any(a => set.Contains(AsDictionary(a))))
+            {
+                var own = AnnotationWriter.OwnAnnotations(document, document.Pages[i]);
+                foreach (var item in own.Elements.Where(a => set.Contains(AsDictionary(a))).ToList())
+                {
+                    own.Elements.Remove(item);
+                }
             }
         }
     }
@@ -331,36 +495,66 @@ public static class FormWriter
             document.Internals.AddObject(field);
         }
 
-        // "a.b.c": the partial name "c" under parents "a" and "a.b" (found or made); a partial name has no dot.
-        var dot = spec.Name.LastIndexOf('.');
-        field.Elements["/T"] = Text(dot < 0 ? spec.Name : spec.Name[(dot + 1)..]);
+        Link(document, fields, field, spec.Name);
+        WriteProperties(document, field, spec, spec.Flags);
+        if (spec.Kind == FormFieldKind.RadioGroup)
+        {
+            field.Elements.SetName("/V", "/" + FormField.Off);
+        }
+
+        return field;
+    }
+
+    /// <summary>
+    /// Puts a field in the tree under its qualified name: "a.b.c" is the partial name "c" under parents "a" and "a.b"
+    /// (found or made), as a partial name has no dot.
+    /// </summary>
+    private static void Link(PdfDocument document, PdfArray fields, PdfDictionary field, string name)
+    {
+        var dot = name.LastIndexOf('.');
+        field.Elements["/T"] = Text(dot < 0 ? name : name[(dot + 1)..]);
         var siblings = fields;
+        field.Elements.Remove("/Parent");
         if (dot > 0)
         {
-            var parent = Parent(document, fields, spec.Name[..dot]);
+            var parent = Parent(document, fields, name[..dot]);
             field.Elements["/Parent"] = parent.Reference!;
             siblings = AsArray(parent.Elements["/Kids"])!;
         }
 
+        siblings.Elements.Add(field.Reference!);
+    }
+
+    /// <summary>
+    /// Writes what a spec says about a field (type, flags, text look, length, format, tool tip, choices) into its
+    /// dictionary, removing what it no longer says; actions other than the format, colours and values stay.
+    /// </summary>
+    private static void WriteProperties(PdfDocument document, PdfDictionary field, FormFieldSpec spec, FormFieldFlags given)
+    {
         var (type, flags) = spec.Kind switch
         {
-            FormFieldKind.Text => ("/Tx", spec.Flags),
-            FormFieldKind.CheckBox => ("/Btn", spec.Flags & ~(FormFieldFlags.Radio | FormFieldFlags.PushButton)),
-            FormFieldKind.RadioGroup => ("/Btn", spec.Flags | FormFieldFlags.Radio | FormFieldFlags.NoToggleToOff),
-            FormFieldKind.PushButton => ("/Btn", (spec.Flags | FormFieldFlags.PushButton) & ~FormFieldFlags.Radio),
-            FormFieldKind.ComboBox => ("/Ch", spec.Flags | FormFieldFlags.Combo),
-            FormFieldKind.ListBox => ("/Ch", spec.Flags & ~FormFieldFlags.Combo),
-            _ => ("/Sig", spec.Flags),
+            FormFieldKind.Text => ("/Tx", given),
+            FormFieldKind.CheckBox => ("/Btn", given & ~(FormFieldFlags.Radio | FormFieldFlags.PushButton)),
+            FormFieldKind.RadioGroup => ("/Btn", given | FormFieldFlags.Radio | FormFieldFlags.NoToggleToOff),
+            FormFieldKind.PushButton => ("/Btn", (given | FormFieldFlags.PushButton) & ~FormFieldFlags.Radio),
+            FormFieldKind.ComboBox => ("/Ch", given | FormFieldFlags.Combo),
+            FormFieldKind.ListBox => ("/Ch", given & ~FormFieldFlags.Combo),
+            _ => ("/Sig", given),
         };
         field.Elements.SetName("/FT", type);
         field.Elements.SetInteger("/Ff", (int)flags); // also when 0: /Ff is inherited from parents
 
         if (spec.Kind is FormFieldKind.Text or FormFieldKind.ComboBox or FormFieldKind.ListBox)
         {
-            field.Elements["/DA"] = new PdfString(string.Create(CultureInfo.InvariantCulture, $"/Helv {Math.Round(spec.FontSize, 2)} Tf 0 g"));
+            var (font, _) = FormReader.Appearance(field.Elements["/DA"]);
+            field.Elements["/DA"] = new PdfString(string.Create(CultureInfo.InvariantCulture, $"{font ?? "/Helv"} {Math.Round(spec.FontSize, 2)} Tf 0 g"));
             if (spec.Alignment != FormTextAlignment.Left)
             {
                 field.Elements.SetInteger("/Q", (int)spec.Alignment);
+            }
+            else
+            {
+                field.Elements.Remove("/Q");
             }
         }
 
@@ -368,18 +562,40 @@ public static class FormWriter
         {
             field.Elements.SetInteger("/MaxLen", spec.MaxLength);
         }
-
-        if (spec.Kind == FormFieldKind.Text && spec.Format is { Kind: not FormFormatKind.None } format)
+        else
         {
-            field.Elements["/AA"] = FormatActions(document, format);
+            field.Elements.Remove("/MaxLen");
+        }
+
+        if (spec.Kind == FormFieldKind.Text)
+        {
+            var actions = AsDictionary(field.Elements["/AA"]);
+            actions?.Elements.Remove("/K");
+            actions?.Elements.Remove("/F");
+            if (spec.Format is { Kind: not FormFormatKind.None } format)
+            {
+                var formatting = FormatActions(document, format);
+                actions ??= new PdfDictionary(document);
+                actions.Elements["/K"] = formatting.Elements["/K"];
+                actions.Elements["/F"] = formatting.Elements["/F"];
+                field.Elements["/AA"] = actions;
+            }
+            else if (actions is { Elements.Count: 0 })
+            {
+                field.Elements.Remove("/AA");
+            }
         }
 
         if (spec.ToolTip is { Length: > 0 } tip)
         {
             field.Elements["/TU"] = Text(tip);
         }
+        else
+        {
+            field.Elements.Remove("/TU");
+        }
 
-        if (spec.Options is { Count: > 0 } options)
+        if (spec.Kind is FormFieldKind.ComboBox or FormFieldKind.ListBox && spec.Options is { Count: > 0 } options)
         {
             var array = new PdfArray(document);
             foreach (var option in options)
@@ -399,14 +615,6 @@ public static class FormWriter
 
             field.Elements["/Opt"] = array;
         }
-
-        if (spec.Kind == FormFieldKind.RadioGroup)
-        {
-            field.Elements.SetName("/V", "/" + FormField.Off);
-        }
-
-        siblings.Elements.Add(field.Reference!);
-        return field;
     }
 
     /// <summary>"a" is an ancestor of "a.b": a field cannot also be the parent of another.</summary>

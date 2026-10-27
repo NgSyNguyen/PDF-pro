@@ -125,7 +125,9 @@ public static partial class FormReader
             _ => FormFieldKind.Text,
         };
         var options = Options(values.GetValueOrDefault("/Opt"));
-        var (value, selected) = Value(kind, values.GetValueOrDefault("/V"), options);
+        var (value, selected) = kind == FormFieldKind.PushButton
+            ? (widgets.Select(w => AsDictionary(w.Elements["/MK"]) is { } look ? Text(look.Elements["/CA"]) : null).FirstOrDefault(c => c is not null), (IReadOnlyList<string>)[])
+            : Value(kind, values.GetValueOrDefault("/V"), options);
         var formWidgets = widgets.Select(w => new FormWidget(
             pages.GetValueOrDefault(w, -1),
             Rect(w),
