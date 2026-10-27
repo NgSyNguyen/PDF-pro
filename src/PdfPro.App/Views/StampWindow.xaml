@@ -96,7 +96,7 @@
               <ComboBox
                 AutomationProperties.AutomationId="StampFont"
                 AutomationProperties.Name="{loc:Tr Stamp_Font}"
-                ItemsSource="{Binding FontFamilies}"
+                ItemsSource="{Binding FontNames}"
                 SelectedItem="{Binding FontFamily}" />
             </StackPanel>
             <StackPanel Grid.Column="2">
@@ -331,7 +331,7 @@
             <ComboBox
               AutomationProperties.AutomationId="StampFont"
               AutomationProperties.Name="{loc:Tr Stamp_Font}"
-              ItemsSource="{Binding FontFamilies}"
+              ItemsSource="{Binding FontNames}"
               SelectedItem="{Binding FontFamily}" />
           </StackPanel>
           <StackPanel Grid.Column="2">
@@ -481,7 +481,7 @@
             <ComboBox
               AutomationProperties.AutomationId="StampFont"
               AutomationProperties.Name="{loc:Tr Stamp_Font}"
-              ItemsSource="{Binding FontFamilies}"
+              ItemsSource="{Binding FontNames}"
               SelectedItem="{Binding FontFamily}" />
           </StackPanel>
           <StackPanel Grid.Column="2">

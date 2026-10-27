@@ -169,6 +169,54 @@ public sealed class StampOperationTests(PdfiumFixture pdfium) : IDisposable
     }
 
     [Fact]
+    public async Task HeaderFooterPreviewTexts_AreWhatTheOperationWrites()
+    {
+        var parameters = new HeaderFooterParams(
+            TopRight: "{filename} – {date:dd/MM/yyyy}",
+            BottomRight: "Trang {page}/{pages}",
+            SkipFirstPage: true,
+            StartNumber: 5,
+            NumberStyle: PageNumberStyle.UpperRoman,
+            Date: new DateTime(2026, 10, 5),
+            FileName: "Hồ sơ",
+            Pages: "1-12");
+
+        var output = await ApplyAsync(new HeaderFooterOperation(), Samples.VanBanVi, parameters);
+
+        using var pig = PigDocument.Open(output);
+        static bool Footer(UglyToad.PdfPig.Content.Letter l) => l.StartBaseLine.Y < 60 && l.StartBaseLine.X > 400;
+        static bool Header(UglyToad.PdfPig.Content.Letter l) => l.StartBaseLine.Y > 780 && l.StartBaseLine.X > 300;
+        for (var page = 0; page < pig.NumberOfPages; page++)
+        {
+            var texts = HeaderFooterOperation.TextsOn(parameters, page, pig.NumberOfPages, "Hồ sơ", title: null, new DateTime(2026, 10, 5));
+            Region(pig, page + 1, Footer).ShouldBe(Compact(texts.GetValueOrDefault(StampAnchor.BottomRight)), $"footer of page {page + 1}");
+            Region(pig, page + 1, Header).ShouldBe(Compact(texts.GetValueOrDefault(StampAnchor.TopRight)), $"header of page {page + 1}");
+        }
+
+        HeaderFooterOperation.TextsOn(parameters, 0, 14, "Hồ sơ", null, DateTime.Now).ShouldBeEmpty("the cover is skipped");
+        HeaderFooterOperation.TextsOn(parameters, 12, 14, "Hồ sơ", null, DateTime.Now).ShouldBeEmpty("outside the pages");
+        HeaderFooterOperation.TextsOn(parameters, 1, 14, "Hồ sơ", null, DateTime.Now)[StampAnchor.BottomRight].ShouldBe("Trang V/XV");
+    }
+
+    [Fact]
+    public async Task PageNumbersPreviewText_IsWhatTheOperationWrites_WithTheGivenFileName()
+    {
+        var parameters = new PageNumbersParams("{page}/{pages} {filename}", PageNumberStyle.LowerRoman, StampAnchor.BottomRight, FirstPage: 3, StartNumber: 2, FileName: "HoSo");
+
+        var output = await ApplyAsync(new PageNumbersOperation(), Samples.BasicVi, parameters);
+
+        using var pig = PigDocument.Open(output);
+        for (var page = 0; page < pig.NumberOfPages; page++)
+        {
+            Region(pig, page + 1, l => l.StartBaseLine.Y < 60 && l.StartBaseLine.X > 400)
+                .ShouldBe(Compact(PageNumbersOperation.TextOn(parameters, page, pig.NumberOfPages, "HoSo", title: null)), $"page {page + 1}");
+        }
+
+        PageNumbersOperation.TextOn(parameters, 1, 6, "HoSo", null).ShouldBeNull("numbering starts on page 3");
+        PageNumbersOperation.TextOn(parameters, 2, 6, "HoSo", null).ShouldBe("ii/v HoSo");
+    }
+
+    [Fact]
     public async Task PageNumbers_StartOnAChosenPage_InRomanNumerals()
     {
         // basic-vi.pdf has its own centred footer, so the numbers go to the bottom right.
@@ -297,6 +345,10 @@ public sealed class StampOperationTests(PdfiumFixture pdfium) : IDisposable
     private static string Region(PigDocument document, int page, Func<UglyToad.PdfPig.Content.Letter, bool> where)
         => string.Concat(document.GetPage(page).Letters.Where(where).Where(l => !string.IsNullOrWhiteSpace(l.Value))
             .OrderByDescending(l => Math.Round(l.StartBaseLine.Y)).ThenBy(l => l.StartBaseLine.X).Select(l => l.Value)).Normalize(NormalizationForm.FormC);
+
+    /// <summary>A text as <see cref="Region"/> reads it back: spaces left out, NFC.</summary>
+    private static string Compact(string? text)
+        => string.Concat((text ?? string.Empty).Where(c => !char.IsWhiteSpace(c))).Normalize(NormalizationForm.FormC);
 
     private static string[] Layers(string path)
     {

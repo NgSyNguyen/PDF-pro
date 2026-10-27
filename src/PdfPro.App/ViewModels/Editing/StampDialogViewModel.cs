@@ -65,7 +65,7 @@ public abstract partial class StampDialogViewModel : ObservableObject, IAsyncDis
     public PageTargetViewModel Target { get; }
 
     /// <summary>Families that can write Vietnamese into PDFs.</summary>
-    public IReadOnlyList<string> FontFamilies => field ??= [.. FontLibrary.Instance.Families.Select(f => f.Name)];
+    public IReadOnlyList<string> FontNames => field ??= [.. FontLibrary.Instance.Families.Select(f => f.Name)];
 
     public IReadOnlyList<ColorSwatch> Swatches { get; } =
     [

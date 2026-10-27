@@ -101,6 +101,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddShapeCommand = new ActiveDocumentCommand(d => d.AddShapeCommand);
         AddImageCommand = new ActiveDocumentCommand(d => d.AddImageCommand);
         AddSignatureCommand = new ActiveDocumentCommand(d => d.AddSignatureCommand);
+        StampWatermarkCommand = new ActiveDocumentCommand(d => d.StampWatermarkCommand);
+        StampBackgroundCommand = new ActiveDocumentCommand(d => d.StampBackgroundCommand);
+        StampHeaderFooterCommand = new ActiveDocumentCommand(d => d.StampHeaderFooterCommand);
+        StampPageNumbersCommand = new ActiveDocumentCommand(d => d.StampPageNumbersCommand);
+        RemoveStampsCommand = new ActiveDocumentCommand(d => d.RemoveStampsCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
@@ -181,6 +186,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand AddImageCommand { get; }
 
     public ActiveDocumentCommand AddSignatureCommand { get; }
+
+    public ActiveDocumentCommand StampWatermarkCommand { get; }
+
+    public ActiveDocumentCommand StampBackgroundCommand { get; }
+
+    public ActiveDocumentCommand StampHeaderFooterCommand { get; }
+
+    public ActiveDocumentCommand StampPageNumbersCommand { get; }
+
+    public ActiveDocumentCommand RemoveStampsCommand { get; }
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -408,6 +423,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
             AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand,
+            StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -579,9 +595,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Stamp,
                 [
-                    new("stamp.watermark", Strings.Cmd_Watermark, SymbolRegular.Water24),
-                    new("stamp.headerFooter", Strings.Cmd_HeaderFooter, SymbolRegular.DocumentHeader24),
-                    new("stamp.pageNumbers", Strings.Cmd_PageNumbers, SymbolRegular.NumberSymbol24),
+                    new("stamp.watermark", Strings.Cmd_Watermark, SymbolRegular.Water24, StampWatermarkCommand),
+                    new("stamp.background", Strings.Cmd_Background, SymbolRegular.PaintBucket24, StampBackgroundCommand),
+                    new("stamp.headerFooter", Strings.Cmd_HeaderFooter, SymbolRegular.DocumentHeader24, StampHeaderFooterCommand),
+                    new("stamp.pageNumbers", Strings.Cmd_PageNumbers, SymbolRegular.NumberSymbol24, StampPageNumbersCommand),
+                    new("stamp.remove", Strings.Cmd_RemoveStamps, SymbolRegular.EraserTool24, RemoveStampsCommand, Strings.Cmd_RemoveStamps_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Content,
                 [

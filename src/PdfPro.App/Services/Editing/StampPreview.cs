@@ -5,6 +5,7 @@ using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Rendering;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Operations.Stamping;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Services.Editing;
@@ -62,7 +63,7 @@ public sealed class StampPreview(
                 return image.Image;
             }
         }
-        catch (Exception ex) when (ex is IOException or InvalidDataException or PdfDocumentException or OperationValidationException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is DocumentSaveException or IOException or InvalidDataException or PdfDocumentException or OperationValidationException or UnauthorizedAccessException)
         {
             logger.LogWarning("A stamp preview could not be made: {ErrorType}", ex.GetType().Name);
             return null;
@@ -104,7 +105,7 @@ public sealed class StampPreview(
         return _page;
     }
 
-    private static void TryDelete(string path)
+    internal static void TryDelete(string path)
     {
         try
         {
@@ -113,6 +114,33 @@ public sealed class StampPreview(
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             // A preview file still open is left in the work folder, which the session removes.
+        }
+    }
+}
+
+/// <summary>The PDF_Pro stamps a document carries, for "Gỡ dấu".</summary>
+public static class DocumentStamps
+{
+    /// <summary>
+    /// How many pages of the document as displayed carry each kind of PDF_Pro stamp: the plan is written to the work
+    /// folder (pages may come from several files and revisions), read in the background and removed again.
+    /// </summary>
+    /// <exception cref="DocumentSaveException">The pages could not be written.</exception>
+    /// <exception cref="InvalidDataException">The written pages could not be read.</exception>
+    public static async Task<IReadOnlyDictionary<StampKind, int>> ScanAsync(DocumentWorkspace workspace, IDocumentSaver saver, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(workspace);
+        ArgumentNullException.ThrowIfNull(saver);
+        Directory.CreateDirectory(workspace.WorkDirectory);
+        var path = Path.Combine(workspace.WorkDirectory, $"stamps-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            await saver.ExportAsync(workspace, [.. Enumerable.Range(0, workspace.Pages.PageCount)], path, new Progress<OperationProgress>(), cancellationToken);
+            return await Task.Run(() => RemoveStampsOperation.Scan(path), cancellationToken);
+        }
+        finally
+        {
+            StampPreview.TryDelete(path);
         }
     }
 }

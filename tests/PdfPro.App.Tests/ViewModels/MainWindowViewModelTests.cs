@@ -96,7 +96,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
-                "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature"],
+                "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature",
+                "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>

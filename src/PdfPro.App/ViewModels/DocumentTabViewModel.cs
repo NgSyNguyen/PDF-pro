@@ -691,7 +691,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         {
             found = await stamps.ScanAsync(Workspace, CancellationToken.None);
         }
-        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception ex) when (ex is DocumentSaveException or IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
         {
             _logger.LogWarning("The stamps of a document could not be read: {ErrorType}", ex.GetType().Name);
             await _messages.ShowErrorAsync(Strings.Stamp_Error_Title, Strings.Stamp_Error_Scan);
@@ -1140,7 +1140,8 @@ internal sealed class DocumentTabFactory(
     ILoggerFactory loggers,
     ScreenFonts? screenFonts = null,
     ScreenImages? screenImages = null,
-    SignatureLibrary? signatures = null) : IDocumentTabFactory
+    SignatureLibrary? signatures = null,
+    IDocumentSaver? saver = null) : IDocumentTabFactory
 {
     /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
     public DocumentTabViewModel Create(DocumentWorkspace workspace)
@@ -1160,9 +1161,19 @@ internal sealed class DocumentTabFactory(
             (page, token) => LoadPreviewAsync(workspace, page, token),
             screenFonts,
             screenImages,
-            signatures);
+            signatures,
+            Stamps());
         return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
     }
+
+    /// <summary>Previews and scans for the stamp dialogs; none (the stamp commands off) without a saver to write pages.</summary>
+    private StampServices? Stamps()
+        => saver is null
+            ? null
+            : new StampServices(
+                (w, page) => new StampPreview(w, page, saver, loader, renderer, loggers.CreateLogger<StampPreview>()),
+                debouncers,
+                (w, token) => DocumentStamps.ScanAsync(w, saver, token));
 
     /// <summary>A page as displayed, sharp enough for the crop preview box.</summary>
     private async Task<ImageSource?> LoadPreviewAsync(DocumentWorkspace workspace, VirtualPage page, CancellationToken cancellationToken)
