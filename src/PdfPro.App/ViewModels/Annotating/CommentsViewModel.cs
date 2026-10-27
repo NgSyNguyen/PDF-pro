@@ -118,6 +118,23 @@ public sealed partial class CommentItemViewModel : ObservableObject
     /// <summary>Already in the file: changing it writes a new revision of the document.</summary>
     public bool IsFromFile => FromFile is not null;
 
+    /// <summary>
+    /// Its comment can be rewritten here. Not for a text box of the file: its words are drawn in its appearance, which
+    /// would keep showing the old ones.
+    /// </summary>
+    public bool CanEditContents => CanEdit && FromFile?.Kind != FileAnnotationKind.FreeText;
+
+    /// <summary>The comment is being rewritten (<see cref="ContentsDraft"/>).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsContents))]
+    public partial bool IsEditingContents { get; private set; }
+
+    /// <summary>The comment is shown (it has one and is not being rewritten).</summary>
+    public bool ShowsContents => HasContents && !IsEditingContents;
+
+    [ObservableProperty]
+    public partial string ContentsDraft { get; set; } = string.Empty;
+
     public bool HasContents => Contents.Length > 0;
 
     public bool HasMarkedText => !string.IsNullOrEmpty(MarkedText);
@@ -172,6 +189,29 @@ public sealed partial class CommentItemViewModel : ObservableObject
             _owner.Delete(this);
         }
     }
+
+    /// <summary>"Sửa": the comment in a text box, to be saved or dropped.</summary>
+    [RelayCommand]
+    private void EditContents()
+    {
+        if (CanEditContents)
+        {
+            ContentsDraft = Contents;
+            IsEditingContents = true;
+        }
+    }
+
+    [RelayCommand]
+    private void SaveContents()
+    {
+        if (IsEditingContents && _owner.SetContents(this, ContentsDraft))
+        {
+            IsEditingContents = false;
+        }
+    }
+
+    [RelayCommand]
+    private void CancelEditContents() => IsEditingContents = false;
 }
 
 /// <summary>
@@ -433,6 +473,23 @@ public sealed partial class CommentsViewModel : ObservableObject
         {
             _apply(_operations.Get<DeleteAnnotationsOperation>(), new DeleteAnnotationsParams(index + 1, [target.Id]));
         }
+    }
+
+    /// <summary>Rewrites the comment: at once for the session's, as the next revision for the file's.</summary>
+    internal bool SetContents(CommentItemViewModel item, string text)
+    {
+        var contents = AnnotationToolsViewModel.CleanContents(text);
+        if (string.Equals(contents, item.Contents, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (item.FromFile is { } annotation)
+        {
+            return item.CanEditContents && EditFile(item, annotation, FileAnnotationAction.SetContents, contents, ReviewState.None, _time.GetLocalNow());
+        }
+
+        return item.Target is { } target && _tools.SetContents(target, contents);
     }
 
     /// <summary>

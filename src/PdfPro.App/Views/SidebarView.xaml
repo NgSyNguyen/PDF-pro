@@ -582,7 +582,35 @@
                       Margin="0,4,0,0"
                       Text="{Binding Contents}"
                       TextWrapping="Wrap"
-                      Visibility="{Binding HasContents, Converter={StaticResource BoolToVisibility}}" />
+                      Visibility="{Binding ShowsContents, Converter={StaticResource BoolToVisibility}}" />
+                    <!-- Rewriting the comment ("Sửa"). -->
+                    <StackPanel Margin="0,4,0,0" Visibility="{Binding IsEditingContents, Converter={StaticResource BoolToVisibility}}">
+                      <TextBox
+                        AcceptsReturn="True"
+                        AutomationProperties.AutomationId="CommentContentsText"
+                        AutomationProperties.Name="{loc:Tr Comments_Edit}"
+                        MaxHeight="160"
+                        Text="{Binding ContentsDraft, UpdateSourceTrigger=PropertyChanged}"
+                        TextWrapping="Wrap"
+                        VerticalScrollBarVisibility="Auto" />
+                      <StackPanel
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <ui:Button
+                          Margin="0,0,4,0"
+                          Padding="8,2"
+                          Appearance="Primary"
+                          AutomationProperties.AutomationId="CommentContentsSave"
+                          Command="{Binding SaveContentsCommand}"
+                          Content="{loc:Tr Comments_Save}" />
+                        <ui:Button
+                          Padding="8,2"
+                          AutomationProperties.AutomationId="CommentContentsCancel"
+                          Command="{Binding CancelEditContentsCommand}"
+                          Content="{loc:Tr Common_Cancel}" />
+                      </StackPanel>
+                    </StackPanel>
                     <ItemsControl
                       Margin="12,4,0,0"
                       ItemsSource="{Binding Replies}"
@@ -649,6 +677,15 @@
                             CommandParameter="Completed"
                             Content="{loc:Tr Comments_State_Completed}"
                             Icon="{ui:SymbolIcon CheckmarkCircle24}" />
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentEdit"
+                            AutomationProperties.Name="{loc:Tr Comments_Edit}"
+                            Command="{Binding EditContentsCommand}"
+                            Icon="{ui:SymbolIcon Edit24}"
+                            ToolTip="{loc:Tr Comments_Edit}"
+                            Visibility="{Binding CanEditContents, Converter={StaticResource BoolToVisibility}}" />
                           <ui:Button
                             Margin="0,0,4,4"
                             Padding="6,2"

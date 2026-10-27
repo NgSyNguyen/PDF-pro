@@ -391,20 +391,48 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         }
 
         EditingContents = null;
-        var text = TextNormalizer.ToNfc(ContentsDraft.Replace("\r\n", "\n", StringComparison.Ordinal)).TrimEnd();
-        text = text[..Math.Min(text.Length, AnnotationItem.MaxContentsLength)];
+        var text = CleanContents(ContentsDraft);
         if (_newTextBox is { } draft)
         {
             _newTextBox = null;
             AddTextBox(target.PageKey, draft, text);
         }
-        else if (Find(target) is { } item && IndexOf(target.PageKey) is { } index && !string.Equals(item.Contents, text, StringComparison.Ordinal))
+        else
         {
-            var changed = item is FreeTextAnnotation box ? Fit(target.PageKey, box, text) : item with { Contents = text };
-            _apply(_operations.Get<UpdateAnnotationsOperation>(), new UpdateAnnotationsParams(index + 1, [changed with { Modified = _time.GetLocalNow() }]));
+            SetContents(target, text);
         }
 
         Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Replaces the comment of an annotation of the session (the text of a text box, which is refitted) as one undoable
+    /// step; false when it is gone or the change is refused. The same text changes nothing.
+    /// </summary>
+    public bool SetContents(AnnotationTarget target, string text)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(text);
+        text = CleanContents(text);
+        if (Find(target) is not { } item || IndexOf(target.PageKey) is not { } index)
+        {
+            return false;
+        }
+
+        if (string.Equals(item.Contents, text, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        var changed = item is FreeTextAnnotation box ? Fit(target.PageKey, box, text) : item with { Contents = text };
+        return _apply(_operations.Get<UpdateAnnotationsOperation>(), new UpdateAnnotationsParams(index + 1, [changed with { Modified = _time.GetLocalNow() }]));
+    }
+
+    /// <summary>Typed text as a comment: NFC, line feeds, no trailing blanks, at most the longest comment.</summary>
+    internal static string CleanContents(string text)
+    {
+        var clean = TextNormalizer.ToNfc(text.Replace("\r\n", "\n", StringComparison.Ordinal)).TrimEnd();
+        return clean[..Math.Min(clean.Length, AnnotationItem.MaxContentsLength)];
     }
 
     /// <summary>Closes the comment without keeping what was typed (a new text box is not added).</summary>

@@ -714,6 +714,8 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Comments_Kind_Caret" xml:space="preserve"><value>Insert text</value></data>
   <data name="Comments_FromFile" xml:space="preserve"><value>Already in the file — each change makes a new revision of the document</value></data>
   <data name="Comments_Reply" xml:space="preserve"><value>Reply</value></data>
+  <data name="Comments_Edit" xml:space="preserve"><value>Edit the comment</value></data>
+  <data name="Comments_Save" xml:space="preserve"><value>Save</value></data>
   <data name="Comments_ReplyPlaceholder" xml:space="preserve"><value>Write a reply…</value></data>
   <data name="Comments_Delete" xml:space="preserve"><value>Delete comment</value></data>
   <data name="Comments_Export" xml:space="preserve"><value>Export…</value></data>

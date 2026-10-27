@@ -714,6 +714,8 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Comments_Kind_Caret" xml:space="preserve"><value>Chèn chữ</value></data>
   <data name="Comments_FromFile" xml:space="preserve"><value>Có sẵn trong tệp — mỗi thay đổi tạo một bản sửa mới của tài liệu</value></data>
   <data name="Comments_Reply" xml:space="preserve"><value>Trả lời</value></data>
+  <data name="Comments_Edit" xml:space="preserve"><value>Sửa bình luận</value></data>
+  <data name="Comments_Save" xml:space="preserve"><value>Lưu</value></data>
   <data name="Comments_ReplyPlaceholder" xml:space="preserve"><value>Viết trả lời…</value></data>
   <data name="Comments_Delete" xml:space="preserve"><value>Xóa bình luận</value></data>
   <data name="Comments_Export" xml:space="preserve"><value>Xuất…</value></data>

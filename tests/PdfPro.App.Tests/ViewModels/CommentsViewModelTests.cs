@@ -175,6 +175,59 @@ public sealed class CommentsViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task TheCommentOfTheSession_IsRewritten_AsOneStep()
+    {
+        await using var tab = await OpenAsync();
+        AddNote(tab, page: 1, "n1", new PdfPoint(100, 500), "Kiểm tra ngày ký");
+        var comments = await ShowAsync(tab);
+        var mine = comments.Items.Single(i => i.Target != null);
+
+        mine.CanEditContents.ShouldBeTrue();
+        mine.EditContentsCommand.Execute(null);
+        mine.IsEditingContents.ShouldBeTrue();
+        mine.ShowsContents.ShouldBeFalse();
+        mine.ContentsDraft.ShouldBe("Kiểm tra ngày ký");
+        mine.ContentsDraft = "Kiểm tra lại\r\nngày ký  ";
+        mine.SaveContentsCommand.Execute(null);
+
+        mine.IsEditingContents.ShouldBeFalse();
+        tab.Workspace.Session.Plan[0].FindAnnotation("n1")!.Contents.ShouldBe("Kiểm tra lại\nngày ký");
+        tab.Workspace.Session.History.NextUndoDescription.ShouldBe(Format(Strings.History_UpdateAnnotations, 1));
+    }
+
+    [Fact]
+    public async Task TheCommentOfAFileAnnotation_IsRewrittenAsTheNextRevision_ButNotTheWordsOfATextBox()
+    {
+        await using var tab = await OpenAsync(page => page == 0
+            ?
+            [
+                new FileAnnotation(0, FileAnnotationKind.Highlight, new PdfRect(72, 700, 300, 712), "h", "Minh", "Số liệu sai", When, null, null, null, 4, []),
+                new FileAnnotation(1, FileAnnotationKind.FreeText, new PdfRect(72, 600, 300, 640), "t", "Minh", "Hộp chữ", When, null, null, null, 4, []),
+            ]
+            : []);
+        var requests = new List<ContentChangeRequest>();
+        tab.ContentChangeRequested += (_, request) => requests.Add(request);
+        var comments = await ShowAsync(tab);
+        var highlight = comments.Items.Single(i => i.FromFile?.Name == "h");
+        var box = comments.Items.Single(i => i.FromFile?.Name == "t");
+
+        highlight.EditContentsCommand.Execute(null);
+        highlight.ContentsDraft = "Số liệu đúng";
+        highlight.SaveContentsCommand.Execute(null);
+        box.CanEditContents.ShouldBeFalse("its words are drawn in its appearance");
+        box.EditContentsCommand.Execute(null);
+
+        box.IsEditingContents.ShouldBeFalse();
+        highlight.IsEditingContents.ShouldBeFalse();
+        var request = requests.ShouldHaveSingleItem();
+        request.Description.ShouldBe(Strings.History_EditFileComment);
+        var edit = ((EditFileAnnotationsParams)request.Parameters).Edits.ShouldHaveSingleItem();
+        edit.Action.ShouldBe(FileAnnotationAction.SetContents);
+        edit.Text.ShouldBe("Số liệu đúng");
+        edit.Name.ShouldBe("h");
+    }
+
+    [Fact]
     public async Task ACommentOfTheFile_IsNotChanged_WhileObjectsWaitInTheEditor()
     {
         await using var tab = await OpenAsync();
@@ -247,10 +300,10 @@ public sealed class CommentsViewModelTests : IDisposable
         rows.Length.ShouldBe(1 + 3 + 1, "the header, three comments and one answer");
     }
 
-    private async Task<DocumentTabViewModel> OpenAsync()
+    private async Task<DocumentTabViewModel> OpenAsync(Func<int, IReadOnlyList<FileAnnotation>>? annotations = null)
     {
         var document = FakePdfDocument.WithPages(3);
-        document.FileAnnotations = page => page switch
+        document.FileAnnotations = annotations ?? (page => page switch
         {
             0 =>
             [
@@ -262,7 +315,7 @@ public sealed class CommentsViewModelTests : IDisposable
             ],
             2 => [new FileAnnotation(0, FileAnnotationKind.Ink, new PdfRect(100, 100, 200, 200), null, null, null, null, null, null, null, 4, [])],
             _ => [],
-        };
+        });
         var tab = _factory.Create(await _fixture.CreateAsync(document));
         tab.Viewer.ViewportSize = new ViewSize(1000, 700);
         foreach (var page in tab.Workspace.Pages.Pages)
