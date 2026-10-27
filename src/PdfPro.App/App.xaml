@@ -18,6 +18,7 @@
       <controls:NullToCollapsedConverter x:Key="NullToCollapsed" />
       <controls:EnumMatchConverter x:Key="EnumMatch" />
       <controls:HexColorBrushConverter x:Key="HexBrush" />
+      <controls:EnumMatchVisibilityConverter x:Key="EnumMatchVisibility" />
     </ResourceDictionary>
   </Application.Resources>
 </Application>

@@ -41,6 +41,7 @@ public sealed record HistoryEntryViewModel(string Description, bool IsRedo, int 
 /// <param name="LoadPreview">Loads a page image for the crop dialog's preview (upright, as displayed), or null.</param>
 /// <param name="ScreenFonts">Faces the page editor draws text with (null where nothing is drawn).</param>
 /// <param name="ScreenImages">Pictures the page editor draws.</param>
+/// <param name="Signatures">The saved hand signatures (null: none are kept).</param>
 public sealed record DocumentTabServices(
     OperationCatalog Operations,
     IMessageService Messages,
@@ -50,7 +51,8 @@ public sealed record DocumentTabServices(
     Func<DocumentWorkspace, IPageOrganizerHost, PageOrganizerViewModel> CreateOrganizer,
     Func<VirtualPage, CancellationToken, Task<ImageSource?>> LoadPreview,
     ScreenFonts? ScreenFonts = null,
-    ScreenImages? ScreenImages = null);
+    ScreenImages? ScreenImages = null,
+    SignatureLibrary? Signatures = null);
 
 /// <summary>A content change the user asked for, run by the window in the background.</summary>
 /// <param name="Operation">The content operation.</param>
@@ -399,6 +401,29 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
     }
 
+    /// <summary>
+    /// "Chữ ký tay": the signature dialog (draw, type a name, a photo, or a saved one), then the signature picture placed
+    /// in the middle of the current page in the page editor. It is a picture, not a digital signature.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanEditContent))]
+    private async Task AddSignatureAsync()
+    {
+        var dialog = new SignatureViewModel(_services.Signatures, _services.FileDialogs, _logger);
+        if (!_services.PageDialogs.ShowSignature(dialog) || dialog.Result is not { } png)
+        {
+            return;
+        }
+
+        try
+        {
+            await PlaceImageAsync(ImageImporter.ImportPng(png, ImagesDirectory), isSignature: true);
+        }
+        catch (Exception ex) when (ex is IOException or NotSupportedException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning("A signature could not be placed: {ErrorType}", ex.GetType().Name);
+        }
+    }
+
     /// <summary>Places a picture (pasted from the clipboard) on the current page in the page editor.</summary>
     public async Task PastePictureAsync(System.Windows.Media.Imaging.BitmapSource bitmap)
     {
@@ -416,7 +441,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// <summary>Pictures placed in the editor are copied here, inside the document's session.</summary>
     private string ImagesDirectory => Path.Combine(Workspace.WorkDirectory, "images");
 
-    private async Task PlaceImageAsync(ImportedImage image)
+    private async Task PlaceImageAsync(ImportedImage image, bool isSignature = false)
     {
         if (!CanEditContent() || Viewer.PageCount == 0)
         {
@@ -424,9 +449,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
 
         StartEditing(OverlayTool.Select);
-        var page = Workspace.Pages.Pages[Math.Clamp(Viewer.CurrentPageIndex, 0, Viewer.PageCount - 1)];
+        var index = Math.Clamp(Viewer.CurrentPageIndex, 0, Viewer.PageCount - 1);
+        var page = Workspace.Pages.Pages[index];
         await Editor.GetGeometryAsync(page.Key);
-        Editor.AddImage(page.Key, image);
+
+        // In the middle of what is on screen of the page, so it is seen at once.
+        Editor.AddImage(page.Key, image, isSignature, Viewer.VisibleCenterOf(index));
     }
 
     /// <summary>"Thêm hình": opens the page editor with the rectangle tool (the editor's bar has the other shapes).</summary>
@@ -979,6 +1007,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         AddTextCommand.NotifyCanExecuteChanged();
         AddShapeCommand.NotifyCanExecuteChanged();
         AddImageCommand.NotifyCanExecuteChanged();
+        AddSignatureCommand.NotifyCanExecuteChanged();
     }
 }
 
@@ -1001,7 +1030,8 @@ internal sealed class DocumentTabFactory(
     IPdfDocumentLoader loader,
     ILoggerFactory loggers,
     ScreenFonts? screenFonts = null,
-    ScreenImages? screenImages = null) : IDocumentTabFactory
+    ScreenImages? screenImages = null,
+    SignatureLibrary? signatures = null) : IDocumentTabFactory
 {
     /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
     public DocumentTabViewModel Create(DocumentWorkspace workspace)
@@ -1020,7 +1050,8 @@ internal sealed class DocumentTabFactory(
             (w, host) => new PageOrganizerViewModel(w.Pages, w.SourcePathOf, host, thumbnails, ui, loggers.CreateLogger<PageOrganizerViewModel>()),
             (page, token) => LoadPreviewAsync(workspace, page, token),
             screenFonts,
-            screenImages);
+            screenImages,
+            signatures);
         return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
     }
 

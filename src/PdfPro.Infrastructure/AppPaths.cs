@@ -49,6 +49,9 @@ public sealed class AppPaths
 
     public string SettingsFile => Path.Combine(DataRoot, "settings.json");
 
+    /// <summary>Saved hand signatures (pictures), each encrypted for the Windows account (DPAPI).</summary>
+    public string SignaturesDirectory => Path.Combine(DataRoot, "signatures");
+
     /// <summary>First-page marks remembered per document (one small file per document, named by a hash of its path).</summary>
     public string SplitMarksDirectory => Path.Combine(DataRoot, "split-marks");
 

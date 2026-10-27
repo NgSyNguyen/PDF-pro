@@ -50,6 +50,14 @@
     </ItemGroup>
   </Target>
 
+  <!-- Handwriting fonts for signatures typed by name (SIL OFL 1.1, assets/fonts/*/OFL.txt): drawn into the signature picture. -->
+  <ItemGroup>
+    <Content Include="..\..\assets\fonts\DancingScript\DancingScript-Regular.otf" Link="Fonts\DancingScript-Regular.otf" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\assets\fonts\Charm\Charm-Regular.ttf" Link="Fonts\Charm-Regular.ttf" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\assets\fonts\DancingScript\OFL.txt" Link="Fonts\DancingScript-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\assets\fonts\Charm\OFL.txt" Link="Fonts\Charm-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="PdfPro.App.Tests" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />

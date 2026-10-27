@@ -74,6 +74,7 @@ internal static class AppHost
         services.AddHostedService<ThumbnailCacheMaintenance>();
         services.AddSingleton<ScreenFonts>();
         services.AddSingleton<ScreenImages>();
+        services.AddSingleton<SignatureLibrary>();
         services.AddHostedService<FontLibraryWarmup>();
         services.AddSingleton<IDocumentTabFactory, DocumentTabFactory>();
         services.AddSingleton<IPrintDialogService, PrintDialogService>();

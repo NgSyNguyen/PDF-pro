@@ -22,6 +22,7 @@ public sealed class PageEditorViewModelTests : IDisposable
 {
     private readonly WorkspaceFixture _fixture = new();
     private readonly RenderCache _cache = new(new FakeSettingsService(AppSettings.Default));
+    private readonly IPageDialogService _pageDialogs = Substitute.For<IPageDialogService>();
     private readonly DocumentTabFactory _factory;
 
     public PageEditorViewModelTests()
@@ -33,7 +34,7 @@ public sealed class PageEditorViewModelTests : IDisposable
             new ManualDebouncerFactory(),
             TestOperations.Catalog(),
             Substitute.For<IMessageService>(),
-            Substitute.For<IPageDialogService>(),
+            _pageDialogs,
             Substitute.For<IFileDialogService>(),
             Substitute.For<IPdfDocumentLoader>(),
             NullLoggerFactory.Instance);
@@ -300,6 +301,47 @@ public sealed class PageEditorViewModelTests : IDisposable
         request.Operation.ShouldBeOfType<OverlayOperation>();
         request.Completed!(true);
         tab.HasPendingEdits.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AHandSignature_IsPlacedAsASignaturePicture()
+    {
+        await using var tab = await OpenAsync(1);
+        _pageDialogs.ShowSignature(Arg.Any<SignatureViewModel>()).Returns(call =>
+        {
+            var dialog = call.Arg<SignatureViewModel>();
+            dialog.Mode = SignatureMode.Type;
+            dialog.Name = "Phạm Thị Dung";
+            dialog.SaveToLibrary = false;
+            dialog.UseCommand.Execute(null);
+            return true;
+        });
+
+        await tab.AddSignatureCommand.ExecuteAsync(null);
+
+        var image = tab.Editor.Objects.ShouldHaveSingleItem().Item.ShouldBeOfType<ImageOverlay>();
+        image.IsSignature.ShouldBeTrue();
+        File.Exists(image.ImagePath).ShouldBeTrue();
+        image.ImagePath.ShouldStartWith(tab.Workspace.WorkDirectory, Case.Insensitive, "the picture lives in the session");
+        image.Box.Size.Width.ShouldBeLessThan(300, "a signature is placed at its own, small size");
+        tab.Editor.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task NewPictures_GoInTheMiddleOfWhatIsOnScreen()
+    {
+        await using var tab = await OpenAsync(3);
+        tab.Viewer.ViewportSize = new ViewSize(900, 500);
+
+        // Both views lie wholly inside the first page (below its top margin).
+        tab.Viewer.ScrollOffset = new ViewPoint(0, 100);
+        var top = tab.Viewer.VisibleCenterOf(0).ShouldNotBeNull();
+        tab.Viewer.ScrollOffset = new ViewPoint(0, 400);
+        var lower = tab.Viewer.VisibleCenterOf(0).ShouldNotBeNull();
+
+        (lower.Y - top.Y).ShouldBe(300 / tab.Viewer.Layout.Scale, 1, "scrolling down moves the spot down the page");
+        top.X.ShouldBe(297.5, 1, "the page fits the width: the middle of the page across");
+        tab.Viewer.VisibleCenterOf(2).ShouldBeNull("page 3 is not on screen");
     }
 
     private static double Top(PageGeometry geometry, TextOverlay text) => text.Box.ToView(new PageCoordinateMapper(geometry, 1)).HandlePosition(Core.Geometry.BoxHandle.Top).Y;

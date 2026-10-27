@@ -1,0 +1,267 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.SignatureWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:editing="clr-namespace:PdfPro.App.ViewModels.Editing"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=editing:SignatureViewModel}"
+  Title="{loc:Tr Signature_Title}"
+  Width="620"
+  MinHeight="0"
+  AutomationProperties.AutomationId="SignatureWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+  <ui:FluentWindow.Resources>
+    <DataTemplate x:Key="InkSwatch" DataType="{x:Type editing:ColorSwatch}">
+      <Button
+        Width="24"
+        Height="24"
+        Margin="0,0,6,0"
+        Padding="0"
+        AutomationProperties.Name="{Binding Hex}"
+        Background="{Binding Hex, Converter={StaticResource HexBrush}}"
+        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+        Command="{Binding DataContext.SetInkColorCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+        CommandParameter="{Binding Hex}"
+        ToolTip="{Binding Hex}" />
+    </DataTemplate>
+  </ui:FluentWindow.Resources>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr Signature_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <ui:InfoBar
+        Margin="0,0,0,12"
+        IsClosable="False"
+        IsOpen="True"
+        Message="{loc:Tr Signature_Notice}"
+        Severity="Informational" />
+
+      <StackPanel Orientation="Horizontal">
+        <RadioButton
+          Margin="0,0,16,0"
+          AutomationProperties.AutomationId="SignatureMode_Draw"
+          Content="{loc:Tr Signature_Draw}"
+          GroupName="SignatureMode"
+          IsChecked="{Binding Mode, Converter={StaticResource EnumMatch}, ConverterParameter=Draw}" />
+        <RadioButton
+          Margin="0,0,16,0"
+          AutomationProperties.AutomationId="SignatureMode_Type"
+          Content="{loc:Tr Signature_Type}"
+          GroupName="SignatureMode"
+          IsChecked="{Binding Mode, Converter={StaticResource EnumMatch}, ConverterParameter=Type}" />
+        <RadioButton
+          AutomationProperties.AutomationId="SignatureMode_Picture"
+          Content="{loc:Tr Signature_Picture}"
+          GroupName="SignatureMode"
+          IsChecked="{Binding Mode, Converter={StaticResource EnumMatch}, ConverterParameter=Picture}" />
+      </StackPanel>
+
+      <!-- Drawing -->
+      <StackPanel Margin="0,10,0,0" Visibility="{Binding Mode, Converter={StaticResource EnumMatchVisibility}, ConverterParameter=Draw}">
+        <Border
+          Height="180"
+          Background="White"
+          BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+          BorderThickness="1"
+          CornerRadius="4">
+          <Grid>
+            <Line
+              Margin="24,0,24,46"
+              VerticalAlignment="Bottom"
+              Stroke="LightGray"
+              StrokeDashArray="4 3"
+              X1="0"
+              X2="1"
+              Stretch="Fill" />
+            <InkCanvas
+              AutomationProperties.AutomationId="SignatureInk"
+              AutomationProperties.Name="{loc:Tr Signature_Draw}"
+              Background="Transparent"
+              DefaultDrawingAttributes="{Binding InkAttributes}"
+              Strokes="{Binding Strokes, Mode=OneWay}" />
+          </Grid>
+        </Border>
+        <DockPanel Margin="0,8,0,0">
+          <ui:Button
+            AutomationProperties.AutomationId="SignatureClear"
+            Command="{Binding ClearCommand}"
+            Content="{loc:Tr Signature_Clear}"
+            DockPanel.Dock="Right" />
+          <TextBlock
+            Margin="0,0,8,0"
+            VerticalAlignment="Center"
+            Text="{loc:Tr Signature_Width}" />
+          <Slider
+            Width="140"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="SignatureWidth"
+            AutomationProperties.Name="{loc:Tr Signature_Width}"
+            Maximum="6"
+            Minimum="1"
+            Value="{Binding InkWidth}" />
+        </DockPanel>
+      </StackPanel>
+
+      <!-- A name in a handwriting font -->
+      <StackPanel Margin="0,10,0,0" Visibility="{Binding Mode, Converter={StaticResource EnumMatchVisibility}, ConverterParameter=Type}">
+        <TextBlock Margin="0,0,0,4" Text="{loc:Tr Signature_Name}" />
+        <TextBox
+          AutomationProperties.AutomationId="SignatureName"
+          AutomationProperties.Name="{loc:Tr Signature_Name}"
+          Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Margin="0,8,0,4" Text="{loc:Tr Signature_Font}" />
+        <ComboBox
+          AutomationProperties.AutomationId="SignatureFont"
+          AutomationProperties.Name="{loc:Tr Signature_Font}"
+          ItemsSource="{Binding Fonts}"
+          SelectedItem="{Binding Font}" />
+      </StackPanel>
+
+      <!-- A photo or scan of a signature -->
+      <StackPanel Margin="0,10,0,0" Visibility="{Binding Mode, Converter={StaticResource EnumMatchVisibility}, ConverterParameter=Picture}">
+        <ui:Button
+          AutomationProperties.AutomationId="SignaturePickPicture"
+          Command="{Binding PickPictureCommand}"
+          Content="{loc:Tr Signature_PickPicture}"
+          Icon="{ui:SymbolIcon ImageAdd24}" />
+        <TextBlock Margin="0,8,0,4" Text="{loc:Tr Signature_PaperThreshold}" />
+        <Slider
+          AutomationProperties.AutomationId="SignatureThreshold"
+          AutomationProperties.Name="{loc:Tr Signature_PaperThreshold}"
+          Maximum="250"
+          Minimum="150"
+          Value="{Binding PaperThreshold}" />
+      </StackPanel>
+
+      <!-- Ink colour and the result -->
+      <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+        <TextBlock
+          Margin="0,0,8,0"
+          VerticalAlignment="Center"
+          Text="{loc:Tr Signature_Color}" />
+        <ItemsControl ItemTemplate="{StaticResource InkSwatch}" ItemsSource="{Binding InkColors}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+      </StackPanel>
+      <TextBlock Margin="0,12,0,4" Text="{loc:Tr Signature_Preview}" />
+      <Border
+        Height="90"
+        Padding="8"
+        Background="White"
+        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="4">
+        <Grid>
+          <Image
+            AutomationProperties.AutomationId="SignaturePreview"
+            Source="{Binding Preview}"
+            Stretch="Uniform" />
+          <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Foreground="Gray"
+            Text="{loc:Tr Signature_Empty}">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding Preview}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Visible" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
+        </Grid>
+      </Border>
+      <TextBlock
+        Margin="0,6,0,0"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap" />
+      <CheckBox
+        Margin="0,6,0,0"
+        AutomationProperties.AutomationId="SignatureSaveToLibrary"
+        Content="{loc:Tr Signature_SaveToLibrary}"
+        IsChecked="{Binding SaveToLibrary}" />
+
+      <!-- Saved signatures -->
+      <StackPanel Margin="0,12,0,0" Visibility="{Binding HasSaved, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Margin="0,0,0,4" Text="{loc:Tr Signature_Saved}" />
+        <ItemsControl AutomationProperties.AutomationId="SignatureSaved" ItemsSource="{Binding Saved}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type editing:SavedSignatureViewModel}">
+              <Grid Margin="0,0,8,8">
+                <Button
+                  Width="140"
+                  Height="60"
+                  Padding="4"
+                  AutomationProperties.Name="{loc:Tr Signature_UseSaved}"
+                  Background="White"
+                  Command="{Binding DataContext.UseSavedCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                  CommandParameter="{Binding}"
+                  ToolTip="{loc:Tr Signature_UseSaved}">
+                  <Image Source="{Binding Picture}" Stretch="Uniform" />
+                </Button>
+                <ui:Button
+                  Width="22"
+                  Height="22"
+                  Margin="0,-6,-6,0"
+                  Padding="0"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Top"
+                  AutomationProperties.Name="{loc:Tr Signature_DeleteSaved}"
+                  Command="{Binding DataContext.DeleteSavedCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                  CommandParameter="{Binding}"
+                  Icon="{ui:SymbolIcon Dismiss12}"
+                  ToolTip="{loc:Tr Signature_DeleteSaved}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <StackPanel
+        Margin="0,16,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="SignatureUse"
+          Command="{Binding UseCommand}"
+          Content="{loc:Tr Signature_Use}"
+          IsDefault="True" />
+        <ui:Button
+          AutomationProperties.AutomationId="SignatureCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

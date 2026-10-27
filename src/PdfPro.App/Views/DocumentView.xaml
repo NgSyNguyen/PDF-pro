@@ -188,6 +188,15 @@
             ToolTip="{loc:Tr Editor_Tool_Image}">
             <ui:SymbolIcon Symbol="ImageAdd24" />
           </Button>
+          <Button
+            Margin="0,0,4,0"
+            Padding="8,4"
+            AutomationProperties.AutomationId="EditorSignature"
+            AutomationProperties.Name="{loc:Tr Editor_Tool_Signature}"
+            Command="{Binding DataContext.AddSignatureCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            ToolTip="{loc:Tr Editor_Tool_Signature}">
+            <ui:SymbolIcon Symbol="Signature24" />
+          </Button>
           <TextBlock
             Margin="10,0,0,0"
             VerticalAlignment="Center"

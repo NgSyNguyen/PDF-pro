@@ -148,4 +148,6 @@ public interface IPageDialogService
     bool ShowInterleave(ViewModels.Organizer.InterleaveViewModel viewModel);
 
     bool ShowSheetLayout(ViewModels.Organizer.SheetLayoutViewModel viewModel);
+
+    bool ShowSignature(ViewModels.Editing.SignatureViewModel viewModel);
 }

@@ -100,6 +100,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddTextCommand = new ActiveDocumentCommand(d => d.AddTextCommand);
         AddShapeCommand = new ActiveDocumentCommand(d => d.AddShapeCommand);
         AddImageCommand = new ActiveDocumentCommand(d => d.AddImageCommand);
+        AddSignatureCommand = new ActiveDocumentCommand(d => d.AddSignatureCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
@@ -178,6 +179,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand AddShapeCommand { get; }
 
     public ActiveDocumentCommand AddImageCommand { get; }
+
+    public ActiveDocumentCommand AddSignatureCommand { get; }
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -404,7 +407,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand, AddImageCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -572,7 +575,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("edit.addText", Strings.Cmd_AddText, SymbolRegular.TextAddT24, AddTextCommand),
                     new("edit.addImage", Strings.Cmd_AddImage, SymbolRegular.ImageAdd24, AddImageCommand),
                     new("edit.addShape", Strings.Cmd_AddShape, SymbolRegular.Shapes24, AddShapeCommand),
-                    new("edit.handSignature", Strings.Cmd_HandSignature, SymbolRegular.Signature24),
+                    new("edit.handSignature", Strings.Cmd_HandSignature, SymbolRegular.Signature24, AddSignatureCommand),
                 ]),
                 new(Strings.Ribbon_Group_Stamp,
                 [

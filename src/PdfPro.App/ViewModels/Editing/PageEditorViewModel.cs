@@ -334,8 +334,11 @@ public sealed partial class PageEditorViewModel : ObservableObject
         Invalidate();
     }
 
-    /// <summary>A picture placed in the middle of a page, at its own size or shrunk to half the page.</summary>
-    public OverlayObjectViewModel? AddImage(Guid pageKey, ImportedImage image, bool isSignature = false)
+    /// <summary>
+    /// A picture placed at <paramref name="shownCenter"/> (points of the page as shown; the middle of the page when
+    /// null), at its own size or shrunk to half the page.
+    /// </summary>
+    public OverlayObjectViewModel? AddImage(Guid pageKey, ImportedImage image, bool isSignature = false, ViewPoint? shownCenter = null)
     {
         ArgumentNullException.ThrowIfNull(image);
         if (GeometryOf(pageKey) is not { } geometry)
@@ -345,7 +348,8 @@ public sealed partial class PageEditorViewModel : ObservableObject
 
         var shown = geometry.DisplaySize;
         var size = image.SizeWithin(new PdfSize(shown.Width / 2, shown.Height / 2));
-        var center = new PageCoordinateMapper(geometry, 1).ScreenToPdf(new ViewPoint(shown.Width / 2, shown.Height / 2));
+        var at = shownCenter ?? new ViewPoint(shown.Width / 2, shown.Height / 2);
+        var center = new PageCoordinateMapper(geometry, 1).ScreenToPdf(at);
         Tool = OverlayTool.Select;
         return Add(pageKey, new ImageOverlay(0, new OverlayBox(center, size), image.Path, isSignature));
     }

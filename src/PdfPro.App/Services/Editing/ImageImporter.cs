@@ -51,6 +51,16 @@ public static class ImageImporter
         return ImportBitmap(frame, folder);
     }
 
+    /// <summary>A PNG made by the app (a hand signature), stored as it is.</summary>
+    /// <exception cref="IOException">The copy cannot be written.</exception>
+    /// <exception cref="NotSupportedException">The bytes are not a picture.</exception>
+    public static ImportedImage ImportPng(byte[] png, string folder)
+    {
+        ArgumentNullException.ThrowIfNull(png);
+        var frame = Decode(png);
+        return new ImportedImage(Store(png, ".png", folder), frame.PixelWidth, frame.PixelHeight, Dpi(frame.DpiX), Dpi(frame.DpiY));
+    }
+
     /// <summary>A picture in memory (pasted from the clipboard) written as a PNG.</summary>
     /// <exception cref="IOException">The copy cannot be written.</exception>
     public static ImportedImage ImportBitmap(BitmapSource bitmap, string folder)

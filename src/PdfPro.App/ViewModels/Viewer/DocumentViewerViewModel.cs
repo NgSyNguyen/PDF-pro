@@ -145,6 +145,24 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
 
     private ViewRect Viewport => new(ScrollOffset.X, ScrollOffset.Y, ViewportSize.Width, ViewportSize.Height);
 
+    /// <summary>
+    /// The middle of the part of a page that is on screen, in points of the page as displayed (origin top-left), or
+    /// null when none of it is visible (or nothing is laid out yet): where new objects go.
+    /// </summary>
+    public ViewPoint? VisibleCenterOf(int pageIndex)
+    {
+        if (pageIndex < 0 || pageIndex >= Layout.PageCount || ViewportSize.Width <= 0 || ViewportSize.Height <= 0)
+        {
+            return null;
+        }
+
+        var page = Layout.GetPageBounds(pageIndex);
+        var visible = ViewRect.Intersect(page, Viewport);
+        return visible.IsEmpty
+            ? null
+            : new ViewPoint((visible.X + (visible.Width / 2) - page.X) / Layout.Scale, (visible.Y + (visible.Height / 2) - page.Y) / Layout.Scale);
+    }
+
     private ViewPoint ViewportCenter => new(ViewportSize.Width / 2, ViewportSize.Height / 2);
 
     /// <summary>Ctrl + mouse wheel: zooms keeping the page spot under <paramref name="anchorInViewport"/> fixed.</summary>

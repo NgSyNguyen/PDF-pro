@@ -680,4 +680,26 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Props_ForNew" xml:space="preserve"><value>For new objects</value></data>
   <data name="Props_ForSelection" xml:space="preserve"><value>For the {0} selected objects</value></data>
   <data name="Props_HexColor" xml:space="preserve"><value>Colour code #RRGGBB</value></data>
+  <data name="Signature_Title" xml:space="preserve"><value>Hand signature</value></data>
+  <data name="Signature_Notice" xml:space="preserve"><value>This is a picture of a signature, NOT a digital signature. To sign with legal weight like a digital signature, use Security › Sign.</value></data>
+  <data name="Signature_Draw" xml:space="preserve"><value>Draw</value></data>
+  <data name="Signature_Type" xml:space="preserve"><value>Type a name</value></data>
+  <data name="Signature_Picture" xml:space="preserve"><value>Picture of a signature</value></data>
+  <data name="Signature_Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Signature_Width" xml:space="preserve"><value>Pen width</value></data>
+  <data name="Signature_Name" xml:space="preserve"><value>Full name</value></data>
+  <data name="Signature_Font" xml:space="preserve"><value>Handwriting style</value></data>
+  <data name="Signature_PickPicture" xml:space="preserve"><value>Choose a picture…</value></data>
+  <data name="Signature_PickPicture_Title" xml:space="preserve"><value>Choose a photo or scan of a signature</value></data>
+  <data name="Signature_PaperThreshold" xml:space="preserve"><value>Remove the paper (move left if paper remains)</value></data>
+  <data name="Signature_Color" xml:space="preserve"><value>Ink colour</value></data>
+  <data name="Signature_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Signature_Empty" xml:space="preserve"><value>Draw, type a name or choose a picture</value></data>
+  <data name="Signature_SaveToLibrary" xml:space="preserve"><value>Keep in the signature library (encrypted, only this Windows account can open it)</value></data>
+  <data name="Signature_Saved" xml:space="preserve"><value>Saved signatures</value></data>
+  <data name="Signature_UseSaved" xml:space="preserve"><value>Use this signature</value></data>
+  <data name="Signature_DeleteSaved" xml:space="preserve"><value>Remove from the library</value></data>
+  <data name="Signature_Use" xml:space="preserve"><value>Use signature</value></data>
+  <data name="Signature_Error_Picture" xml:space="preserve"><value>This picture cannot be read. Choose a PNG, JPEG, BMP, GIF or TIFF file.</value></data>
+  <data name="Editor_Tool_Signature" xml:space="preserve"><value>Hand signature</value></data>
 </root>
