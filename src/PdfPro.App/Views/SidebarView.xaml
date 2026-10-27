@@ -130,7 +130,7 @@
       <!-- Segmented switch; icon above label so both fit the narrowest sidebar. -->
       <UniformGrid
         Margin="8"
-        Columns="2"
+        Columns="3"
         DataContext="{Binding Sidebar}"
         DockPanel.Dock="Top">
         <RadioButton
@@ -169,6 +169,25 @@
               HorizontalAlignment="Center"
               FontSize="12"
               Text="{loc:Tr Sidebar_Bookmarks}" />
+          </StackPanel>
+        </RadioButton>
+        <RadioButton
+          Margin="2,0,0,0"
+          Padding="4,6"
+          HorizontalAlignment="Stretch"
+          HorizontalContentAlignment="Center"
+          AutomationProperties.AutomationId="SidebarSearch"
+          AutomationProperties.Name="{loc:Tr Sidebar_Search}"
+          GroupName="SidebarPanel"
+          IsChecked="{Binding IsSearchSelected}"
+          Style="{StaticResource {x:Type ToggleButton}}">
+          <StackPanel>
+            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Search24" />
+            <TextBlock
+              Margin="0,2,0,0"
+              HorizontalAlignment="Center"
+              FontSize="12"
+              Text="{loc:Tr Sidebar_Search}" />
           </StackPanel>
         </RadioButton>
       </UniformGrid>
@@ -282,6 +301,140 @@
               </TreeView>
             </Grid>
           </Grid>
+        </Grid>
+
+        <!-- Search -->
+        <Grid Visibility="{Binding Sidebar.IsSearchSelected, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock
+            Style="{StaticResource SidebarMessage}"
+            Text="{loc:Tr Sidebar_SearchEmpty}"
+            Visibility="{Binding HasActiveDocument, Converter={StaticResource InverseBoolToVisibility}}" />
+          <DockPanel
+            Margin="8,0,8,8"
+            DataContext="{Binding ActiveDocument.Search}"
+            Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <DockPanel DockPanel.Dock="Top">
+              <ui:Button
+                Margin="4,0,0,0"
+                Padding="6"
+                AutomationProperties.AutomationId="SearchRun"
+                AutomationProperties.Name="{loc:Tr Search_Run}"
+                Command="{Binding SearchCommand}"
+                DockPanel.Dock="Right"
+                Icon="{ui:SymbolIcon Search24}"
+                ToolTip="{loc:Tr Search_Run}" />
+              <ui:TextBox
+                x:Name="SearchBox"
+                AutomationProperties.AutomationId="SearchQuery"
+                AutomationProperties.Name="{loc:Tr Search_Query}"
+                PlaceholderText="{loc:Tr Search_Query}"
+                Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}">
+                <ui:TextBox.InputBindings>
+                  <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                  <KeyBinding Key="Escape" Command="{Binding ClearCommand}" />
+                </ui:TextBox.InputBindings>
+              </ui:TextBox>
+            </DockPanel>
+            <WrapPanel Margin="0,6,0,0" DockPanel.Dock="Top">
+              <CheckBox
+                Margin="0,0,8,4"
+                AutomationProperties.AutomationId="SearchMatchCase"
+                Content="{loc:Tr Search_MatchCase}"
+                IsChecked="{Binding MatchCase}" />
+              <CheckBox
+                Margin="0,0,8,4"
+                AutomationProperties.AutomationId="SearchWholeWord"
+                Content="{loc:Tr Search_WholeWord}"
+                IsChecked="{Binding WholeWord}" />
+              <CheckBox
+                Margin="0,0,8,4"
+                AutomationProperties.AutomationId="SearchRegex"
+                Content="{loc:Tr Search_Regex}"
+                IsChecked="{Binding UseRegex}" />
+            </WrapPanel>
+            <DockPanel Margin="0,2,0,0" DockPanel.Dock="Top">
+              <TextBlock
+                Margin="0,0,6,0"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Text="{loc:Tr Search_Diacritics}" />
+              <ComboBox
+                AutomationProperties.AutomationId="SearchDiacritics"
+                AutomationProperties.Name="{loc:Tr Search_Diacritics}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding DiacriticsOptions}"
+                SelectedValue="{Binding Diacritics}"
+                SelectedValuePath="Value" />
+            </DockPanel>
+            <StackPanel Margin="0,8,0,4" DockPanel.Dock="Top">
+              <DockPanel>
+                <ui:Button
+                  Padding="6,2"
+                  AutomationProperties.AutomationId="SearchStop"
+                  Command="{Binding StopCommand}"
+                  Content="{loc:Tr Search_Stop}"
+                  DockPanel.Dock="Right"
+                  Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock
+                  VerticalAlignment="Center"
+                  AutomationProperties.AutomationId="SearchStatus"
+                  Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                  Text="{Binding StatusText}"
+                  TextWrapping="Wrap" />
+              </DockPanel>
+              <ProgressBar
+                Margin="0,4,0,0"
+                Maximum="1"
+                Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}"
+                Value="{Binding Progress, Mode=OneWay}" />
+              <TextBlock
+                AutomationProperties.AutomationId="SearchError"
+                Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                Text="{Binding ErrorText}"
+                TextWrapping="Wrap"
+                Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+              <TextBlock
+                Margin="0,4,0,0"
+                AutomationProperties.AutomationId="SearchScannedPages"
+                Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                Text="{Binding ScannedPagesText}"
+                TextWrapping="Wrap"
+                Visibility="{Binding ScannedPagesText, Converter={StaticResource NullToCollapsed}}" />
+            </StackPanel>
+            <ListBox
+              AutomationProperties.AutomationId="SearchResults"
+              AutomationProperties.Name="{loc:Tr Search_Results}"
+              Background="Transparent"
+              BorderThickness="0"
+              ItemsSource="{Binding Results}"
+              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+              SelectedItem="{Binding SelectedResult, Mode=TwoWay}"
+              VirtualizingPanel.IsVirtualizing="True"
+              VirtualizingPanel.VirtualizationMode="Recycling">
+              <ListBox.ItemContainerStyle>
+                <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                  <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+                  <Setter Property="Padding" Value="6,4" />
+                </Style>
+              </ListBox.ItemContainerStyle>
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type viewer:SearchResultViewModel}">
+                  <StackPanel>
+                    <TextBlock
+                      FontSize="11"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding PageLabel}" />
+                    <TextBlock TextWrapping="Wrap">
+                      <Run Text="{Binding Snippet.Before, Mode=OneWay}" /><Run
+                        Background="#66FFD700"
+                        FontWeight="SemiBold"
+                        Text="{Binding Snippet.Match, Mode=OneWay}" /><Run Text="{Binding Snippet.After, Mode=OneWay}" />
+                    </TextBlock>
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
         </Grid>
       </Grid>
     </DockPanel>

@@ -109,6 +109,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         StampHeaderFooterCommand = new ActiveDocumentCommand(d => d.StampHeaderFooterCommand);
         StampPageNumbersCommand = new ActiveDocumentCommand(d => d.StampPageNumbersCommand);
         RemoveStampsCommand = new ActiveDocumentCommand(d => d.RemoveStampsCommand);
+        FindNextCommand = new ActiveDocumentCommand(d => d.Search.NextCommand);
+        FindPreviousCommand = new ActiveDocumentCommand(d => d.Search.PreviousCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
@@ -125,7 +127,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -199,6 +201,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand StampPageNumbersCommand { get; }
 
     public ActiveDocumentCommand RemoveStampsCommand { get; }
+
+    /// <summary>F3: the next match of the search.</summary>
+    public ActiveDocumentCommand FindNextCommand { get; }
+
+    /// <summary>Shift+F3: the previous match of the search.</summary>
+    public ActiveDocumentCommand FindPreviousCommand { get; }
+
+    /// <summary>The search panel was asked for (Ctrl+F, "Tìm"): the window puts the keyboard in its query box.</summary>
+    public event EventHandler? SearchRequested;
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -427,6 +438,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
             AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
+            FindNextCommand, FindPreviousCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -472,6 +484,24 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
     private Task CloseActiveDocumentAsync() => CloseTabAsync(ActiveDocument);
+
+    /// <summary>"Tìm" (Ctrl+F): shows the search panel of the sidebar (the organizer gives way to the viewer).</summary>
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowSearch()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsOrganizing)
+        {
+            document.IsOrganizing = false;
+        }
+
+        Sidebar.SelectedPanel = SidebarPanel.Search;
+        SearchRequested?.Invoke(this, EventArgs.Empty);
+    }
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
     private void ShowProperties()
@@ -631,7 +661,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Search,
                 [
-                    new("search.find", Strings.Cmd_Find, SymbolRegular.DocumentSearch24),
+                    new("search.find", Strings.Cmd_Find, SymbolRegular.DocumentSearch24, ShowSearchCommand, Strings.Cmd_Find_ToolTip),
                 ]),
             ]),
             new("security", Strings.Ribbon_Tab_Security,

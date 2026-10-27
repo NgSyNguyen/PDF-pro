@@ -813,4 +813,26 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Bates_FailedStatus" xml:space="preserve"><value>Bates numbering failed</value></data>
   <data name="Bates_Error_Title" xml:space="preserve"><value>Bates numbering failed</value></data>
   <data name="Bates_Error_File" xml:space="preserve"><value>"{0}" could not be read or written. No file was created.</value></data>
+  <data name="Cmd_Find_ToolTip" xml:space="preserve"><value>Find text in the document (Ctrl+F; F3 / Shift+F3: next / previous match)</value></data>
+  <data name="Sidebar_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Sidebar_SearchEmpty" xml:space="preserve"><value>Open a document to search its text.</value></data>
+  <data name="Search_Query" xml:space="preserve"><value>Search the document</value></data>
+  <data name="Search_Run" xml:space="preserve"><value>Search (Enter)</value></data>
+  <data name="Search_MatchCase" xml:space="preserve"><value>Match case</value></data>
+  <data name="Search_WholeWord" xml:space="preserve"><value>Whole words</value></data>
+  <data name="Search_Regex" xml:space="preserve"><value>Regular expression</value></data>
+  <data name="Search_Diacritics" xml:space="preserve"><value>Vietnamese tone marks</value></data>
+  <data name="Search_Diacritics_Auto" xml:space="preserve"><value>Automatic</value></data>
+  <data name="Search_Diacritics_Ignore" xml:space="preserve"><value>Ignore marks</value></data>
+  <data name="Search_Diacritics_Match" xml:space="preserve"><value>Match marks</value></data>
+  <data name="Search_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Search_Results" xml:space="preserve"><value>Search results</value></data>
+  <data name="Search_ResultPage" xml:space="preserve"><value>Page {0}</value></data>
+  <data name="Search_Progress" xml:space="preserve"><value>Searching page {0}/{1}…</value></data>
+  <data name="Search_Done" xml:space="preserve"><value>{0} matches on {1} pages</value></data>
+  <data name="Search_NoMatches" xml:space="preserve"><value>Not found.</value></data>
+  <data name="Search_Stopped" xml:space="preserve"><value>Search stopped.</value></data>
+  <data name="Search_Error_Invalid" xml:space="preserve"><value>The regular expression is not valid.</value></data>
+  <data name="Search_Error_Timeout" xml:space="preserve"><value>The expression took too long on a page and was stopped. Try a simpler expression.</value></data>
+  <data name="Search_ScannedPages" xml:space="preserve"><value>{0} pages are pictures without a text layer — they need text recognition (OCR) to be searched.</value></data>
 </root>

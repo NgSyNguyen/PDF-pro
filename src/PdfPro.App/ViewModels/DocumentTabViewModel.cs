@@ -126,6 +126,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         HistoryEntries = BuildHistory();
         Editor = new PageEditorViewModel(() => Workspace.Pages, services.ScreenFonts, services.ScreenImages ?? new ScreenImages(), logger);
         TextSelection = new TextSelectionViewModel(viewer, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
+        Search = new SearchViewModel(viewer, TextLayers, TextSelection, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
         Editor.ApplyRequested += OnEditorApplyRequested;
         Editor.PropertyChanged += OnEditorPropertyChanged;
         workspace.PagesChanged += OnPagesChanged;
@@ -157,6 +158,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>Text selected in the viewer (Ctrl+C copies it).</summary>
     public TextSelectionViewModel TextSelection { get; }
+
+    /// <summary>"Tìm kiếm" (Ctrl+F, F3, Shift+F3).</summary>
+    public SearchViewModel Search { get; }
 
     /// <summary>Objects wait in the page editor: saving, printing and closing apply them first.</summary>
     public bool HasPendingEdits => Editor.HasObjects;
@@ -343,6 +347,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         Viewer.PropertyChanged -= OnViewerPropertyChanged;
         Editor.ApplyRequested -= OnEditorApplyRequested;
         Editor.PropertyChanged -= OnEditorPropertyChanged;
+        Search.Clear();
         if (Organizer is { } organizer)
         {
             organizer.SelectionChanged -= OnOrganizerSelectionChanged;
@@ -991,6 +996,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     {
         TextSelection.Clear();
         Viewer.SetDocument(Workspace.Pages);
+        Search.Invalidate();
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
         Editor.Refresh();

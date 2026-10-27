@@ -60,8 +60,11 @@
             TextAlignment="Center"
             TextWrapping="Wrap" />
         </StackPanel>
-        <!-- Selected text; only draws, the mouse goes to the viewer. -->
-        <controls:TextSelectionLayer PageKey="{Binding Key}" Selection="{Binding DataContext.TextSelection, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <!-- Search matches and selected text; only draws, the mouse goes to the viewer. -->
+        <controls:TextHighlightLayer
+          PageKey="{Binding Key}"
+          Search="{Binding DataContext.Search, RelativeSource={RelativeSource AncestorType=UserControl}}"
+          Selection="{Binding DataContext.TextSelection, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         <!-- The page editor's objects, selection and guides; inactive (and transparent to the mouse) outside the editor. -->
         <controls:OverlayLayer Editor="{Binding DataContext.Editor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
       </Grid>

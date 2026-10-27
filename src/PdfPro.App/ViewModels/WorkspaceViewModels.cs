@@ -64,13 +64,14 @@ public enum SidebarPanel
 {
     Thumbnails,
     Bookmarks,
+    Search,
 }
 
 /// <summary>Left sidebar: page thumbnails or the bookmark tree.</summary>
 public sealed partial class SidebarViewModel : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsThumbnailsSelected), nameof(IsBookmarksSelected))]
+    [NotifyPropertyChangedFor(nameof(IsThumbnailsSelected), nameof(IsBookmarksSelected), nameof(IsSearchSelected))]
     public partial SidebarPanel SelectedPanel { get; set; }
 
     public bool IsThumbnailsSelected
@@ -93,6 +94,18 @@ public sealed partial class SidebarViewModel : ObservableObject
             if (value)
             {
                 SelectedPanel = SidebarPanel.Bookmarks;
+            }
+        }
+    }
+
+    public bool IsSearchSelected
+    {
+        get => SelectedPanel == SidebarPanel.Search;
+        set
+        {
+            if (value)
+            {
+                SelectedPanel = SidebarPanel.Search;
             }
         }
     }

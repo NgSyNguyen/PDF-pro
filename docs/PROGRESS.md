@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 3.
+Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 4.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -76,9 +76,9 @@ Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5Acceptan
 |---|---|---|---|
 | 1 | Lớp ký tự của trang: PDFium (`PdfiumTextPage.GetLayer`, `IPdfDocument.GetPageTextLayerAsync`) + Core `PageText` (dòng, từ, ký tự tại điểm, caret khi kéo, hình chữ nhật theo dòng, chép chữ NFC nối dòng / sửa gạch nối / giữ đoạn) | `66c9fc5` | Xong |
 | 2 | Tìm kiếm tiếng Việt (Core `TextSearch`): NFC = NFD, hoa/thường, dấu Tự động/Bỏ qua/Khớp (cả đ/Đ), toàn từ, regex (timeout 2 s), cụm từ khớp qua dòng; kết quả là khoảng ký tự; đoạn trích có ngữ cảnh | `5accbd9` | Xong |
-| 3 | Chọn chữ trên viewer: `TextLayerCache` (LRU 256 trang, dùng chung với tìm kiếm), `TextSelectionViewModel` (bấm/kéo, đúp = từ, ba lần = dòng, kéo theo từ/dòng, xuyên trang, Ctrl+A cả tài liệu, Esc), `TextSelectionLayer` (chỉ vẽ), con trỏ chữ I, Ctrl+C | commit `feat(app): select and copy text…` | Xong, chờ CI |
-| 4 | Panel tìm kiếm Ctrl+F (chạy nền, kết quả đổ dần, tô sáng, F3/Shift+F3, hủy, gợi ý OCR cho trang ảnh) | — | Tiếp theo |
-| 5+ | Annotation (mô hình, đọc, ghi, công cụ, panel bình luận, flatten) | — | Chưa |
+| 3 | Chọn chữ trên viewer: `TextLayerCache` (LRU 256 trang, dùng chung với tìm kiếm), `TextSelectionViewModel` (bấm/kéo, đúp = từ, ba lần = dòng, kéo theo từ/dòng, xuyên trang, Ctrl+A cả tài liệu, Esc), `TextSelectionLayer` (chỉ vẽ), con trỏ chữ I, Ctrl+C | `7944a57` | Xong, CI xanh |
+| 4 | Tìm kiếm: `SearchViewModel` (chạy nền qua `TextLayerCache`, kết quả đổ dần kèm ngữ cảnh, kết quả đang chọn được chọn chữ + cuộn tới, F3/Shift+F3 vòng quanh, Dừng, tự tìm lại khi đổi tùy chọn hoặc đổi trang, đếm trang ảnh → gợi ý OCR); sidebar thêm mục "Tìm kiếm"; `TextHighlightLayer` (thay `TextSelectionLayer`) vẽ kết quả vàng/cam + vùng chọn; Ctrl+F, F3, Shift+F3, nút ribbon "Tìm" | commit `feat(app): search panel…` | Xong, chờ CI |
+| 5+ | Annotation (mô hình, đọc, ghi, công cụ, panel bình luận, flatten) | — | Tiếp theo |
 
 **Quyết định Phase 6 (sẽ đưa vào SPEC mục Phase 6):**
 - PDFium 157 có API annotation nhưng **không ghi được** `/L` (đường), `/Vertices` (đa giác), `/IRT` (trả lời); PDFsharp 6.2.4 **không** lưu incremental. → Annotation được ghi bằng **PDFsharp ở tầng dictionary** (đủ loại, `/AP` sinh bằng XGraphics, trả lời có `/IRT`), giữ trên `PageRef` như dấu tách trang (thêm/sửa/hoàn tác tức thì, chỉ ghi ra PDF khi lưu/vật chất hóa). Annotation có sẵn trong tệp: sửa/xóa là thao tác nội dung (revision).

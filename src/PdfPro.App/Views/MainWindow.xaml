@@ -48,6 +48,9 @@
     <KeyBinding Key="R" Command="{Binding RotateRightCommand}" Modifiers="Control" />
     <KeyBinding Key="R" Command="{Binding RotateLeftCommand}" Modifiers="Control+Shift" />
     <KeyBinding Key="M" Command="{Binding MarkSplitCommand}" Modifiers="Control" />
+    <KeyBinding Key="F" Command="{Binding ShowSearchCommand}" Modifiers="Control" />
+    <KeyBinding Key="F3" Command="{Binding FindNextCommand}" />
+    <KeyBinding Key="F3" Command="{Binding FindPreviousCommand}" Modifiers="Shift" />
   </ui:FluentWindow.InputBindings>
 
   <ui:FluentWindow.CommandBindings>
