@@ -150,4 +150,7 @@ public interface IPageDialogService
     bool ShowSheetLayout(ViewModels.Organizer.SheetLayoutViewModel viewModel);
 
     bool ShowSignature(ViewModels.Editing.SignatureViewModel viewModel);
+
+    /// <summary>A stamp dialog (watermark, background, header and footer, page numbers, removing stamps).</summary>
+    bool ShowStamp(ViewModels.Editing.StampDialogViewModel viewModel);
 }

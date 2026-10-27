@@ -42,6 +42,7 @@ public sealed record HistoryEntryViewModel(string Description, bool IsRedo, int 
 /// <param name="ScreenFonts">Faces the page editor draws text with (null where nothing is drawn).</param>
 /// <param name="ScreenImages">Pictures the page editor draws.</param>
 /// <param name="Signatures">The saved hand signatures (null: none are kept).</param>
+/// <param name="Stamps">Previews and scans for the stamp dialogs (null: the stamp commands are off).</param>
 public sealed record DocumentTabServices(
     OperationCatalog Operations,
     IMessageService Messages,
@@ -52,7 +53,17 @@ public sealed record DocumentTabServices(
     Func<VirtualPage, CancellationToken, Task<ImageSource?>> LoadPreview,
     ScreenFonts? ScreenFonts = null,
     ScreenImages? ScreenImages = null,
-    SignatureLibrary? Signatures = null);
+    SignatureLibrary? Signatures = null,
+    StampServices? Stamps = null);
+
+/// <summary>What the stamp dialogs use besides the operations.</summary>
+/// <param name="CreatePreview">Shows page n (0-based) of the document with a stamp, until disposed.</param>
+/// <param name="Debouncers">Delays previews while the user types.</param>
+/// <param name="ScanAsync">Counts the pages carrying each kind of PDF_Pro stamp in the document as displayed.</param>
+public sealed record StampServices(
+    Func<DocumentWorkspace, int, IStampPreview> CreatePreview,
+    IDebouncerFactory Debouncers,
+    Func<DocumentWorkspace, CancellationToken, Task<IReadOnlyDictionary<StampKind, int>>> ScanAsync);
 
 /// <summary>A content change the user asked for, run by the window in the background.</summary>
 /// <param name="Operation">The content operation.</param>
@@ -643,6 +654,99 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
     }
 
+    /// <summary>"Hình mờ": the dialog with a live preview of the current page, then the window stamps the pages in the background.</summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private Task StampWatermarkAsync()
+        => StampAsync((context, preview, debouncers) => new WatermarkDialogViewModel(context, _operations.Get<WatermarkOperation>(), _services.FileDialogs, preview, debouncers));
+
+    /// <summary>"Nền trang": a colour or a picture under the content of the pages.</summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private Task StampBackgroundAsync()
+        => StampAsync((context, preview, debouncers) => new BackgroundDialogViewModel(context, _operations.Get<BackgroundOperation>(), _services.FileDialogs, preview, debouncers));
+
+    /// <summary>"Đầu & chân trang".</summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private Task StampHeaderFooterAsync()
+        => StampAsync((context, preview, debouncers) => new HeaderFooterDialogViewModel(context, _operations.Get<HeaderFooterOperation>(), preview, debouncers));
+
+    /// <summary>"Đánh số trang".</summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private Task StampPageNumbersAsync()
+        => StampAsync((context, preview, debouncers) => new PageNumbersDialogViewModel(context, _operations.Get<PageNumbersOperation>(), preview, debouncers));
+
+    /// <summary>
+    /// "Gỡ dấu": looks for the stamps PDF_Pro added to the document as displayed, then lets the user choose the kinds to
+    /// take off. A document without any is told so instead.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private async Task RemoveStampsAsync()
+    {
+        if (_services.Stamps is not { } stamps)
+        {
+            return;
+        }
+
+        IReadOnlyDictionary<StampKind, int> found;
+        try
+        {
+            found = await stamps.ScanAsync(Workspace, CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            _logger.LogWarning("The stamps of a document could not be read: {ErrorType}", ex.GetType().Name);
+            await _messages.ShowErrorAsync(Strings.Stamp_Error_Title, Strings.Stamp_Error_Scan);
+            return;
+        }
+
+        if (found.Count == 0)
+        {
+            await _messages.ShowInfoAsync(Strings.RemoveStamps_Title, Strings.RemoveStamps_None);
+            return;
+        }
+
+        await StampAsync((context, preview, debouncers) => new RemoveStampsDialogViewModel(context, found, _operations.Get<RemoveStampsOperation>(), preview, debouncers));
+    }
+
+    /// <summary>Stamps change the content: objects waiting in the page editor are applied first.</summary>
+    private bool CanStamp() => _services.Stamps is not null && CanChangeContent();
+
+    /// <summary>Shows a stamp dialog; a confirmed choice is run by the window in the background as one undoable step.</summary>
+    private async Task StampAsync(Func<StampContext, IStampPreview, IDebouncerFactory, StampDialogViewModel> create)
+    {
+        if (_services.Stamps is not { } stamps || !CanStamp())
+        {
+            return;
+        }
+
+        var context = await StampContextAsync();
+        var dialog = create(context, stamps.CreatePreview(Workspace, context.CurrentPage), stamps.Debouncers);
+        await using (dialog)
+        {
+            if (_services.PageDialogs.ShowStamp(dialog) && dialog.Result is { } choice && CanStamp())
+            {
+                ContentChangeRequested?.Invoke(this, new ContentChangeRequest(choice.Operation, choice.Parameters, choice.Description));
+            }
+        }
+    }
+
+    /// <summary>The document's name and title, and the pages the dialog starts with (the organizer's selection, if any).</summary>
+    private async Task<StampContext> StampContextAsync()
+    {
+        string? title = null;
+        try
+        {
+            title = (await Document.GetMetadataAsync()).Title;
+        }
+        catch (PdfDocumentException ex)
+        {
+            _logger.LogWarning("The document title could not be read: {Failure}", ex.Failure);
+        }
+
+        IReadOnlyList<int> selected = IsOrganizing && Organizer is { } organizer ? organizer.SelectedIndices : [];
+        var current = selected.Count > 0 ? selected[0] : Math.Clamp(Viewer.CurrentPageIndex, 0, Viewer.PageCount - 1);
+        return new StampContext(Viewer.PageCount, Path.GetFileNameWithoutExtension(FileName), string.IsNullOrWhiteSpace(title) ? null : title, current, selected);
+    }
+
     /// <summary>
     /// "Trang đầu tệp" (Ctrl+M): marks the target pages as first pages of split files, or unmarks them when all of them
     /// are marked already. The first page always starts the first file, so it is left out. The step can be undone and
@@ -1008,6 +1112,11 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         AddShapeCommand.NotifyCanExecuteChanged();
         AddImageCommand.NotifyCanExecuteChanged();
         AddSignatureCommand.NotifyCanExecuteChanged();
+        StampWatermarkCommand.NotifyCanExecuteChanged();
+        StampBackgroundCommand.NotifyCanExecuteChanged();
+        StampHeaderFooterCommand.NotifyCanExecuteChanged();
+        StampPageNumbersCommand.NotifyCanExecuteChanged();
+        RemoveStampsCommand.NotifyCanExecuteChanged();
     }
 }
 

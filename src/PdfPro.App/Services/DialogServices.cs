@@ -219,6 +219,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new SignatureWindow(viewModel));
     }
 
+    public bool ShowStamp(ViewModels.Editing.StampDialogViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new StampWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

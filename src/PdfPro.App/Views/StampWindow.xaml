@@ -1,0 +1,602 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.StampWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:editing="clr-namespace:PdfPro.App.ViewModels.Editing"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:views="clr-namespace:PdfPro.App.Views"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=editing:StampDialogViewModel}"
+  Title="{Binding Title}"
+  Width="900"
+  Height="700"
+  MinWidth="760"
+  MinHeight="520"
+  AutomationProperties.AutomationId="StampWindow"
+  ExtendsContentIntoTitleBar="True"
+  ShowInTaskbar="False"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="SectionTitle" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,16,0,4" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,8,0,4" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+    <Style x:Key="Note" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,6,0,0" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <!-- A row of colour squares; the command comes from the Tag of the ItemsControl. -->
+    <DataTemplate x:Key="SwatchTemplate" DataType="{x:Type editing:ColorSwatch}">
+      <Button
+        Width="22"
+        Height="22"
+        Margin="0,0,4,4"
+        Padding="0"
+        AutomationProperties.Name="{Binding Hex}"
+        Background="{Binding Hex, Converter={StaticResource HexBrush}}"
+        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        Command="{Binding Tag, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+        CommandParameter="{Binding Hex}"
+        ToolTip="{Binding Hex}" />
+    </DataTemplate>
+    <ItemsPanelTemplate x:Key="SwatchPanel">
+      <WrapPanel />
+    </ItemsPanelTemplate>
+
+    <!-- Hình mờ -->
+    <DataTemplate DataType="{x:Type editing:WatermarkDialogViewModel}">
+      <StackPanel>
+        <WrapPanel>
+          <RadioButton
+            MinWidth="0"
+            Margin="0,0,16,0"
+            AutomationProperties.AutomationId="WatermarkUseText"
+            Content="{loc:Tr Watermark_Kind_Text}"
+            GroupName="WatermarkKind"
+            IsChecked="{Binding UsesText}" />
+          <RadioButton
+            MinWidth="0"
+            AutomationProperties.AutomationId="WatermarkUsePicture"
+            Content="{loc:Tr Watermark_Kind_Picture}"
+            GroupName="WatermarkKind"
+            IsChecked="{Binding UsesPicture}" />
+        </WrapPanel>
+
+        <StackPanel Visibility="{Binding UsesText, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Watermark_Text}" />
+          <TextBox
+            MinHeight="56"
+            AcceptsReturn="True"
+            AutomationProperties.AutomationId="WatermarkText"
+            AutomationProperties.Name="{loc:Tr Watermark_Text}"
+            Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+            TextWrapping="Wrap" />
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="12" />
+              <ColumnDefinition Width="120" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+              <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_Font}" />
+              <ComboBox
+                AutomationProperties.AutomationId="StampFont"
+                AutomationProperties.Name="{loc:Tr Stamp_Font}"
+                ItemsSource="{Binding FontFamilies}"
+                SelectedItem="{Binding FontFamily}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+              <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_FontSize}" />
+              <TextBox
+                AutomationProperties.AutomationId="StampFontSize"
+                AutomationProperties.Name="{loc:Tr Stamp_FontSize}"
+                Text="{Binding FontSize, UpdateSourceTrigger=LostFocus}" />
+            </StackPanel>
+          </Grid>
+          <CheckBox
+            Margin="0,8,0,0"
+            AutomationProperties.AutomationId="StampBold"
+            Content="{loc:Tr Stamp_Bold}"
+            IsChecked="{Binding Bold}" />
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_Color}" />
+          <ItemsControl
+            ItemTemplate="{StaticResource SwatchTemplate}"
+            ItemsPanel="{StaticResource SwatchPanel}"
+            ItemsSource="{Binding Swatches}"
+            Tag="{Binding SetColorCommand}" />
+          <TextBox
+            Width="120"
+            HorizontalAlignment="Left"
+            AutomationProperties.AutomationId="StampColor"
+            AutomationProperties.Name="{loc:Tr Stamp_HexColor}"
+            Text="{Binding Color, UpdateSourceTrigger=PropertyChanged}"
+            ToolTip="{loc:Tr Stamp_HexColor}" />
+        </StackPanel>
+
+        <StackPanel Visibility="{Binding UsesPicture, Converter={StaticResource BoolToVisibility}}">
+          <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+            <ui:Button
+              AutomationProperties.AutomationId="WatermarkPickPicture"
+              Command="{Binding PickPictureCommand}"
+              Content="{loc:Tr Watermark_PickPicture}" />
+            <TextBlock
+              Margin="12,0,0,0"
+              VerticalAlignment="Center"
+              AutomationProperties.AutomationId="WatermarkPictureName"
+              Text="{Binding PictureName}"
+              TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Watermark_PictureScale}" />
+          <TextBox
+            Width="120"
+            HorizontalAlignment="Left"
+            AutomationProperties.AutomationId="WatermarkPictureScale"
+            AutomationProperties.Name="{loc:Tr Watermark_PictureScale}"
+            Text="{Binding PictureScalePercent, UpdateSourceTrigger=LostFocus}" />
+        </StackPanel>
+
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Watermark_Opacity}" />
+            <TextBox
+              AutomationProperties.AutomationId="WatermarkOpacity"
+              AutomationProperties.Name="{loc:Tr Watermark_Opacity}"
+              Text="{Binding OpacityPercent, UpdateSourceTrigger=LostFocus}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Watermark_Rotation}" TextTrimming="CharacterEllipsis" />
+            <TextBox
+              AutomationProperties.AutomationId="WatermarkRotation"
+              AutomationProperties.Name="{loc:Tr Watermark_Rotation}"
+              Text="{Binding Rotation, UpdateSourceTrigger=LostFocus}" />
+          </StackPanel>
+        </Grid>
+        <CheckBox
+          Margin="0,12,0,0"
+          AutomationProperties.AutomationId="WatermarkTile"
+          Content="{loc:Tr Watermark_Tile}"
+          IsChecked="{Binding Tile}" />
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_Position}" />
+        <ComboBox
+          AutomationProperties.AutomationId="StampPosition"
+          AutomationProperties.Name="{loc:Tr Stamp_Position}"
+          DisplayMemberPath="Label"
+          IsEnabled="{Binding Tile, Converter={StaticResource InverseBool}}"
+          ItemsSource="{Binding Anchors}"
+          SelectedValue="{Binding Anchor}"
+          SelectedValuePath="Value" />
+        <CheckBox
+          Margin="0,12,0,0"
+          AutomationProperties.AutomationId="WatermarkBehind"
+          Content="{loc:Tr Watermark_Behind}"
+          IsChecked="{Binding BehindContent}" />
+        <TextBlock Style="{StaticResource Note}" Text="{loc:Tr Watermark_Behind_Note}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <!-- Nền trang -->
+    <DataTemplate DataType="{x:Type editing:BackgroundDialogViewModel}">
+      <StackPanel>
+        <WrapPanel>
+          <RadioButton
+            MinWidth="0"
+            Margin="0,0,16,0"
+            AutomationProperties.AutomationId="BackgroundUseColor"
+            Content="{loc:Tr Background_Color}"
+            GroupName="BackgroundKind"
+            IsChecked="{Binding UsesText}" />
+          <RadioButton
+            MinWidth="0"
+            AutomationProperties.AutomationId="BackgroundUsePicture"
+            Content="{loc:Tr Background_Picture}"
+            GroupName="BackgroundKind"
+            IsChecked="{Binding UsesPicture}" />
+        </WrapPanel>
+        <StackPanel Visibility="{Binding UsesText, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_Color}" />
+          <ItemsControl
+            ItemTemplate="{StaticResource SwatchTemplate}"
+            ItemsPanel="{StaticResource SwatchPanel}"
+            ItemsSource="{Binding Swatches}"
+            Tag="{Binding SetColorCommand}" />
+          <TextBox
+            Width="120"
+            HorizontalAlignment="Left"
+            AutomationProperties.AutomationId="StampColor"
+            AutomationProperties.Name="{loc:Tr Stamp_HexColor}"
+            Text="{Binding Color, UpdateSourceTrigger=PropertyChanged}"
+            ToolTip="{loc:Tr Stamp_HexColor}" />
+        </StackPanel>
+        <StackPanel Visibility="{Binding UsesPicture, Converter={StaticResource BoolToVisibility}}">
+          <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+            <ui:Button
+              AutomationProperties.AutomationId="BackgroundPickPicture"
+              Command="{Binding PickPictureCommand}"
+              Content="{loc:Tr Watermark_PickPicture}" />
+            <TextBlock
+              Margin="12,0,0,0"
+              VerticalAlignment="Center"
+              Text="{Binding PictureName}"
+              TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+          <CheckBox
+            Margin="0,8,0,0"
+            AutomationProperties.AutomationId="BackgroundKeepProportions"
+            Content="{loc:Tr Background_KeepProportions}"
+            IsChecked="{Binding KeepProportions}" />
+        </StackPanel>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Watermark_Opacity}" />
+        <TextBox
+          Width="120"
+          HorizontalAlignment="Left"
+          AutomationProperties.AutomationId="BackgroundOpacity"
+          AutomationProperties.Name="{loc:Tr Watermark_Opacity}"
+          Text="{Binding OpacityPercent, UpdateSourceTrigger=LostFocus}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <!-- Đầu trang & chân trang -->
+    <DataTemplate DataType="{x:Type editing:HeaderFooterDialogViewModel}">
+      <StackPanel>
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="8" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TextBlock Grid.Column="1" Style="{StaticResource FieldLabel}" Text="{loc:Tr HeaderFooter_Left}" />
+          <TextBlock Grid.Column="3" Style="{StaticResource FieldLabel}" Text="{loc:Tr HeaderFooter_Center}" />
+          <TextBlock Grid.Column="5" Style="{StaticResource FieldLabel}" Text="{loc:Tr HeaderFooter_Right}" />
+          <TextBlock
+            Grid.Row="1"
+            Margin="0,0,12,0"
+            VerticalAlignment="Center"
+            FontWeight="SemiBold"
+            Text="{loc:Tr HeaderFooter_Header}" />
+          <TextBox
+            Grid.Row="1"
+            Grid.Column="1"
+            AutomationProperties.AutomationId="HeaderLeft"
+            Text="{Binding TopLeft, UpdateSourceTrigger=PropertyChanged}" />
+          <TextBox
+            Grid.Row="1"
+            Grid.Column="3"
+            AutomationProperties.AutomationId="HeaderCenter"
+            Text="{Binding TopCenter, UpdateSourceTrigger=PropertyChanged}" />
+          <TextBox
+            Grid.Row="1"
+            Grid.Column="5"
+            AutomationProperties.AutomationId="HeaderRight"
+            Text="{Binding TopRight, UpdateSourceTrigger=PropertyChanged}" />
+          <TextBlock
+            Grid.Row="3"
+            Margin="0,0,12,0"
+            VerticalAlignment="Center"
+            FontWeight="SemiBold"
+            Text="{loc:Tr HeaderFooter_Footer}" />
+          <TextBox
+            Grid.Row="3"
+            Grid.Column="1"
+            AutomationProperties.AutomationId="FooterLeft"
+            Text="{Binding BottomLeft, UpdateSourceTrigger=PropertyChanged}" />
+          <TextBox
+            Grid.Row="3"
+            Grid.Column="3"
+            AutomationProperties.AutomationId="FooterCenter"
+            Text="{Binding BottomCenter, UpdateSourceTrigger=PropertyChanged}" />
+          <TextBox
+            Grid.Row="3"
+            Grid.Column="5"
+            AutomationProperties.AutomationId="FooterRight"
+            Text="{Binding BottomRight, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+        <TextBlock Style="{StaticResource Note}" Text="{loc:Tr Stamp_Fields}" />
+
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="120" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_Font}" />
+            <ComboBox
+              AutomationProperties.AutomationId="StampFont"
+              AutomationProperties.Name="{loc:Tr Stamp_Font}"
+              ItemsSource="{Binding FontFamilies}"
+              SelectedItem="{Binding FontFamily}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_FontSize}" />
+            <TextBox
+              AutomationProperties.AutomationId="StampFontSize"
+              AutomationProperties.Name="{loc:Tr Stamp_FontSize}"
+              Text="{Binding FontSize, UpdateSourceTrigger=LostFocus}" />
+          </StackPanel>
+        </Grid>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_Color}" />
+        <ItemsControl
+          ItemTemplate="{StaticResource SwatchTemplate}"
+          ItemsPanel="{StaticResource SwatchPanel}"
+          ItemsSource="{Binding Swatches}"
+          Tag="{Binding SetColorCommand}" />
+        <TextBox
+          Width="120"
+          HorizontalAlignment="Left"
+          AutomationProperties.AutomationId="StampColor"
+          AutomationProperties.Name="{loc:Tr Stamp_HexColor}"
+          Text="{Binding Color, UpdateSourceTrigger=PropertyChanged}"
+          ToolTip="{loc:Tr Stamp_HexColor}" />
+
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr HeaderFooter_MarginSides}" />
+            <TextBox
+              AutomationProperties.AutomationId="HeaderFooterMarginSides"
+              AutomationProperties.Name="{loc:Tr HeaderFooter_MarginSides}"
+              Text="{Binding MarginSides, UpdateSourceTrigger=LostFocus}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr HeaderFooter_MarginEnds}" />
+            <TextBox
+              AutomationProperties.AutomationId="HeaderFooterMarginEnds"
+              AutomationProperties.Name="{loc:Tr HeaderFooter_MarginEnds}"
+              Text="{Binding MarginEnds, UpdateSourceTrigger=LostFocus}" />
+          </StackPanel>
+        </Grid>
+
+        <TextBlock Style="{StaticResource SectionTitle}" Text="{loc:Tr HeaderFooter_Numbering}" />
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr HeaderFooter_StartNumber}" />
+            <TextBox
+              AutomationProperties.AutomationId="HeaderFooterStartNumber"
+              AutomationProperties.Name="{loc:Tr HeaderFooter_StartNumber}"
+              Text="{Binding StartNumber, UpdateSourceTrigger=LostFocus}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr HeaderFooter_NumberStyle}" />
+            <ComboBox
+              AutomationProperties.AutomationId="HeaderFooterNumberStyle"
+              AutomationProperties.Name="{loc:Tr HeaderFooter_NumberStyle}"
+              DisplayMemberPath="Label"
+              ItemsSource="{Binding NumberStyles}"
+              SelectedValue="{Binding NumberStyle}"
+              SelectedValuePath="Value" />
+          </StackPanel>
+        </Grid>
+        <CheckBox
+          Margin="0,12,0,0"
+          AutomationProperties.AutomationId="HeaderFooterSkipFirst"
+          Content="{loc:Tr HeaderFooter_SkipFirst}"
+          IsChecked="{Binding SkipFirstPage}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <!-- Đánh số trang -->
+    <DataTemplate DataType="{x:Type editing:PageNumbersDialogViewModel}">
+      <StackPanel>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr PageNumbers_Pattern}" />
+        <ComboBox
+          AutomationProperties.AutomationId="PageNumbersPattern"
+          AutomationProperties.Name="{loc:Tr PageNumbers_Pattern}"
+          IsEditable="True"
+          ItemsSource="{Binding Patterns}"
+          Text="{Binding Pattern, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Style="{StaticResource Note}" Text="{loc:Tr Stamp_Fields}" />
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr HeaderFooter_NumberStyle}" />
+            <ComboBox
+              AutomationProperties.AutomationId="PageNumbersStyle"
+              AutomationProperties.Name="{loc:Tr HeaderFooter_NumberStyle}"
+              DisplayMemberPath="Label"
+              ItemsSource="{Binding NumberStyles}"
+              SelectedValue="{Binding NumberStyle}"
+              SelectedValuePath="Value" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_Position}" />
+            <ComboBox
+              AutomationProperties.AutomationId="StampPosition"
+              AutomationProperties.Name="{loc:Tr Stamp_Position}"
+              DisplayMemberPath="Label"
+              ItemsSource="{Binding Anchors}"
+              SelectedValue="{Binding Anchor}"
+              SelectedValuePath="Value" />
+          </StackPanel>
+        </Grid>
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr PageNumbers_FirstPage}" />
+            <TextBox
+              AutomationProperties.AutomationId="PageNumbersFirstPage"
+              AutomationProperties.Name="{loc:Tr PageNumbers_FirstPage}"
+              Text="{Binding FirstPage, UpdateSourceTrigger=LostFocus}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr PageNumbers_StartNumber}" />
+            <TextBox
+              AutomationProperties.AutomationId="PageNumbersStartNumber"
+              AutomationProperties.Name="{loc:Tr PageNumbers_StartNumber}"
+              Text="{Binding StartNumber, UpdateSourceTrigger=LostFocus}" />
+          </StackPanel>
+        </Grid>
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="120" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_Font}" />
+            <ComboBox
+              AutomationProperties.AutomationId="StampFont"
+              AutomationProperties.Name="{loc:Tr Stamp_Font}"
+              ItemsSource="{Binding FontFamilies}"
+              SelectedItem="{Binding FontFamily}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_FontSize}" />
+            <TextBox
+              AutomationProperties.AutomationId="StampFontSize"
+              AutomationProperties.Name="{loc:Tr Stamp_FontSize}"
+              Text="{Binding FontSize, UpdateSourceTrigger=LostFocus}" />
+          </StackPanel>
+        </Grid>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Stamp_Color}" />
+        <ItemsControl
+          ItemTemplate="{StaticResource SwatchTemplate}"
+          ItemsPanel="{StaticResource SwatchPanel}"
+          ItemsSource="{Binding Swatches}"
+          Tag="{Binding SetColorCommand}" />
+        <TextBox
+          Width="120"
+          HorizontalAlignment="Left"
+          AutomationProperties.AutomationId="StampColor"
+          AutomationProperties.Name="{loc:Tr Stamp_HexColor}"
+          Text="{Binding Color, UpdateSourceTrigger=PropertyChanged}"
+          ToolTip="{loc:Tr Stamp_HexColor}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <!-- Gỡ dấu đã đóng -->
+    <DataTemplate DataType="{x:Type editing:RemoveStampsDialogViewModel}">
+      <StackPanel>
+        <TextBlock Text="{loc:Tr RemoveStamps_Intro}" TextWrapping="Wrap" />
+        <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding Kinds}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type editing:StampKindViewModel}">
+              <CheckBox
+                Margin="0,0,0,4"
+                AutomationProperties.AutomationId="{Binding Kind, StringFormat=RemoveStamps_{0}}"
+                Content="{Binding Label}"
+                IsChecked="{Binding IsChecked}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Style="{StaticResource Note}" Text="{loc:Tr RemoveStamps_Note}" />
+      </StackPanel>
+    </DataTemplate>
+  </ui:FluentWindow.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <ui:TitleBar
+      Title="{Binding Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <Grid Grid.Row="1" Margin="24,4,24,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="24" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,12,12">
+          <ContentControl Content="{Binding}" Focusable="False" />
+          <views:PageTargetPanel Margin="0,20,0,0" DataContext="{Binding Target}" />
+        </StackPanel>
+      </ScrollViewer>
+      <StackPanel Grid.Column="2" Width="{x:Static editing:StampDialogViewModel.PreviewWidth}">
+        <TextBlock
+          AutomationProperties.AutomationId="StampPreviewLabel"
+          FontWeight="SemiBold"
+          Text="{Binding PreviewLabel}" />
+        <Border
+          MinHeight="240"
+          Margin="0,6,0,0"
+          Background="{DynamicResource ControlFillColorDefaultBrush}"
+          BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+          BorderThickness="1">
+          <Image
+            AutomationProperties.AutomationId="StampPreview"
+            RenderOptions.BitmapScalingMode="HighQuality"
+            Source="{Binding Preview}"
+            Stretch="Uniform"
+            StretchDirection="DownOnly" />
+        </Border>
+      </StackPanel>
+    </Grid>
+
+    <StackPanel Grid.Row="2" Margin="24,12,24,24">
+      <TextBlock
+        AutomationProperties.AutomationId="StampError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+      <StackPanel
+        Margin="0,12,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="StampApply"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr Stamp_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="StampCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </Grid>
+</ui:FluentWindow>
