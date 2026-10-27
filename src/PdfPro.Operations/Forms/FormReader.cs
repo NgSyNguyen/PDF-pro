@@ -1,6 +1,9 @@
 using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 using PdfSharp.Pdf;
 using static PdfPro.Operations.Materializing.PdfGraph;
 
@@ -11,7 +14,7 @@ namespace PdfPro.Operations.Forms;
 /// inherited entries (/FT, /Ff, /V, /DV, /DA, /Q, /Opt, /MaxLen), widgets merged into their field or listed as /Kids,
 /// and the page of every widget (/P, or the page whose /Annots holds it).
 /// </summary>
-public static class FormReader
+public static partial class FormReader
 {
     /// <summary>Upper bound for the fields and the depth of the tree (defends against hostile files).</summary>
     private const int MaxFields = 20_000;
@@ -140,8 +143,63 @@ public static class FormReader
             values.TryGetValue("/MaxLen", out var max) && Resolve(max) is PdfInteger length ? length.Value : 0,
             size,
             values.TryGetValue("/Q", out var q) && Resolve(q) is PdfInteger quadding && Enum.IsDefined((FormTextAlignment)quadding.Value) ? (FormTextAlignment)quadding.Value : FormTextAlignment.Left,
-            Text(values.GetValueOrDefault("/DV")));
+            Text(values.GetValueOrDefault("/DV")),
+            kind == FormFieldKind.Text ? Format(node) : null,
+            kind is FormFieldKind.Text or FormFieldKind.ComboBox or FormFieldKind.ListBox or FormFieldKind.PushButton ? widgets.Select(Family).FirstOrDefault(f => f is not null) : null);
     }
+
+    /// <summary>The number or date format of a text field, from its /AA format action (Acrobat's AF functions).</summary>
+    private static FormTextFormat? Format(PdfDictionary field)
+    {
+        if (AsDictionary(field.Elements["/AA"]) is not { } actions || AsDictionary(actions.Elements["/F"]) is not { } action || Script(action.Elements["/JS"]) is not { } script)
+        {
+            return null;
+        }
+
+        if (NumberFormat().Match(script) is { Success: true } number
+            && int.TryParse(number.Groups["dec"].Value, CultureInfo.InvariantCulture, out var decimals)
+            && int.TryParse(number.Groups["sep"].Value, CultureInfo.InvariantCulture, out var separators))
+        {
+            return FormTextFormat.Number(Math.Clamp(decimals, 0, FormTextFormat.MaxDecimals), separators is 2 or 3 ? NumberSeparators.DotComma : NumberSeparators.CommaDot);
+        }
+
+        return DateFormat().Match(script) is { Success: true } date ? FormTextFormat.Date(date.Groups["pattern"].Value) : null;
+    }
+
+    /// <summary>The text of a /JS entry: a string, or a stream (at most 64 KB read).</summary>
+    private static string? Script(PdfItem? item) => Resolve(item) switch
+    {
+        PdfString text => text.Value,
+        PdfDictionary { Stream: { } stream } => Encoding.Latin1.GetString(stream.UnfilteredValue.AsSpan(0, Math.Min(stream.UnfilteredValue.Length, 65_536))),
+        _ => null,
+    };
+
+    /// <summary>The bundled family a widget's value is drawn in, from the fonts of its appearance.</summary>
+    private static string? Family(PdfDictionary widget)
+    {
+        if (AsDictionary(widget.Elements["/AP"]) is not { } appearance || AsDictionary(appearance.Elements["/N"]) is not { } normal
+            || AsDictionary(normal.Elements["/Resources"]) is not { } resources || AsDictionary(resources.Elements["/Font"]) is not { } fonts)
+        {
+            return null;
+        }
+
+        foreach (var font in fonts.Elements.Values.Select(AsDictionary).OfType<PdfDictionary>())
+        {
+            var name = new string([.. font.Elements.GetName("/BaseFont").Where(char.IsLetter)]);
+            if (FontFamilies.Bundled.FirstOrDefault(f => name.Contains(f.Replace(" ", string.Empty, StringComparison.Ordinal), StringComparison.OrdinalIgnoreCase)) is { } family)
+            {
+                return family;
+            }
+        }
+
+        return null;
+    }
+
+    [GeneratedRegex(@"AFNumber_Format\(\s*(?<dec>[0-9]+)\s*,\s*(?<sep>[0-9]+)", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex NumberFormat();
+
+    [GeneratedRegex(@"AFDate_FormatEx\(\s*[""'](?<pattern>[^""']{1,40})[""']", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex DateFormat();
 
     private static (string? Value, IReadOnlyList<string> Selected) Value(FormFieldKind kind, PdfItem? item, IReadOnlyList<FormOption> options)
     {

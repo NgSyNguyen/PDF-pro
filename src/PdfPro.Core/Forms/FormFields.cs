@@ -88,6 +88,8 @@ public sealed record FormOption(string Export, string Display);
 /// <param name="FontSize">The size of /DA (0 means "fit the box").</param>
 /// <param name="Alignment">/Q.</param>
 /// <param name="DefaultValue">/DV, or null.</param>
+/// <param name="Format">The number or date format of a text field (its /AA actions), or null.</param>
+/// <param name="FontFamily">The bundled family its value is drawn in (from its appearance), or null for the default.</param>
 public sealed record FormField(
     string Name,
     FormFieldKind Kind,
@@ -100,7 +102,9 @@ public sealed record FormField(
     int MaxLength = 0,
     double FontSize = 0,
     FormTextAlignment Alignment = FormTextAlignment.Left,
-    string? DefaultValue = null)
+    string? DefaultValue = null,
+    FormTextFormat? Format = null,
+    string? FontFamily = null)
 {
     /// <summary>The value of check boxes and radio groups that are not on.</summary>
     public const string Off = "Off";

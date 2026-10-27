@@ -102,6 +102,11 @@ internal static class FormAppearances
             return new string('•', value.Length);
         }
 
+        if (field.Format is { } format)
+        {
+            return format.Display(value);
+        }
+
         return field.Kind == FormFieldKind.ComboBox ? field.Options.FirstOrDefault(o => o.Export == value)?.Display ?? value : value;
     }
 
@@ -113,6 +118,12 @@ internal static class FormAppearances
     private static void DrawText(XGraphics graphics, PdfSize size, FormField field, string text)
     {
         var font = Font(field, size);
+        if (text.Length == 0)
+        {
+            // An invisible space keeps the font in the appearance's resources: its family is read back from there.
+            DrawLine(graphics, size, " ", font, FormTextAlignment.Left, (size.Height - (font.Size * 1.2)) / 2);
+            return;
+        }
         if (field.Flags.HasFlag(FormFieldFlags.Comb) && field.MaxLength > 0)
         {
             // One character per cell.
@@ -209,14 +220,14 @@ internal static class FormAppearances
         }
     }
 
-    /// <summary>The font of the value: Noto Sans at the size of /DA, or (size 0) what fits one line of the box.</summary>
+    /// <summary>The font of the value: the field's bundled family (Noto Sans by default) at the size of /DA, or (size 0) what fits one line of the box.</summary>
     private static XFont Font(FormField field, PdfSize size, int lines = 1)
     {
         FontLibrary.Register();
         var fontSize = field.FontSize > 0
             ? field.FontSize
             : Math.Clamp((size.Height - (2 * Padding)) / (1.2 * lines), 4, MaxAutoSize);
-        return new XFont(FontFamilies.NotoSans, fontSize, XFontStyleEx.Regular);
+        return new XFont(field.FontFamily is { } family && FontFamilies.IsBundled(family) ? family : FontFamilies.NotoSans, fontSize, XFontStyleEx.Regular);
     }
 
     private static IEnumerable<string> Wrap(XGraphics graphics, string text, XFont font, double width)

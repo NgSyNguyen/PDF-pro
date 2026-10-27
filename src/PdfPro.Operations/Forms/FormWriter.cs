@@ -19,7 +19,7 @@ namespace PdfPro.Operations.Forms;
 /// <param name="Page">0-based page.</param>
 /// <param name="Rect">Its box, in the page's PDF user space.</param>
 /// <param name="Flags">Required, read-only, multi-line, password, comb, editable combo, multi-select…</param>
-/// <param name="Value">The starting value (text, a choice, the on state when checked).</param>
+/// <param name="Value">The starting value, also the default one /DV (text, a choice, the on state when checked).</param>
 /// <param name="Options">The choices of a combo or list box.</param>
 /// <param name="ToolTip">Shown when hovering, read by screen readers (/TU).</param>
 /// <param name="FontSize">Text size, 0 to fit the box.</param>
@@ -27,6 +27,8 @@ namespace PdfPro.Operations.Forms;
 /// <param name="MaxLength">Most characters of a text field (0: no limit; needed for comb fields).</param>
 /// <param name="OnState">The value of a check box or radio button when on ("Yes" by default).</param>
 /// <param name="Caption">The words of a push button.</param>
+/// <param name="Format">The number or date format of a text field.</param>
+/// <param name="FontFamily">The bundled family the value is drawn in (null: the default, Noto Sans).</param>
 public sealed record FormFieldSpec(
     string Name,
     FormFieldKind Kind,
@@ -40,14 +42,16 @@ public sealed record FormFieldSpec(
     FormTextAlignment Alignment = FormTextAlignment.Left,
     int MaxLength = 0,
     string? OnState = null,
-    string? Caption = null)
+    string? Caption = null,
+    FormTextFormat? Format = null,
+    string? FontFamily = null)
 {
     public const string DefaultOnState = "Yes";
 
     /// <summary>What is wrong with the spec (English, for validation), or null.</summary>
     public string? Problem(int pageCount)
     {
-        if (string.IsNullOrWhiteSpace(Name) || Name.StartsWith('.') || Name.EndsWith('.') || Name.Length > 255)
+        if (string.IsNullOrWhiteSpace(Name) || Name.Split('.').Any(string.IsNullOrWhiteSpace) || Name.Length > 255)
         {
             return "A field needs a name (without a leading or trailing dot, at most 255 characters).";
         }
@@ -75,6 +79,16 @@ public sealed record FormFieldSpec(
         if (Flags.HasFlag(FormFieldFlags.Comb) && MaxLength == 0)
         {
             return "A comb field needs a most number of characters.";
+        }
+
+        if (Format is { Kind: not FormFormatKind.None } format && (Kind != FormFieldKind.Text || format.Problem() is not null))
+        {
+            return format.Problem() ?? "Only text fields have a number or date format.";
+        }
+
+        if (FontFamily is { } family && !FontFamilies.IsBundled(family))
+        {
+            return "The font must be one of the bundled families.";
         }
 
         return OnState is { } on && (on.Length == 0 || on == FormField.Off || on.Any(c => c <= ' ' || c is '/' or '(' or ')' or '<' or '>' or '[' or ']' or '{' or '}' or '%' or '#'))
@@ -114,7 +128,8 @@ public static class FormWriter
         foreach (var group in specs.GroupBy(s => s.Name, StringComparer.Ordinal))
         {
             var first = group.First();
-            if (group.Any(s => s.Kind != first.Kind) || (first.Kind != FormFieldKind.RadioGroup && (group.Count() > 1 || existing.ContainsKey(first.Name))))
+            if (group.Any(s => s.Kind != first.Kind) || (first.Kind != FormFieldKind.RadioGroup && (group.Count() > 1 || existing.ContainsKey(first.Name)))
+                || existing.Keys.Concat(specs.Select(s => s.Name)).Any(other => IsAncestor(other, first.Name) || IsAncestor(first.Name, other)))
             {
                 throw new ArgumentException($"The name '{first.Name}' is used by another field.", nameof(specs));
             }
@@ -132,17 +147,101 @@ public static class FormWriter
                     if (button.Value is { } chosen && chosen == (button.OnState ?? FormFieldSpec.DefaultOnState))
                     {
                         parent.Elements.SetName("/V", "/" + chosen);
+                        parent.Elements.SetName("/DV", "/" + chosen);
                     }
                 }
             }
             else
             {
                 var field = NewField(document, fields, first, merged: true);
-                SetValue(field, first.Kind, first.Value ?? (first.Kind == FormFieldKind.CheckBox ? FormField.Off : null), first.Kind == FormFieldKind.ListBox && first.Value is { } selected ? [selected] : null, first.Options ?? []);
+                var value = first.Value is { } given ? TextNormalizer.ToNfc(given) : first.Kind == FormFieldKind.CheckBox ? FormField.Off : null;
+                SetValue(field, first.Kind, value, first.Kind == FormFieldKind.ListBox && value is not null ? [value] : null, first.Options ?? []);
+                if (first.Kind != FormFieldKind.PushButton && field.Elements["/V"] is { } start)
+                {
+                    field.Elements["/DV"] = start is PdfArray choices ? choices.Clone() : start;
+                }
             }
         }
 
-        RefreshAll(document, specs.Select(s => s.Name).ToHashSet(StringComparer.Ordinal), captions: specs.Where(s => s.Caption is not null).ToDictionary(s => s.Name, s => s.Caption!, StringComparer.Ordinal));
+        RefreshAll(
+            document,
+            specs.Select(s => s.Name).ToHashSet(StringComparer.Ordinal),
+            captions: specs.Where(s => s.Caption is not null).ToDictionary(s => s.Name, s => s.Caption!, StringComparer.Ordinal),
+            families: specs.Where(s => s.FontFamily is not null).DistinctBy(s => s.Name).ToDictionary(s => s.Name, s => s.FontFamily!, StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    /// Takes fields off the form with their widgets (from the pages' /Annots), and their parents left without kids.
+    /// </summary>
+    /// <exception cref="InvalidDataException">A field is not in the document (any more).</exception>
+    public static void RemoveFields(PdfDocument document, IReadOnlyCollection<string> names)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(names);
+        if (names.Count == 0)
+        {
+            return;
+        }
+
+        var found = FormReader.Fields(document).Where(f => names.Contains(f.Field.Name)).ToList();
+        if (names.Except(found.Select(f => f.Field.Name), StringComparer.Ordinal).FirstOrDefault() is { } missing)
+        {
+            throw new InvalidDataException($"The field '{missing}' is not in the document any more.");
+        }
+
+        var widgets = found.SelectMany(f => f.Widgets).ToHashSet(ReferenceEqualityComparer.Instance);
+        for (var i = 0; i < document.PageCount; i++)
+        {
+            if (Annotations(document.Pages[i]) is { } annotations && annotations.Elements.Any(a => widgets.Contains(AsDictionary(a))))
+            {
+                var own = AnnotationWriter.OwnAnnotations(document, document.Pages[i]);
+                foreach (var item in own.Elements.Where(a => widgets.Contains(AsDictionary(a))).ToList())
+                {
+                    own.Elements.Remove(item);
+                }
+            }
+        }
+
+        var form = AsDictionary(document.Internals.Catalog.Elements["/AcroForm"])!;
+        foreach (var (_, dictionary, _) in found)
+        {
+            Unlink(form, dictionary);
+        }
+
+        if (AsArray(form.Elements["/CO"]) is { } order)
+        {
+            var removed = found.Select(f => f.Dictionary).ToHashSet(ReferenceEqualityComparer.Instance);
+            foreach (var item in order.Elements.Where(e => removed.Contains(AsDictionary(e))).ToList())
+            {
+                order.Elements.Remove(item);
+            }
+        }
+    }
+
+    /// <summary>Takes a field out of its parent's /Kids (or /Fields); a parent left without kids goes too.</summary>
+    private static void Unlink(PdfDictionary form, PdfDictionary field)
+    {
+        for (var depth = 0; depth < 32; depth++)
+        {
+            var parent = AsDictionary(field.Elements["/Parent"]);
+            var siblings = parent is null ? AsArray(form.Elements["/Fields"]) : AsArray(parent.Elements["/Kids"]);
+            if (siblings is null)
+            {
+                return;
+            }
+
+            foreach (var item in siblings.Elements.Where(e => ReferenceEquals(AsDictionary(e), field)).ToList())
+            {
+                siblings.Elements.Remove(item);
+            }
+
+            if (parent is null || siblings.Elements.Count > 0)
+            {
+                return;
+            }
+
+            field = parent;
+        }
     }
 
     /// <summary>Gives fields new values and redraws their widgets. Returns the names of fields that do not exist.</summary>
@@ -232,7 +331,17 @@ public static class FormWriter
             document.Internals.AddObject(field);
         }
 
-        field.Elements["/T"] = Text(spec.Name);
+        // "a.b.c": the partial name "c" under parents "a" and "a.b" (found or made); a partial name has no dot.
+        var dot = spec.Name.LastIndexOf('.');
+        field.Elements["/T"] = Text(dot < 0 ? spec.Name : spec.Name[(dot + 1)..]);
+        var siblings = fields;
+        if (dot > 0)
+        {
+            var parent = Parent(document, fields, spec.Name[..dot]);
+            field.Elements["/Parent"] = parent.Reference!;
+            siblings = AsArray(parent.Elements["/Kids"])!;
+        }
+
         var (type, flags) = spec.Kind switch
         {
             FormFieldKind.Text => ("/Tx", spec.Flags),
@@ -244,10 +353,7 @@ public static class FormWriter
             _ => ("/Sig", spec.Flags),
         };
         field.Elements.SetName("/FT", type);
-        if (flags != FormFieldFlags.None)
-        {
-            field.Elements.SetInteger("/Ff", (int)flags);
-        }
+        field.Elements.SetInteger("/Ff", (int)flags); // also when 0: /Ff is inherited from parents
 
         if (spec.Kind is FormFieldKind.Text or FormFieldKind.ComboBox or FormFieldKind.ListBox)
         {
@@ -261,6 +367,11 @@ public static class FormWriter
         if (spec.MaxLength > 0)
         {
             field.Elements.SetInteger("/MaxLen", spec.MaxLength);
+        }
+
+        if (spec.Kind == FormFieldKind.Text && spec.Format is { Kind: not FormFormatKind.None } format)
+        {
+            field.Elements["/AA"] = FormatActions(document, format);
         }
 
         if (spec.ToolTip is { Length: > 0 } tip)
@@ -294,8 +405,42 @@ public static class FormWriter
             field.Elements.SetName("/V", "/" + FormField.Off);
         }
 
-        fields.Elements.Add(field.Reference!);
+        siblings.Elements.Add(field.Reference!);
         return field;
+    }
+
+    /// <summary>"a" is an ancestor of "a.b": a field cannot also be the parent of another.</summary>
+    private static bool IsAncestor(string name, string of)
+        => of.Length > name.Length && of[name.Length] == '.' && of.StartsWith(name, StringComparison.Ordinal);
+
+    /// <summary>The non-terminal field of a qualified name ("a.b"), made with its own parents when missing.</summary>
+    private static PdfDictionary Parent(PdfDocument document, PdfArray fields, string name)
+    {
+        PdfDictionary? parent = null;
+        var siblings = fields;
+        foreach (var partial in name.Split('.'))
+        {
+            var found = siblings.Elements.Select(AsDictionary).OfType<PdfDictionary>()
+                .FirstOrDefault(d => d.Elements.GetString("/T") == partial && AsArray(d.Elements["/Kids"]) is not null);
+            if (found is null)
+            {
+                found = new PdfDictionary(document);
+                document.Internals.AddObject(found);
+                found.Elements["/T"] = Text(partial);
+                found.Elements["/Kids"] = new PdfArray(document);
+                if (parent is not null)
+                {
+                    found.Elements["/Parent"] = parent.Reference!;
+                }
+
+                siblings.Elements.Add(found.Reference!);
+            }
+
+            parent = found;
+            siblings = AsArray(found.Elements["/Kids"])!;
+        }
+
+        return parent!;
     }
 
     /// <summary>A widget annotation on its page, with /MK colours and the on state of a button.</summary>
@@ -358,6 +503,30 @@ public static class FormWriter
         return widget;
     }
 
+    /// <summary>
+    /// The keystroke and format actions of a number or date field, as Acrobat writes them (AFNumber_*, AFDate_*Ex):
+    /// readers check the typing and show the value formatted.
+    /// </summary>
+    private static PdfDictionary FormatActions(PdfDocument document, FormTextFormat format)
+    {
+        var (keystroke, display) = format.Kind == FormFormatKind.Number
+            ? (string.Create(CultureInfo.InvariantCulture, $"AFNumber_Keystroke({format.Decimals}, {(int)format.Separators}, 0, 0, \"\", true);"),
+               string.Create(CultureInfo.InvariantCulture, $"AFNumber_Format({format.Decimals}, {(int)format.Separators}, 0, 0, \"\", true);"))
+            : ($"AFDate_KeystrokeEx(\"{format.DatePattern}\");", $"AFDate_FormatEx(\"{format.DatePattern}\");");
+        var actions = new PdfDictionary(document);
+        actions.Elements["/K"] = JavaScript(document, keystroke);
+        actions.Elements["/F"] = JavaScript(document, display);
+        return actions;
+    }
+
+    private static PdfDictionary JavaScript(PdfDocument document, string script)
+    {
+        var action = new PdfDictionary(document);
+        action.Elements.SetName("/S", "/JavaScript");
+        action.Elements["/JS"] = new PdfString(script);
+        return action;
+    }
+
     private static void SetValue(PdfDictionary field, FormFieldKind kind, string? value, IReadOnlyList<string>? selected, IReadOnlyList<FormOption> options)
     {
         switch (kind)
@@ -407,11 +576,20 @@ public static class FormWriter
     }
 
     /// <summary>Redraws every widget of the named fields for their current values.</summary>
-    private static void RefreshAll(PdfDocument document, IReadOnlySet<string> names, IReadOnlyDictionary<string, string> captions)
+    private static void RefreshAll(
+        PdfDocument document,
+        IReadOnlySet<string> names,
+        IReadOnlyDictionary<string, string> captions,
+        IReadOnlyDictionary<string, string>? families = null)
     {
         foreach (var (field, _, widgets) in FormReader.Fields(document).Where(f => names.Contains(f.Field.Name)))
         {
             var shown = field.Kind == FormFieldKind.PushButton && captions.TryGetValue(field.Name, out var caption) ? field with { Value = caption } : field;
+            if (families is not null && families.TryGetValue(field.Name, out var family))
+            {
+                shown = shown with { FontFamily = family };
+            }
+
             for (var i = 0; i < widgets.Count; i++)
             {
                 var widget = widgets[i];

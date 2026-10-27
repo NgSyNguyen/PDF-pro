@@ -118,6 +118,7 @@ internal static class AppHost
         services.AddOperation<FlattenAnnotationsOperation>();
         services.AddOperation<EditContentOperation>();
         services.AddOperation<FillFormOperation>();
+        services.AddOperation<DesignFormOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();
