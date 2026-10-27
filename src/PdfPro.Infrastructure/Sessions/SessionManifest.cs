@@ -1,4 +1,5 @@
 using System.Text.Json;
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Sessions;
 
 namespace PdfPro.Infrastructure.Sessions;
@@ -62,6 +63,7 @@ public sealed record StateDto(string BaseSourceId, int Revision, IReadOnlyList<P
 /// <param name="Key">Page key.</param>
 /// <param name="BlankSize">Width and height of a blank page, or null.</param>
 /// <param name="Split">Set when the page starts a file in a split by marks.</param>
+/// <param name="Annotations">Annotations added to the page in the session, or null for none.</param>
 public sealed record PageDto(
     string Source,
     int Page,
@@ -69,7 +71,8 @@ public sealed record PageDto(
     Guid Key,
     IReadOnlyList<double>? Crop = null,
     IReadOnlyList<double>? BlankSize = null,
-    SplitMarkDto? Split = null);
+    SplitMarkDto? Split = null,
+    IReadOnlyList<AnnotationItem>? Annotations = null);
 
 /// <param name="FileName">The file name the user chose for the file the page starts, or null.</param>
 public sealed record SplitMarkDto(string? FileName = null);

@@ -13,6 +13,7 @@ using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfPro.Infrastructure;
 using PdfPro.Operations;
+using PdfPro.Operations.Annotating;
 using PdfPro.Operations.Materializing;
 using PdfPro.Operations.Layout;
 using PdfPro.Operations.Merging;
@@ -108,6 +109,9 @@ internal static class AppHost
         services.AddOperation<PageNumbersOperation>();
         services.AddOperation<BatesOperation>();
         services.AddOperation<RemoveStampsOperation>();
+        services.AddOperation<AddAnnotationsOperation>();
+        services.AddOperation<UpdateAnnotationsOperation>();
+        services.AddOperation<DeleteAnnotationsOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();

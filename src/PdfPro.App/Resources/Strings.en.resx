@@ -634,6 +634,9 @@ The original file was not changed and your changes are still here.</value></data
   <data name="History_HeaderFooter" xml:space="preserve"><value>Add header and footer</value></data>
   <data name="History_PageNumbers" xml:space="preserve"><value>Add page numbers</value></data>
   <data name="History_RemoveStamps" xml:space="preserve"><value>Remove stamps</value></data>
+  <data name="History_AddAnnotations" xml:space="preserve"><value>Add {0} annotations</value></data>
+  <data name="History_UpdateAnnotations" xml:space="preserve"><value>Edit {0} annotations</value></data>
+  <data name="History_DeleteAnnotations" xml:space="preserve"><value>Delete {0} annotations</value></data>
   <data name="Editor_Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Editor_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Editor_Apply" xml:space="preserve"><value>Apply</value></data>

@@ -67,6 +67,9 @@ internal static class TestOperations
             new Operations.Stamping.PageNumbersOperation(),
             new Operations.Stamping.BatesOperation(),
             new Operations.Stamping.RemoveStampsOperation(),
+            new Operations.Annotating.AddAnnotationsOperation(materializer, loader),
+            new Operations.Annotating.UpdateAnnotationsOperation(materializer, loader),
+            new Operations.Annotating.DeleteAnnotationsOperation(materializer, loader),
         ]);
     }
 }

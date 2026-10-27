@@ -1,5 +1,7 @@
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Overlay;
 using PdfPro.Core.Sessions;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
@@ -91,6 +93,47 @@ public sealed class SessionManifestSerializerTests
         restored.State.Plan[0].SplitMark!.FileName.ShouldBe("Tờ trình");
         restored.State.Plan.GetSplitStarts().ShouldBe([0, 2]);
         json.ShouldNotContain("\"split\":null", Case.Sensitive, "pages without marks write nothing");
+    }
+
+    [Fact]
+    public void RoundTrip_KeepsAnnotationsWithTheirConversation()
+    {
+        var created = new DateTimeOffset(2026, 10, 27, 9, 30, 0, TimeSpan.FromHours(7));
+        AnnotationItem[] annotations =
+        [
+            new MarkupAnnotation("h1", new RgbColor(255, 230, 0), 0.6, "Lan", created, created, "Số liệu sai", MarkupKind.Highlight, [TextQuad.Of(new PdfRect(72, 700, 300, 712))], "Số: 12/2026")
+            {
+                Replies = [new AnnotationReply("h1-r1", "Minh", created.AddHours(1), "Đã sửa")],
+                Reviews = [new AnnotationReview("h1-s1", "Minh", created.AddHours(2), ReviewState.Accepted)],
+            },
+            new InkAnnotation("i1", RgbColor.Red, 1, "Lan", created, created, "", 2, [[new PdfPoint(10, 10), new PdfPoint(20, 30)]]),
+        ];
+        var plan = PagePlan.Identity("s0", 3, RandomPageKeys.Instance).WithAnnotations(1, annotations);
+        var state = new SessionState(plan, "s0", 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [new SessionSource("s0", "sources/s0.pdf", SessionSourceKind.Original, 3)],
+            State = state,
+            HistoryBase = state,
+            Undo = [],
+            Redo = [],
+        };
+
+        var json = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot, DateTimeOffset.UtcNow));
+        var restored = SessionManifestSerializer.ToSnapshot(SessionManifestSerializer.Deserialize(json), ParameterType).State.Plan;
+
+        restored[0].Annotations.ShouldBeEmpty();
+        restored[1].Annotations.Select(a => a.GetType()).ShouldBe([typeof(MarkupAnnotation), typeof(InkAnnotation)]);
+        var highlight = (MarkupAnnotation)restored[1].Annotations[0];
+        highlight.Quads.ShouldBe(annotations[0].ShouldBeOfType<MarkupAnnotation>().Quads);
+        highlight.Contents.ShouldBe("Số liệu sai");
+        highlight.Created.ShouldBe(created);
+        highlight.Replies.ShouldHaveSingleItem().Contents.ShouldBe("Đã sửa");
+        highlight.State.ShouldBe(ReviewState.Accepted);
+        restored.HasSameContent(plan).ShouldBeFalse("annotations are read back as new instances…");
+        restored.Select(p => p.PageKey).ShouldBe(plan.Select(p => p.PageKey), "…of the same pages");
+        json.ShouldNotContain("\"annotations\":null", Case.Sensitive, "pages without annotations write nothing");
     }
 
     [Fact]

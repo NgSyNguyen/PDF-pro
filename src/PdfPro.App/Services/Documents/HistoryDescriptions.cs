@@ -2,6 +2,7 @@ using System.Globalization;
 using PdfPro.App.Resources;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Sessions;
+using PdfPro.Operations.Annotating;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Stamping;
 
@@ -38,6 +39,9 @@ internal static class HistoryDescriptions
             HeaderFooterParams => Strings.History_HeaderFooter,
             PageNumbersParams => Strings.History_PageNumbers,
             RemoveStampsParams => Strings.History_RemoveStamps,
+            AddAnnotationsParams p => Format(Strings.History_AddAnnotations, p.Items.Count),
+            UpdateAnnotationsParams p => Format(Strings.History_UpdateAnnotations, p.Items.Count),
+            DeleteAnnotationsParams p => Format(Strings.History_DeleteAnnotations, p.Ids.Count),
             _ => Strings.History_Other,
         };
     }

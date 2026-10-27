@@ -1,5 +1,6 @@
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Operations.Annotating;
 using PdfPro.Pdfium;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
@@ -18,7 +19,8 @@ public static class MaterializeStages
 /// Writes a page plan with PDFsharp (SPEC "PagePlan — tài liệu ảo"). The base source is opened for modification
 /// and its page tree rearranged, so its document structure (metadata, bookmarks, named destinations, forms, links)
 /// is kept; pages of other sources are imported and their links reconnected; references to deleted pages are cut so
-/// those pages really leave the file. Sources PDFsharp cannot parse are first repaired by PDFium.
+/// those pages really leave the file; annotations added in the session are written with their appearances. Sources
+/// PDFsharp cannot parse are first repaired by PDFium.
 /// </summary>
 public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMaterializer
 {
@@ -118,6 +120,15 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
         AnnotationOwnership.EnsureUnique(baseDocument, pages);
         ForeignPages.Retarget(placed, foreignIds);
         DeadDestinations.Remove(baseDocument, removedPages, pages);
+        foreach (var (page, pageRef) in placed)
+        {
+            // Annotations made in the session are in the source page's space, which the placed page keeps.
+            if (pageRef.Annotations.Count > 0)
+            {
+                AnnotationWriter.Write(baseDocument, page, pageRef.Annotations);
+            }
+        }
+
         if (!plan.IsIdentity(request.BaseSourceId, basePageCount))
         {
             // Labels ("i, ii, 1, 2…") describe the old page sequence; they would now be wrong.

@@ -1,10 +1,12 @@
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Geometry;
 
 namespace PdfPro.Core.Organizing;
 
 /// <summary>
 /// One page of a page plan: which page of which source file it shows, plus the plan's own edits (extra rotation,
-/// crop). Immutable; the edit methods return a new instance (or this one when nothing changes).
+/// crop, annotations added in the session). Immutable; the edit methods return a new instance (or this one when
+/// nothing changes).
 /// </summary>
 /// <remarks>
 /// <see cref="PageKey"/> identifies the page across plan edits (moves, undo), so selections, caches and views can
@@ -14,11 +16,11 @@ namespace PdfPro.Core.Organizing;
 public sealed record PageRef
 {
     public PageRef(string sourceId, int sourcePageIndex, int rotationDelta, PageCrop? cropBoxOverride, Guid pageKey)
-        : this(sourceId, sourcePageIndex, rotationDelta, cropBoxOverride, pageKey, blankSize: null, splitMark: null)
+        : this(sourceId, sourcePageIndex, rotationDelta, cropBoxOverride, pageKey, blankSize: null, splitMark: null, annotations: [])
     {
     }
 
-    private PageRef(string sourceId, int sourcePageIndex, int rotationDelta, PageCrop? cropBoxOverride, Guid pageKey, PdfSize? blankSize, SplitMark? splitMark)
+    private PageRef(string sourceId, int sourcePageIndex, int rotationDelta, PageCrop? cropBoxOverride, Guid pageKey, PdfSize? blankSize, SplitMark? splitMark, IReadOnlyList<AnnotationItem> annotations)
     {
         if (!SourceIds.IsValid(sourceId))
         {
@@ -54,6 +56,7 @@ public sealed record PageRef
         PageKey = pageKey;
         BlankSize = blankSize;
         SplitMark = splitMark;
+        Annotations = annotations;
     }
 
     public string SourceId { get; }
@@ -80,10 +83,17 @@ public sealed record PageRef
     /// </summary>
     public SplitMark? SplitMark { get; }
 
+    /// <summary>
+    /// Annotations added to the page in this session, in drawing order, in the PDF user space of the page as written
+    /// (the source page's space: rotation and crop do not move them). They are written into the file when the plan
+    /// is materialized; annotations already in the source file are not listed here.
+    /// </summary>
+    public IReadOnlyList<AnnotationItem> Annotations { get; }
+
     /// <summary><see cref="RotationDelta"/> in clockwise quarter turns (0–3).</summary>
     public int QuarterTurns => RotationDelta / 90;
 
-    public static PageRef Blank(PdfSize size, Guid pageKey) => new(SourceIds.Blank, 0, 0, null, pageKey, size, splitMark: null);
+    public static PageRef Blank(PdfSize size, Guid pageKey) => new(SourceIds.Blank, 0, 0, null, pageKey, size, splitMark: null, annotations: []);
 
     /// <summary>The same page with a different extra rotation (any multiple of 90 degrees).</summary>
     public PageRef WithRotation(int rotationDelta)
@@ -95,27 +105,64 @@ public sealed record PageRef
 
         return PageGeometry.NormalizeRotation(rotationDelta) == RotationDelta
             ? this
-            : new PageRef(SourceId, SourcePageIndex, rotationDelta, CropBoxOverride, PageKey, BlankSize, SplitMark);
+            : new PageRef(SourceId, SourcePageIndex, rotationDelta, CropBoxOverride, PageKey, BlankSize, SplitMark, Annotations);
     }
 
     public PageRef WithCrop(PageCrop? crop)
-        => crop == CropBoxOverride ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, crop, PageKey, BlankSize, SplitMark);
+        => crop == CropBoxOverride ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, crop, PageKey, BlankSize, SplitMark, Annotations);
 
-    /// <summary>A copy of this page under another key (duplicating a page); the copy has no split mark.</summary>
+    /// <summary>A copy of this page under another key (duplicating a page), annotations included; the copy has no split mark.</summary>
     public PageRef WithKey(Guid pageKey)
-        => pageKey == PageKey ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, CropBoxOverride, pageKey, BlankSize, splitMark: null);
+        => pageKey == PageKey ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, CropBoxOverride, pageKey, BlankSize, splitMark: null, Annotations);
 
     /// <summary>The same page with another split mark (null removes it).</summary>
     public PageRef WithSplitMark(SplitMark? mark)
-        => mark == SplitMark ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, CropBoxOverride, PageKey, BlankSize, mark);
+        => mark == SplitMark ? this : new PageRef(SourceId, SourcePageIndex, RotationDelta, CropBoxOverride, PageKey, BlankSize, mark, Annotations);
 
-    /// <summary>True when both show the same page the same way (split marks aside).</summary>
+    /// <summary>The same page with these session annotations (names must be unique on the page).</summary>
+    /// <exception cref="ArgumentException">A null annotation, or two with the same name.</exception>
+    public PageRef WithAnnotations(IReadOnlyList<AnnotationItem> annotations)
+    {
+        ArgumentNullException.ThrowIfNull(annotations);
+        if (ReferenceEquals(annotations, Annotations) || (annotations.Count == 0 && Annotations.Count == 0))
+        {
+            return this;
+        }
+
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var annotation in annotations)
+        {
+            if (annotation is null || !names.Add(annotation.Id))
+            {
+                throw new ArgumentException("Annotations must not be null and their names must be unique on the page.", nameof(annotations));
+            }
+        }
+
+        return new PageRef(SourceId, SourcePageIndex, RotationDelta, CropBoxOverride, PageKey, BlankSize, SplitMark, [.. annotations]);
+    }
+
+    /// <summary>The session annotation named <paramref name="id"/>, or null.</summary>
+    public AnnotationItem? FindAnnotation(string id)
+    {
+        foreach (var annotation in Annotations)
+        {
+            if (string.Equals(annotation.Id, id, StringComparison.Ordinal))
+            {
+                return annotation;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>True when both show the same page the same way, with the same annotations (split marks aside).</summary>
     public bool HasSameContent(PageRef other)
     {
         ArgumentNullException.ThrowIfNull(other);
         return PageKey == other.PageKey && SourcePageIndex == other.SourcePageIndex && RotationDelta == other.RotationDelta
             && CropBoxOverride == other.CropBoxOverride && BlankSize == other.BlankSize
-            && string.Equals(SourceId, other.SourceId, StringComparison.Ordinal);
+            && string.Equals(SourceId, other.SourceId, StringComparison.Ordinal)
+            && (ReferenceEquals(Annotations, other.Annotations) || Annotations.SequenceEqual(other.Annotations));
     }
 
     /// <summary>The page size before the plan's edits: the blank size, or the source page as displayed.</summary>

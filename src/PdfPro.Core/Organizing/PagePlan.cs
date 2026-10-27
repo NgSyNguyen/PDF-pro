@@ -1,4 +1,5 @@
 using System.Collections;
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Geometry;
 
 namespace PdfPro.Core.Organizing;
@@ -98,7 +99,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         return -1;
     }
 
-    /// <summary>True when the plan shows every page of the source once, in order, without rotation or crop.</summary>
+    /// <summary>True when the plan shows every page of the source once, in order, without rotation, crop or annotations.</summary>
     public bool IsIdentity(string sourceId, int pageCount)
     {
         if (_pages.Length != pageCount)
@@ -109,7 +110,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         for (var i = 0; i < _pages.Length; i++)
         {
             var page = _pages[i];
-            if (page.IsBlank || page.SourcePageIndex != i || page.RotationDelta != 0 || page.CropBoxOverride is not null
+            if (page.IsBlank || page.SourcePageIndex != i || page.RotationDelta != 0 || page.CropBoxOverride is not null || page.Annotations.Count > 0
                 || !string.Equals(page.SourceId, sourceId, StringComparison.Ordinal))
             {
                 return false;
@@ -206,7 +207,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
     }
 
     /// <summary>
-    /// Copies pages (with their rotation and crop, without split marks) under new keys. The copies are inserted as one
+    /// Copies pages (with their rotation, crop and annotations, without split marks) under new keys. The copies are inserted as one
     /// block, in page order, right after the last selected page.
     /// </summary>
     public PagePlan Duplicate(IReadOnlyCollection<int> indices, IPageKeyGenerator keys)
@@ -278,6 +279,26 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         }
 
         return pages is null ? this : new PagePlan(pages);
+    }
+
+    /// <summary>True when at least one page carries annotations added in the session.</summary>
+    public bool HasAnnotations => Array.Exists(_pages, p => p.Annotations.Count > 0);
+
+    /// <summary>Gives the page at <paramref name="index"/> these session annotations.</summary>
+    /// <exception cref="ArgumentException">A null annotation, or two with the same name.</exception>
+    public PagePlan WithAnnotations(int index, IReadOnlyList<AnnotationItem> annotations)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, Count);
+        var page = _pages[index].WithAnnotations(annotations);
+        if (ReferenceEquals(page, _pages[index]))
+        {
+            return this;
+        }
+
+        var pages = (PageRef[])_pages.Clone();
+        pages[index] = page;
+        return new PagePlan(pages);
     }
 
     /// <summary>True when at least one page carries a split mark.</summary>

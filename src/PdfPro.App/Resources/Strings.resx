@@ -634,6 +634,9 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="History_HeaderFooter" xml:space="preserve"><value>Thêm đầu trang, chân trang</value></data>
   <data name="History_PageNumbers" xml:space="preserve"><value>Đánh số trang</value></data>
   <data name="History_RemoveStamps" xml:space="preserve"><value>Gỡ dấu đã đóng</value></data>
+  <data name="History_AddAnnotations" xml:space="preserve"><value>Thêm {0} chú thích</value></data>
+  <data name="History_UpdateAnnotations" xml:space="preserve"><value>Sửa {0} chú thích</value></data>
+  <data name="History_DeleteAnnotations" xml:space="preserve"><value>Xóa {0} chú thích</value></data>
   <data name="Editor_Delete" xml:space="preserve"><value>Xóa</value></data>
   <data name="Editor_Cancel" xml:space="preserve"><value>Hủy</value></data>
   <data name="Editor_Apply" xml:space="preserve"><value>Áp dụng</value></data>
