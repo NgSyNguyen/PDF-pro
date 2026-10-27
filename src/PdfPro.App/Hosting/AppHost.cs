@@ -17,6 +17,7 @@ using PdfPro.Operations.Layout;
 using PdfPro.Operations.Merging;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Splitting;
+using PdfPro.Operations.Stamping;
 using PdfPro.Pdfium;
 using Serilog;
 
@@ -95,6 +96,7 @@ internal static class AppHost
         services.AddOperation<NUpOperation>();
         services.AddOperation<BookletOperation>();
         services.AddOperation<TileOperation>();
+        services.AddOperation<OverlayOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();
