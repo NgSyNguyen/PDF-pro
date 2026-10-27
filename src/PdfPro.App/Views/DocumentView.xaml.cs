@@ -12,7 +12,8 @@ namespace PdfPro.App.Views;
 /// Document view. Code-behind only routes input to the view model: Ctrl + wheel zooms around the mouse,
 /// Home/End/PageUp/PageDown navigate by page (arrow keys and the wheel scroll through the ScrollViewer). While the
 /// page editor is open, Delete, the arrow keys (1 point, with Shift 10), Ctrl+C, Ctrl+V, Ctrl+A and Esc act on its
-/// objects.
+/// objects; otherwise the mouse selects text (the text cursor shows over it) and Ctrl+C copies it, Ctrl+A selects the
+/// whole document's text, Esc clears the selection.
 /// </summary>
 public partial class DocumentView : UserControl
 {
@@ -44,6 +45,12 @@ public partial class DocumentView : UserControl
             return;
         }
 
+        if (Document is { Editor.IsActive: false } reader && HandleSelectionKey(reader.TextSelection, e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (Keyboard.Modifiers != ModifierKeys.None || Viewer is not { } viewer)
         {
             return;
@@ -62,6 +69,100 @@ public partial class DocumentView : UserControl
         {
             command.Execute(null);
             e.Handled = true;
+        }
+    }
+
+    private static bool HandleSelectionKey(TextSelectionViewModel selection, Key key)
+    {
+        var control = Keyboard.Modifiers == ModifierKeys.Control;
+        switch (key)
+        {
+            case Key.C when control && selection.HasSelection:
+                _ = CopyAsync(selection);
+                return true;
+            case Key.A when control:
+                selection.SelectAll();
+                return true;
+            case Key.Escape when selection.HasSelection:
+                selection.Clear();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>Puts the selected text on the Windows clipboard (left as it was when the clipboard is busy).</summary>
+    private static async Task CopyAsync(TextSelectionViewModel selection)
+    {
+        var text = await selection.GetTextAsync();
+        if (text.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            Clipboard.SetText(text);
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            // Another program holds the clipboard; copying again will work.
+        }
+    }
+
+    private void OnSurfaceMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (Document is { Editor.IsActive: false } document)
+        {
+            var point = e.GetPosition(Surface);
+            _ = PressAsync(document.TextSelection, new ViewPoint(point.X, point.Y), e.ClickCount);
+        }
+    }
+
+    private async Task PressAsync(TextSelectionViewModel selection, ViewPoint point, int clickCount)
+    {
+        if (await selection.PressAsync(point, clickCount) && Mouse.LeftButton == MouseButtonState.Pressed)
+        {
+            Surface.CaptureMouse();
+        }
+    }
+
+    private void OnSurfaceMouseMove(object sender, MouseEventArgs e)
+    {
+        if (Document is not { Editor.IsActive: false } document)
+        {
+            Surface.ClearValue(CursorProperty);
+            return;
+        }
+
+        var position = e.GetPosition(Surface);
+        var point = new ViewPoint(position.X, position.Y);
+        if (document.TextSelection.IsDragging && e.LeftButton == MouseButtonState.Pressed)
+        {
+            document.TextSelection.DragTo(point);
+            return;
+        }
+
+        if (document.TextSelection.IsOverText(point))
+        {
+            Surface.Cursor = Cursors.IBeam;
+        }
+        else
+        {
+            Surface.ClearValue(CursorProperty);
+        }
+    }
+
+    private void OnSurfaceMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (Document is { } document && document.TextSelection.IsDragging)
+        {
+            document.TextSelection.Release();
+        }
+
+        if (Surface.IsMouseCaptured)
+        {
+            Surface.ReleaseMouseCapture();
         }
     }
 

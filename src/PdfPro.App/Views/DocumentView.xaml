@@ -60,6 +60,8 @@
             TextAlignment="Center"
             TextWrapping="Wrap" />
         </StackPanel>
+        <!-- Selected text; only draws, the mouse goes to the viewer. -->
+        <controls:TextSelectionLayer PageKey="{Binding Key}" Selection="{Binding DataContext.TextSelection, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         <!-- The page editor's objects, selection and guides; inactive (and transparent to the mouse) outside the editor. -->
         <controls:OverlayLayer Editor="{Binding DataContext.Editor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
       </Grid>
@@ -228,6 +230,9 @@
         AutomationProperties.AutomationId="DocumentSurface"
         Background="Transparent"
         DpiScale="{Binding DpiScale, Mode=TwoWay}"
+        MouseLeftButtonDown="OnSurfaceMouseLeftButtonDown"
+        MouseLeftButtonUp="OnSurfaceMouseLeftButtonUp"
+        MouseMove="OnSurfaceMouseMove"
         Offset="{Binding ScrollOffset, Mode=TwoWay}"
         PageLayout="{Binding Layout}"
         PageTemplate="{StaticResource PageTemplate}"

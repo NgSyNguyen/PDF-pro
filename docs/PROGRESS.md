@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 2.
+Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 3.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -75,9 +75,9 @@ Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5Acceptan
 | Lát | Nội dung | Commit | Trạng thái |
 |---|---|---|---|
 | 1 | Lớp ký tự của trang: PDFium (`PdfiumTextPage.GetLayer`, `IPdfDocument.GetPageTextLayerAsync`) + Core `PageText` (dòng, từ, ký tự tại điểm, caret khi kéo, hình chữ nhật theo dòng, chép chữ NFC nối dòng / sửa gạch nối / giữ đoạn) | `66c9fc5` | Xong |
-| 2 | Tìm kiếm tiếng Việt (Core `TextSearch`): NFC = NFD, hoa/thường, dấu Tự động/Bỏ qua/Khớp (cả đ/Đ), toàn từ, regex (timeout 2 s), cụm từ khớp qua dòng; kết quả là khoảng ký tự; đoạn trích có ngữ cảnh | commit `feat(core): Vietnamese-aware text search…` | Xong |
-| 3 | Chọn chữ trên viewer (kéo, đúp = từ, ba lần = dòng, xuyên trang) + Ctrl+C | — | Tiếp theo |
-| 4 | Panel tìm kiếm Ctrl+F (chạy nền, kết quả đổ dần, tô sáng, F3/Shift+F3, hủy, gợi ý OCR cho trang ảnh) | — | Chưa |
+| 2 | Tìm kiếm tiếng Việt (Core `TextSearch`): NFC = NFD, hoa/thường, dấu Tự động/Bỏ qua/Khớp (cả đ/Đ), toàn từ, regex (timeout 2 s), cụm từ khớp qua dòng; kết quả là khoảng ký tự; đoạn trích có ngữ cảnh | `5accbd9` | Xong |
+| 3 | Chọn chữ trên viewer: `TextLayerCache` (LRU 256 trang, dùng chung với tìm kiếm), `TextSelectionViewModel` (bấm/kéo, đúp = từ, ba lần = dòng, kéo theo từ/dòng, xuyên trang, Ctrl+A cả tài liệu, Esc), `TextSelectionLayer` (chỉ vẽ), con trỏ chữ I, Ctrl+C | commit `feat(app): select and copy text…` | Xong, chờ CI |
+| 4 | Panel tìm kiếm Ctrl+F (chạy nền, kết quả đổ dần, tô sáng, F3/Shift+F3, hủy, gợi ý OCR cho trang ảnh) | — | Tiếp theo |
 | 5+ | Annotation (mô hình, đọc, ghi, công cụ, panel bình luận, flatten) | — | Chưa |
 
 **Quyết định Phase 6 (sẽ đưa vào SPEC mục Phase 6):**
@@ -107,6 +107,7 @@ Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5Acceptan
 - **Tránh đặt tên thuộc tính trùng tên lớp tĩnh** đang dùng trong cùng lớp (lỗi CS0236 với `FontFamilies.Default`; thuộc tính đã đổi thành `FontNames`).
 - **Bates của tài liệu đang sửa:** xuất bản sao vào `work\bates-{guid}\{tên tài liệu}` — bản đánh số lấy tên theo tệp vào, nên bản sao phải mang đúng tên tài liệu; thư mục tạm bị xóa sau khi chạy. Tệp có mật khẩu bị từ chối cho tới P8 (PDFsharp mở không mật khẩu). Thư mục ra mặc định `…\Đã đánh số Bates` cạnh tệp đầu; "Ghi đè" + thư mục chứa tệp gốc bị chặn.
 - `MainWindowViewModel` nhận `IBatesService?` là tham số tùy chọn cuối (test: `Create(isDebugBuild, withBates)`).
+- **Chọn chữ:** chuột trên `DocumentViewPanel` (code-behind chỉ chuyển tiếp) → `TextSelectionViewModel` đổi điểm viewport → (trang, điểm PDF) bằng `DocumentLayout` + `PageCoordinateMapper` với hình học của `PageEditorViewModel.GeometryOf`; vùng chọn bị xóa khi plan đổi (vị trí theo chỉ số trang). Kéo sang trang chưa đọc chữ thì lần di chuột sau mới bắt được (trang được đọc nền). Chưa có tự cuộn khi kéo sát mép.
 - `DocumentTabFactory` có tham số tùy chọn ở cuối (`screenFonts`, `screenImages`, `signatures`, `saver`): test dựng factory không truyền chúng thì tính năng tương ứng tắt — test của tính năng phải truyền vào (ví dụ `saver: _saver`).
 - Test ribbon `Ribbon_OnlyImplementedCommandsAreAvailable` liệt kê đủ id lệnh đã có — thêm nút mới phải thêm id vào đó.
 - PDFsharp **ghim 6.2.4** (6.5+ là AGPL, có test canh). Không thêm package mới nếu stack hiện có làm được.

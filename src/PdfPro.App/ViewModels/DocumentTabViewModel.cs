@@ -125,6 +125,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         _logger = logger;
         HistoryEntries = BuildHistory();
         Editor = new PageEditorViewModel(() => Workspace.Pages, services.ScreenFonts, services.ScreenImages ?? new ScreenImages(), logger);
+        TextSelection = new TextSelectionViewModel(viewer, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
         Editor.ApplyRequested += OnEditorApplyRequested;
         Editor.PropertyChanged += OnEditorPropertyChanged;
         workspace.PagesChanged += OnPagesChanged;
@@ -150,6 +151,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>The page editor: text, pictures, shapes and lines placed on pages until applied.</summary>
     public PageEditorViewModel Editor { get; }
+
+    /// <summary>The characters of the pages, read once: selecting, copying and searching share them.</summary>
+    public TextLayerCache TextLayers { get; } = new();
+
+    /// <summary>Text selected in the viewer (Ctrl+C copies it).</summary>
+    public TextSelectionViewModel TextSelection { get; }
 
     /// <summary>Objects wait in the page editor: saving, printing and closing apply them first.</summary>
     public bool HasPendingEdits => Editor.HasObjects;
@@ -982,6 +989,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     private void OnPagesChanged(object? sender, EventArgs e)
     {
+        TextSelection.Clear();
         Viewer.SetDocument(Workspace.Pages);
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
