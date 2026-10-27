@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 5, sau lát 10.
+Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 1.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -50,7 +50,8 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | P3 Phiên tài liệu & tổ chức trang | Xong (`4ff9664` … `c1bbc4c`), có nghiệm thu FlaUI |
 | P4 Gộp, tách & bố cục | Xong (`b541fcd` … `1b0a5c2`), có nghiệm thu FlaUI và mục SPEC |
 | **P5 Chèn & đóng dấu** | **Đang làm** — xem bảng lát dưới |
-| P6–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
+| **P6 Chú thích & tìm kiếm** | **Đang làm** — xem bảng lát Phase 6 |
+| P7–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
 
 ### Phase 5 — các lát
 
@@ -65,11 +66,24 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | 7 | Chữ ký tay (vẽ / gõ / ảnh), thư viện mã hóa DPAPI | `11cf4ed` | Xong |
 | 8 | Hộp thoại đóng dấu có xem trước (Hình mờ, Nền, Đầu & chân trang, Số trang, Gỡ dấu), nút ribbon | `8846ae0`, `292e6a3` | Xong, CI xanh |
 | 9 | Hộp thoại Bates nhiều tệp (`stamp.bates`): danh sách tệp, số chạy nối tiếp, nhãn, thư mục ra, chạy nền | `4ebc005` | Xong |
-| 10 | Mục Phase 5 trong SPEC + `Phase5AcceptanceTests` (FlaUI: hình mờ một bước hoàn tác + gỡ lại; Bates 3 tệp) | commit `docs: SPEC Phase 5…` | Xong — **chưa chạy tay trên Windows** |
+| 10 | Mục Phase 5 trong SPEC + `Phase5AcceptanceTests` (FlaUI: hình mờ một bước hoàn tác + gỡ lại; Bates 3 tệp) | `493f280` | Xong — **chưa chạy tay trên Windows** |
 
 Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5AcceptanceTests` trên Windows (`PDFPRO_UI_TESTS=1`), ghi số đo vào SPEC mục Phase 5, kiểm tay chữ tiếng Việt trong Acrobat Reader/Chrome.
 
-Tiếp theo: **Phase 6** theo `docs/PROMPTS.md` (chọn chữ, tìm kiếm có/không dấu, annotation chuẩn PDF, bình luận).
+### Phase 6 — các lát (kế hoạch do agent tự quyết, 27/10/2026)
+
+| Lát | Nội dung | Commit | Trạng thái |
+|---|---|---|---|
+| 1 | Lớp ký tự của trang: PDFium (`PdfiumTextPage.GetLayer`, `IPdfDocument.GetPageTextLayerAsync`) + Core `PageText` (dòng, từ, ký tự tại điểm, caret khi kéo, hình chữ nhật theo dòng, chép chữ NFC nối dòng / sửa gạch nối / giữ đoạn) | commit `feat: page character layer…` | Xong |
+| 2 | Tìm kiếm tiếng Việt (Core): NFC, không phân biệt hoa thường, bỏ dấu (cả đ/Đ), toàn từ, regex; ánh xạ kết quả về ký tự | — | Tiếp theo |
+| 3 | Chọn chữ trên viewer (kéo, đúp = từ, ba lần = dòng, xuyên trang) + Ctrl+C | — | Chưa |
+| 4 | Panel tìm kiếm Ctrl+F (chạy nền, kết quả đổ dần, tô sáng, F3/Shift+F3, hủy, gợi ý OCR cho trang ảnh) | — | Chưa |
+| 5+ | Annotation (mô hình, đọc, ghi, công cụ, panel bình luận, flatten) | — | Chưa |
+
+**Quyết định Phase 6 (sẽ đưa vào SPEC mục Phase 6):**
+- PDFium 157 có API annotation nhưng **không ghi được** `/L` (đường), `/Vertices` (đa giác), `/IRT` (trả lời); PDFsharp 6.2.4 **không** lưu incremental. → Annotation được ghi bằng **PDFsharp ở tầng dictionary** (đủ loại, `/AP` sinh bằng XGraphics, trả lời có `/IRT`), giữ trên `PageRef` như dấu tách trang (thêm/sửa/hoàn tác tức thì, chỉ ghi ra PDF khi lưu/vật chất hóa). Annotation có sẵn trong tệp: sửa/xóa là thao tác nội dung (revision).
+- **Lưu incremental để không phá chữ ký số dời sang P8** (P8 phải viết bộ ghi incremental cho ký nhiều người; còn cần `signed.pdf` và bộ xác minh để kiểm chứng). Tới lúc đó lưu tệp đã ký vẫn cảnh báo như P3.
+- Hộp ký tự dùng `FPDFText_GetLooseCharBox` (cao từ ascent tới descent của phông → các ký tự một dòng cùng đỉnh/đáy), trong không gian PDF của trang nguồn = không gian của trang sau khi vật chất hóa (map bằng `MaterializedGeometry` như overlay).
 
 ## 5. Bản đồ mã Phase 5
 

@@ -1,6 +1,7 @@
 using PDFiumCore;
 using PdfPro.Core.Documents;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 using PdfPro.Pdfium.Native;
 
 namespace PdfPro.Pdfium;
@@ -116,6 +117,13 @@ public sealed class PdfiumDocument : IDisposable
     {
         using var text = GetCachedPage(pageIndex).LoadText();
         return text.GetText();
+    }
+
+    /// <summary>The characters of a page with their boxes (not normalized).</summary>
+    public PageText GetPageTextLayer(int pageIndex)
+    {
+        using var text = GetCachedPage(pageIndex).LoadText();
+        return text.GetLayer();
     }
 
     public PdfDocumentMetadata GetMetadata()

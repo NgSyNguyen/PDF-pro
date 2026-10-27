@@ -3,6 +3,7 @@ using System.Windows.Media.Imaging;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Rendering;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.TestSupport;
@@ -87,6 +88,19 @@ internal sealed class FakePdfDocument(IReadOnlyList<PdfSize> pageSizes) : IPdfDo
         }
 
         return Texts?.Invoke(pageIndex) ?? string.Empty;
+    }
+
+    /// <summary>The characters of each page with their boxes (none by default).</summary>
+    public Func<int, PageText>? TextLayers { get; set; }
+
+    public async Task<PageText> GetPageTextLayerAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+    {
+        if (TextGate is { } gate)
+        {
+            await gate.Task.WaitAsync(cancellationToken);
+        }
+
+        return TextLayers?.Invoke(pageIndex) ?? PageText.Empty;
     }
 }
 

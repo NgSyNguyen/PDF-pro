@@ -1,4 +1,5 @@
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 
 namespace PdfPro.Pdfium;
 
@@ -74,6 +75,10 @@ public sealed class PdfDocumentHandle : IPdfDocument
     /// <summary>Raw page text (not normalized).</summary>
     public Task<string> GetPageTextAsync(int pageIndex, CancellationToken cancellationToken = default)
         => Run(document => document.GetPageText(pageIndex), PdfiumPriority.Normal, cancellationToken);
+
+    /// <summary>The characters of a page with their boxes in its PDF user space (not normalized).</summary>
+    public Task<PageText> GetPageTextLayerAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+        => Run(document => document.GetPageTextLayer(pageIndex), priority, cancellationToken);
 
     /// <summary>Runs custom gate-affine work against the document (advanced use and tests).</summary>
     public Task<T> RunAsync<T>(Func<PdfiumDocument, T> work, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)

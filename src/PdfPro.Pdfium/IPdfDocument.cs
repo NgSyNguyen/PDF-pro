@@ -1,4 +1,5 @@
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 
 namespace PdfPro.Pdfium;
 
@@ -26,6 +27,9 @@ public interface IPdfDocument : IAsyncDisposable
     Task<PdfDocumentMetadata> GetMetadataAsync(CancellationToken cancellationToken = default);
 
     Task<string> GetPageTextAsync(int pageIndex, CancellationToken cancellationToken = default);
+
+    /// <summary>The characters of a page with their boxes in its PDF user space, for selecting, copying and searching.</summary>
+    Task<PageText> GetPageTextLayerAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Opens documents; the seam that lets view models be tested without PDFium.</summary>
