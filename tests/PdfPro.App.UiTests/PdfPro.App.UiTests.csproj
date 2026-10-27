@@ -18,6 +18,7 @@
     <PackageReference Include="Shouldly" />
     <PackageReference Include="FlaUI.UIA3" />
     <PackageReference Include="PDFsharp" />
+    <PackageReference Include="PdfPig" />
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
   </ItemGroup>

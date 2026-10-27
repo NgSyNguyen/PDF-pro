@@ -80,6 +80,27 @@ internal static class PdfFile
         ];
     }
 
+    /// <summary>The names of the file's optional content groups (layers): "Watermark", "Background", "Header/Footer"…</summary>
+    public static string[] Layers(string path)
+    {
+        using var document = PdfReader.Open(path, PdfDocumentOpenMode.Import);
+        return Resolve(document.Internals.Catalog.Elements["/OCProperties"]) is PdfDictionary properties
+            && Resolve(properties.Elements["/OCGs"]) is PdfArray groups
+            ? [.. groups.Elements.Select(Resolve).OfType<PdfDictionary>().Select(g => g.Elements.GetString("/Name"))]
+            : [];
+    }
+
+    /// <summary>The text of every page as PdfPig reads it, NFC, without white space (so layout does not matter).</summary>
+    public static string[] PageTexts(string path)
+    {
+        using var document = UglyToad.PdfPig.PdfDocument.Open(path);
+        return
+        [
+            .. document.GetPages().Select(page => string.Concat(page.Letters.Select(l => l.Value).Where(v => !string.IsNullOrWhiteSpace(v)))
+                .Normalize(System.Text.NormalizationForm.FormC)),
+        ];
+    }
+
     private static void AddChildren(PdfDictionary parent, int depth, Dictionary<PdfObject, int> pages, List<PdfBookmark> result)
     {
         var item = Resolve(parent.Elements["/First"]) as PdfDictionary;

@@ -1,6 +1,6 @@
 # PDF_Pro — Đặc tả kỹ thuật (SPEC)
 
-> Nguồn sự thật của dự án. Cập nhật lần cuối: 23/10/2026. Khi thiết kế thay đổi, cập nhật file này trước rồi mới code.
+> Nguồn sự thật của dự án. Cập nhật lần cuối: 27/10/2026. Khi thiết kế thay đổi, cập nhật file này trước rồi mới code.
 
 ## Sản phẩm & ma trận tính năng
 
@@ -79,7 +79,7 @@ PdfPro/
 ├─ THIRD_PARTY_NOTICES.md        // license mọi thư viện, font, tessdata
 ├─ docs/      SPEC.md · PROMPTS.md · PROGRESS.md (tiến độ, bàn giao) · adr/
 ├─ samples/                      // PDF mẫu để test (dữ liệu giả)
-├─ assets/fonts/                 // font Unicode đóng gói (P4: Noto Sans + OFL.txt), nhúng vào PdfPro.Operations
+├─ assets/fonts/                 // font OFL đóng gói: Noto Sans/Serif, Be Vietnam Pro (nhúng vào PdfPro.Operations); Charm, Dancing Script (chữ ký gõ tên, chép cạnh exe)
 ├─ tools/                        // qpdf, tesseract + tessdata (tải bằng script)
 ├─ src/
 │  ├─ PdfPro.Core/               // domain thuần: Session, PagePlan, Command, Operation
@@ -283,6 +283,52 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Tách `big-1000.pdf` thành 100 tệp 10 trang: 9,7 s (~95 ms/tệp, có tiến độ, hủy được). Tách theo bookmark `vanban-vi.pdf`: 5 tệp tên đúng dấu tiếng Việt ("Quyết định số 12-QĐ-UBND.pdf", "Hợp đồng 128-2026-HĐ-MT.pdf"…).
 - Sổ gập 10 trang → 12 trang (6 mặt A4 ngang trên 3 tờ), thứ tự in kiểm bằng golden test; in thử gập đôi là bước kiểm tay.
 - Kịch bản FlaUI: `Phase4AcceptanceTests` (tách theo dấu + dấu được nhớ khi mở lại, gộp 20 tệp, tách theo bookmark tiếng Việt, sổ gập từ tài liệu đang sửa).
+
+### Chèn & đóng dấu (Phase 5)
+
+**Đối tượng overlay (Core)**
+- Đối tượng tạm (`OverlayItems.cs`, record bất biến, serialize JSON = tham số của `edit.overlay`): hộp chữ, ảnh (PNG giữ alpha, JPEG nhúng nguyên byte, cờ chữ ký tay), chữ nhật, elip, che trắng (tô màu, không viền — **chỉ che về hình**, không xóa nội dung bên dưới; xóa thật là redaction ở P8), đường thẳng/mũi tên. `PageIndex` tính trên tài liệu như đang hiển thị.
+- `OverlayBox`: **tâm** đặt trong không gian PDF của trang, rộng/cao bằng point, góc xoay theo chiều kim đồng hồ so với trang như đang hiển thị; mọi chuyển đổi qua `PageCoordinateMapper`, nên zoom hay /Rotate không làm lệch. Không gian đó là trang **sau khi ghi** (`MaterializedGeometry`: hộp nguồn + /Rotate + crop và xoay của plan), dùng chung cho trình chỉnh sửa và materializer.
+- `RotatedBox`: chọn, 8 nút kéo, nút xoay (Shift: bước 15°), hit-test; `OverlaySnapping` hít vào mép/tâm trang và đối tượng khác kèm đường gióng. `OverlayLimits`: cạnh ≤ 14.400 pt, cỡ chữ 1–400, giãn dòng 0,5–5, viền ≤ 72 pt, chữ ≤ 20.000 ký tự.
+- `TextLayout`: một bộ ngắt dòng cho cả màn hình lẫn PDF, từ số đo của chính mặt chữ nhúng (NFC, xuống dòng theo từ, từ quá dài bị bẻ giữa các phần tử văn bản, căn trái/giữa/phải/đều, giãn dòng) — chữ trên màn hình và trong PDF xuống dòng y hệt.
+
+**Phông chữ (`FontLibrary`, Operations)**
+- Đóng gói Noto Sans, Noto Serif, Be Vietnam Pro đủ 4 kiểu (SIL OFL 1.1) trong `PdfPro.Operations.dll`; thêm phông cài trên máy nếu viết đủ mọi chữ tiếng Việt, có đường viền TrueType và giấy phép cho nhúng subset (bỏ `.ttc` vì PDFsharp 6.2 không nhúng được). Nghiêng thiếu thì giả bằng cách xiên; **đậm không bao giờ giả** (không có mặt đậm thì không cho chọn đậm).
+- Cùng một mặt chữ dùng để đo, vẽ màn hình (`ScreenFonts` ghi phông đóng gói ra cache cho WPF) và nhúng PDF (subset + ToUnicode). Phông cài trên máy được đọc nền lúc khởi động.
+- Kiểm thử: quốc hiệu và mọi chữ cái tiếng Việt viết bằng 12 mặt chữ đóng gói, đọc lại đúng bằng PdfPig và PDFium.
+
+**Ghi vào PDF (`edit.overlay`, các `stamp.*`)**
+- `StampForms` vẽ bằng PDFsharp lên trang nháp rồi biến thành form XObject (chỉ API công khai, có lề để nét không bị cắt). `PageStamper` đặt form bằng ma trận từ `PageCoordinateMapper`; nội dung cũ bọc `q…Q` khi dấu nằm trên; mỗi trang được `/Resources` riêng (tài nguyên dùng chung hoặc thừa kế không bao giờ bị sửa); độ mờ qua ExtGState + nhóm trong suốt.
+- Dấu gỡ được nằm trong optional content group ("Watermark", "Background", "Header/Footer"; mỗi tên một layer cho cả tài liệu) và stream của nó mang khóa `/PdfProStamp` với loại (`Watermark`, `Background`, `HeaderFooter`, `PageNumbers`, `Bates`) — `stamp.remove` nhận ra dấu nhờ khóa này.
+- `DocumentContentOperation`: mở / kiểm / lưu chung cho thao tác nội dung; trong phiên chạy trên bản vật chất hóa của plan (tên GUID) → **`{filename}` luôn lấy từ tham số** (`FileName`), không từ tên tệp vào.
+
+**Trình chỉnh sửa trang (App)**
+- "Thêm chữ / ảnh / hình / chữ ký tay": đối tượng nằm trên `OverlayLayer` phía trên ảnh trang, giữ theo `PageKey` (trang có thể di chuyển, xoay trong lúc chờ). Vẽ đúng như sẽ ghi (chữ bằng GlyphRun với độ rộng ký tự của mặt nhúng, ảnh theo hướng EXIF).
+- Click = đối tượng cỡ mặc định, kéo = theo khung; kéo di chuyển (hít, Alt tắt hít), 8 nút đổi cỡ (Shift hoặc ảnh: giữ tỉ lệ), nút xoay; mũi tên dịch 1 pt (Shift 10 pt); Delete; Ctrl+C/Ctrl+V được giữa các trang (mỗi lần dán lệch 10 pt), dán ảnh chép từ chương trình khác. Gõ chữ tại chỗ (đúp chuột để sửa), hộp tự cao theo dòng; hộp rỗng bị bỏ; thêm + gõ là một bước.
+- Panel thuộc tính: phông, cỡ, đậm (chỉ khi có mặt đậm), nghiêng, màu (bảng + mã hex), căn lề, giãn dòng, viền, nền, màu/độ dày nét, đầu mũi tên, độ mờ; mỗi thay đổi là một bước và thành kiểu cho đối tượng mới.
+- Trình chỉnh sửa có Hoàn tác/Làm lại riêng (Ctrl+Z hoàn tác sửa đổi của nó trước rồi mới tới tài liệu). "Áp dụng" ghi tất cả bằng **một** `edit.overlay` → revision mới → **một bước hoàn tác** của tài liệu. Đối tượng đang chờ được áp dụng trước khi Lưu, In, đóng thẻ, thoát, sang chế độ Sắp xếp; trong lúc còn đối tượng chờ, các thao tác nội dung khác bị tắt.
+- Ảnh: JPEG chép nguyên byte vào phiên (không nén lại), định dạng khác thành PNG 8-bit đặt tên theo nội dung; đặt giữa phần đang thấy của trang, không quá nửa trang.
+
+**Chữ ký tay (dạng ảnh)**
+- Vẽ bằng chuột/bút (nét làm mượt, độ dày), gõ tên bằng Dancing Script hoặc Charm (OFL, chép vào `Fonts\` cạnh exe), hoặc nhập ảnh chụp/scan (`SignatureImages`: nền giấy thành trong suốt có mép mềm, cắt sát nét mực). Xuất PNG nền trong suốt 288 DPI, cắt sát mực; đặt như một ảnh chữ ký.
+- Thư viện chữ ký: mỗi chữ ký một tệp, PNG **mã hóa DPAPI theo tài khoản Windows**, giữ 20 chữ ký mới nhất; mục không đọc được bị bỏ qua. Giao diện ghi rõ đây là chữ ký hình ảnh, **khác chữ ký số** (P8).
+
+**Đóng dấu hàng loạt — hộp thoại có xem trước**
+- `stamp.watermark` (chữ hoặc ảnh; 9 vị trí hoặc lát kín trang; xoay; độ mờ; trên/dưới nội dung; layer "Watermark"), `stamp.background` (màu hoặc ảnh kéo giãn/giữ tỉ lệ, dưới nội dung), `stamp.headerFooter` (6 vùng, `{page} {pages} {date[:định dạng]} {filename} {title}`, bỏ trang bìa và đánh số từ trang sau, số bắt đầu, kiểu 1/i/I), `stamp.pageNumbers` (mẫu như "Trang {page}/{pages}", từ trang k với số n, 6 vị trí), `stamp.remove` (gỡ các loại đã chọn cùng tài nguyên của chúng và layer không còn trang nào dùng; trang hiện lại y như trước; đối tượng của trình chỉnh sửa không bị đụng tới).
+- Một cửa sổ chung (`StampWindow`), mỗi hộp thoại một template; "Áp dụng cho" trang đã chọn / tất cả / lẻ / chẵn / khoảng trang (mặc định: vùng chọn của chế độ Sắp xếp). **Xem trước = chạy đúng thao tác thật** trên bản 1 trang của trang hiện tại (xuất một lần vào `work\`), PDFium render, 250 ms sau lần sửa cuối; chữ phụ thuộc trang được viết sẵn (`TextsOn`/`TextOn`) rồi `StampTemplate.Escape`. Trang ngoài phạm vi áp dụng hiện nguyên trạng. Tệp xem trước bị xóa khi đóng hộp thoại.
+- "Gỡ dấu" quét tài liệu **như đang hiển thị** (xuất plan ra `work\stamps-*.pdf`, đếm ở luồng nền, xóa bản tạm) và liệt kê từng loại kèm số trang; không có dấu nào thì chỉ báo.
+- Mỗi lần áp dụng là một thao tác nội dung (revision mới, một bước hoàn tác), chạy nền ở thanh trạng thái như Đổi khổ giấy.
+
+**Số Bates nhiều tệp (`stamp.bates`, Export)**
+- Một số chạy cho mọi trang của nhiều tệp, nối tiếp từ tệp này sang tệp kia, không trống, không trùng (`BatesNumbering`); nhãn = tiền tố + số đệm 0 (1–15 chữ số; số lớn hơn thì dài thêm, có cảnh báo) + hậu tố (≤ 50 ký tự, không ký tự điều khiển).
+- Hộp thoại như Gộp: danh sách tệp (thêm, thả từ Explorer, kéo đổi thứ tự, sắp theo tên tự nhiên, bỏ) với dải số của từng tệp; nhãn của trang đầu; vị trí (6), phông, cỡ, đậm, màu; thư mục ra (mặc định `Đã đánh số Bates` cạnh tệp đầu), ghi đè, mở thư mục khi xong. Tài liệu đang mở có sẵn trong danh sách; đang sửa thì đánh số **bản sao của cái đang hiển thị**, đặt đúng tên tài liệu trong `work\bates-{guid}\` (bản đánh số giữ tên tệp vào), xóa sau khi chạy.
+- Ghi nền với tiến độ và nút Hủy; mọi bản sao qua tệp tạm, **được tất cả hoặc không gì**; tệp gốc không bao giờ bị ghi; "Ghi đè" vào thư mục chứa tệp gốc bị chặn. Tệp có mật khẩu bị từ chối kèm giải thích (tới P8).
+
+**Nghiệm thu**
+- Unit/golden: đối tượng đặt trên trang /Rotate 0/90/180/270 và CropBox lệch gốc render đúng chỗ (PDFium) và đọc lại đúng dòng bằng PdfPig; chữ xem trước của đầu/chân trang và số trang khớp chữ thật ghi ra trên mọi trang; Bates nối tiếp qua nhiều tệp, lỗi một tệp thì không ghi gì; gỡ dấu xong trang render y như trước.
+- Kịch bản FlaUI `Phase5AcceptanceTests` (chạy tay): hình mờ "TÀI LIỆU MẬT" trên mọi trang `basic-vi.pdf` là một bước hoàn tác, tìm được bằng PdfPig, nằm trong layer "Watermark", gỡ lại thì chữ các trang y như ban đầu; Bates "HS-" cho 3 tệp chạy liền 1…n, tệp gốc giữ nguyên SHA-256.
+- Kiểm tay: chữ có đủ dấu (ẳ, ỡ, ự, Ỷ…) bằng 3 phông đóng gói mở đúng trên máy không cài phông và trong Acrobat Reader / Chrome; đối tượng không lệch khi zoom 50–400 % và trên trang /Rotate 90.
+- Số đo trên máy phát triển: chưa đo (ghi lại khi chạy `Phase5AcceptanceTests` trên Windows — thời gian được in ra output của test).
 
 ### Hệ tọa độ — nguồn bug số một
 

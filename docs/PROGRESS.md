@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 5, sau lát 9.
+Cập nhật lần cuối: 27/10/2026 — Phase 5, sau lát 10.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -64,10 +64,12 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | 6 | Gõ chữ tại chỗ, panel thuộc tính, chèn ảnh, áp dụng trước khi lưu/đóng | `f145f5d` | Xong |
 | 7 | Chữ ký tay (vẽ / gõ / ảnh), thư viện mã hóa DPAPI | `11cf4ed` | Xong |
 | 8 | Hộp thoại đóng dấu có xem trước (Hình mờ, Nền, Đầu & chân trang, Số trang, Gỡ dấu), nút ribbon | `8846ae0`, `292e6a3` | Xong, CI xanh |
-| 9 | Hộp thoại Bates nhiều tệp (`stamp.bates`): danh sách tệp, số chạy nối tiếp, nhãn, thư mục ra, chạy nền | commit `feat(app): Bates numbering…` | Xong, chờ CI |
-| 10 | Mục Phase 5 trong SPEC + `Phase5AcceptanceTests` (FlaUI) | — | Tiếp theo |
+| 9 | Hộp thoại Bates nhiều tệp (`stamp.bates`): danh sách tệp, số chạy nối tiếp, nhãn, thư mục ra, chạy nền | `4ebc005` | Xong |
+| 10 | Mục Phase 5 trong SPEC + `Phase5AcceptanceTests` (FlaUI: hình mờ một bước hoàn tác + gỡ lại; Bates 3 tệp) | commit `docs: SPEC Phase 5…` | Xong — **chưa chạy tay trên Windows** |
 
-Sau lát 10: sang **Phase 6** theo `docs/PROMPTS.md` (chọn chữ, tìm kiếm có/không dấu, annotation chuẩn PDF, bình luận).
+Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5AcceptanceTests` trên Windows (`PDFPRO_UI_TESTS=1`), ghi số đo vào SPEC mục Phase 5, kiểm tay chữ tiếng Việt trong Acrobat Reader/Chrome.
+
+Tiếp theo: **Phase 6** theo `docs/PROMPTS.md` (chọn chữ, tìm kiếm có/không dấu, annotation chuẩn PDF, bình luận).
 
 ## 5. Bản đồ mã Phase 5
 
