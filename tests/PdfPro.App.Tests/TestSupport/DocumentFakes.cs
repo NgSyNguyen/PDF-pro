@@ -78,6 +78,7 @@ internal static class TestOperations
             new Operations.Editing.EditContentOperation(Gate.Value),
             new Operations.Forms.FillFormOperation(materializer, loader),
             new Operations.Forms.DesignFormOperation(),
+            new Operations.Forms.MergeFormDataOperation(),
         ]);
     }
 }
