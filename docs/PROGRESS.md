@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 1.
+Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 2.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -74,9 +74,9 @@ Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5Acceptan
 
 | Lát | Nội dung | Commit | Trạng thái |
 |---|---|---|---|
-| 1 | Lớp ký tự của trang: PDFium (`PdfiumTextPage.GetLayer`, `IPdfDocument.GetPageTextLayerAsync`) + Core `PageText` (dòng, từ, ký tự tại điểm, caret khi kéo, hình chữ nhật theo dòng, chép chữ NFC nối dòng / sửa gạch nối / giữ đoạn) | commit `feat: page character layer…` | Xong |
-| 2 | Tìm kiếm tiếng Việt (Core): NFC, không phân biệt hoa thường, bỏ dấu (cả đ/Đ), toàn từ, regex; ánh xạ kết quả về ký tự | — | Tiếp theo |
-| 3 | Chọn chữ trên viewer (kéo, đúp = từ, ba lần = dòng, xuyên trang) + Ctrl+C | — | Chưa |
+| 1 | Lớp ký tự của trang: PDFium (`PdfiumTextPage.GetLayer`, `IPdfDocument.GetPageTextLayerAsync`) + Core `PageText` (dòng, từ, ký tự tại điểm, caret khi kéo, hình chữ nhật theo dòng, chép chữ NFC nối dòng / sửa gạch nối / giữ đoạn) | `66c9fc5` | Xong |
+| 2 | Tìm kiếm tiếng Việt (Core `TextSearch`): NFC = NFD, hoa/thường, dấu Tự động/Bỏ qua/Khớp (cả đ/Đ), toàn từ, regex (timeout 2 s), cụm từ khớp qua dòng; kết quả là khoảng ký tự; đoạn trích có ngữ cảnh | commit `feat(core): Vietnamese-aware text search…` | Xong |
+| 3 | Chọn chữ trên viewer (kéo, đúp = từ, ba lần = dòng, xuyên trang) + Ctrl+C | — | Tiếp theo |
 | 4 | Panel tìm kiếm Ctrl+F (chạy nền, kết quả đổ dần, tô sáng, F3/Shift+F3, hủy, gợi ý OCR cho trang ảnh) | — | Chưa |
 | 5+ | Annotation (mô hình, đọc, ghi, công cụ, panel bình luận, flatten) | — | Chưa |
 

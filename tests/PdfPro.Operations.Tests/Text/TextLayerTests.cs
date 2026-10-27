@@ -78,6 +78,31 @@ public sealed class TextLayerTests(PdfiumFixture pdfium) : IDisposable
         }
     }
 
+    [Theory]
+    [InlineData(@"Số:\s*\d+", true)]
+    [InlineData("so:", false)]
+    [InlineData("SỐ:", false)]
+    public async Task SearchingTheDecisionNumbers_FindsTheFirstPageOfEachDocument(string query, bool regex)
+    {
+        // vanban-vi.pdf: five documents starting on pages 1, 4, 6, 8 and 11 with "Số: …".
+        TextSearch.TryCreate(query, new TextSearchOptions(UseRegex: regex), out var search, out var error).ShouldBeTrue(error);
+        await using var document = await PdfInspector.OpenAsync(pdfium.Gate, Samples.VanBanVi);
+
+        var pages = new List<int>();
+        for (var page = 0; page < document.PageCount; page++)
+        {
+            var layer = await document.GetPageTextLayerAsync(page, cancellationToken: Token);
+            var matches = search.FindAll(layer);
+            if (matches.Count > 0)
+            {
+                pages.Add(page + 1);
+                TextNormalizer.ToNfc(layer.GetText(matches[0])).ShouldStartWith("Số:");
+            }
+        }
+
+        pages.ShouldBe([1, 4, 6, 8, 11]);
+    }
+
     [Fact]
     public async Task AScannedPage_HasNoText()
     {
