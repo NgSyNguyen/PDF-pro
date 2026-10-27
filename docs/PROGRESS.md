@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 4.
+Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 5.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -19,7 +19,7 @@ Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 4.
 | Nhánh làm việc | `claude/laughing-pasteur-x9yt44` |
 | PR | NgSyNguyen/PDF-pro#1 (draft → `main`) — gom toàn bộ phần còn lại của Phase 5 |
 | CI | `.github/workflows/build.yml`, `windows-latest`; chạy khi push vào `main` hoặc trên pull request (nhánh không có PR thì **không** chạy CI) |
-| CI gần nhất | `292e6a3`: 1.740 test, 0 lỗi, 1.726 đạt, 14 bỏ qua (UI test FlaUI tự bỏ qua khi không đặt `PDFPRO_UI_TESTS=1`) |
+| CI gần nhất | `de2ed54` (P6 lát 4): xanh. Mốc đếm: `292e6a3` có 1.740 test, 1.726 đạt, 14 bỏ qua (UI test FlaUI tự bỏ qua khi không đặt `PDFPRO_UI_TESTS=1`) |
 
 - Trên máy chủ dự án có `README.md` chưa track (không rõ nguồn) — **chưa commit**; README chính thức để tới P13.
 - Máy chủ dự án cần `git config user.name/user.email` trong repo (đã từng thiếu → commit thất bại im lặng).
@@ -77,12 +77,19 @@ Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5Acceptan
 | 1 | Lớp ký tự của trang: PDFium (`PdfiumTextPage.GetLayer`, `IPdfDocument.GetPageTextLayerAsync`) + Core `PageText` (dòng, từ, ký tự tại điểm, caret khi kéo, hình chữ nhật theo dòng, chép chữ NFC nối dòng / sửa gạch nối / giữ đoạn) | `66c9fc5` | Xong |
 | 2 | Tìm kiếm tiếng Việt (Core `TextSearch`): NFC = NFD, hoa/thường, dấu Tự động/Bỏ qua/Khớp (cả đ/Đ), toàn từ, regex (timeout 2 s), cụm từ khớp qua dòng; kết quả là khoảng ký tự; đoạn trích có ngữ cảnh | `5accbd9` | Xong |
 | 3 | Chọn chữ trên viewer: `TextLayerCache` (LRU 256 trang, dùng chung với tìm kiếm), `TextSelectionViewModel` (bấm/kéo, đúp = từ, ba lần = dòng, kéo theo từ/dòng, xuyên trang, Ctrl+A cả tài liệu, Esc), `TextSelectionLayer` (chỉ vẽ), con trỏ chữ I, Ctrl+C | `7944a57` | Xong, CI xanh |
-| 4 | Tìm kiếm: `SearchViewModel` (chạy nền qua `TextLayerCache`, kết quả đổ dần kèm ngữ cảnh, kết quả đang chọn được chọn chữ + cuộn tới, F3/Shift+F3 vòng quanh, Dừng, tự tìm lại khi đổi tùy chọn hoặc đổi trang, đếm trang ảnh → gợi ý OCR); sidebar thêm mục "Tìm kiếm"; `TextHighlightLayer` (thay `TextSelectionLayer`) vẽ kết quả vàng/cam + vùng chọn; Ctrl+F, F3, Shift+F3, nút ribbon "Tìm" | commit `feat(app): search panel…` | Xong, chờ CI |
-| 5+ | Annotation (mô hình, đọc, ghi, công cụ, panel bình luận, flatten) | — | Tiếp theo |
+| 4 | Tìm kiếm: `SearchViewModel` (chạy nền qua `TextLayerCache`, kết quả đổ dần kèm ngữ cảnh, kết quả đang chọn được chọn chữ + cuộn tới, F3/Shift+F3 vòng quanh, Dừng, tự tìm lại khi đổi tùy chọn hoặc đổi trang, đếm trang ảnh → gợi ý OCR); sidebar thêm mục "Tìm kiếm"; `TextHighlightLayer` (thay `TextSelectionLayer`) vẽ kết quả vàng/cam + vùng chọn; Ctrl+F, F3, Shift+F3, nút ribbon "Tìm" | `de2ed54` | Xong, CI xanh |
+| 5 | Core `Annotations/AnnotationItems.cs` (markup 4 loại, ghi chú, hộp chữ có đường chỉ, mực, chữ nhật/elip, đường/mũi tên, đa giác/đường gấp khúc, con dấu chữ/ảnh; trả lời, trạng thái duyệt; JSON đa hình; `Validate`, `MoveBy`), `PdfDate.Format`; Operations `Annotating/AnnotationWriter` (PDFsharp tầng dictionary, `/AP` cho mọi loại, highlight nhân màu, chữ tiếng Việt nhúng font, thẳng theo góc xoay trang; trả lời/trạng thái = `/Text` có `/IRT`) | commit `feat(operations): annotation model and writer…` | Xong, chờ CI |
+| 6 | Chú thích của phiên trên `PageRef` + thao tác plan `annotate.add/update/delete`, manifest, vật chất hóa ghi bằng `AnnotationWriter` | — | Tiếp theo |
+| 7 | Công cụ chú thích trên viewer | — | |
+| 8 | Chú thích có sẵn trong tệp (đọc bằng PDFium), panel bình luận | — | |
+| 9 | `annotate.flatten`, mục SPEC Phase 6, `Phase6AcceptanceTests` | — | |
 
 **Quyết định Phase 6 (sẽ đưa vào SPEC mục Phase 6):**
 - PDFium 157 có API annotation nhưng **không ghi được** `/L` (đường), `/Vertices` (đa giác), `/IRT` (trả lời); PDFsharp 6.2.4 **không** lưu incremental. → Annotation được ghi bằng **PDFsharp ở tầng dictionary** (đủ loại, `/AP` sinh bằng XGraphics, trả lời có `/IRT`), giữ trên `PageRef` như dấu tách trang (thêm/sửa/hoàn tác tức thì, chỉ ghi ra PDF khi lưu/vật chất hóa). Annotation có sẵn trong tệp: sửa/xóa là thao tác nội dung (revision).
 - **Lưu incremental để không phá chữ ký số dời sang P8** (P8 phải viết bộ ghi incremental cho ký nhiều người; còn cần `signed.pdf` và bộ xác minh để kiểm chứng). Tới lúc đó lưu tệp đã ký vẫn cảnh báo như P3.
+- `/AP` của chú thích: `/BBox` = `/Rect` trong không gian trang, ma trận đơn vị; nét vẽ viết thẳng content stream (số invariant); chữ (hộp chữ, con dấu) vẽ bằng `StampForms` rồi đặt bằng `FormToLocal.Then(new PageCoordinateMapper(Box, Rotation, 1).ScreenToPdfMatrix)`. FreeText theo Acrobat: `/C` = màu nền, màu viền trong `/DA`. Mảng `/Annots` luôn được chép thành mảng riêng của trang (có thể dùng chung giữa các trang).
+- Namespace `PdfPro.Operations.Annotating` (không phải `Annotations`: đụng hàm `PdfGraph.Annotations(page)`).
+- `PdfRect` có `[JsonConstructor]` và `[JsonIgnore]` cho Width/Height/IsEmpty/Size (trước đó deserialize ra toàn 0 vì là struct).
 - Hộp ký tự dùng `FPDFText_GetLooseCharBox` (cao từ ascent tới descent của phông → các ký tự một dòng cùng đỉnh/đáy), trong không gian PDF của trang nguồn = không gian của trang sau khi vật chất hóa (map bằng `MaterializedGeometry` như overlay).
 
 ## 5. Bản đồ mã Phase 5
