@@ -110,15 +110,15 @@ public sealed class MergeFormDataOperation : PdfOperation<MergeFormParams>
 
     private static MergeFormResult Write(string templatePath, TabularData table, MergeFormParams parameters, string folder, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
     {
-        byte[] template;
+        var template = File.ReadAllBytes(templatePath);
         IReadOnlyList<FormField> fields;
         try
         {
-            template = File.ReadAllBytes(templatePath);
+            // Read from memory: whatever goes wrong now is the document's content, not the disk.
             using var document = PdfReader.Open(new MemoryStream(template), PdfDocumentOpenMode.Import);
             fields = FormReader.Read(document);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException and not IOException and not UnauthorizedAccessException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             throw new InvalidDataException("The document cannot be read.", ex);
         }

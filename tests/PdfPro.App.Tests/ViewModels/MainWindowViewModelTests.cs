@@ -99,7 +99,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
-                "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature", "edit.content", "forms.design",
+                "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature", "edit.content", "forms.design", "forms.exportData", "forms.importData", "forms.merge",
                 "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
                 "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
                 "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten"],

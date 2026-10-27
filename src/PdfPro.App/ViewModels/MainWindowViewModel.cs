@@ -103,6 +103,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddTextCommand = new ActiveDocumentCommand(d => d.AddTextCommand);
         ToggleContentEditingCommand = new ActiveDocumentCommand(d => d.ToggleContentEditingCommand);
         ToggleFormDesignCommand = new ActiveDocumentCommand(d => d.ToggleFormDesignCommand);
+        ExportFormDataCommand = new ActiveDocumentCommand(d => d.ExportFormDataCommand);
+        ImportFormDataCommand = new ActiveDocumentCommand(d => d.ImportFormDataCommand);
+        MergeFormDataCommand = new ActiveDocumentCommand(d => d.MergeFormDataCommand);
         AddShapeCommand = new ActiveDocumentCommand(d => d.AddShapeCommand);
         AddImageCommand = new ActiveDocumentCommand(d => d.AddImageCommand);
         AddSignatureCommand = new ActiveDocumentCommand(d => d.AddSignatureCommand);
@@ -202,6 +205,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand ToggleContentEditingCommand { get; }
 
     public ActiveDocumentCommand ToggleFormDesignCommand { get; }
+
+    public ActiveDocumentCommand ExportFormDataCommand { get; }
+
+    public ActiveDocumentCommand ImportFormDataCommand { get; }
+
+    public ActiveDocumentCommand MergeFormDataCommand { get; }
 
     public ActiveDocumentCommand AddShapeCommand { get; }
 
@@ -457,6 +466,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.ContentChangeRequested -= OnContentChangeRequested;
             _trackedDocument.SplitRequested -= OnSplitRequested;
             _trackedDocument.LayoutRequested -= OnLayoutRequested;
+            _trackedDocument.FormMergeRequested -= OnFormMergeRequested;
         }
 
         _trackedDocument = value as DocumentTabViewModel;
@@ -467,6 +477,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.ContentChangeRequested += OnContentChangeRequested;
             _trackedDocument.SplitRequested += OnSplitRequested;
             _trackedDocument.LayoutRequested += OnLayoutRequested;
+            _trackedDocument.FormMergeRequested += OnFormMergeRequested;
         }
 
         foreach (var command in new[]
@@ -475,6 +486,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
             AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand,
+            ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
             HighlightCommand, UnderlineCommand, StrikeOutCommand, SquigglyCommand, StickyNoteCommand,
@@ -717,6 +729,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Forms,
                 [
                     new("forms.design", Strings.Cmd_DesignForm, SymbolRegular.Form24, ToggleFormDesignCommand, Strings.Cmd_DesignForm_ToolTip),
+                    new("forms.exportData", Strings.Cmd_ExportFormData, SymbolRegular.ArrowExport24, ExportFormDataCommand, Strings.Cmd_ExportFormData_ToolTip),
+                    new("forms.importData", Strings.Cmd_ImportFormData, SymbolRegular.ArrowImport24, ImportFormDataCommand, Strings.Cmd_ImportFormData_ToolTip),
+                    new("forms.merge", Strings.Cmd_MergeFormData, SymbolRegular.DocumentTableArrowRight24, MergeFormDataCommand, Strings.Cmd_MergeFormData_ToolTip),
                 ]),
             ]),
             new("annotate", Strings.Ribbon_Tab_Annotate,

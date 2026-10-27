@@ -145,6 +145,44 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickFormDataSavePath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.FormData_ExportDialog_Title,
+            Filter = Strings.FormData_ExportDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".json",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickFormDataFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.FormData_ImportDialog_Title,
+            Filter = Strings.FormData_ImportDialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickTableFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.FormMerge_DataDialog_Title,
+            Filter = Strings.FormMerge_DataDialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickFolder(string title, string? initialDirectory)
     {
         var dialog = new OpenFolderDialog { Title = title, Multiselect = false };
@@ -265,6 +303,12 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new FlattenWindow(viewModel));
+    }
+
+    public bool ShowFormMerge(ViewModels.Forms.FormMergeViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new FormMergeWindow(viewModel));
     }
 
     private static bool Show(Window window)

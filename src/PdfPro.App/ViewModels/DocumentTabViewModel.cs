@@ -162,6 +162,11 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             {
                 ToggleFormDesignCommand.NotifyCanExecuteChanged();
             }
+
+            if (e.PropertyName == nameof(FormFillingViewModel.HasFields))
+            {
+                NotifyFormDataCommands();
+            }
         };
         Annotations.PropertyChanged += (_, e) =>
         {
@@ -1250,6 +1255,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         NotifyAnnotationCommands();
         ToggleContentEditingCommand.NotifyCanExecuteChanged();
         ToggleFormDesignCommand.NotifyCanExecuteChanged();
+        NotifyFormDataCommands();
     }
 }
 

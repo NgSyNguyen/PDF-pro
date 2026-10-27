@@ -1053,4 +1053,55 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="FieldProps_Error_Options" xml:space="preserve"><value>Danh sách cần ít nhất một lựa chọn và các lựa chọn không được trùng nhau.</value></data>
   <data name="FieldProps_Error_Default" xml:space="preserve"><value>Giá trị mặc định không đúng định dạng đã chọn.</value></data>
   <data name="FieldProps_Error_Size" xml:space="preserve"><value>Cỡ chữ phải từ 0 đến 200; số ký tự và số chữ số thập phân không được âm (tối đa 10 chữ số thập phân).</value></data>
+  <data name="Cmd_ExportFormData" xml:space="preserve"><value>Xuất dữ liệu</value></data>
+  <data name="Cmd_ExportFormData_ToolTip" xml:space="preserve"><value>Lưu giá trị các trường của biểu mẫu ra tệp JSON hoặc XFDF</value></data>
+  <data name="Cmd_ImportFormData" xml:space="preserve"><value>Nhập dữ liệu</value></data>
+  <data name="Cmd_ImportFormData_ToolTip" xml:space="preserve"><value>Điền biểu mẫu từ tệp JSON hoặc XFDF (một bước hoàn tác)</value></data>
+  <data name="Cmd_MergeFormData" xml:space="preserve"><value>Trộn dữ liệu</value></data>
+  <data name="Cmd_MergeFormData_ToolTip" xml:space="preserve"><value>Điền biểu mẫu theo từng dòng của bảng CSV hoặc Excel, mỗi dòng một tệp PDF</value></data>
+  <data name="FormData_ExportDialog_Title" xml:space="preserve"><value>Xuất dữ liệu biểu mẫu</value></data>
+  <data name="FormData_ExportDialog_Filter" xml:space="preserve"><value>Dữ liệu JSON (*.json)|*.json|XFDF — mở bằng Acrobat (*.xfdf)|*.xfdf</value></data>
+  <data name="FormData_ImportDialog_Title" xml:space="preserve"><value>Nhập dữ liệu biểu mẫu</value></data>
+  <data name="FormData_ImportDialog_Filter" xml:space="preserve"><value>Dữ liệu biểu mẫu (*.json;*.xfdf;*.xml)|*.json;*.xfdf;*.xml|Mọi tệp (*.*)|*.*</value></data>
+  <data name="FormData_Error_Title" xml:space="preserve"><value>Dữ liệu biểu mẫu</value></data>
+  <data name="FormData_Error_Export" xml:space="preserve"><value>Không ghi được tệp dữ liệu. Hãy kiểm tra thư mục và thử lại.</value></data>
+  <data name="FormData_Error_Import" xml:space="preserve"><value>Không đọc được "{0}": tệp không phải dữ liệu biểu mẫu JSON hoặc XFDF.</value></data>
+  <data name="FormData_Import_Title" xml:space="preserve"><value>Nhập dữ liệu biểu mẫu</value></data>
+  <data name="FormData_Imported" xml:space="preserve"><value>Đã điền {0} trường.</value></data>
+  <data name="FormData_Unknown" xml:space="preserve"><value>Biểu mẫu không có các trường:
+{0}</value></data>
+  <data name="FormData_Rejected" xml:space="preserve"><value>Giá trị không hợp với trường (bỏ qua):
+{0}</value></data>
+  <data name="FormMerge_DataDialog_Title" xml:space="preserve"><value>Chọn bảng dữ liệu</value></data>
+  <data name="FormMerge_DataDialog_Filter" xml:space="preserve"><value>Bảng dữ liệu (*.csv;*.xlsx;*.txt)|*.csv;*.xlsx;*.txt|CSV (*.csv)|*.csv|Excel (*.xlsx)|*.xlsx</value></data>
+  <data name="FormMerge_Title" xml:space="preserve"><value>Trộn dữ liệu vào biểu mẫu</value></data>
+  <data name="FormMerge_Message" xml:space="preserve"><value>Mỗi dòng của bảng (CSV hoặc Excel) tạo một tệp PDF đã điền. Dòng đầu của bảng là tên trường: cột trùng tên với trường sẽ điền vào trường đó.</value></data>
+  <data name="FormMerge_Data" xml:space="preserve"><value>Bảng dữ liệu</value></data>
+  <data name="FormMerge_Browse" xml:space="preserve"><value>Chọn…</value></data>
+  <data name="FormMerge_Summary" xml:space="preserve"><value>{0} dòng — {1} trên {2} cột khớp với trường của biểu mẫu</value></data>
+  <data name="FormMerge_Column_Matched" xml:space="preserve"><value>{0} → {1}</value></data>
+  <data name="FormMerge_Column_Unmatched" xml:space="preserve"><value>{0} (không có trong biểu mẫu)</value></data>
+  <data name="FormMerge_NameColumn" xml:space="preserve"><value>Đặt tên tệp theo cột</value></data>
+  <data name="FormMerge_NameByRow" xml:space="preserve"><value>(theo số thứ tự dòng)</value></data>
+  <data name="FormMerge_Folder" xml:space="preserve"><value>Thư mục lưu</value></data>
+  <data name="FormMerge_FolderDialog_Title" xml:space="preserve"><value>Chọn thư mục lưu các tệp đã điền</value></data>
+  <data name="FormMerge_FolderSuffix" xml:space="preserve"><value>đã trộn</value></data>
+  <data name="FormMerge_Overwrite" xml:space="preserve"><value>Ghi đè tệp trùng tên</value></data>
+  <data name="FormMerge_OpenFolder" xml:space="preserve"><value>Mở thư mục khi xong</value></data>
+  <data name="FormMerge_Run" xml:space="preserve"><value>Trộn</value></data>
+  <data name="FormMerge_Error_NoRows" xml:space="preserve"><value>Bảng không có dòng dữ liệu nào.</value></data>
+  <data name="FormMerge_Error_NoMatch" xml:space="preserve"><value>Không có cột nào trùng tên với trường của biểu mẫu. Dòng đầu của bảng phải là tên trường.</value></data>
+  <data name="FormMerge_Error_Data" xml:space="preserve"><value>Không đọc được "{0}": hãy dùng tệp CSV hoặc Excel (.xlsx) có dòng đầu là tên trường.</value></data>
+  <data name="FormMerge_Progress" xml:space="preserve"><value>Đang trộn dữ liệu ({0} dòng)…</value></data>
+  <data name="FormMerge_Done" xml:space="preserve"><value>Đã tạo {0} tệp trong "{1}"</value></data>
+  <data name="FormMerge_Cancelled" xml:space="preserve"><value>Đã dừng trộn dữ liệu; chưa tệp nào được ghi.</value></data>
+  <data name="FormMerge_FailedStatus" xml:space="preserve"><value>Trộn dữ liệu không thành công</value></data>
+  <data name="FormMerge_Error_Title" xml:space="preserve"><value>Không trộn được dữ liệu</value></data>
+  <data name="FormMerge_Error_NoForm" xml:space="preserve"><value>Tài liệu không có trường biểu mẫu nào để điền.</value></data>
+  <data name="FormMerge_Error_OutputIsInput" xml:space="preserve"><value>Một tệp kết quả sẽ ghi đè lên tài liệu; hãy chọn thư mục khác.</value></data>
+  <data name="FormMerge_Error_Prepare" xml:space="preserve"><value>Không chuẩn bị được tài liệu đang mở để trộn.</value></data>
+  <data name="FormMerge_Written" xml:space="preserve"><value>Đã tạo {0} tệp.</value></data>
+  <data name="FormMerge_UnknownColumns" xml:space="preserve"><value>Các cột không có trong biểu mẫu (bỏ qua): {0}</value></data>
+  <data name="FormMerge_Problems" xml:space="preserve"><value>{0} giá trị không hợp với trường (để trống):</value></data>
+  <data name="FormMerge_Problem" xml:space="preserve"><value>dòng {0}, cột {1}</value></data>
 </root>

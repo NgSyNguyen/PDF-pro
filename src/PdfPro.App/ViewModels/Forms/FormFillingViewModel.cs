@@ -251,6 +251,13 @@ public sealed partial class FormFillingViewModel : ObservableObject
         return _apply(_operations.Get<FillFormOperation>(), new FillFormParams([value]));
     }
 
+    /// <summary>Gives fields values (imported data: one undoable step for all of them).</summary>
+    public bool Fill(IReadOnlyList<FormValue> values)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        return values.Count > 0 && _apply(_operations.Get<FillFormOperation>(), new FillFormParams(values));
+    }
+
     /// <summary>
     /// The pages or the values changed: the form is read again when the base file changed (a new revision), editors are
     /// rebuilt for changed pages and every value is shown again.

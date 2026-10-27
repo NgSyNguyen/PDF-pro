@@ -134,6 +134,19 @@ public interface IFileDialogService
     /// <returns>The chosen path, or null when cancelled.</returns>
     string? PickImageSavePath(string suggestedFileName, string extension);
 
+    /// <summary>Asks where to write the form's data: JSON (.json) or XFDF (.xfdf); overwriting asks for confirmation.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickFormDataSavePath(string suggestedFileName);
+
+    /// <summary>Asks for a form data file to fill the form with (JSON, XFDF).</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickFormDataFile();
+
+    /// <summary>Asks for a table to merge into the form (CSV, Excel workbook).</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickTableFile();
+
     /// <summary>Asks for a folder (where split files go).</summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="initialDirectory">Folder shown first (or its nearest existing parent), or null.</param>
@@ -170,4 +183,7 @@ public interface IPageDialogService
 
     /// <summary>"Làm phẳng chú thích": which comments, on which pages.</summary>
     bool ShowFlatten(ViewModels.Annotating.FlattenViewModel viewModel);
+
+    /// <summary>"Trộn dữ liệu": the table, the file names and the output folder of a form merge.</summary>
+    bool ShowFormMerge(ViewModels.Forms.FormMergeViewModel viewModel);
 }

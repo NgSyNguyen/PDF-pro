@@ -1053,4 +1053,55 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="FieldProps_Error_Options" xml:space="preserve"><value>A list needs at least one choice, without repeats.</value></data>
   <data name="FieldProps_Error_Default" xml:space="preserve"><value>The default value does not fit the chosen format.</value></data>
   <data name="FieldProps_Error_Size" xml:space="preserve"><value>The font size must be from 0 to 200; characters and decimal places cannot be negative (at most 10 decimal places).</value></data>
+  <data name="Cmd_ExportFormData" xml:space="preserve"><value>Export data</value></data>
+  <data name="Cmd_ExportFormData_ToolTip" xml:space="preserve"><value>Save the values of the form's fields as JSON or XFDF</value></data>
+  <data name="Cmd_ImportFormData" xml:space="preserve"><value>Import data</value></data>
+  <data name="Cmd_ImportFormData_ToolTip" xml:space="preserve"><value>Fill the form from a JSON or XFDF file (one undo step)</value></data>
+  <data name="Cmd_MergeFormData" xml:space="preserve"><value>Merge data</value></data>
+  <data name="Cmd_MergeFormData_ToolTip" xml:space="preserve"><value>Fill the form once per row of a CSV or Excel table, one PDF per row</value></data>
+  <data name="FormData_ExportDialog_Title" xml:space="preserve"><value>Export form data</value></data>
+  <data name="FormData_ExportDialog_Filter" xml:space="preserve"><value>JSON data (*.json)|*.json|XFDF — opens in Acrobat (*.xfdf)|*.xfdf</value></data>
+  <data name="FormData_ImportDialog_Title" xml:space="preserve"><value>Import form data</value></data>
+  <data name="FormData_ImportDialog_Filter" xml:space="preserve"><value>Form data (*.json;*.xfdf;*.xml)|*.json;*.xfdf;*.xml|All files (*.*)|*.*</value></data>
+  <data name="FormData_Error_Title" xml:space="preserve"><value>Form data</value></data>
+  <data name="FormData_Error_Export" xml:space="preserve"><value>The data file could not be written. Check the folder and try again.</value></data>
+  <data name="FormData_Error_Import" xml:space="preserve"><value>"{0}" could not be read: it is not JSON or XFDF form data.</value></data>
+  <data name="FormData_Import_Title" xml:space="preserve"><value>Import form data</value></data>
+  <data name="FormData_Imported" xml:space="preserve"><value>{0} fields filled.</value></data>
+  <data name="FormData_Unknown" xml:space="preserve"><value>The form has no fields named:
+{0}</value></data>
+  <data name="FormData_Rejected" xml:space="preserve"><value>Values that do not fit their field (left out):
+{0}</value></data>
+  <data name="FormMerge_DataDialog_Title" xml:space="preserve"><value>Choose the data table</value></data>
+  <data name="FormMerge_DataDialog_Filter" xml:space="preserve"><value>Data tables (*.csv;*.xlsx;*.txt)|*.csv;*.xlsx;*.txt|CSV (*.csv)|*.csv|Excel (*.xlsx)|*.xlsx</value></data>
+  <data name="FormMerge_Title" xml:space="preserve"><value>Merge data into the form</value></data>
+  <data name="FormMerge_Message" xml:space="preserve"><value>Every row of the table (CSV or Excel) gives one filled PDF. The first row names the fields: a column named like a field fills it.</value></data>
+  <data name="FormMerge_Data" xml:space="preserve"><value>Data table</value></data>
+  <data name="FormMerge_Browse" xml:space="preserve"><value>Browse…</value></data>
+  <data name="FormMerge_Summary" xml:space="preserve"><value>{0} rows — {1} of {2} columns match fields of the form</value></data>
+  <data name="FormMerge_Column_Matched" xml:space="preserve"><value>{0} → {1}</value></data>
+  <data name="FormMerge_Column_Unmatched" xml:space="preserve"><value>{0} (not in the form)</value></data>
+  <data name="FormMerge_NameColumn" xml:space="preserve"><value>Name files by column</value></data>
+  <data name="FormMerge_NameByRow" xml:space="preserve"><value>(by row number)</value></data>
+  <data name="FormMerge_Folder" xml:space="preserve"><value>Output folder</value></data>
+  <data name="FormMerge_FolderDialog_Title" xml:space="preserve"><value>Choose where the filled files go</value></data>
+  <data name="FormMerge_FolderSuffix" xml:space="preserve"><value>merged</value></data>
+  <data name="FormMerge_Overwrite" xml:space="preserve"><value>Replace files of the same name</value></data>
+  <data name="FormMerge_OpenFolder" xml:space="preserve"><value>Open the folder when done</value></data>
+  <data name="FormMerge_Run" xml:space="preserve"><value>Merge</value></data>
+  <data name="FormMerge_Error_NoRows" xml:space="preserve"><value>The table has no data rows.</value></data>
+  <data name="FormMerge_Error_NoMatch" xml:space="preserve"><value>No column is named like a field of the form. The first row of the table must name the fields.</value></data>
+  <data name="FormMerge_Error_Data" xml:space="preserve"><value>"{0}" could not be read: use a CSV or Excel (.xlsx) file whose first row names the fields.</value></data>
+  <data name="FormMerge_Progress" xml:space="preserve"><value>Merging data ({0} rows)…</value></data>
+  <data name="FormMerge_Done" xml:space="preserve"><value>{0} files written to "{1}"</value></data>
+  <data name="FormMerge_Cancelled" xml:space="preserve"><value>Merge stopped; no file was written.</value></data>
+  <data name="FormMerge_FailedStatus" xml:space="preserve"><value>The merge failed</value></data>
+  <data name="FormMerge_Error_Title" xml:space="preserve"><value>The data could not be merged</value></data>
+  <data name="FormMerge_Error_NoForm" xml:space="preserve"><value>The document has no form fields to fill.</value></data>
+  <data name="FormMerge_Error_OutputIsInput" xml:space="preserve"><value>A filled file would replace the document; choose another folder.</value></data>
+  <data name="FormMerge_Error_Prepare" xml:space="preserve"><value>The open document could not be prepared for the merge.</value></data>
+  <data name="FormMerge_Written" xml:space="preserve"><value>{0} files written.</value></data>
+  <data name="FormMerge_UnknownColumns" xml:space="preserve"><value>Columns that are not fields (left out): {0}</value></data>
+  <data name="FormMerge_Problems" xml:space="preserve"><value>{0} values do not fit their field (left empty):</value></data>
+  <data name="FormMerge_Problem" xml:space="preserve"><value>row {0}, column {1}</value></data>
 </root>
