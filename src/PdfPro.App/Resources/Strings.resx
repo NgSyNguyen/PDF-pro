@@ -648,10 +648,9 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Cmd_FlattenAnnotations" xml:space="preserve"><value>Làm phẳng</value></data>
   <data name="Cmd_FlattenAnnotations_ToolTip" xml:space="preserve"><value>Vẽ chú thích thẳng vào nội dung trang để không sửa hay xóa được nữa</value></data>
   <data name="Flatten_Title" xml:space="preserve"><value>Làm phẳng chú thích</value></data>
-  <data name="Flatten_Message" xml:space="preserve"><value>Ghi chú, tô sáng, hình vẽ, hộp chữ và con dấu sẽ được vẽ thẳng vào nội dung trang: trang trông như cũ nhưng không sửa, trả lời hay xóa các chú thích đó được nữa; luồng trả lời của chúng bị bỏ. Liên kết và trường biểu mẫu giữ nguyên. Có thể hoàn tác.</value></data>
-  <data name="Flatten_All" xml:space="preserve"><value>Cả tài liệu</value></data>
-  <data name="Flatten_OnlyPage" xml:space="preserve"><value>Chỉ trang {0}</value></data>
-  <data name="Flatten_OnlySelected" xml:space="preserve"><value>Chỉ {0} trang đã chọn</value></data>
+  <data name="Flatten_Message" xml:space="preserve"><value>Các chú thích chọn dưới đây sẽ được vẽ thẳng vào nội dung trang: trang trông như cũ nhưng không sửa, trả lời hay xóa chúng được nữa, luồng trả lời của chúng bị bỏ. Liên kết và trường biểu mẫu giữ nguyên. Có thể hoàn tác.</value></data>
+  <data name="Flatten_Kinds" xml:space="preserve"><value>Chú thích được làm phẳng</value></data>
+  <data name="Flatten_Apply" xml:space="preserve"><value>Làm phẳng</value></data>
   <data name="History_FlattenAnnotations" xml:space="preserve"><value>Làm phẳng chú thích</value></data>
   <data name="History_FlattenAnnotationsOn" xml:space="preserve"><value>Làm phẳng chú thích của {0} trang</value></data>
   <data name="Cmd_Squiggly" xml:space="preserve"><value>Lượn sóng</value></data>

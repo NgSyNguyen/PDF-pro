@@ -1,10 +1,5 @@
-using System.Globalization;
 using CommunityToolkit.Mvvm.Input;
-using PdfPro.App.Resources;
-using PdfPro.App.Services;
-using PdfPro.App.Services.Documents;
 using PdfPro.App.ViewModels.Annotating;
-using PdfPro.Core.Organizing;
 using PdfPro.Core.Sessions;
 using PdfPro.Operations.Annotating;
 
@@ -44,24 +39,19 @@ public sealed partial class DocumentTabViewModel
     private Task StampAnnotationAsync() => UseAnnotationToolAsync(AnnotationTool.Stamp);
 
     /// <summary>
-    /// "Làm phẳng": once confirmed, the window draws the comments into the page content (the next revision, one undoable
-    /// step) — of the whole document, or of the current page (the selected pages in the organizer).
+    /// "Làm phẳng": the dialog (which comments, on which pages — the whole document by default), then the window draws
+    /// them into the page content (the next revision, one undoable step).
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanChangeContent))]
-    private async Task FlattenAnnotationsAsync()
+    private void FlattenAnnotations()
     {
         Annotations.StopTool();
-        var targets = TargetPageIndices;
-        var only = targets.Count == 1
-            ? string.Format(CultureInfo.CurrentCulture, Strings.Flatten_OnlyPage, targets[0] + 1)
-            : string.Format(CultureInfo.CurrentCulture, Strings.Flatten_OnlySelected, targets.Count);
-        var choice = await _messages.AskAsync(Strings.Flatten_Title, Strings.Flatten_Message, Strings.Flatten_All, targets.Count > 0 ? only : null, Strings.Common_Cancel);
-        if (choice == DialogChoice.Cancel || !CanChangeContent())
+        var dialog = new FlattenViewModel(Viewer.PageCount, TargetPageIndices);
+        if (!_services.PageDialogs.ShowFlatten(dialog) || dialog.Result is not { } parameters || !CanChangeContent())
         {
             return;
         }
 
-        var parameters = new FlattenAnnotationsParams(choice == DialogChoice.Secondary ? PageRanges.Format(targets) : null);
         var description = Workspace.Describe(new HistoryRecord(FlattenAnnotationsOperation.OperationId, parameters, []), Workspace.Session.Plan);
         ContentChangeRequested?.Invoke(this, new ContentChangeRequest(_operations.Get<FlattenAnnotationsOperation>(), parameters, description));
     }

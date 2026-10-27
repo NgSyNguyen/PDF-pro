@@ -648,10 +648,9 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Cmd_FlattenAnnotations" xml:space="preserve"><value>Flatten</value></data>
   <data name="Cmd_FlattenAnnotations_ToolTip" xml:space="preserve"><value>Draw the annotations into the page content so they can no longer be changed or removed</value></data>
   <data name="Flatten_Title" xml:space="preserve"><value>Flatten annotations</value></data>
-  <data name="Flatten_Message" xml:space="preserve"><value>Notes, highlights, drawings, text boxes and stamps will be drawn into the page content: the pages look the same, but these annotations can no longer be edited, answered or deleted, and their conversations are dropped. Links and form fields stay. This can be undone.</value></data>
-  <data name="Flatten_All" xml:space="preserve"><value>Whole document</value></data>
-  <data name="Flatten_OnlyPage" xml:space="preserve"><value>Page {0} only</value></data>
-  <data name="Flatten_OnlySelected" xml:space="preserve"><value>The {0} selected pages only</value></data>
+  <data name="Flatten_Message" xml:space="preserve"><value>The annotations chosen below will be drawn into the page content: the pages look the same, but they can no longer be edited, answered or deleted, and their conversations are dropped. Links and form fields stay. This can be undone.</value></data>
+  <data name="Flatten_Kinds" xml:space="preserve"><value>Annotations to flatten</value></data>
+  <data name="Flatten_Apply" xml:space="preserve"><value>Flatten</value></data>
   <data name="History_FlattenAnnotations" xml:space="preserve"><value>Flatten annotations</value></data>
   <data name="History_FlattenAnnotationsOn" xml:space="preserve"><value>Flatten the annotations of {0} pages</value></data>
   <data name="Cmd_Squiggly" xml:space="preserve"><value>Squiggly</value></data>

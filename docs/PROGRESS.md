@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 9a.
+Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 9b.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -85,8 +85,11 @@ Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5Acceptan
 | 8a | Đọc chú thích có sẵn trong tệp bằng PDFium: Core `Annotations/FileAnnotation.cs` (`FileAnnotationKind` theo số của PDFium, `IsComment`, `IsReply`, `IsHidden`), `PdfiumPage.GetAnnotations()` (NM, T, Contents, M, IRT → chỉ số, State/StateModel, F, QuadPoints), `AnnotationSafeHandle` (đóng cả chú thích liên kết), `IPdfDocument.GetPageAnnotationsAsync` | `be561a9` | Xong, CI xanh |
 | 8b | Panel "Bình luận" (sidebar, mục thứ 4): `ViewModels/Annotating/CommentsViewModel.cs` (chú thích của phiên + có sẵn trong tệp, theo trang rồi trên→dưới như hiển thị; trả lời/trạng thái của tệp gom theo `/IRT`; lọc loại/tác giả/trạng thái/chữ (bỏ dấu); chọn → cuộn tới + chọn chú thích của phiên; trả lời, Chấp nhận/Từ chối/Hoàn thành, xóa = 1 bước hoàn tác; chỉ đọc khi panel hiện, đọc lại khi trang đổi); Core `CommentExport` (Markdown theo trang; CSV 1 dòng/bình luận + 1 dòng/trả lời, chống công thức, BOM UTF-8); `IFileDialogService.PickCommentExportPath` | `88dd914` | Xong, CI xanh |
 | 8c | Sửa chú thích **có sẵn trong tệp** = thao tác nội dung `annotate.editFile` (`Annotating/EditFileAnnotationsOperation.cs`: trả lời, trạng thái, sửa nội dung, xóa cả luồng `/IRT` + `/Popup`; tìm chú thích theo chỉ số + loại + `/NM` hoặc `/Rect` ±0,5, không thấy thì từ chối chứ không sửa nhầm; `AnnotationWriter.AddToThread` dùng chung); panel Bình luận gửi `ContentChangeRequest` (cửa sổ chạy nền → revision mới, 1 bước hoàn tác; bị chặn khi trình chỉnh sửa còn đối tượng chờ áp dụng); tên lịch sử "Trả lời/Đặt trạng thái/Sửa/Xóa bình luận" | `e7420d8` | Xong |
-| 9a | `annotate.flatten` (`Annotating/FlattenAnnotationsOperation.cs`): vẽ `/AP /N` (hoặc trạng thái `/AS`) của chú thích bình luận vào nội dung trang qua `PageStamper.Place` (BBox×Matrix khớp `/Rect`, 12.5.5; không nhân `/CA` vì `/AP` đã có độ mờ, như PDFium hiển thị), gỡ chúng cùng luồng `/IRT` + `/Popup` (`AnnotationThreads`); giữ liên kết, trường biểu mẫu, Redact, chú thích không có `/AP`; chú thích ẩn bị gỡ không vẽ; `Count(page)`. App: nhóm ribbon "Duyệt" (`annotate.comments` mở panel Bình luận, `annotate.flatten` hỏi "Cả tài liệu" / "Chỉ trang n" / "Chỉ n trang đã chọn" → cửa sổ chạy nền) | commit `feat: flatten annotations…` | Xong, chờ CI |
-| 9b | Mục SPEC Phase 6, `Phase6AcceptanceTests` (FlaUI) | — | Tiếp theo |
+| 9a | `annotate.flatten` (`Annotating/FlattenAnnotationsOperation.cs`): vẽ `/AP /N` (hoặc trạng thái `/AS`) của chú thích bình luận vào nội dung trang qua `PageStamper.Place` (BBox×Matrix khớp `/Rect`, 12.5.5; không nhân `/CA` vì `/AP` đã có độ mờ, như PDFium hiển thị), gỡ chúng cùng luồng `/IRT` + `/Popup` (`AnnotationThreads`); giữ liên kết, trường biểu mẫu, Redact, chú thích không có `/AP`; chú thích ẩn bị gỡ không vẽ; `Count(page)`. App: nhóm ribbon "Duyệt" (`annotate.comments` mở panel Bình luận, `annotate.flatten` hỏi "Cả tài liệu" / "Chỉ trang n" / "Chỉ n trang đã chọn" → cửa sổ chạy nền) | `38a8e9d` | Xong |
+| 9b | Làm phẳng **theo loại** (PROMPTS B8): Core `AnnotationGroup` (Ghi chú / Đánh dấu chữ / Hình vẽ / Con dấu) + `AnnotationGroups.Of(kind)`, `KindOf("/Subtype")`; `FlattenAnnotationsParams.Groups` (null = tất cả); hộp thoại `FlattenWindow` (`FlattenViewModel`: 4 ô loại + `PageTargetPanel`, mặc định cả tài liệu) thay hộp hỏi | commit `feat: flatten chosen kinds…` | Xong, chờ CI |
+| 9c | Sửa nội dung bình luận ngay trong panel (của phiên: `annotate.update`; của tệp: `annotate.editFile` SetContents) | — | Tiếp theo |
+| 9d | Chọn / di chuyển / xóa chú thích **có sẵn trong tệp** trên viewer (PROMPTS B7) | — | |
+| 9e | Mục SPEC Phase 6, `Phase6AcceptanceTests` (FlaUI) | — | |
 
 **Quyết định Phase 6 (sẽ đưa vào SPEC mục Phase 6):**
 - PDFium 157 có API annotation nhưng **không ghi được** `/L` (đường), `/Vertices` (đa giác), `/IRT` (trả lời); PDFsharp 6.2.4 **không** lưu incremental. → Annotation được ghi bằng **PDFsharp ở tầng dictionary** (đủ loại, `/AP` sinh bằng XGraphics, trả lời có `/IRT`), giữ trên `PageRef` như dấu tách trang (thêm/sửa/hoàn tác tức thì, chỉ ghi ra PDF khi lưu/vật chất hóa). Annotation có sẵn trong tệp: sửa/xóa là thao tác nội dung (revision).

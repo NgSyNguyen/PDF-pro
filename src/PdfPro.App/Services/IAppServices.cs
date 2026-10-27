@@ -161,4 +161,7 @@ public interface IPageDialogService
 
     /// <summary>"Số Bates": numbering the pages of several files.</summary>
     bool ShowBates(ViewModels.Editing.BatesViewModel viewModel);
+
+    /// <summary>"Làm phẳng chú thích": which comments, on which pages.</summary>
+    bool ShowFlatten(ViewModels.Annotating.FlattenViewModel viewModel);
 }

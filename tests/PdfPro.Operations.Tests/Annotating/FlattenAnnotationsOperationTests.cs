@@ -34,6 +34,21 @@ public sealed class FlattenAnnotationsOperationTests(PdfiumFixture pdfium) : IDi
         _operation.Validate(new FlattenAnnotationsParams(), document).IsValid.ShouldBeTrue();
         _operation.Validate(new FlattenAnnotationsParams("2"), document).IsValid.ShouldBeTrue();
         _operation.Validate(new FlattenAnnotationsParams("3"), document).IsValid.ShouldBeFalse();
+        _operation.Validate(new FlattenAnnotationsParams(Groups: [AnnotationGroup.Markup]), document).IsValid.ShouldBeTrue();
+        _operation.Validate(new FlattenAnnotationsParams(Groups: []), document).IsValid.ShouldBeFalse("nothing to flatten");
+        _operation.Validate(new FlattenAnnotationsParams(Groups: [(AnnotationGroup)9]), document).IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task OnlyTheChosenFamilies_AreFlattened()
+    {
+        var input = Annotated(page => { });
+
+        var output = await ApplyAsync(input, new FlattenAnnotationsParams(Groups: [AnnotationGroup.Markup, AnnotationGroup.Stamps]));
+
+        (await ReadAsync(output, 0)).Where(a => !a.IsReply && a.IsComment).Select(a => a.Name).ShouldBe(["n1", "box"], "the highlight was flattened");
+        (await ReadAsync(output, 0)).ShouldContain(a => a.Name == "n1-r", "the note keeps its answer");
+        new FlattenAnnotationsParams(Groups: [AnnotationGroup.Markup]).ShouldBe(new FlattenAnnotationsParams(Groups: [AnnotationGroup.Markup]));
     }
 
     [Fact]
@@ -99,6 +114,7 @@ public sealed class FlattenAnnotationsOperationTests(PdfiumFixture pdfium) : IDi
         using var document = PdfReader.Open(input, PdfDocumentOpenMode.Import);
         FlattenAnnotationsOperation.Count(document.Pages[0]).ShouldBe(2, "the note and the box; not the answer, nor the highlight without an appearance");
         FlattenAnnotationsOperation.Count(document.Pages[1]).ShouldBe(0);
+        FlattenAnnotationsOperation.Count(document.Pages[0], [AnnotationGroup.Drawings]).ShouldBe(1, "the box");
     }
 
     /// <summary>basic-vi.pdf with a highlight (h1), a note (n1) answered once and a rectangle (box) on page 1.</summary>

@@ -1,13 +1,15 @@
 using System.Globalization;
 using NSubstitute;
 using PdfPro.App.Resources;
-using PdfPro.App.Services;
 using PdfPro.App.ViewModels;
+using PdfPro.App.ViewModels.Annotating;
+using PdfPro.App.ViewModels.Organizer;
+using PdfPro.Core.Annotations;
 using PdfPro.Operations.Annotating;
 
 namespace PdfPro.App.Tests.ViewModels;
 
-/// <summary>"Làm phẳng": the comments drawn into the pages, once confirmed, by the window.</summary>
+/// <summary>"Làm phẳng": the dialog, then the window draws the comments into the pages.</summary>
 public sealed partial class DocumentTabViewModelTests
 {
     [Fact]
@@ -16,10 +18,13 @@ public sealed partial class DocumentTabViewModelTests
         await using var tab = await CreateAsync(3);
         ContentChangeRequest? request = null;
         tab.ContentChangeRequested += (_, r) => request = r;
-        _messages.AskAsync(Strings.Flatten_Title, Strings.Flatten_Message, Strings.Flatten_All, Arg.Any<string?>(), Strings.Common_Cancel)
-            .Returns(DialogChoice.Primary);
+        _pageDialogs.ShowFlatten(Arg.Any<FlattenViewModel>()).Returns(call =>
+        {
+            call.Arg<FlattenViewModel>().ApplyCommand.Execute(null);
+            return true;
+        });
 
-        await tab.FlattenAnnotationsCommand.ExecuteAsync(null);
+        tab.FlattenAnnotationsCommand.Execute(null);
 
         request.ShouldNotBeNull();
         request.Operation.ShouldBeOfType<FlattenAnnotationsOperation>();
@@ -29,23 +34,28 @@ public sealed partial class DocumentTabViewModelTests
     }
 
     [Fact]
-    public async Task Flatten_CanBeLimitedToTheCurrentPage_OrToThePagesSelectedInTheOrganizer()
+    public async Task Flatten_CanBeLimitedToTheCurrentPage_AndToSomeKinds()
     {
         await using var tab = await CreateAsync(3);
-        var requests = new List<ContentChangeRequest>();
-        tab.ContentChangeRequested += (_, r) => requests.Add(r);
-        _messages.AskAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>()).Returns(DialogChoice.Secondary);
+        ContentChangeRequest? request = null;
+        tab.ContentChangeRequested += (_, r) => request = r;
         tab.Viewer.NavigateTo(1);
+        _pageDialogs.ShowFlatten(Arg.Any<FlattenViewModel>()).Returns(call =>
+        {
+            var dialog = call.Arg<FlattenViewModel>();
+            dialog.Target.Target.ShouldBe(PageTarget.All, "the whole document unless asked");
+            dialog.Target.IsSelected = true;
+            dialog.Notes = false;
+            dialog.Stamps = false;
+            dialog.ApplyCommand.Execute(null);
+            return true;
+        });
 
-        await tab.FlattenAnnotationsCommand.ExecuteAsync(null);
-        tab.ToggleOrganizeModeCommand.Execute(null);
-        tab.Organizer!.Select([0, 1, 2]);
-        await tab.FlattenAnnotationsCommand.ExecuteAsync(null);
+        tab.FlattenAnnotationsCommand.Execute(null);
 
-        await _messages.Received(1).AskAsync(Strings.Flatten_Title, Strings.Flatten_Message, Strings.Flatten_All, Format(Strings.Flatten_OnlyPage, 2), Strings.Common_Cancel);
-        await _messages.Received(1).AskAsync(Strings.Flatten_Title, Strings.Flatten_Message, Strings.Flatten_All, Format(Strings.Flatten_OnlySelected, 3), Strings.Common_Cancel);
-        requests.Select(r => r.Parameters).ShouldBe([new FlattenAnnotationsParams("2"), new FlattenAnnotationsParams("1-3")]);
-        requests.Select(r => r.Description).ShouldBe([Format(Strings.History_FlattenAnnotationsOn, 1), Format(Strings.History_FlattenAnnotationsOn, 3)]);
+        request.ShouldNotBeNull();
+        request.Parameters.ShouldBe(new FlattenAnnotationsParams("2", [AnnotationGroup.Markup, AnnotationGroup.Drawings]));
+        request.Description.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.History_FlattenAnnotationsOn, 1));
     }
 
     [Fact]
@@ -54,10 +64,34 @@ public sealed partial class DocumentTabViewModelTests
         await using var tab = await CreateAsync(2);
         var requested = false;
         tab.ContentChangeRequested += (_, _) => requested = true;
-        _messages.AskAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>()).Returns(DialogChoice.Cancel);
+        _pageDialogs.ShowFlatten(Arg.Any<FlattenViewModel>()).Returns(false);
 
-        await tab.FlattenAnnotationsCommand.ExecuteAsync(null);
+        tab.FlattenAnnotationsCommand.Execute(null);
 
         requested.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void FlattenDialog_NeedsAKind_AndAValidRange()
+    {
+        var dialog = new FlattenViewModel(5, [2]);
+        var closed = new List<bool>();
+        dialog.CloseRequested += (_, accepted) => closed.Add(accepted);
+
+        dialog.Notes = dialog.Markup = dialog.Drawings = dialog.Stamps = false;
+        dialog.ApplyCommand.CanExecute(null).ShouldBeFalse("nothing would be flattened");
+        dialog.Stamps = true;
+        dialog.Target.IsRange = true;
+        dialog.Target.RangeText = "7";
+        dialog.ApplyCommand.Execute(null);
+        dialog.Error.ShouldNotBeNull();
+        dialog.Result.ShouldBeNull();
+
+        dialog.Target.IsOdd = true;
+        dialog.Error.ShouldBeNull("cleared when the pages change");
+        dialog.ApplyCommand.Execute(null);
+        dialog.Result.ShouldBe(new FlattenAnnotationsParams("odd", [AnnotationGroup.Stamps]));
+        dialog.CancelCommand.Execute(null);
+        closed.ShouldBe([true, false]);
     }
 }

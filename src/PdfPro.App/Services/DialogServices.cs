@@ -245,6 +245,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new BatesWindow(viewModel));
     }
 
+    public bool ShowFlatten(ViewModels.Annotating.FlattenViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new FlattenWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)
