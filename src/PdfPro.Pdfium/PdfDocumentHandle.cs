@@ -88,6 +88,12 @@ public sealed class PdfDocumentHandle : IPdfDocument
     public Task<IReadOnlyList<PageObjectInfo>> GetPageObjectsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
         => Run(document => document.GetPageObjects(pageIndex), priority, cancellationToken);
 
+    public Task<ExtractedImage> ExtractImageAsync(int pageIndex, PageObjectInfo image, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        return Run(document => document.ExtractImage(pageIndex, PageObjectRef.Of(pageIndex + 1, image)), PdfiumPriority.High, cancellationToken);
+    }
+
     /// <summary>Runs custom gate-affine work against the document (advanced use and tests).</summary>
     public Task<T> RunAsync<T>(Func<PdfiumDocument, T> work, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
         => Run(work, priority, cancellationToken);

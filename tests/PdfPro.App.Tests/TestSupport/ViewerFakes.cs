@@ -116,6 +116,12 @@ internal sealed class FakePdfDocument(IReadOnlyList<PdfSize> pageSizes) : IPdfDo
 
     public Task<IReadOnlyList<PageObjectInfo>> GetPageObjectsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
         => Task.FromResult(PageObjects?.Invoke(pageIndex) ?? []);
+
+    /// <summary>What extracting an image gives (a 1×1 PNG by default).</summary>
+    public Func<int, PageObjectInfo, ExtractedImage>? ExtractedImages { get; set; }
+
+    public Task<ExtractedImage> ExtractImageAsync(int pageIndex, PageObjectInfo image, CancellationToken cancellationToken = default)
+        => Task.FromResult(ExtractedImages?.Invoke(pageIndex, image) ?? new ExtractedImage(".png", Core.Imaging.PngCodec.Encode(new Core.Imaging.BgraImage(1, 1, [0, 0, 0, 255])), 1, 1));
 }
 
 /// <summary>Records render requests; each one completes when the test says so (or immediately with AutoComplete).</summary>

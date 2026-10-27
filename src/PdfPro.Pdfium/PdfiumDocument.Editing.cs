@@ -1,7 +1,10 @@
+using System.Runtime.InteropServices;
 using PDFiumCore;
 using PdfPro.Core.Editing;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Imaging;
 using PdfPro.Core.Text;
+using PdfPro.Pdfium.Native;
 
 namespace PdfPro.Pdfium;
 
@@ -51,6 +54,12 @@ public sealed partial class PdfiumDocument
                         break;
                     case MoveObjectEdit move:
                         fpdf_edit.FPDFPageObjTransform(item, 1, 0, 0, 1, move.Dx, move.Dy);
+                        break;
+                    case RotateObjectEdit rotate:
+                        Rotate(item, rotate.Degrees);
+                        break;
+                    case ReplaceImageEdit picture:
+                        ReplaceImage(native, pageNative, item, picture);
                         break;
                     default:
                         throw new NotSupportedException($"Unknown content edit {edit.GetType().Name}.");
@@ -192,6 +201,116 @@ public sealed partial class PdfiumDocument
             {
                 fpdf_edit.FPDFFontClose(loaded);
             }
+        }
+    }
+
+    /// <summary>Turns an object about the centre of its box (counter-clockwise degrees in PDF user space).</summary>
+    private static void Rotate(FpdfPageobjectT item, double degrees)
+    {
+        float left = 0, bottom = 0, right = 0, top = 0;
+        _ = fpdf_edit.FPDFPageObjGetBounds(item, ref left, ref bottom, ref right, ref top);
+        var (cx, cy) = ((left + right) / 2.0, (bottom + top) / 2.0);
+        var turn = PdfMatrix.Translation(-cx, -cy).Then(PdfMatrix.Rotation(degrees)).Then(PdfMatrix.Translation(cx, cy));
+        fpdf_edit.FPDFPageObjTransform(item, turn.A, turn.B, turn.C, turn.D, turn.E, turn.F);
+    }
+
+    /// <summary>
+    /// Puts a picture in an image's frame as a new image object at the same place in drawing order (the old image's
+    /// stream may be shown by other pages too, which keep it).
+    /// </summary>
+    private static void ReplaceImage(FpdfDocumentT document, FpdfPageT page, FpdfPageobjectT item, ReplaceImageEdit edit)
+    {
+        var frame = PdfiumPage.Matrix(item);
+        var created = fpdf_edit.FPDFPageObjNewImageObj(document);
+        if (created is null || created.__Instance == IntPtr.Zero)
+        {
+            throw new InvalidOperationException("PDFium could not create an image object.");
+        }
+
+        try
+        {
+            var bytes = File.ReadAllBytes(edit.ImagePath);
+            if (bytes is [0xFF, 0xD8, ..])
+            {
+                using var source = PdfFileSource.Open(edit.ImagePath);
+                if (fpdf_edit.FPDFImageObjLoadJpegFileInline(null, 0, created, source.Access) == 0)
+                {
+                    throw new InvalidDataException("The JPEG picture cannot be read.");
+                }
+            }
+            else
+            {
+                SetPixels(created, PngCodec.Decode(bytes));
+            }
+
+            uint width = 0, height = 0;
+            _ = fpdf_edit.FPDFImageObjGetImagePixelSize(created, ref width, ref height);
+            var placed = edit.KeepAspect && width > 0 && height > 0 ? Fit(frame, width / (double)height) : frame;
+            using var matrix = new FS_MATRIX_
+            {
+                A = (float)placed.A,
+                B = (float)placed.B,
+                C = (float)placed.C,
+                D = (float)placed.D,
+                E = (float)placed.E,
+                F = (float)placed.F,
+            };
+            fpdf_edit.FPDFPageObjSetMatrix(created, matrix);
+            fpdf_edit.FPDFPageInsertObjectAtIndex(page, created, (ulong)(IndexOf(page, item) + 1));
+        }
+        catch
+        {
+            fpdf_edit.FPDFPageObjDestroy(created);
+            throw;
+        }
+
+        Remove(page, item);
+    }
+
+    /// <summary>The frame shrunk along one side so that a picture of this aspect fills it without stretching, centred.</summary>
+    private static PdfMatrix Fit(PdfMatrix frame, double aspect)
+    {
+        var width = Math.Sqrt((frame.A * frame.A) + (frame.B * frame.B));
+        var height = Math.Sqrt((frame.C * frame.C) + (frame.D * frame.D));
+        if (width <= 0 || height <= 0)
+        {
+            return frame;
+        }
+
+        // In the image's unit square: shrink one axis and centre it, then map the square onto the frame.
+        var unit = width / height > aspect
+            ? PdfMatrix.Scaling(aspect * height / width, 1).Then(PdfMatrix.Translation((1 - (aspect * height / width)) / 2, 0))
+            : PdfMatrix.Scaling(1, width / aspect / height).Then(PdfMatrix.Translation(0, (1 - (width / aspect / height)) / 2));
+        return unit.Then(frame);
+    }
+
+    private static void SetPixels(FpdfPageobjectT image, BgraImage pixels)
+    {
+        const int Bgra = 4; // FPDFBitmap_BGRA
+        var handle = GCHandle.Alloc(pixels.Pixels, GCHandleType.Pinned);
+        try
+        {
+            var bitmap = fpdfview.FPDFBitmapCreateEx(pixels.Width, pixels.Height, Bgra, handle.AddrOfPinnedObject(), pixels.Stride);
+            if (bitmap is null || bitmap.__Instance == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("PDFium could not take the picture's pixels.");
+            }
+
+            try
+            {
+                if (fpdf_edit.FPDFImageObjSetBitmap(null, 0, image, bitmap) == 0)
+                {
+                    throw new InvalidOperationException("PDFium could not write the picture.");
+                }
+            }
+            finally
+            {
+                fpdfview.FPDFBitmapDestroy(bitmap);
+            }
+        }
+        finally
+        {
+            handle.Free();
         }
     }
 

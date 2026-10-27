@@ -38,6 +38,10 @@ public interface IPdfDocument : IAsyncDisposable
 
     /// <summary>The page's top-level drawings (text, paths, images…) in drawing order, for editing.</summary>
     Task<IReadOnlyList<PageObjectInfo>> GetPageObjectsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default);
+
+    /// <summary>An image of a page as stored (JPEG as is, other images as PNG); <paramref name="image"/> as listed.</summary>
+    /// <exception cref="InvalidDataException">The image is not there any more or cannot be read.</exception>
+    Task<ExtractedImage> ExtractImageAsync(int pageIndex, PageObjectInfo image, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Opens documents; the seam that lets view models be tested without PDFium.</summary>

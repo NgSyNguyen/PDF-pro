@@ -61,6 +61,8 @@ internal static class HistoryDescriptions
             [ReplaceTextEdit] => Strings.History_ReplaceText,
             [DeleteObjectEdit] => Strings.History_DeleteObject,
             [MoveObjectEdit] => Strings.History_MoveObject,
+            [RotateObjectEdit] => Strings.History_RotateObject,
+            [ReplaceImageEdit] => Strings.History_ReplaceImage,
             _ => Format(Strings.History_EditContent, parameters.Edits.Count),
         };
     }

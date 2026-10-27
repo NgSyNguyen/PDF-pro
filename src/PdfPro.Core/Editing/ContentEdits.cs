@@ -44,6 +44,8 @@ public enum TextOverflow
 [JsonDerivedType(typeof(ReplaceTextEdit), "text")]
 [JsonDerivedType(typeof(DeleteObjectEdit), "delete")]
 [JsonDerivedType(typeof(MoveObjectEdit), "move")]
+[JsonDerivedType(typeof(RotateObjectEdit), "rotate")]
+[JsonDerivedType(typeof(ReplaceImageEdit), "image")]
 public abstract record ContentEdit(PageObjectRef Target)
 {
     /// <summary>The longest text written into one object.</summary>
@@ -81,3 +83,31 @@ public sealed record MoveObjectEdit(PageObjectRef Target, double Dx, double Dy) 
                 ? "The move must be a finite distance within the page."
                 : null);
 }
+
+/// <summary>Turns a drawing about the centre of its box by <paramref name="Degrees"/> (counter-clockwise in PDF user space).</summary>
+public sealed record RotateObjectEdit(PageObjectRef Target, double Degrees) : ContentEdit(Target)
+{
+    public override string? Problem()
+        => base.Problem()
+            ?? (!double.IsFinite(Degrees) || Math.Abs(Degrees % 360) < 1e-9 ? "The turn must be a finite angle that is not a whole turn." : null);
+}
+
+/// <summary>
+/// Puts another picture in an image's frame: stretched to it, or (<paramref name="KeepAspect"/>) as large as fits,
+/// centred. The picture is a JPEG (written as is) or a PNG file; other pages that show the same image keep the old one.
+/// </summary>
+public sealed record ReplaceImageEdit(PageObjectRef Target, string ImagePath, bool KeepAspect = true) : ContentEdit(Target)
+{
+    public override string? Problem()
+        => base.Problem()
+            ?? (Target.Kind != PageObjectKind.Image ? "Only an image can be replaced by a picture."
+            : string.IsNullOrWhiteSpace(ImagePath) ? "The picture is missing."
+            : null);
+}
+
+/// <summary>An image taken out of a page as stored: JPEG or JPEG 2000 bytes as they are, anything else as PNG.</summary>
+/// <param name="Extension">".jpg", ".jp2" or ".png".</param>
+/// <param name="Data">The file's bytes.</param>
+/// <param name="PixelWidth">Its width in pixels.</param>
+/// <param name="PixelHeight">Its height in pixels.</param>
+public sealed record ExtractedImage(string Extension, byte[] Data, int PixelWidth, int PixelHeight);

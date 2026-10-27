@@ -657,6 +657,8 @@ The original file was not changed and your changes are still here.</value></data
   <data name="History_ReplaceText" xml:space="preserve"><value>Edit text</value></data>
   <data name="History_DeleteObject" xml:space="preserve"><value>Delete an object</value></data>
   <data name="History_MoveObject" xml:space="preserve"><value>Move an object</value></data>
+  <data name="History_RotateObject" xml:space="preserve"><value>Rotate an object</value></data>
+  <data name="History_ReplaceImage" xml:space="preserve"><value>Replace an image</value></data>
   <data name="History_EditContent" xml:space="preserve"><value>Edit content ({0} changes)</value></data>
   <data name="Cmd_Squiggly" xml:space="preserve"><value>Squiggly</value></data>
   <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Highlight the selected text; with nothing selected, turn the tool on and drag over text (Esc turns it off)</value></data>

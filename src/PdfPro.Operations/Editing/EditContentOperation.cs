@@ -15,7 +15,8 @@ public sealed record EditContentParams([property: Required] IReadOnlyList<Conten
 
 /// <summary>
 /// "edit.content": changes the drawings of pages — rewrites the words of a text object (keeping its font when the font
-/// has every glyph, otherwise with a bundled Unicode font of the same look), removes or moves an object — through
+/// has every glyph, otherwise with a bundled Unicode font of the same look), removes, moves or turns an object, puts
+/// another picture in an image's frame — through
 /// PDFium's page object API, then regenerates the content of the changed pages. A content change (the next revision).
 /// Which characters a font can write is read from its /ToUnicode map (or its encoding) with PDFsharp.
 /// </summary>
@@ -121,6 +122,11 @@ public sealed class EditContentOperation(PdfiumGate gate) : FileContentOperation
             if (edit.Target.Page < 1 || edit.Target.Page > document.PageCount || edit.Target.Index < 0)
             {
                 errors.Add(new OperationValidationError(member, $"The page must be between 1 and {document.PageCount}."));
+            }
+
+            if (edit is ReplaceImageEdit picture && !File.Exists(picture.ImagePath))
+            {
+                errors.Add(new OperationValidationError(member, "The picture file does not exist."));
             }
 
             if (deleted.Contains((edit.Target.Page, edit.Target.Index)))
