@@ -1,3 +1,4 @@
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Text;
 
@@ -30,6 +31,9 @@ public interface IPdfDocument : IAsyncDisposable
 
     /// <summary>The characters of a page with their boxes in its PDF user space, for selecting, copying and searching.</summary>
     Task<PageText> GetPageTextLayerAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default);
+
+    /// <summary>The annotations already in a page, in /Annots order, for the comments list.</summary>
+    Task<IReadOnlyList<FileAnnotation>> GetPageAnnotationsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Opens documents; the seam that lets view models be tested without PDFium.</summary>

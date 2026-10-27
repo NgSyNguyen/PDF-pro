@@ -2,6 +2,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Rendering;
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Text;
 using PdfPro.Pdfium;
@@ -102,6 +103,12 @@ internal sealed class FakePdfDocument(IReadOnlyList<PdfSize> pageSizes) : IPdfDo
 
         return TextLayers?.Invoke(pageIndex) ?? PageText.Empty;
     }
+
+    /// <summary>The annotations already in each page (none by default).</summary>
+    public Func<int, IReadOnlyList<FileAnnotation>>? FileAnnotations { get; set; }
+
+    public Task<IReadOnlyList<FileAnnotation>> GetPageAnnotationsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+        => Task.FromResult(FileAnnotations?.Invoke(pageIndex) ?? []);
 }
 
 /// <summary>Records render requests; each one completes when the test says so (or immediately with AutoComplete).</summary>
