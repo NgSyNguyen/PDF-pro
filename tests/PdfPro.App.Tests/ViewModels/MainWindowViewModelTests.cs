@@ -34,6 +34,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
     private readonly IPageDialogService _pageDialogs = Substitute.For<IPageDialogService>();
     private readonly IMergeService _merge = Substitute.For<IMergeService>();
     private readonly FakeSettingsService _settings = new(AppSettings.Default);
+    private readonly FakeFormSource _forms = new();
     private readonly AppPaths _paths = new(@"C:\data\PdfPro", @"C:\app\tools");
     private readonly RenderCache _cache;
     private readonly IDocumentTabFactory _tabFactory;
@@ -52,7 +53,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _pageDialogs,
             _fileDialogs,
             Substitute.For<IPdfDocumentLoader>(),
-            NullLoggerFactory.Instance);
+            NullLoggerFactory.Instance,
+            forms: _forms);
     }
 
     public void Dispose()

@@ -8,9 +8,11 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Editing;
+using PdfPro.App.Services.Forms;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.ViewModels.Annotating;
 using PdfPro.App.ViewModels.Editing;
+using PdfPro.App.ViewModels.Forms;
 using PdfPro.App.ViewModels.Organizer;
 using PdfPro.App.ViewModels.Splitting;
 using PdfPro.App.ViewModels.Viewer;
@@ -58,7 +60,8 @@ public sealed record DocumentTabServices(
     ScreenImages? ScreenImages = null,
     SignatureLibrary? Signatures = null,
     StampServices? Stamps = null,
-    Func<string>? AnnotationAuthor = null);
+    Func<string>? AnnotationAuthor = null,
+    IFormSource? Forms = null);
 
 /// <summary>What the stamp dialogs use besides the operations.</summary>
 /// <param name="CreatePreview">Shows page n (0-based) of the document with a stamp, until disposed.</param>
@@ -142,6 +145,23 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             requestContentChange: RequestContentChange);
         ContentEditor = new ContentEditorViewModel(viewer, Editor.GeometryOf, RequestContentChange, _operations, document => Workspace.SourcePathOf(document), () => ImagesDirectory, services.FileDialogs, _messages, logger);
         ContentEditor.PropertyChanged += OnContentEditorPropertyChanged;
+        Forms = new FormFillingViewModel(
+            viewer,
+            () => Workspace.Session.BaseSourceId,
+            () => Workspace.SourcePathOf(Workspace.BaseDocument),
+            () => Workspace.Session.Plan,
+            Apply,
+            _operations,
+            services.Forms ?? new PdfFormSource(),
+            Editor.GeometryOf);
+        Annotations.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AnnotationToolsViewModel.Tool))
+            {
+                UpdateFormsActive();
+            }
+        };
+        Forms.Refresh();
         _shownPlan = workspace.Session.Plan;
         Editor.ApplyRequested += OnEditorApplyRequested;
         Editor.PropertyChanged += OnEditorPropertyChanged;
@@ -186,6 +206,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>"Sửa nội dung": the drawings of the pages, edited in the viewer.</summary>
     public ContentEditorViewModel ContentEditor { get; }
+
+    /// <summary>Filling the document's form in the viewer.</summary>
+    public FormFillingViewModel Forms { get; }
 
     /// <summary>Objects wait in the page editor: saving, printing and closing apply them first.</summary>
     public bool HasPendingEdits => Editor.HasObjects;
@@ -599,6 +622,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             FinishEditing();
         }
 
+        UpdateFormsActive();
         if (value)
         {
             Annotations.StopTool();
@@ -1050,6 +1074,15 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
         Annotations.Refresh();
         ContentEditor.Refresh();
+        if (samePages)
+        {
+            Forms.RefreshValues(); // a field was filled (or the filling undone): the inputs stay, keeping the focus
+        }
+        else
+        {
+            Forms.Refresh();
+        }
+
         Comments.Invalidate();
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
@@ -1133,6 +1166,11 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     private void OnEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(PageEditorViewModel.IsActive))
+        {
+            UpdateFormsActive();
+        }
+
         if (e.PropertyName == nameof(PageEditorViewModel.IsActive) && Editor.IsActive)
         {
             EditorProperties ??= new OverlayPropertiesViewModel(Editor);
@@ -1214,7 +1252,8 @@ internal sealed class DocumentTabFactory(
     ScreenImages? screenImages = null,
     SignatureLibrary? signatures = null,
     IDocumentSaver? saver = null,
-    ISettingsService? settings = null) : IDocumentTabFactory
+    ISettingsService? settings = null,
+    IFormSource? forms = null) : IDocumentTabFactory
 {
     /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
     public DocumentTabViewModel Create(DocumentWorkspace workspace)
@@ -1236,7 +1275,8 @@ internal sealed class DocumentTabFactory(
             screenImages,
             signatures,
             Stamps(),
-            AnnotationAuthor);
+            AnnotationAuthor,
+            forms);
         return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
     }
 

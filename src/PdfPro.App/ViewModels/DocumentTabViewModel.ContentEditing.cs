@@ -36,11 +36,16 @@ public sealed partial class DocumentTabViewModel
     {
         if (e.PropertyName == nameof(ContentEditorViewModel.IsActive))
         {
+            UpdateFormsActive();
             OnPropertyChanged(nameof(IsEditingContent));
             ToggleContentEditingCommand.NotifyCanExecuteChanged();
             NotifyAnnotationCommands();
         }
     }
+
+    /// <summary>The form's inputs take the mouse only while no other mode uses the viewer.</summary>
+    private void UpdateFormsActive()
+        => Forms.IsActive = !ContentEditor.IsActive && !Editor.IsActive && !IsOrganizing && Annotations.Tool == Annotating.AnnotationTool.None;
 
     /// <summary>The content editing mode is on (the ribbon button shows it pressed).</summary>
     public bool IsEditingContent => ContentEditor.IsActive;

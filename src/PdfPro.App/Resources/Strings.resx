@@ -660,6 +660,16 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="History_RotateObject" xml:space="preserve"><value>Xoay đối tượng</value></data>
   <data name="History_ReplaceImage" xml:space="preserve"><value>Thay ảnh</value></data>
   <data name="History_FillForm" xml:space="preserve"><value>Điền {0} trường biểu mẫu</value></data>
+  <data name="Forms_RequiredToolTip" xml:space="preserve"><value>{0} (bắt buộc)</value></data>
+  <data name="Forms_XfaFull" xml:space="preserve"><value>Biểu mẫu này là biểu mẫu XFA: PDF_Pro chưa điền được. Hãy dùng Adobe Acrobat Reader để điền.</value></data>
+  <data name="Forms_XfaForeground" xml:space="preserve"><value>Biểu mẫu này có phần XFA: PDF_Pro điền các trường AcroForm đi kèm, bố cục XFA không được hiển thị.</value></data>
+  <data name="Forms_Required_Title" xml:space="preserve"><value>Còn trường bắt buộc chưa điền</value></data>
+  <data name="Forms_Required_Message" xml:space="preserve"><value>Biểu mẫu còn {0} trường bắt buộc chưa điền:
+{1}
+
+Vẫn lưu tài liệu?</value></data>
+  <data name="Forms_Required_Save" xml:space="preserve"><value>Vẫn lưu</value></data>
+  <data name="Forms_Required_Back" xml:space="preserve"><value>Quay lại điền</value></data>
   <data name="Cmd_EditContent_ToolTip" xml:space="preserve"><value>Sửa chữ, ảnh và hình vẽ có sẵn trên trang: rê chuột để thấy khung, bấm để chọn, kéo để di chuyển, bấm đúp vào chữ để sửa</value></data>
   <data name="ContentEditor_Hint" xml:space="preserve"><value>Sửa nội dung — chữ chỉ sửa chính xác trong phạm vi một khối chữ</value></data>
   <data name="ContentEditor_TextBlock" xml:space="preserve"><value>Khối chữ · {0} {1} pt</value></data>

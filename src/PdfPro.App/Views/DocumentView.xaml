@@ -65,6 +65,8 @@
           PageKey="{Binding Key}"
           Search="{Binding DataContext.Search, RelativeSource={RelativeSource AncestorType=UserControl}}"
           Selection="{Binding DataContext.TextSelection, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <!-- The form's fields: real inputs over their widgets, showing the session's values. -->
+        <controls:FormFieldLayer Forms="{Binding DataContext.Forms, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- Annotations added in the session (the page image does not have them yet); only draws. -->
         <controls:AnnotationLayer Annotations="{Binding DataContext.Annotations, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- "Sửa nội dung": frames around the drawing under the mouse and the selected one; only draws. -->
@@ -91,6 +93,16 @@
       Message="{loc:Tr Document_ReadOnlyEncrypted}"
       Severity="Informational"
       Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVisibility}}" />
+
+    <ui:InfoBar
+      Margin="0,0,0,6"
+      AutomationProperties.AutomationId="XfaNotice"
+      DockPanel.Dock="Top"
+      IsClosable="False"
+      IsOpen="{Binding Forms.HasXfaNotice, Mode=OneWay}"
+      Message="{Binding Forms.XfaNotice}"
+      Severity="Warning"
+      Visibility="{Binding Forms.HasXfaNotice, Converter={StaticResource BoolToVisibility}}" />
 
     <!-- "Sắp xếp trang": the organizer grid replaces the viewer. -->
     <views:OrganizerView Visibility="{Binding IsOrganizing, Converter={StaticResource BoolToVisibility}}" />
