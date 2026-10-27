@@ -80,7 +80,7 @@ public static class AnnotationWriter
     }
 
     /// <summary>The page's /Annots as an array of its own: /Annots may be an indirect array other pages share.</summary>
-    private static PdfArray OwnAnnotations(PdfDocument document, PdfPage page)
+    internal static PdfArray OwnAnnotations(PdfDocument document, PdfPage page)
     {
         var annotations = new PdfArray(document);
         foreach (var existing in Annotations(page)?.Elements ?? Enumerable.Empty<PdfItem>())

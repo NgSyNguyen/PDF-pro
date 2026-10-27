@@ -222,6 +222,11 @@ public sealed partial class PdfiumDocument : IDisposable
         {
             fpdfview.FPDFBitmapFillRect(bitmap, 0, 0, region.Width, region.Height, 0xFFFFFFFF);
             fpdfview.FPDF_RenderPageBitmap(bitmap, page.Native, -region.X, -region.Y, pageWidth, pageHeight, quarterTurns, ToNativeFlags(options.Flags));
+            if (options.Flags.HasFlag(PdfRenderFlags.Annotations) && FormHandle() is { } form)
+            {
+                // Form fields are drawn by the form-fill layer, not by FPDF_RenderPageBitmap.
+                fpdf_formfill.FPDF_FFLDraw(form, bitmap, page.Native, -region.X, -region.Y, pageWidth, pageHeight, quarterTurns, ToNativeFlags(options.Flags));
+            }
             return new PageBitmap(
                 handle,
                 fpdfview.FPDFBitmapGetBuffer(bitmap),
@@ -276,6 +281,7 @@ public sealed partial class PdfiumDocument : IDisposable
         }
 
         _pageCache.Clear();
+        CloseForm();
         _sizeBuffer.Dispose();
         _handle.Dispose();
     }
