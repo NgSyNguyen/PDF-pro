@@ -1,6 +1,7 @@
 using PDFiumCore;
 using PdfPro.Core.Annotations;
 using PdfPro.Core.Documents;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Text;
 using PdfPro.Pdfium.Native;
@@ -129,6 +130,8 @@ public sealed class PdfiumDocument : IDisposable
 
     /// <summary>The annotations of a page in /Annots order (not normalized).</summary>
     public IReadOnlyList<FileAnnotation> GetPageAnnotations(int pageIndex) => GetCachedPage(pageIndex).GetAnnotations();
+
+    public IReadOnlyList<PageObjectInfo> GetPageObjects(int pageIndex) => GetCachedPage(pageIndex).GetObjects();
 
     public PdfDocumentMetadata GetMetadata()
     {

@@ -1,4 +1,5 @@
 using PdfPro.Core.Annotations;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Text;
 
@@ -83,6 +84,9 @@ public sealed class PdfDocumentHandle : IPdfDocument
 
     public Task<IReadOnlyList<FileAnnotation>> GetPageAnnotationsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
         => Run(document => document.GetPageAnnotations(pageIndex), priority, cancellationToken);
+
+    public Task<IReadOnlyList<PageObjectInfo>> GetPageObjectsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+        => Run(document => document.GetPageObjects(pageIndex), priority, cancellationToken);
 
     /// <summary>Runs custom gate-affine work against the document (advanced use and tests).</summary>
     public Task<T> RunAsync<T>(Func<PdfiumDocument, T> work, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)

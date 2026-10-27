@@ -87,7 +87,7 @@ public sealed class PdfiumTextPage : IDisposable
         _ => "\uFFFD",
     };
 
-    private FpdfTextpageT Native
+    internal FpdfTextpageT Native
     {
         get
         {

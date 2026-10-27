@@ -7,7 +7,7 @@ using PdfPro.Pdfium.Native;
 namespace PdfPro.Pdfium;
 
 /// <summary>A loaded page. Gate-affine: use only on the PDFium thread, dispose when done.</summary>
-public sealed class PdfiumPage : IDisposable
+public sealed partial class PdfiumPage : IDisposable
 {
     private readonly PdfiumGate _gate;
     private readonly PageSafeHandle _handle;

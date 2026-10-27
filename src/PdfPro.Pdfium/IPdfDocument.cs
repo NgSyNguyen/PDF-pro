@@ -1,4 +1,5 @@
 using PdfPro.Core.Annotations;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Text;
 
@@ -34,6 +35,9 @@ public interface IPdfDocument : IAsyncDisposable
 
     /// <summary>The annotations already in a page, in /Annots order, for the comments list.</summary>
     Task<IReadOnlyList<FileAnnotation>> GetPageAnnotationsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default);
+
+    /// <summary>The page's top-level drawings (text, paths, images…) in drawing order, for editing.</summary>
+    Task<IReadOnlyList<PageObjectInfo>> GetPageObjectsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Opens documents; the seam that lets view models be tested without PDFium.</summary>

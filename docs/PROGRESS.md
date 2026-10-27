@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 6 xong (lát 9e); tiếp theo P7.
+Cập nhật lần cuối: 27/10/2026 — Phase 7, sau lát 1.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -51,7 +51,8 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | P4 Gộp, tách & bố cục | Xong (`b541fcd` … `1b0a5c2`), có nghiệm thu FlaUI và mục SPEC |
 | **P5 Chèn & đóng dấu** | **Đang làm** — xem bảng lát dưới |
 | P6 Chú thích & tìm kiếm | Xong về code (`66c9fc5` … lát 9e), có mục SPEC và `Phase6AcceptanceTests` (chưa chạy tay) |
-| P7–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
+| **P7 Sửa nội dung gốc & biểu mẫu** | **Đang làm** — xem bảng lát Phase 7 |
+| P8–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
 
 ### Phase 5 — các lát
 
@@ -104,6 +105,28 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - Namespace `PdfPro.Operations.Annotating` (không phải `Annotations`: đụng hàm `PdfGraph.Annotations(page)`).
 - `PdfRect` có `[JsonConstructor]` và `[JsonIgnore]` cho Width/Height/IsEmpty/Size (trước đó deserialize ra toàn 0 vì là struct).
 - Hộp ký tự dùng `FPDFText_GetLooseCharBox` (cao từ ascent tới descent của phông → các ký tự một dòng cùng đỉnh/đáy), trong không gian PDF của trang nguồn = không gian của trang sau khi vật chất hóa (map bằng `MaterializedGeometry` như overlay).
+
+### Phase 7 — các lát (kế hoạch + phân tích khả thi do agent tự quyết, 27/10/2026)
+
+**Khả thi / giới hạn (sẽ vào SPEC mục Phase 7):**
+- PDF không có "đoạn văn": đơn vị sửa là **một text object của PDFium** (một lần vẽ chữ — thường một dòng hoặc một đoạn dòng). UI ghi rõ "chỉ chính xác trong phạm vi một khối chữ".
+- `edit.content` là **thao tác nội dung chạy bằng PDFium** (không phải PDFsharp): mở bản vật chất hóa, sửa page object (`FPDFTextSetText`, `FPDFPageRemoveObject`, `FPDFPageObjTransform`, `FPDFImageObjSetBitmap`…), `FPDFPageGenerateContent` cho trang bị sửa, `FPDF_SaveAsCopy`. Mỗi lần áp dụng = 1 revision = 1 bước hoàn tác. Đối tượng nhận theo chỉ số trong trang + loại + hộp bao (±1 pt); lệch thì từ chối, không sửa nhầm.
+- Thay chữ: kiểm từng ký tự có glyph trong phông của object (`FPDFFontGetGlyphPath` ≠ rỗng; khoảng trắng bỏ qua). Đủ → giữ phông/cỡ/màu/ma trận. Thiếu (phông subset của Word thiếu chữ có dấu) → xóa object, tạo object mới cùng ma trận/cỡ/màu bằng phông đóng gói gần nhất (serif/sans, đậm/nghiêng theo cờ phông) qua `FPDFTextLoadFont` (CID, nhúng đủ) và **báo đã thay phông**. Dài hơn khung cũ: tùy chọn xuống dòng trong bề rộng cũ (đo bằng `FPDFFontGetGlyphWidth`) hoặc cho tràn.
+- Rủi ro: `FPDFPageGenerateContent` viết lại toàn bộ content stream của trang → chỉ gọi cho trang có sửa; test golden so ảnh render vùng không sửa phải y nguyên.
+- **Biểu mẫu**: đọc field bằng PDFium (form handle); **giá trị điền giữ trong phiên** (thao tác plan, hoàn tác tức thì, như chú thích) và ghi bằng PDFsharp khi vật chất hóa (`/V`, `/AS`, `/AP` sinh lại với phông tiếng Việt đóng gói) — không dùng trạng thái form-fill của PDFium (không hoàn tác được, phông `/DA` thường không có chữ có dấu). Viewer đặt ô nhập WPF lên đúng widget (qua `PageCoordinateMapper`), Tab theo thứ tự field. XFA: phát hiện (`FPDF_GetFormType`) và báo không hỗ trợ đầy đủ.
+- Excel (trộn dữ liệu): chỉ CSV trước; `.xlsx` cần thư viện (DocumentFormat.OpenXml — MIT) → quyết định ở lát dữ liệu, ghi THIRD_PARTY_NOTICES nếu thêm.
+
+| Lát | Nội dung | Commit | Trạng thái |
+|---|---|---|---|
+| 1 | Core `Editing/PageObjects.cs` (`PageObjectKind`, `PageObjectInfo`: chỉ số, loại, hộp bao, 4 góc, ma trận, màu tô; `PageTextObject`: chữ, tên phông, cỡ, nhúng, đậm/nghiêng/serif theo cờ phông, chữ ẩn; `PageImageObject`: cỡ điểm ảnh) + PDFium `PdfiumPage.Objects.cs` (`GetObjects()`), `IPdfDocument.GetPageObjectsAsync`; test trên `basic-vi.pdf`, `big-1000.pdf` | commit `feat(pdfium): read the drawings of a page…` | Xong |
+| 2 | `edit.content` (Operations, PDFium): thay chữ (giữ phông / thay phông đóng gói, xuống dòng), xóa, di chuyển object; golden test (PdfPig thấy chữ mới, không còn chữ cũ; vùng khác render y nguyên) | — | Tiếp theo |
+| 3 | Ảnh: thay ảnh giữ khung, xoay, xóa, trích ảnh độ phân giải gốc | — | |
+| 4 | App: chế độ "Sửa nội dung" (khung khi rê chuột, chọn, đúp chữ → ô nhập tại chỗ, Delete, kéo, menu ảnh) | — | |
+| 5 | Biểu mẫu — đọc field (PDFium) + Core `FormField`; điền trên viewer (giá trị trong phiên, ghi PDFsharp), Tab, field bắt buộc khi lưu, XFA | — | |
+| 6 | `forms.design` (đặt field mới, panel thuộc tính, ghi PDFsharp tầng dictionary) | — | |
+| 7 | Dữ liệu: JSON/XFDF xuất/nhập; trộn CSV(/Excel) → mỗi dòng một tệp | — | |
+| 8 | `forms.flatten`, `forms.reset`, `forms.autodetect` | — | |
+| 9 | Mục SPEC Phase 7, `Phase7AcceptanceTests` | — | |
 
 ## 5. Bản đồ mã Phase 5
 
