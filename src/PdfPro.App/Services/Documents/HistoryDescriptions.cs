@@ -43,6 +43,8 @@ internal static class HistoryDescriptions
             UpdateAnnotationsParams p => Format(Strings.History_UpdateAnnotations, p.Items.Count),
             DeleteAnnotationsParams p => Format(Strings.History_DeleteAnnotations, p.Ids.Count),
             EditFileAnnotationsParams p => Describe(p),
+            FlattenAnnotationsParams p when string.IsNullOrWhiteSpace(p.Pages) => Strings.History_FlattenAnnotations,
+            FlattenAnnotationsParams p => Format(Strings.History_FlattenAnnotationsOn, Count(p.Pages!, before)),
             _ => Strings.History_Other,
         };
     }

@@ -113,6 +113,7 @@ internal static class AppHost
         services.AddOperation<UpdateAnnotationsOperation>();
         services.AddOperation<DeleteAnnotationsOperation>();
         services.AddOperation<EditFileAnnotationsOperation>();
+        services.AddOperation<FlattenAnnotationsOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();

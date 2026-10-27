@@ -2,7 +2,7 @@ using PdfPro.App.ViewModels;
 
 namespace PdfPro.App.Tests.ViewModels;
 
-/// <summary>"Tìm" (Ctrl+F) and F3 / Shift+F3 from the window.</summary>
+/// <summary>"Tìm" (Ctrl+F), F3 / Shift+F3 and "Bình luận" from the window.</summary>
 public sealed partial class MainWindowViewModelTests
 {
     [Fact]
@@ -36,5 +36,21 @@ public sealed partial class MainWindowViewModelTests
         viewModel.ShowSearchCommand.CanExecute(null).ShouldBeTrue();
         viewModel.FindNextCommand.CanExecute(null).ShouldBeTrue();
         viewModel.FindPreviousCommand.CanExecute(null).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Comments_ShowsTheCommentsPanel_LeavingTheOrganizer()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        viewModel.OrganizeModeCommand.Execute(null);
+
+        viewModel.ShowCommentsCommand.Execute(null);
+
+        viewModel.Sidebar.SelectedPanel.ShouldBe(SidebarPanel.Comments);
+        viewModel.IsOrganizing.ShouldBeFalse();
+        viewModel.ActiveDocument!.Comments.IsActive.ShouldBeTrue("the list is read while the panel is shown");
+
+        viewModel.SelectedTab = viewModel.Home;
+        viewModel.ShowCommentsCommand.CanExecute(null).ShouldBeFalse();
     }
 }

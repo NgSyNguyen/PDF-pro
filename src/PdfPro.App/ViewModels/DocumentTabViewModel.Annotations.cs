@@ -1,5 +1,12 @@
+using System.Globalization;
 using CommunityToolkit.Mvvm.Input;
+using PdfPro.App.Resources;
+using PdfPro.App.Services;
+using PdfPro.App.Services.Documents;
 using PdfPro.App.ViewModels.Annotating;
+using PdfPro.Core.Organizing;
+using PdfPro.Core.Sessions;
+using PdfPro.Operations.Annotating;
 
 namespace PdfPro.App.ViewModels;
 
@@ -36,6 +43,29 @@ public sealed partial class DocumentTabViewModel
     [RelayCommand(CanExecute = nameof(CanAnnotate))]
     private Task StampAnnotationAsync() => UseAnnotationToolAsync(AnnotationTool.Stamp);
 
+    /// <summary>
+    /// "Làm phẳng": once confirmed, the window draws the comments into the page content (the next revision, one undoable
+    /// step) — of the whole document, or of the current page (the selected pages in the organizer).
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanChangeContent))]
+    private async Task FlattenAnnotationsAsync()
+    {
+        Annotations.StopTool();
+        var targets = TargetPageIndices;
+        var only = targets.Count == 1
+            ? string.Format(CultureInfo.CurrentCulture, Strings.Flatten_OnlyPage, targets[0] + 1)
+            : string.Format(CultureInfo.CurrentCulture, Strings.Flatten_OnlySelected, targets.Count);
+        var choice = await _messages.AskAsync(Strings.Flatten_Title, Strings.Flatten_Message, Strings.Flatten_All, targets.Count > 0 ? only : null, Strings.Common_Cancel);
+        if (choice == DialogChoice.Cancel || !CanChangeContent())
+        {
+            return;
+        }
+
+        var parameters = new FlattenAnnotationsParams(choice == DialogChoice.Secondary ? PageRanges.Format(targets) : null);
+        var description = Workspace.Describe(new HistoryRecord(FlattenAnnotationsOperation.OperationId, parameters, []), Workspace.Session.Plan);
+        ContentChangeRequested?.Invoke(this, new ContentChangeRequest(_operations.Get<FlattenAnnotationsOperation>(), parameters, description));
+    }
+
     /// <summary>Annotating needs an editable document shown in the viewer, with the page editor closed.</summary>
     private bool CanAnnotate() => CanEditPages && !IsOrganizing && !Editor.IsActive;
 
@@ -56,5 +86,6 @@ public sealed partial class DocumentTabViewModel
         InkCommand.NotifyCanExecuteChanged();
         ShapesCommand.NotifyCanExecuteChanged();
         StampAnnotationCommand.NotifyCanExecuteChanged();
+        FlattenAnnotationsCommand.NotifyCanExecuteChanged();
     }
 }

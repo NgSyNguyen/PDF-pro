@@ -150,7 +150,7 @@ public sealed class EditFileAnnotationsOperation : DocumentContentOperation<Edit
 
         foreach (var group in targets.Where(t => t.Edit.Action == FileAnnotationAction.Delete).GroupBy(t => t.Page))
         {
-            Remove(document, group.Key, group.Select(t => t.Annotation).ToList());
+            AnnotationThreads.Remove(document, group.Key, group.Select(t => t.Annotation).ToList());
         }
     }
 
@@ -209,53 +209,6 @@ public sealed class EditFileAnnotationsOperation : DocumentContentOperation<Edit
         PdfLongInteger integer => integer.Value,
         _ => null,
     };
-
-    /// <summary>Removes annotations from their page with their answers (whole threads) and pop-up windows.</summary>
-    private static void Remove(PdfDocument document, PdfPage page, IReadOnlyList<PdfDictionary> removed)
-    {
-        var annotations = Annotations(page);
-        if (annotations is null)
-        {
-            return;
-        }
-
-        var gone = new HashSet<PdfDictionary>(removed, ReferenceEqualityComparer.Instance);
-        var all = annotations.Elements.Select(AsDictionary).OfType<PdfDictionary>().ToList();
-        bool changed;
-        do
-        {
-            // Answers to removed annotations go too, and answers to those, until no more are found.
-            changed = false;
-            foreach (var annotation in all.Where(a => !gone.Contains(a)))
-            {
-                if (AsDictionary(annotation.Elements["/IRT"]) is { } parent && gone.Contains(parent))
-                {
-                    gone.Add(annotation);
-                    changed = true;
-                }
-            }
-        }
-        while (changed);
-
-        foreach (var annotation in gone.ToList())
-        {
-            if (AsDictionary(annotation.Elements["/Popup"]) is { } popup)
-            {
-                gone.Add(popup);
-            }
-        }
-
-        var kept = new PdfArray(document);
-        foreach (var item in annotations.Elements)
-        {
-            if (AsDictionary(item) is not { } annotation || !gone.Contains(annotation))
-            {
-                kept.Elements.Add(item);
-            }
-        }
-
-        page.Elements["/Annots"] = kept;
-    }
 
     /// <summary>The /Subtype of a kind (12.5.6), without the slash.</summary>
     private static string SubtypeName(FileAnnotationKind kind) => kind switch

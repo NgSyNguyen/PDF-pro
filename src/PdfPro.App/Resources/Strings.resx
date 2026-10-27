@@ -642,6 +642,18 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="History_ReviewFileComment" xml:space="preserve"><value>Đặt trạng thái bình luận</value></data>
   <data name="History_EditFileComment" xml:space="preserve"><value>Sửa bình luận</value></data>
   <data name="History_DeleteFileComment" xml:space="preserve"><value>Xóa bình luận</value></data>
+  <data name="Ribbon_Group_Review" xml:space="preserve"><value>Duyệt</value></data>
+  <data name="Cmd_Comments" xml:space="preserve"><value>Bình luận</value></data>
+  <data name="Cmd_Comments_ToolTip" xml:space="preserve"><value>Mở danh sách bình luận của tài liệu: lọc, trả lời, đặt trạng thái, xuất</value></data>
+  <data name="Cmd_FlattenAnnotations" xml:space="preserve"><value>Làm phẳng</value></data>
+  <data name="Cmd_FlattenAnnotations_ToolTip" xml:space="preserve"><value>Vẽ chú thích thẳng vào nội dung trang để không sửa hay xóa được nữa</value></data>
+  <data name="Flatten_Title" xml:space="preserve"><value>Làm phẳng chú thích</value></data>
+  <data name="Flatten_Message" xml:space="preserve"><value>Ghi chú, tô sáng, hình vẽ, hộp chữ và con dấu sẽ được vẽ thẳng vào nội dung trang: trang trông như cũ nhưng không sửa, trả lời hay xóa các chú thích đó được nữa; luồng trả lời của chúng bị bỏ. Liên kết và trường biểu mẫu giữ nguyên. Có thể hoàn tác.</value></data>
+  <data name="Flatten_All" xml:space="preserve"><value>Cả tài liệu</value></data>
+  <data name="Flatten_OnlyPage" xml:space="preserve"><value>Chỉ trang {0}</value></data>
+  <data name="Flatten_OnlySelected" xml:space="preserve"><value>Chỉ {0} trang đã chọn</value></data>
+  <data name="History_FlattenAnnotations" xml:space="preserve"><value>Làm phẳng chú thích</value></data>
+  <data name="History_FlattenAnnotationsOn" xml:space="preserve"><value>Làm phẳng chú thích của {0} trang</value></data>
   <data name="Cmd_Squiggly" xml:space="preserve"><value>Lượn sóng</value></data>
   <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Tô sáng chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ (Esc để tắt)</value></data>
   <data name="Cmd_Underline_ToolTip" xml:space="preserve"><value>Gạch chân chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ</value></data>

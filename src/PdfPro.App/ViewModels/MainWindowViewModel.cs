@@ -118,6 +118,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         InkCommand = new ActiveDocumentCommand(d => d.InkCommand);
         ShapesCommand = new ActiveDocumentCommand(d => d.ShapesCommand);
         StampAnnotationCommand = new ActiveDocumentCommand(d => d.StampAnnotationCommand);
+        FlattenAnnotationsCommand = new ActiveDocumentCommand(d => d.FlattenAnnotationsCommand);
         FindNextCommand = new ActiveDocumentCommand(d => d.Search.NextCommand);
         FindPreviousCommand = new ActiveDocumentCommand(d => d.Search.PreviousCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
@@ -137,7 +138,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -229,6 +230,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand ShapesCommand { get; }
 
     public ActiveDocumentCommand StampAnnotationCommand { get; }
+
+    public ActiveDocumentCommand FlattenAnnotationsCommand { get; }
 
     /// <summary>F3: the next match of the search.</summary>
     public ActiveDocumentCommand FindNextCommand { get; }
@@ -469,7 +472,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
             HighlightCommand, UnderlineCommand, StrikeOutCommand, SquigglyCommand, StickyNoteCommand,
-            TextBoxCommand, InkCommand, ShapesCommand, StampAnnotationCommand,
+            TextBoxCommand, InkCommand, ShapesCommand, StampAnnotationCommand, FlattenAnnotationsCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -550,6 +553,23 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         Sidebar.SelectedPanel = SidebarPanel.Search;
         SearchRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>"Bình luận": shows the comments panel of the sidebar (the organizer gives way to the viewer).</summary>
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowComments()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsOrganizing)
+        {
+            document.IsOrganizing = false;
+        }
+
+        Sidebar.SelectedPanel = SidebarPanel.Comments;
     }
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
@@ -708,6 +728,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("annotate.ink", Strings.Cmd_Ink, SymbolRegular.InkStroke24, InkCommand, Strings.Cmd_Ink_ToolTip),
                     new("annotate.shapes", Strings.Cmd_Shapes, SymbolRegular.DrawShape24, ShapesCommand, Strings.Cmd_Shapes_ToolTip),
                     new("annotate.stamp", Strings.Cmd_StampAnnotation, SymbolRegular.DocumentCheckmark24, StampAnnotationCommand, Strings.Cmd_StampAnnotation_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Review,
+                [
+                    new("annotate.comments", Strings.Cmd_Comments, SymbolRegular.CommentMultiple24, ShowCommentsCommand, Strings.Cmd_Comments_ToolTip),
+                    new("annotate.flatten", Strings.Cmd_FlattenAnnotations, SymbolRegular.Layer24, FlattenAnnotationsCommand, Strings.Cmd_FlattenAnnotations_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Search,
                 [
