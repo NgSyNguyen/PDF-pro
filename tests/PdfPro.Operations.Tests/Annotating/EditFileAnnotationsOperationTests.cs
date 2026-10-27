@@ -94,6 +94,66 @@ public sealed class EditFileAnnotationsOperationTests(PdfiumFixture pdfium) : ID
     }
 
     [Fact]
+    public async Task Moving_ShiftsThePlace_TheStrokes_AndThePopUp_AndTheAppearanceFollows()
+    {
+        var input = Annotated(withInk: true);
+        var read = await ReadAsync(input);
+        var ink = read.Single(a => a.Name == "i1");
+        var note = read.Single(a => a.Name == "n1");
+
+        var output = await ApplyAsync(
+            input,
+            Edit(ink, FileAnnotationAction.Move) with { Dx = 50, Dy = -100 },
+            Edit(note, FileAnnotationAction.Move) with { Dx = -20, Dy = 10 });
+
+        var after = await ReadAsync(output);
+        var movedInk = after.Single(a => a.Name == "i1");
+        movedInk.Rect.Left.ShouldBe(ink.Rect.Left + 50, 0.01);
+        movedInk.Rect.Bottom.ShouldBe(ink.Rect.Bottom - 100, 0.01);
+        movedInk.Modified.ShouldBe(Created.AddDays(1));
+        after.Single(a => a.Name == "n1").Rect.Top.ShouldBe(note.Rect.Top + 10, 0.01);
+        after.Single(a => a.Name == "h1").Rect.ShouldBe(read.Single(a => a.Name == "h1").Rect, "only the chosen ones move");
+
+        using var document = PdfReader.Open(output, PdfDocumentOpenMode.Import);
+        var annotations = PdfPro.Operations.Materializing.PdfGraph.Annotations(document.Pages[0])!.Elements
+            .Select(PdfPro.Operations.Materializing.PdfGraph.AsDictionary).OfType<PdfSharp.Pdf.PdfDictionary>().ToList();
+        var stroke = PdfPro.Operations.Materializing.PdfGraph.AsArray(PdfPro.Operations.Materializing.PdfGraph.AsArray(
+            annotations.Single(a => a.Elements.GetString("/NM") == "i1").Elements["/InkList"])!.Elements[0])!;
+        Value(stroke.Elements[0]).ShouldBe(150, 0.01, "the first point (100, 300) moved by (50, -100)");
+        Value(stroke.Elements[1]).ShouldBe(200, 0.01);
+
+        await using var before = await PdfInspector.OpenAsync(pdfium.Gate, input);
+        await using var moved = await PdfInspector.OpenAsync(pdfium.Gate, output);
+        using var original = await before.RenderPageAsync(0, new PageRenderOptions { Scale = 1 }, cancellationToken: Token);
+        using var shifted = await moved.RenderPageAsync(0, new PageRenderOptions { Scale = 1 }, cancellationToken: Token);
+        var height = original.Height;
+        IsRed(original.GetPixel(150, height - 325)).ShouldBeTrue("the stroke before");
+        IsRed(shifted.GetPixel(150, height - 325)).ShouldBeFalse("gone from there");
+        IsRed(shifted.GetPixel(200, height - 225)).ShouldBeTrue("drawn where it went");
+    }
+
+    [Fact]
+    public void AMove_MustBeAFiniteDistance()
+    {
+        var edit = new FileAnnotationEdit(1, 0, FileAnnotationKind.Square, "s", new PdfRect(0, 0, 20, 20), FileAnnotationAction.Move, Author: "Minh", When: Created, Dx: 10);
+        var document = new Core.Documents.DocumentInfo(1);
+
+        _operation.Validate(new EditFileAnnotationsParams([edit]), document).IsValid.ShouldBeTrue();
+        _operation.Validate(new EditFileAnnotationsParams([edit with { Dx = 0 }]), document).IsValid.ShouldBeFalse("not a move");
+        _operation.Validate(new EditFileAnnotationsParams([edit with { Dy = double.NaN }]), document).IsValid.ShouldBeFalse();
+        _operation.Validate(new EditFileAnnotationsParams([edit with { Dx = 20000 }]), document).IsValid.ShouldBeFalse();
+    }
+
+    private static double Value(PdfSharp.Pdf.PdfItem item) => item switch
+    {
+        PdfSharp.Pdf.PdfReal real => real.Value,
+        PdfSharp.Pdf.PdfInteger integer => integer.Value,
+        _ => double.NaN,
+    };
+
+    private static bool IsRed((byte B, byte G, byte R) pixel) => pixel.R > 150 && pixel.G < 120 && pixel.B < 120;
+
+    [Fact]
     public void BadChanges_AreRefused()
     {
         var edit = new FileAnnotationEdit(1, 0, FileAnnotationKind.Text, "n", new PdfRect(0, 0, 20, 20), FileAnnotationAction.Reply, "ok", Author: "Minh", When: Created, Id: "r");
@@ -110,8 +170,8 @@ public sealed class EditFileAnnotationsOperationTests(PdfiumFixture pdfium) : ID
     private static FileAnnotationEdit Edit(FileAnnotation annotation, FileAnnotationAction action, string? text = null, ReviewState state = ReviewState.None, string? id = null)
         => new(1, annotation.Index, annotation.Kind, annotation.Name, annotation.Rect, action, text, state, "Minh", Created.AddDays(1), id);
 
-    /// <summary>basic-vi.pdf with a highlight (h1) and a note (n1) answered once.</summary>
-    private string Annotated()
+    /// <summary>basic-vi.pdf with a highlight (h1), a note (n1) answered once, and a red stroke (i1) when asked.</summary>
+    private string Annotated(bool withInk = false)
     {
         var path = _temp.Combine($"annotated-{Guid.NewGuid():N}.pdf");
         using var document = PdfReader.Open(Samples.BasicVi, PdfDocumentOpenMode.Modify);
@@ -122,6 +182,9 @@ public sealed class EditFileAnnotationsOperationTests(PdfiumFixture pdfium) : ID
             {
                 Replies = [new AnnotationReply("n1-r", "Minh", Created, "Trả lời cũ")],
             },
+            .. withInk
+                ? [new InkAnnotation("i1", new RgbColor(220, 30, 30), 1, "Lan", Created, Created, string.Empty, 6, [[new PdfPoint(100, 300), new PdfPoint(200, 350)]])]
+                : Array.Empty<AnnotationItem>(),
         ]);
         document.Save(path);
         return path;

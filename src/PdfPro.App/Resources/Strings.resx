@@ -642,6 +642,7 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="History_ReviewFileComment" xml:space="preserve"><value>Đặt trạng thái bình luận</value></data>
   <data name="History_EditFileComment" xml:space="preserve"><value>Sửa bình luận</value></data>
   <data name="History_DeleteFileComment" xml:space="preserve"><value>Xóa bình luận</value></data>
+  <data name="History_MoveFileComment" xml:space="preserve"><value>Di chuyển chú thích</value></data>
   <data name="Ribbon_Group_Review" xml:space="preserve"><value>Duyệt</value></data>
   <data name="Cmd_Comments" xml:space="preserve"><value>Bình luận</value></data>
   <data name="Cmd_Comments_ToolTip" xml:space="preserve"><value>Mở danh sách bình luận của tài liệu: lọc, trả lời, đặt trạng thái, xuất</value></data>
@@ -672,6 +673,8 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Annotation_TextBoxHeader" xml:space="preserve"><value>Hộp chữ — gõ nội dung</value></data>
   <data name="Annotation_Comment" xml:space="preserve"><value>Bình luận…</value></data>
   <data name="Annotation_Delete" xml:space="preserve"><value>Xóa</value></data>
+  <data name="Annotation_FileSelected" xml:space="preserve"><value>Chú thích có sẵn trong tệp — kéo để di chuyển, Delete để xóa (ghi thành bản sửa mới)</value></data>
+  <data name="Annotation_FileSelectedFixed" xml:space="preserve"><value>Chú thích có sẵn trong tệp — Delete để xóa (ghi thành bản sửa mới)</value></data>
   <data name="Annotation_Width" xml:space="preserve"><value>Nét (pt)</value></data>
   <data name="Annotation_StampWithDate" xml:space="preserve"><value>Kèm ngày</value></data>
   <data name="Annotation_StampText" xml:space="preserve"><value>Chữ trên con dấu</value></data>

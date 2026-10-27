@@ -27,6 +27,36 @@ public static class AnnotationHitTest
         return null;
     }
 
+    /// <summary>
+    /// The topmost comment already in the file under <paramref name="point"/>, or null: marked text by its lines, the
+    /// others by their box. Answers, hidden ones and what is not a comment (links, fields, pop-ups) are not picked.
+    /// </summary>
+    /// <param name="annotations">In /Annots order (the last one is on top).</param>
+    /// <param name="point">The point, in the page's PDF user space.</param>
+    /// <param name="tolerance">Slack in points around them.</param>
+    public static FileAnnotation? At(IReadOnlyList<FileAnnotation> annotations, PdfPoint point, double tolerance)
+    {
+        ArgumentNullException.ThrowIfNull(annotations);
+        for (var i = annotations.Count - 1; i >= 0; i--)
+        {
+            var annotation = annotations[i];
+            if (AnnotationGroups.Of(annotation.Kind) is null || annotation.IsReply || annotation.IsHidden)
+            {
+                continue;
+            }
+
+            var hit = annotation.Quads.Count > 0
+                ? annotation.Quads.Any(q => Inflate(q.Bounds, tolerance).Contains(point))
+                : Inflate(annotation.Rect, tolerance).Contains(point);
+            if (hit)
+            {
+                return annotation;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>True when <paramref name="point"/> (PDF user space) is on the annotation.</summary>
     public static bool Contains(AnnotationItem annotation, PdfPoint point, double tolerance)
     {
@@ -110,4 +140,6 @@ public static class AnnotationHitTest
 
         return inside;
     }
+
+    private static PdfRect Inflate(PdfRect rect, double by) => new(rect.Left - by, rect.Bottom - by, rect.Right + by, rect.Top + by);
 }

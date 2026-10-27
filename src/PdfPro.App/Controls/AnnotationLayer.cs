@@ -9,7 +9,8 @@ namespace PdfPro.App.Controls;
 
 /// <summary>
 /// Draws the annotations made in the session over one page of the viewer (the page image comes from the source file,
-/// which does not have them yet), the one being moved where the mouse has it, and a frame around the selected one.
+/// which does not have them yet), the one being moved where the mouse has it, and a frame around the selected one —
+/// for an annotation already in the file (drawn by the page image), the frame alone.
 /// Purely visual: the mouse goes to the viewer, which hands it to <see cref="AnnotationToolsViewModel"/>.
 /// </summary>
 public sealed class AnnotationLayer : FrameworkElement
@@ -52,7 +53,9 @@ public sealed class AnnotationLayer : FrameworkElement
 
         var items = annotations.AnnotationsOn(PageKey);
         var preview = annotations.PreviewOn(PageKey);
-        if ((items.Count == 0 && preview is null) || annotations.GeometryOf(PageKey) is not { } geometry)
+        var fileSelection = annotations.FileSelectionOn(PageKey);
+        _ = annotations.FileAnnotationsOn(PageKey); // read in the background, so that a click can pick them
+        if ((items.Count == 0 && preview is null && fileSelection is null) || annotations.GeometryOf(PageKey) is not { } geometry)
         {
             return;
         }
@@ -79,6 +82,15 @@ public sealed class AnnotationLayer : FrameworkElement
                 frame.Inflate(3, 3);
                 drawingContext.DrawRectangle(null, SelectionPen, frame);
             }
+        }
+
+        if (fileSelection is { } rect)
+        {
+            // An annotation of the file is drawn by the page image: only its frame shows (where the drag has it).
+            var bounds = mapper.PdfRectToScreen(rect);
+            var frame = new Rect(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+            frame.Inflate(3, 3);
+            drawingContext.DrawRectangle(null, SelectionPen, frame);
         }
 
         if (preview is not null)

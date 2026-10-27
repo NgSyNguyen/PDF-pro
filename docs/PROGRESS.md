@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 9c.
+Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 9d.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -87,9 +87,9 @@ Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5Acceptan
 | 8c | Sửa chú thích **có sẵn trong tệp** = thao tác nội dung `annotate.editFile` (`Annotating/EditFileAnnotationsOperation.cs`: trả lời, trạng thái, sửa nội dung, xóa cả luồng `/IRT` + `/Popup`; tìm chú thích theo chỉ số + loại + `/NM` hoặc `/Rect` ±0,5, không thấy thì từ chối chứ không sửa nhầm; `AnnotationWriter.AddToThread` dùng chung); panel Bình luận gửi `ContentChangeRequest` (cửa sổ chạy nền → revision mới, 1 bước hoàn tác; bị chặn khi trình chỉnh sửa còn đối tượng chờ áp dụng); tên lịch sử "Trả lời/Đặt trạng thái/Sửa/Xóa bình luận" | `e7420d8` | Xong |
 | 9a | `annotate.flatten` (`Annotating/FlattenAnnotationsOperation.cs`): vẽ `/AP /N` (hoặc trạng thái `/AS`) của chú thích bình luận vào nội dung trang qua `PageStamper.Place` (BBox×Matrix khớp `/Rect`, 12.5.5; không nhân `/CA` vì `/AP` đã có độ mờ, như PDFium hiển thị), gỡ chúng cùng luồng `/IRT` + `/Popup` (`AnnotationThreads`); giữ liên kết, trường biểu mẫu, Redact, chú thích không có `/AP`; chú thích ẩn bị gỡ không vẽ; `Count(page)`. App: nhóm ribbon "Duyệt" (`annotate.comments` mở panel Bình luận, `annotate.flatten` hỏi "Cả tài liệu" / "Chỉ trang n" / "Chỉ n trang đã chọn" → cửa sổ chạy nền) | `38a8e9d` | Xong |
 | 9b | Làm phẳng **theo loại** (PROMPTS B8): Core `AnnotationGroup` (Ghi chú / Đánh dấu chữ / Hình vẽ / Con dấu) + `AnnotationGroups.Of(kind)`, `KindOf("/Subtype")`; `FlattenAnnotationsParams.Groups` (null = tất cả); hộp thoại `FlattenWindow` (`FlattenViewModel`: 4 ô loại + `PageTargetPanel`, mặc định cả tài liệu) thay hộp hỏi | `a989b20` | Xong |
-| 9c | Sửa nội dung bình luận ngay trong panel (nút "Sửa" → ô chữ, Lưu/Hủy): của phiên qua `AnnotationToolsViewModel.SetContents` (hộp chữ tự co giãn, 1 bước hoàn tác), của tệp qua `annotate.editFile` SetContents (revision). **Hộp chữ (FreeText) của tệp không sửa được chữ** (chữ nằm trong `/AP`, đổi `/Contents` không đổi chữ hiển thị) | commit `feat(app): rewrite comments…` | Xong, chờ CI |
-| 9d | Chọn / di chuyển / xóa chú thích **có sẵn trong tệp** trên viewer (PROMPTS B7) | — | Tiếp theo |
-| 9e | Mục SPEC Phase 6, `Phase6AcceptanceTests` (FlaUI) | — | |
+| 9c | Sửa nội dung bình luận ngay trong panel (nút "Sửa" → ô chữ, Lưu/Hủy): của phiên qua `AnnotationToolsViewModel.SetContents` (hộp chữ tự co giãn, 1 bước hoàn tác), của tệp qua `annotate.editFile` SetContents (revision). **Hộp chữ (FreeText) của tệp không sửa được chữ** (chữ nằm trong `/AP`, đổi `/Contents` không đổi chữ hiển thị) | `f950f6e` | Xong |
+| 9d | Chọn / di chuyển / xóa chú thích **có sẵn trong tệp** trên viewer (PROMPTS B7): `annotate.editFile` thêm `Move` (dời `/Rect`, `/QuadPoints`, `/Vertices`, `/L`, `/CL`, `/InkList` và `/Rect` của `/Popup`; `/AP` theo vì được khớp vào `/Rect`); Core `AnnotationHitTest.At(FileAnnotation…)` (markup theo dòng, còn lại theo hộp; bỏ trả lời/ẩn/không phải bình luận), `FileAnnotation.IsMovable`; App `AnnotationToolsViewModel.FileAnnotations.cs` (đọc nền theo (nguồn, trang), `SelectedFile`, kéo = khung nét đứt đi theo chuột → nhả = revision, Delete/Esc, thanh trạng thái hướng dẫn); `AnnotationLayer` vẽ khung | commit `feat: select, move and delete…` | Xong, chờ CI |
+| 9e | Mục SPEC Phase 6, `Phase6AcceptanceTests` (FlaUI) | — | Tiếp theo |
 
 **Quyết định Phase 6 (sẽ đưa vào SPEC mục Phase 6):**
 - PDFium 157 có API annotation nhưng **không ghi được** `/L` (đường), `/Vertices` (đa giác), `/IRT` (trả lời); PDFsharp 6.2.4 **không** lưu incremental. → Annotation được ghi bằng **PDFsharp ở tầng dictionary** (đủ loại, `/AP` sinh bằng XGraphics, trả lời có `/IRT`), giữ trên `PageRef` như dấu tách trang (thêm/sửa/hoàn tác tức thì, chỉ ghi ra PDF khi lưu/vật chất hóa). Annotation có sẵn trong tệp: sửa/xóa là thao tác nội dung (revision).

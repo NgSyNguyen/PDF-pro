@@ -284,10 +284,82 @@ public sealed class AnnotationToolsViewModelTests : IDisposable
         tab.UnderlineCommand.CanExecute(null).ShouldBeFalse("the page editor takes the mouse");
     }
 
-    private async Task<DocumentTabViewModel> OpenAsync()
+    [Fact]
+    public async Task AnnotationsOfTheFile_AreSelected_Moved_AndDeleted_AsTheNextRevision()
+    {
+        await using var tab = await OpenAsync(page => page == 0
+            ?
+            [
+                new FileAnnotation(0, FileAnnotationKind.Stamp, new PdfRect(300, 400, 400, 450), "s", "Minh", null, null, null, null, null, 4, []),
+                new FileAnnotation(1, FileAnnotationKind.Highlight, new PdfRect(Left, Top, Left + 120, Top + 12), "h", "Minh", null, null, null, null, null, 4, [TextQuad.Of(new PdfRect(Left, Top, Left + 120, Top + 12))]),
+            ]
+            : []);
+        var requests = new List<ContentChangeRequest>();
+        tab.ContentChangeRequested += (_, r) => requests.Add(r);
+        var annotations = tab.Annotations;
+        var page = Key(tab, 0);
+        annotations.FileAnnotationsOn(page).ShouldBeEmpty("read in the background");
+        await WaitUntilAsync(() => annotations.FileAnnotationsOn(page).Count == 2);
+        var scale = tab.Viewer.Layout.Scale;
+
+        var grab = Viewport(tab, 0, new PdfPoint(350, 425));
+        annotations.Press(grab, clickCount: 1).ShouldBeTrue();
+        annotations.SelectedFile.ShouldNotBeNull().Annotation.Name.ShouldBe("s");
+        annotations.Selected.ShouldBeNull();
+        annotations.IsMoving.ShouldBeTrue();
+        annotations.IsBarVisible.ShouldBeTrue();
+        annotations.ToolText.ShouldBe(Strings.Annotation_FileSelected);
+        annotations.DragTo(new ViewPoint(grab.X + 30, grab.Y + 15));
+        annotations.FileSelectionOn(page).ShouldNotBeNull().Left.ShouldBe(300 + (30 / scale), 0.01, "the frame follows the mouse");
+        annotations.Release();
+
+        var move = ((EditFileAnnotationsParams)requests.ShouldHaveSingleItem().Parameters).Edits.ShouldHaveSingleItem();
+        move.Action.ShouldBe(FileAnnotationAction.Move);
+        (move.Page, move.Index, move.Name, move.Kind).ShouldBe((1, 0, "s", FileAnnotationKind.Stamp));
+        move.Dx.ShouldBe(30 / scale, 0.01);
+        move.Dy.ShouldBe(-15 / scale, 0.01, "down on the screen is down on the page");
+        requests[0].Description.ShouldBe(Strings.History_MoveFileComment);
+        tab.Workspace.Session.Plan[0].Annotations.ShouldBeEmpty("the file changes, not the plan");
+
+        var onText = Viewport(tab, 0, new PdfPoint(Left + 30, Top + 6));
+        annotations.Press(onText, clickCount: 1).ShouldBeTrue();
+        annotations.SelectedFile!.Annotation.Name.ShouldBe("h");
+        annotations.IsMoving.ShouldBeFalse("marked text stays on its text");
+        annotations.ToolText.ShouldBe(Strings.Annotation_FileSelectedFixed);
+        annotations.Release();
+        annotations.DeleteCommand.CanExecute(null).ShouldBeTrue();
+        annotations.DeleteCommand.Execute(null);
+
+        requests.Count.ShouldBe(2);
+        ((EditFileAnnotationsParams)requests[1].Parameters).Edits.ShouldHaveSingleItem().Action.ShouldBe(FileAnnotationAction.Delete);
+        annotations.SelectedFile.ShouldBeNull();
+
+        annotations.Press(grab, clickCount: 1).ShouldBeTrue();
+        annotations.Release();
+        annotations.Escape().ShouldBeTrue();
+        annotations.SelectedFile.ShouldBeNull();
+        annotations.Press(Viewport(tab, 0, new PdfPoint(500, 200)), clickCount: 1).ShouldBeFalse("nothing there: text selection takes the press");
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while (!condition())
+        {
+            DateTime.UtcNow.ShouldBeLessThan(deadline);
+            await Task.Delay(10, TestContext.Current.CancellationToken);
+        }
+    }
+
+    private async Task<DocumentTabViewModel> OpenAsync(Func<int, IReadOnlyList<FileAnnotation>>? fileAnnotations = null)
     {
         var document = FakePdfDocument.WithPages(Lines.Length);
         document.TextLayers = page => Layer(Lines[page]);
+        if (fileAnnotations is not null)
+        {
+            document.FileAnnotations = fileAnnotations;
+        }
+
         var tab = _factory.Create(await _fixture.CreateAsync(document));
         tab.Viewer.ViewportSize = new ViewSize(1000, 700);
         foreach (var page in tab.Workspace.Pages.Pages)

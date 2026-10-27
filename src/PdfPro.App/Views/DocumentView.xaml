@@ -241,7 +241,7 @@
               Command="{Binding DeleteCommand}"
               Content="{loc:Tr Annotation_Delete}"
               Icon="{ui:SymbolIcon Delete24}"
-              Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+              Visibility="{Binding HasAnySelection, Converter={StaticResource BoolToVisibility}}" />
             <ui:Button
               AutomationProperties.AutomationId="AnnotationToolDone"
               Command="{Binding StopToolCommand}"

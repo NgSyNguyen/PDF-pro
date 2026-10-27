@@ -84,4 +84,33 @@ public sealed class AnnotationHitTestTests
         AnnotationHitTest.At([over, under], new PdfPoint(110, 110), 1).ShouldBeSameAs(under);
         AnnotationHitTest.At([under, over], new PdfPoint(500, 500), 1).ShouldBeNull();
     }
+
+    [Fact]
+    public void CommentsOfTheFile_ArePickedByTheirLinesOrBox_TopmostFirst()
+    {
+        static FileAnnotation Of(int index, FileAnnotationKind kind, PdfRect rect, int? inReplyTo = null, int flags = 4, IReadOnlyList<TextQuad>? quads = null)
+            => new(index, kind, rect, $"a{index}", null, null, null, inReplyTo, null, null, flags, quads ?? []);
+
+        IReadOnlyList<FileAnnotation> annotations =
+        [
+            Of(0, FileAnnotationKind.Highlight, new PdfRect(72, 680, 300, 712), quads: [TextQuad.Of(new PdfRect(72, 700, 300, 712)), TextQuad.Of(new PdfRect(72, 680, 120, 692))]),
+            Of(1, FileAnnotationKind.Square, new PdfRect(100, 400, 200, 500)),
+            Of(2, FileAnnotationKind.Stamp, new PdfRect(150, 450, 260, 480)),
+            Of(3, FileAnnotationKind.Text, new PdfRect(400, 400, 420, 420), inReplyTo: 1),
+            Of(4, FileAnnotationKind.Link, new PdfRect(400, 300, 500, 320)),
+            Of(5, FileAnnotationKind.Ink, new PdfRect(400, 200, 500, 250), flags: FileAnnotation.HiddenFlag),
+        ];
+
+        AnnotationHitTest.At(annotations, new PdfPoint(200, 706), 2)!.Index.ShouldBe(0);
+        AnnotationHitTest.At(annotations, new PdfPoint(200, 686), 2).ShouldBeNull("between the marked lines' ends");
+        AnnotationHitTest.At(annotations, new PdfPoint(160, 460), 2)!.Index.ShouldBe(2, "the stamp is over the square");
+        AnnotationHitTest.At(annotations, new PdfPoint(120, 420), 2)!.Index.ShouldBe(1);
+        AnnotationHitTest.At(annotations, new PdfPoint(201, 420), 2)!.Index.ShouldBe(1, "a little slack");
+        AnnotationHitTest.At(annotations, new PdfPoint(410, 410), 2).ShouldBeNull("an answer");
+        AnnotationHitTest.At(annotations, new PdfPoint(450, 310), 2).ShouldBeNull("a link is not a comment");
+        AnnotationHitTest.At(annotations, new PdfPoint(450, 220), 2).ShouldBeNull("hidden");
+        annotations[0].IsMovable.ShouldBeFalse("marked text stays on its text");
+        annotations[1].IsMovable.ShouldBeTrue();
+        annotations[3].IsMovable.ShouldBeFalse();
+    }
 }

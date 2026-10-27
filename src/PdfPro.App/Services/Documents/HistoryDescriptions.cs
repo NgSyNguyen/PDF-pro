@@ -63,6 +63,7 @@ internal static class HistoryDescriptions
             FileAnnotationAction.Reply => Strings.History_ReplyFileComment,
             FileAnnotationAction.SetState => Strings.History_ReviewFileComment,
             FileAnnotationAction.SetContents => Strings.History_EditFileComment,
+            FileAnnotationAction.Move => Strings.History_MoveFileComment,
             _ => Strings.History_DeleteFileComment,
         };
     }

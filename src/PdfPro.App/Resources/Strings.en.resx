@@ -642,6 +642,7 @@ The original file was not changed and your changes are still here.</value></data
   <data name="History_ReviewFileComment" xml:space="preserve"><value>Set a comment's state</value></data>
   <data name="History_EditFileComment" xml:space="preserve"><value>Edit a comment</value></data>
   <data name="History_DeleteFileComment" xml:space="preserve"><value>Delete a comment</value></data>
+  <data name="History_MoveFileComment" xml:space="preserve"><value>Move an annotation</value></data>
   <data name="Ribbon_Group_Review" xml:space="preserve"><value>Review</value></data>
   <data name="Cmd_Comments" xml:space="preserve"><value>Comments</value></data>
   <data name="Cmd_Comments_ToolTip" xml:space="preserve"><value>Open the list of the document's comments: filter, reply, set states, export</value></data>
@@ -672,6 +673,8 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Annotation_TextBoxHeader" xml:space="preserve"><value>Text box — type its text</value></data>
   <data name="Annotation_Comment" xml:space="preserve"><value>Comment…</value></data>
   <data name="Annotation_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Annotation_FileSelected" xml:space="preserve"><value>Annotation already in the file — drag to move it, Delete to remove it (written as a new revision)</value></data>
+  <data name="Annotation_FileSelectedFixed" xml:space="preserve"><value>Annotation already in the file — Delete to remove it (written as a new revision)</value></data>
   <data name="Annotation_Width" xml:space="preserve"><value>Width (pt)</value></data>
   <data name="Annotation_StampWithDate" xml:space="preserve"><value>With the date</value></data>
   <data name="Annotation_StampText" xml:space="preserve"><value>Stamp text</value></data>

@@ -22,6 +22,9 @@ public enum FileAnnotationAction
     /// <summary>Replaces its comment.</summary>
     SetContents,
 
+    /// <summary>Moves it on its page (with its pop-up window) by <see cref="FileAnnotationEdit.Dx"/>, <see cref="FileAnnotationEdit.Dy"/>.</summary>
+    Move,
+
     /// <summary>Removes it with its conversation and pop-up window.</summary>
     Delete,
 }
@@ -42,6 +45,8 @@ public enum FileAnnotationAction
 /// <param name="Author">Who answers or reviews.</param>
 /// <param name="When">When; the answer is dated with it.</param>
 /// <param name="Id">The name (/NM) of the answer added.</param>
+/// <param name="Dx">How far to move it right, in points.</param>
+/// <param name="Dy">How far to move it up, in points.</param>
 public sealed record FileAnnotationEdit(
     [property: Range(1, int.MaxValue)] int Page,
     [property: Range(0, int.MaxValue)] int Index,
@@ -53,7 +58,9 @@ public sealed record FileAnnotationEdit(
     ReviewState State = ReviewState.None,
     string Author = "",
     DateTimeOffset When = default,
-    string? Id = null);
+    string? Id = null,
+    double Dx = 0,
+    double Dy = 0);
 
 /// <param name="Edits">The changes, made in order (removals last).</param>
 public sealed record EditFileAnnotationsParams([property: Required] IReadOnlyList<FileAnnotationEdit> Edits);
@@ -68,6 +75,12 @@ public sealed class EditFileAnnotationsOperation : DocumentContentOperation<Edit
 
     /// <summary>How far a /Rect may be from the one read to still be the same annotation, in points.</summary>
     private const double RectTolerance = 0.5;
+
+    /// <summary>The longest move, in points (the largest page side PDF allows).</summary>
+    private const double MaxMove = 14400;
+
+    /// <summary>Entries holding page coordinates: flat x, y lists (12.5).</summary>
+    private static readonly string[] PointLists = ["/Rect", "/QuadPoints", "/Vertices", "/L", "/CL"];
 
     public override string Id => OperationId;
 
@@ -112,6 +125,12 @@ public sealed class EditFileAnnotationsOperation : DocumentContentOperation<Edit
             {
                 errors.Add(new OperationValidationError(member, "An answer needs a name."));
             }
+
+            if (edit.Action == FileAnnotationAction.Move
+                && (!double.IsFinite(edit.Dx) || !double.IsFinite(edit.Dy) || Math.Abs(edit.Dx) > MaxMove || Math.Abs(edit.Dy) > MaxMove || (edit.Dx == 0 && edit.Dy == 0)))
+            {
+                errors.Add(new OperationValidationError(member, "The move must be a finite distance within the page."));
+            }
         }
 
         return errors.Count == 0 ? OperationValidationResult.Success : OperationValidationResult.Failed(errors);
@@ -141,6 +160,15 @@ public sealed class EditFileAnnotationsOperation : DocumentContentOperation<Edit
                     else
                     {
                         annotation.Elements["/Contents"] = text.All(c => c < 128) ? new PdfString(text) : new PdfString(text, PdfStringEncoding.Unicode);
+                    }
+
+                    annotation.Elements["/M"] = new PdfString(Core.Documents.PdfDate.Format(edit.When));
+                    break;
+                case FileAnnotationAction.Move:
+                    Move(annotation, edit.Dx, edit.Dy);
+                    if (AsDictionary(annotation.Elements["/Popup"]) is { } popup)
+                    {
+                        Move(popup, edit.Dx, edit.Dy);
                     }
 
                     annotation.Elements["/M"] = new PdfString(Core.Documents.PdfDate.Format(edit.When));
@@ -198,6 +226,40 @@ public sealed class EditFileAnnotationsOperation : DocumentContentOperation<Edit
             && Near(Number(rect.Elements[1]), edit.Rect.Bottom)
             && Near(Number(rect.Elements[2]), edit.Rect.Right)
             && Near(Number(rect.Elements[3]), edit.Rect.Top);
+    }
+
+    /// <summary>
+    /// Shifts every page coordinate of an annotation: its place, marked lines, corners, line ends, callout and strokes.
+    /// The appearance follows, being fitted to /Rect.
+    /// </summary>
+    private static void Move(PdfDictionary annotation, double dx, double dy)
+    {
+        foreach (var key in PointLists)
+        {
+            if (AsArray(annotation.Elements[key]) is { } points)
+            {
+                Shift(points, dx, dy);
+            }
+        }
+
+        if (AsArray(annotation.Elements["/InkList"]) is { } strokes)
+        {
+            foreach (var stroke in strokes.Elements.Select(AsArray).OfType<PdfArray>())
+            {
+                Shift(stroke, dx, dy);
+            }
+        }
+    }
+
+    private static void Shift(PdfArray points, double dx, double dy)
+    {
+        for (var i = 0; i < points.Elements.Count; i++)
+        {
+            if (Number(points.Elements[i]) is { } value)
+            {
+                points.Elements[i] = new PdfReal(Math.Round(value + (i % 2 == 0 ? dx : dy), 3));
+            }
+        }
     }
 
     private static bool Near(double? value, double expected) => value is { } actual && Math.Abs(actual - expected) <= RectTolerance;

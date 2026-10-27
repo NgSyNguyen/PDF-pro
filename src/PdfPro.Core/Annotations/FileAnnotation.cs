@@ -83,4 +83,7 @@ public sealed record FileAnnotation(
     public bool IsReply => InReplyTo is not null;
 
     public bool IsHidden => (Flags & HiddenFlag) != 0;
+
+    /// <summary>A comment that can be dragged elsewhere on its page: all but marked text, which stays on its text.</summary>
+    public bool IsMovable => AnnotationGroups.Of(Kind) is { } group && group != AnnotationGroup.Markup && !IsReply;
 }

@@ -136,6 +136,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         {
             Fonts = Editor.Fonts,
             Images = Editor.Images,
+            RequestContentChange = RequestFileCommentChange,
         };
         Comments = new CommentsViewModel(viewer, Annotations, Editor.GeometryOf, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), services.FileDialogs, _messages, () => Workspace.FileName, logger,
             requestContentChange: RequestFileCommentChange);
@@ -686,7 +687,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
     }
 
-    /// <summary>A change to a comment already in the file (from the comments panel): the window writes the next revision.</summary>
+    /// <summary>A change to an annotation already in the file (comments panel, viewer): the window writes the next revision.</summary>
     private bool RequestFileCommentChange(ContentChangeRequest request)
     {
         if (!CanChangeContent())

@@ -56,8 +56,9 @@ public sealed record AnnotationTarget(Guid PageKey, string Id);
 /// <summary>
 /// Annotating in the viewer ("Chú thích"): marking selected text (highlight, underline, strike-out, squiggly — at once
 /// when text is selected, otherwise each text selection made with the tool), placing sticky notes and writing their
-/// comment, selecting an annotation of the session with a click, moving it with the mouse and deleting it. Every change
-/// is one undoable page operation (annotate.add / update / delete). Annotations are signed with the author name of the
+/// comment, selecting an annotation with a click, moving it with the mouse and deleting it. Every change is one undoable
+/// page operation (annotate.add / update / delete) — or, for an annotation already in the file, the next revision
+/// (annotate.editFile). Annotations are signed with the author name of the
 /// settings. Points arrive in viewport coordinates and become page points through <see cref="PageCoordinateMapper"/>.
 /// Must be used on the UI thread.
 /// </summary>
@@ -163,15 +164,18 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
     /// <summary>"Đang dùng: Tô sáng — Esc để tắt" (with how to draw a polygon).</summary>
     public string? ToolText => Tool switch
     {
-        AnnotationTool.None => null,
+        AnnotationTool.None => SelectedFile is { } file ? (file.Annotation.IsMovable ? Strings.Annotation_FileSelected : Strings.Annotation_FileSelectedFixed) : null,
         AnnotationTool.Polygon or AnnotationTool.Polyline => string.Format(CultureInfo.CurrentCulture, Strings.Annotation_ToolActive, NameOf(Tool)) + " · " + Strings.Annotation_PolygonHint,
         _ => string.Format(CultureInfo.CurrentCulture, Strings.Annotation_ToolActive, NameOf(Tool)),
     };
 
     /// <summary>The tool bar shows: a tool is on, or an annotation is selected (its colour, comment, delete).</summary>
-    public bool IsBarVisible => IsToolActive || Selected is not null;
+    public bool IsBarVisible => IsToolActive || Selected is not null || SelectedFile is not null;
 
     public bool HasSelection => Selected is not null;
+
+    /// <summary>An annotation is selected, of the session or of the file (Delete removes it).</summary>
+    public bool HasAnySelection => Selected is not null || SelectedFile is not null;
 
     /// <summary>The session's annotations of a page, in drawing order.</summary>
     public IReadOnlyList<AnnotationItem> AnnotationsOn(Guid pageKey)
@@ -237,12 +241,19 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         var tolerance = PickTolerancePixels / _viewer.Layout.Scale;
         if (AnnotationHitTest.At(AnnotationsOn(found.Page.Key), found.Point, tolerance) is not { } hit)
         {
+            if (PressFile(found.Index, found.Page, found.Point, tolerance))
+            {
+                return true;
+            }
+
             Selected = null;
+            SelectedFile = null;
             Changed?.Invoke(this, EventArgs.Empty);
             return false;
         }
 
         var target = new AnnotationTarget(found.Page.Key, hit.Id);
+        SelectedFile = null;
         Selected = target;
         if (clickCount >= 2 && hit is NoteAnnotation)
         {
@@ -259,7 +270,7 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
     }
 
     /// <summary>A move is under way (the mouse is captured for it).</summary>
-    public bool IsMoving => _move is not null;
+    public bool IsMoving => _move is not null || _fileMove is not null;
 
     /// <summary>The mouse moved to <paramref name="viewport"/> while moving or drawing an annotation.</summary>
     public void DragTo(ViewPoint viewport)
@@ -267,6 +278,11 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         if (_draw is not null)
         {
             DrawTo(viewport);
+            return;
+        }
+
+        if (DragFile(viewport))
+        {
             return;
         }
 
@@ -291,6 +307,11 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         if (_draw is not null)
         {
             ReleaseDrawing();
+            return;
+        }
+
+        if (ReleaseFile())
+        {
             return;
         }
 
@@ -460,10 +481,15 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         Tool = Tool == tool ? AnnotationTool.None : tool;
     }
 
-    /// <summary>Removes the selected annotation (one undoable step).</summary>
+    /// <summary>Removes the selected annotation (one undoable step; the file's as the next revision).</summary>
     [RelayCommand(CanExecute = nameof(CanDelete))]
     public void Delete()
     {
+        if (Selected is null && DeleteFile())
+        {
+            return;
+        }
+
         if (Selected is not { } target || IndexOf(target.PageKey) is not { } index || Find(target) is null)
         {
             return;
@@ -474,7 +500,7 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    public bool CanDelete => Selected is not null;
+    public bool CanDelete => Selected is not null || SelectedFile is not null;
 
     /// <summary>
     /// Esc: closes the comment, else drops a polygon being drawn, else turns the tool off, else clears the selection.
@@ -501,9 +527,11 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
             return true;
         }
 
-        if (Selected is not null)
+        if (Selected is not null || SelectedFile is not null)
         {
             Selected = null;
+            SelectedFile = null;
+            _fileMove = null;
             Changed?.Invoke(this, EventArgs.Empty);
             return true;
         }
@@ -514,6 +542,7 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
     /// <summary>The pages changed (an edit, undo, redo): the selection is dropped when its annotation is gone.</summary>
     public void Refresh()
     {
+        RefreshFile();
         if (Selected is { } target && Find(target) is null)
         {
             Selected = null;
@@ -531,6 +560,7 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
     public void Select(AnnotationTarget target)
     {
         ArgumentNullException.ThrowIfNull(target);
+        SelectedFile = null;
         Selected = Find(target) is null ? null : target;
         Changed?.Invoke(this, EventArgs.Empty);
     }
@@ -558,6 +588,7 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
     partial void OnSelectedChanged(AnnotationTarget? value)
     {
         OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(HasAnySelection));
         OnPropertyChanged(nameof(IsBarVisible));
         EditCommentCommand.NotifyCanExecuteChanged();
     }
