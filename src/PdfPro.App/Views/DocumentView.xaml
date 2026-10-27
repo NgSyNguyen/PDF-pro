@@ -537,6 +537,13 @@
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
           <ui:Button
             Margin="0,0,6,0"
+            AutomationProperties.AutomationId="FormDesignerDetect"
+            Command="{Binding DetectCommand}"
+            Content="{loc:Tr FormDesigner_Detect}"
+            Icon="{ui:SymbolIcon Wand24}"
+            ToolTip="{loc:Tr FormDesigner_Detect_ToolTip}" />
+          <ui:Button
+            Margin="0,0,6,0"
             AutomationProperties.AutomationId="FormDesignerDelete"
             Command="{Binding DeleteCommand}"
             Content="{loc:Tr FormDesigner_Delete}"
@@ -619,6 +626,42 @@
             Text="{loc:Tr FormDesigner_Hint}"
             TextTrimming="CharacterEllipsis"
             ToolTip="{loc:Tr FormDesigner_Hint}" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- "Nhận diện trường": what was found, then take the chosen proposals or drop them all. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="FormSuggestionsBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding FormDesigner}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding SuggestionStatus, Converter={StaticResource NullToCollapsed}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            Appearance="Primary"
+            AutomationProperties.AutomationId="FormSuggestionsAccept"
+            Command="{Binding AcceptSuggestionsCommand}"
+            Content="{loc:Tr FormDesigner_AcceptSuggestions}"
+            Icon="{ui:SymbolIcon CheckmarkCircle24}" />
+          <ui:Button
+            AutomationProperties.AutomationId="FormSuggestionsClear"
+            Command="{Binding ClearSuggestionsCommand}"
+            Content="{loc:Tr FormDesigner_ClearSuggestions}"
+            Icon="{ui:SymbolIcon DismissCircle24}" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+          <ui:SymbolIcon Margin="0,0,8,0" Symbol="Wand24" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="FormSuggestionsStatus"
+            Text="{Binding SuggestionStatus}"
+            TextTrimming="CharacterEllipsis" />
         </StackPanel>
       </DockPanel>
     </Border>

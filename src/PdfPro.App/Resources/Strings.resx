@@ -1114,4 +1114,10 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="FormMerge_Flatten" xml:space="preserve"><value>Làm phẳng các tệp (giá trị không sửa được nữa)</value></data>
   <data name="History_FlattenForm" xml:space="preserve"><value>Làm phẳng biểu mẫu</value></data>
   <data name="History_ResetForm" xml:space="preserve"><value>Xóa dữ liệu {0} trường biểu mẫu</value></data>
+  <data name="FormDesigner_Detect" xml:space="preserve"><value>Nhận diện trường</value></data>
+  <data name="FormDesigner_Detect_ToolTip" xml:space="preserve"><value>Tìm chỗ trống trên trang (dòng chấm, gạch dưới, đường kẻ, ô vuông) và đề xuất trường; bấm vào đề xuất để chọn hoặc bỏ</value></data>
+  <data name="FormDesigner_Suggestions" xml:space="preserve"><value>{0} đề xuất — {1} được chọn (bấm vào đề xuất để chọn hoặc bỏ)</value></data>
+  <data name="FormDesigner_NoSuggestions" xml:space="preserve"><value>Không tìm thấy chỗ trống nào để đặt trường.</value></data>
+  <data name="FormDesigner_AcceptSuggestions" xml:space="preserve"><value>Thêm các trường đã chọn</value></data>
+  <data name="FormDesigner_ClearSuggestions" xml:space="preserve"><value>Bỏ đề xuất</value></data>
 </root>

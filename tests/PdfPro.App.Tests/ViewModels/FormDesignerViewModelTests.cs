@@ -313,6 +313,62 @@ public sealed class FormDesignerViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task DetectedBlanks_AreProposed_ToggledByAClick_AndPlacedTogether()
+    {
+        var document = FakePdfDocument.WithPages(2);
+        var chars = new List<TextChar>();
+        var x = 100.0;
+        foreach (var c in "Địa chỉ: ..........")
+        {
+            chars.Add(new TextChar(c.ToString(), new PdfRect(x, 400, x + 6, 412)));
+            x += 6;
+        }
+
+        document.TextLayers = page => page == 0 ? new PageText(chars) : PageText.Empty;
+        document.PageObjects = page => page == 0 ? [new Core.Editing.PageObjectInfo(1, Core.Editing.PageObjectKind.Path, new PdfRect(150, 300, 450, 300.75), [], PdfMatrix.Identity, null)] : [];
+        var (tab, requests) = await OpenAsync(document);
+        var designer = tab.FormDesigner;
+
+        await designer.DetectCommand.ExecuteAsync(null);
+
+        designer.Suggestions.Count.ShouldBe(2);
+        designer.SuggestionStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.FormDesigner_Suggestions, 2, 2));
+        var line = designer.Suggestions.Single(s => s.Suggestion.Label.Length == 0);
+        var middle = new PdfPoint((line.Suggestion.Rect.Left + line.Suggestion.Rect.Right) / 2, (line.Suggestion.Rect.Bottom + line.Suggestion.Rect.Top) / 2);
+        designer.CursorAt(Viewport(tab, 0, middle)).ShouldBe(FormDesignCursor.Toggle);
+        designer.Press(Viewport(tab, 0, middle)).ShouldBeTrue();
+        line.IsAccepted.ShouldBeFalse("a click drops a proposal…");
+        designer.SuggestionStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.FormDesigner_Suggestions, 2, 1));
+        designer.Press(Viewport(tab, 0, middle));
+        line.IsAccepted.ShouldBeTrue("…and takes it again");
+        requests.ShouldBeEmpty();
+
+        designer.AcceptSuggestionsCommand.Execute(null);
+
+        var add = ((DesignFormParams)requests.ShouldHaveSingleItem().Parameters).Add.ShouldNotBeNull();
+        add.Select(a => (a.Name, a.Kind, a.Page)).ShouldBe([("Địa chỉ", FormFieldKind.Text, 0), (Strings.FormDesigner_Name_Text + " 1", FormFieldKind.Text, 0)]);
+        add[0].ToolTip.ShouldBe("Địa chỉ");
+        designer.HasSuggestions.ShouldBeFalse();
+        designer.SuggestionStatus.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task NothingDetected_IsSaid_AndTheNoteCanBeDismissed()
+    {
+        var (tab, requests) = await OpenAsync();
+        var designer = tab.FormDesigner;
+
+        await designer.DetectCommand.ExecuteAsync(null);
+
+        designer.HasSuggestions.ShouldBeFalse();
+        designer.SuggestionStatus.ShouldBe(Strings.FormDesigner_NoSuggestions);
+        designer.AcceptSuggestionsCommand.CanExecute(null).ShouldBeFalse();
+        designer.ClearSuggestionsCommand.Execute(null);
+        designer.SuggestionStatus.ShouldBeNull();
+        requests.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task AnXfaOnlyForm_CannotBeDesigned()
     {
         _forms.Form = new FormSnapshot(FormType.XfaFull, []);
@@ -332,9 +388,9 @@ public sealed class FormDesignerViewModelTests : IDisposable
         return new ViewPoint(bounds.X + shown.X - tab.Viewer.ScrollOffset.X, bounds.Y + shown.Y - tab.Viewer.ScrollOffset.Y);
     }
 
-    private async Task<(DocumentTabViewModel Tab, List<ContentChangeRequest> Requests)> OpenAsync()
+    private async Task<(DocumentTabViewModel Tab, List<ContentChangeRequest> Requests)> OpenAsync(FakePdfDocument? document = null)
     {
-        var tab = _factory.Create(await _fixture.CreateAsync(FakePdfDocument.WithPages(2)));
+        var tab = _factory.Create(await _fixture.CreateAsync(document ?? FakePdfDocument.WithPages(2)));
         tab.Viewer.ViewportSize = new ViewSize(1000, 3000);
         foreach (var page in tab.Workspace.Pages.Pages)
         {

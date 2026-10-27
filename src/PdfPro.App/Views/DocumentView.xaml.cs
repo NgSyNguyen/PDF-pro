@@ -338,6 +338,7 @@ public partial class DocumentView : UserControl
             Cursor? cursor = designer.CursorAt(at) switch
             {
                 FormDesignCursor.Place => Cursors.Cross,
+                FormDesignCursor.Toggle => Cursors.Hand,
                 FormDesignCursor.Move => Cursors.SizeAll,
                 FormDesignCursor.ResizeDiagonal => Cursors.SizeNWSE,
                 FormDesignCursor.ResizeAntiDiagonal => Cursors.SizeNESW,

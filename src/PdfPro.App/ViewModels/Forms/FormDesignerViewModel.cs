@@ -39,6 +39,9 @@ public enum FormDesignCursor
 {
     Default,
     Place,
+
+    /// <summary>Over a proposal: a click takes or drops it.</summary>
+    Toggle,
     Move,
     ResizeDiagonal,
     ResizeAntiDiagonal,
@@ -180,6 +183,11 @@ public sealed partial class FormDesignerViewModel : ObservableObject
             return FormDesignCursor.Default;
         }
 
+        if (SuggestionAt(found.Page.Key, found.Point) is not null)
+        {
+            return FormDesignCursor.Toggle;
+        }
+
         return CornerAt(found.Page.Key, viewport) switch
         {
             FormDesignCorner.TopLeft or FormDesignCorner.BottomRight => FormDesignCursor.ResizeDiagonal,
@@ -209,6 +217,10 @@ public sealed partial class FormDesignerViewModel : ObservableObject
         if (Tool != FormDesignTool.Select)
         {
             _drag = new Drag(DragKind.Place, found.Page.Key, found.Index, found.Point, found.Point, null, FormDesignCorner.None);
+        }
+        else if (ToggleSuggestionAt(found.Page.Key, found.Point))
+        {
+            return true;
         }
         else if (CornerAt(found.Page.Key, viewport) is var corner and not FormDesignCorner.None)
         {
@@ -318,6 +330,7 @@ public sealed partial class FormDesignerViewModel : ObservableObject
             Select(null);
         }
 
+        DropSuggestions();
         _drag = null;
         Changed?.Invoke(this, EventArgs.Empty);
     }
@@ -337,8 +350,10 @@ public sealed partial class FormDesignerViewModel : ObservableObject
             _drag = null;
             Tool = FormDesignTool.Select;
             Select(null);
+            DropSuggestions();
         }
 
+        DetectCommand.NotifyCanExecuteChanged();
         Changed?.Invoke(this, EventArgs.Empty);
     }
 

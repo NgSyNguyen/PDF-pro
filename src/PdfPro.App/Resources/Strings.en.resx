@@ -1114,4 +1114,10 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="FormMerge_Flatten" xml:space="preserve"><value>Flatten the files (values cannot be changed)</value></data>
   <data name="History_FlattenForm" xml:space="preserve"><value>Flatten form</value></data>
   <data name="History_ResetForm" xml:space="preserve"><value>Clear {0} form fields</value></data>
+  <data name="FormDesigner_Detect" xml:space="preserve"><value>Detect fields</value></data>
+  <data name="FormDesigner_Detect_ToolTip" xml:space="preserve"><value>Find blanks on the pages (dots, underscores, lines, boxes) and propose fields; click a proposal to take or drop it</value></data>
+  <data name="FormDesigner_Suggestions" xml:space="preserve"><value>{0} proposals — {1} taken (click a proposal to take or drop it)</value></data>
+  <data name="FormDesigner_NoSuggestions" xml:space="preserve"><value>No blank was found to place a field.</value></data>
+  <data name="FormDesigner_AcceptSuggestions" xml:space="preserve"><value>Add the chosen fields</value></data>
+  <data name="FormDesigner_ClearSuggestions" xml:space="preserve"><value>Drop proposals</value></data>
 </root>

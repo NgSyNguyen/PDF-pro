@@ -28,6 +28,10 @@ public sealed class FormDesignLayer : FrameworkElement
     private static readonly Pen SelectionPen = Freeze(new Pen(Accent, 2));
     private static readonly Pen DragPen = Freeze(new Pen(Accent, 1) { DashStyle = DashStyles.Dash });
     private static readonly Brush LabelBackground = Freeze(new SolidColorBrush(Color.FromArgb(0xE0, 0x2F, 0x6F, 0xD6)));
+    private static readonly Brush SuggestionFill = Freeze(new SolidColorBrush(Color.FromArgb(0x40, 0xF7, 0x93, 0x1E)));
+    private static readonly Pen SuggestionPen = Freeze(new Pen(Freeze(new SolidColorBrush(Color.FromRgb(0xE0, 0x7A, 0x00))), 1.5) { DashStyle = DashStyles.Dash });
+    private static readonly Pen DroppedPen = Freeze(new Pen(Freeze(new SolidColorBrush(Color.FromArgb(0xA0, 0x80, 0x80, 0x80))), 1) { DashStyle = DashStyles.Dot });
+    private static readonly Brush SuggestionLabel = Freeze(new SolidColorBrush(Color.FromArgb(0xE0, 0xC0, 0x60, 0x00)));
     private static readonly Typeface LabelFace = new(SystemFonts.MessageFontFamily, FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
 
     public FormDesignLayer()
@@ -65,7 +69,7 @@ public sealed class FormDesignLayer : FrameworkElement
             var frame = Frame(mapper, widget.Widget.Rect);
             var selected = widget.IsSame(designer.Selected);
             drawingContext.DrawRectangle(FieldFill, selected ? SelectionPen : FieldPen, frame);
-            DrawLabel(drawingContext, widget.Field.Name, frame, dpi);
+            DrawLabel(drawingContext, widget.Field.Name, frame, dpi, LabelBackground);
             if (!selected)
             {
                 continue;
@@ -85,6 +89,17 @@ public sealed class FormDesignLayer : FrameworkElement
             }
         }
 
+        // Proposals of "Nhận diện trường": taken ones tinted orange, dropped ones dotted grey.
+        foreach (var suggestion in designer.SuggestionsOn(PageKey))
+        {
+            var frame = Frame(mapper, suggestion.Suggestion.Rect);
+            drawingContext.DrawRectangle(suggestion.IsAccepted ? SuggestionFill : null, suggestion.IsAccepted ? SuggestionPen : DroppedPen, frame);
+            if (suggestion.IsAccepted && suggestion.Suggestion.Label.Length > 0)
+            {
+                DrawLabel(drawingContext, suggestion.Suggestion.Label, frame, dpi, SuggestionLabel);
+            }
+        }
+
         if (designer.Preview(PageKey) is { } preview)
         {
             drawingContext.DrawRectangle(FieldFill, DragPen, Frame(mapper, preview));
@@ -98,7 +113,7 @@ public sealed class FormDesignLayer : FrameworkElement
     }
 
     /// <summary>The field's name on a small tag above its frame (inside it when there is no room above).</summary>
-    private static void DrawLabel(DrawingContext drawingContext, string name, Rect frame, double dpi)
+    private static void DrawLabel(DrawingContext drawingContext, string name, Rect frame, double dpi, Brush background)
     {
         var text = new FormattedText(name, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, LabelFace, LabelSize, Brushes.White, dpi)
         {
@@ -107,7 +122,7 @@ public sealed class FormDesignLayer : FrameworkElement
             Trimming = TextTrimming.CharacterEllipsis,
         };
         var top = frame.Top - text.Height - 2 >= 0 ? frame.Top - text.Height - 2 : frame.Top + 1;
-        drawingContext.DrawRectangle(LabelBackground, null, new Rect(frame.Left, top, text.Width + 6, text.Height + 1));
+        drawingContext.DrawRectangle(background, null, new Rect(frame.Left, top, text.Width + 6, text.Height + 1));
         drawingContext.DrawText(text, new Point(frame.Left + 3, top));
     }
 
