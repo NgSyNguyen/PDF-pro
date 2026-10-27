@@ -154,10 +154,24 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             _operations,
             services.Forms ?? new PdfFormSource(),
             Editor.GeometryOf);
+        FormDesigner = new FormDesignerViewModel(viewer, Forms, Editor.GeometryOf, RequestContentChange, _operations);
+        FormDesigner.PropertyChanged += OnFormDesignerPropertyChanged;
+        Forms.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(FormFillingViewModel.IsXfaOnly))
+            {
+                ToggleFormDesignCommand.NotifyCanExecuteChanged();
+            }
+        };
         Annotations.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(AnnotationToolsViewModel.Tool))
             {
+                if (Annotations.Tool != AnnotationTool.None)
+                {
+                    FormDesigner.IsActive = false;
+                }
+
                 UpdateFormsActive();
             }
         };
@@ -627,6 +641,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         {
             Annotations.StopTool();
             ContentEditor.IsActive = false;
+            FormDesigner.IsActive = false;
             if (Organizer is null)
             {
                 var organizer = _services.CreateOrganizer(Workspace, this);
@@ -1074,6 +1089,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
         Annotations.Refresh();
         ContentEditor.Refresh();
+        FormDesigner.Refresh();
         if (samePages)
         {
             Forms.RefreshValues(); // a field was filled (or the filling undone): the inputs stay, keeping the focus
@@ -1176,6 +1192,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             EditorProperties ??= new OverlayPropertiesViewModel(Editor);
             Annotations.StopTool(); // the page editor takes the mouse
             ContentEditor.IsActive = false;
+            FormDesigner.IsActive = false;
+        }
+
+        if (e.PropertyName == nameof(PageEditorViewModel.IsActive))
+        {
+            OnPropertyChanged(nameof(ShowsProperties));
         }
 
         if (e.PropertyName == nameof(PageEditorViewModel.HasObjects))
@@ -1227,6 +1249,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         RemoveStampsCommand.NotifyCanExecuteChanged();
         NotifyAnnotationCommands();
         ToggleContentEditingCommand.NotifyCanExecuteChanged();
+        ToggleFormDesignCommand.NotifyCanExecuteChanged();
     }
 }
 

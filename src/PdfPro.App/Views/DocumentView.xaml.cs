@@ -4,6 +4,7 @@ using System.Windows.Input;
 using PdfPro.App.ViewModels;
 using PdfPro.App.ViewModels.Annotating;
 using PdfPro.App.ViewModels.Editing;
+using PdfPro.App.ViewModels.Forms;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Geometry;
 
@@ -13,7 +14,7 @@ namespace PdfPro.App.Views;
 /// Document view. Code-behind only routes input to the view model: Ctrl + wheel zooms around the mouse,
 /// Home/End/PageUp/PageDown navigate by page (arrow keys and the wheel scroll through the ScrollViewer). In "Sửa nội
 /// dung" the mouse frames, selects and drags the page's drawings, Delete removes one, Enter or a double-click opens a
-/// text block for typing. While the page editor is open, Delete, the arrow keys (1 point, with Shift 10), Ctrl+C, Ctrl+V, Ctrl+A and Esc act on its
+/// text block for typing. In "Thiết kế biểu mẫu" the mouse places, selects, moves and resizes fields, Delete removes one. While the page editor is open, Delete, the arrow keys (1 point, with Shift 10), Ctrl+C, Ctrl+V, Ctrl+A and Esc act on its
 /// objects; otherwise the mouse selects text (the text cursor shows over it) and Ctrl+C copies it, Ctrl+A selects the
 /// whole document's text, Esc clears the selection.
 /// </summary>
@@ -41,6 +42,12 @@ public partial class DocumentView : UserControl
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (Document is { FormDesigner.IsActive: true } designing && HandleDesignerKey(designing.FormDesigner, e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (Document is { ContentEditor.IsActive: true } editing && HandleContentKey(editing.ContentEditor, e.Key))
         {
             e.Handled = true;
@@ -83,6 +90,26 @@ public partial class DocumentView : UserControl
         {
             command.Execute(null);
             e.Handled = true;
+        }
+    }
+
+    /// <summary>"Thiết kế biểu mẫu": Delete removes the selected field, Esc drops the drag, the tool, then the selection.</summary>
+    private static bool HandleDesignerKey(FormDesignerViewModel designer, Key key)
+    {
+        if (Keyboard.Modifiers != ModifierKeys.None)
+        {
+            return false;
+        }
+
+        switch (key)
+        {
+            case Key.Delete when designer.HasSelection:
+                designer.DeleteCommand.Execute(null);
+                return true;
+            case Key.Escape:
+                return designer.Escape();
+            default:
+                return false;
         }
     }
 
@@ -247,6 +274,17 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (Document is { FormDesigner.IsActive: true } designing)
+        {
+            var at = e.GetPosition(Surface);
+            if (designing.FormDesigner.Press(new ViewPoint(at.X, at.Y)) && designing.FormDesigner.IsDragging)
+            {
+                Surface.CaptureMouse();
+            }
+
+            return;
+        }
+
         if (Document is { ContentEditor.IsActive: true } editing)
         {
             var at = e.GetPosition(Surface);
@@ -287,6 +325,36 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseMove(object sender, MouseEventArgs e)
     {
+        if (Document is { FormDesigner.IsActive: true } designing)
+        {
+            var at = new ViewPoint(e.GetPosition(Surface).X, e.GetPosition(Surface).Y);
+            var designer = designing.FormDesigner;
+            if (designer.IsDragging && e.LeftButton == MouseButtonState.Pressed)
+            {
+                designer.DragTo(at);
+                return;
+            }
+
+            Cursor? cursor = designer.CursorAt(at) switch
+            {
+                FormDesignCursor.Place => Cursors.Cross,
+                FormDesignCursor.Move => Cursors.SizeAll,
+                FormDesignCursor.ResizeDiagonal => Cursors.SizeNWSE,
+                FormDesignCursor.ResizeAntiDiagonal => Cursors.SizeNESW,
+                _ => null,
+            };
+            if (cursor is null)
+            {
+                Surface.ClearValue(CursorProperty);
+            }
+            else
+            {
+                Surface.Cursor = cursor;
+            }
+
+            return;
+        }
+
         if (Document is { ContentEditor.IsActive: true } editing)
         {
             var at = e.GetPosition(Surface);
@@ -349,7 +417,11 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (Document is { ContentEditor.IsActive: true } editing)
+        if (Document is { FormDesigner.IsActive: true } designing)
+        {
+            designing.FormDesigner.Release();
+        }
+        else if (Document is { ContentEditor.IsActive: true } editing)
         {
             editing.ContentEditor.Release();
         }

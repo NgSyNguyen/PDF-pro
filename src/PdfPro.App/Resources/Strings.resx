@@ -980,4 +980,77 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Search_Error_Invalid" xml:space="preserve"><value>Biểu thức chính quy không hợp lệ.</value></data>
   <data name="Search_Error_Timeout" xml:space="preserve"><value>Biểu thức chạy quá lâu trên một trang nên đã dừng. Hãy viết biểu thức đơn giản hơn.</value></data>
   <data name="Search_ScannedPages" xml:space="preserve"><value>{0} trang là ảnh, không có lớp chữ — cần nhận dạng chữ (OCR) để tìm trong đó.</value></data>
+  <data name="Cmd_DesignForm" xml:space="preserve"><value>Thiết kế biểu mẫu</value></data>
+  <data name="Cmd_DesignForm_ToolTip" xml:space="preserve"><value>Đặt trường mới bằng cách kéo khung trên trang; chọn, di chuyển, đổi cỡ, sửa thuộc tính hoặc xóa các trường có sẵn</value></data>
+  <data name="Ribbon_Group_Forms" xml:space="preserve"><value>Biểu mẫu</value></data>
+  <data name="History_AddFormFields" xml:space="preserve"><value>Thêm {0} trường biểu mẫu</value></data>
+  <data name="History_RemoveFormFields" xml:space="preserve"><value>Xóa {0} trường biểu mẫu</value></data>
+  <data name="History_MoveFormField" xml:space="preserve"><value>Di chuyển trường biểu mẫu</value></data>
+  <data name="History_UpdateFormField" xml:space="preserve"><value>Sửa trường {0}</value></data>
+  <data name="History_DesignForm" xml:space="preserve"><value>Thiết kế biểu mẫu</value></data>
+  <data name="FormDesigner_Name_Text" xml:space="preserve"><value>Văn bản</value></data>
+  <data name="FormDesigner_Name_CheckBox" xml:space="preserve"><value>Ô đánh dấu</value></data>
+  <data name="FormDesigner_Name_RadioGroup" xml:space="preserve"><value>Nhóm lựa chọn</value></data>
+  <data name="FormDesigner_Name_ComboBox" xml:space="preserve"><value>Danh sách thả</value></data>
+  <data name="FormDesigner_Name_ListBox" xml:space="preserve"><value>Danh sách</value></data>
+  <data name="FormDesigner_Name_Button" xml:space="preserve"><value>Nút</value></data>
+  <data name="FormDesigner_Name_Signature" xml:space="preserve"><value>Chữ ký</value></data>
+  <data name="FormDesigner_DefaultChoice" xml:space="preserve"><value>Lựa chọn {0}</value></data>
+  <data name="FormDesigner_DefaultCaption" xml:space="preserve"><value>Gửi</value></data>
+  <data name="FormDesigner_Hint" xml:space="preserve"><value>Chọn công cụ rồi kéo khung trên trang để đặt trường (bấm = cỡ thường dùng); bấm để chọn, kéo để di chuyển, kéo góc để đổi cỡ</value></data>
+  <data name="FormDesigner_Done" xml:space="preserve"><value>Xong</value></data>
+  <data name="FormDesigner_Delete" xml:space="preserve"><value>Xóa</value></data>
+  <data name="FormDesigner_Tool_Select" xml:space="preserve"><value>Chọn, di chuyển, đổi cỡ</value></data>
+  <data name="FormDesigner_Tool_Text" xml:space="preserve"><value>Ô văn bản</value></data>
+  <data name="FormDesigner_Tool_CheckBox" xml:space="preserve"><value>Ô đánh dấu</value></data>
+  <data name="FormDesigner_Tool_RadioButton" xml:space="preserve"><value>Nút chọn (đang chọn một nhóm thì nút mới vào cùng nhóm)</value></data>
+  <data name="FormDesigner_Tool_ComboBox" xml:space="preserve"><value>Danh sách thả xuống</value></data>
+  <data name="FormDesigner_Tool_ListBox" xml:space="preserve"><value>Danh sách</value></data>
+  <data name="FormDesigner_Tool_Button" xml:space="preserve"><value>Nút bấm</value></data>
+  <data name="FormDesigner_Tool_Signature" xml:space="preserve"><value>Ô chữ ký số</value></data>
+  <data name="FieldProps_Empty" xml:space="preserve"><value>Chọn một trường trên trang để xem và sửa thuộc tính.</value></data>
+  <data name="FieldProps_Kind_Text" xml:space="preserve"><value>Ô văn bản</value></data>
+  <data name="FieldProps_Kind_CheckBox" xml:space="preserve"><value>Ô đánh dấu</value></data>
+  <data name="FieldProps_Kind_RadioGroup" xml:space="preserve"><value>Nhóm nút chọn</value></data>
+  <data name="FieldProps_Kind_ComboBox" xml:space="preserve"><value>Danh sách thả xuống</value></data>
+  <data name="FieldProps_Kind_ListBox" xml:space="preserve"><value>Danh sách</value></data>
+  <data name="FieldProps_Kind_PushButton" xml:space="preserve"><value>Nút bấm</value></data>
+  <data name="FieldProps_Kind_Signature" xml:space="preserve"><value>Ô chữ ký số</value></data>
+  <data name="FieldProps_Name" xml:space="preserve"><value>Tên trường</value></data>
+  <data name="FieldProps_ToolTip" xml:space="preserve"><value>Chú thích (hiện khi rê chuột)</value></data>
+  <data name="FieldProps_Required" xml:space="preserve"><value>Bắt buộc</value></data>
+  <data name="FieldProps_ReadOnly" xml:space="preserve"><value>Chỉ đọc</value></data>
+  <data name="FieldProps_Multiline" xml:space="preserve"><value>Nhiều dòng</value></data>
+  <data name="FieldProps_Password" xml:space="preserve"><value>Mật khẩu (ẩn ký tự)</value></data>
+  <data name="FieldProps_MaxLength" xml:space="preserve"><value>Số ký tự tối đa (0 = không giới hạn)</value></data>
+  <data name="FieldProps_Look" xml:space="preserve"><value>Hiển thị</value></data>
+  <data name="FieldProps_Font" xml:space="preserve"><value>Phông chữ</value></data>
+  <data name="FieldProps_FontSize" xml:space="preserve"><value>Cỡ chữ (0 = tự vừa ô)</value></data>
+  <data name="FieldProps_Alignment" xml:space="preserve"><value>Căn chữ</value></data>
+  <data name="FieldProps_Align_Left" xml:space="preserve"><value>Trái</value></data>
+  <data name="FieldProps_Align_Center" xml:space="preserve"><value>Giữa</value></data>
+  <data name="FieldProps_Align_Right" xml:space="preserve"><value>Phải</value></data>
+  <data name="FieldProps_Value" xml:space="preserve"><value>Giá trị</value></data>
+  <data name="FieldProps_Default" xml:space="preserve"><value>Giá trị mặc định</value></data>
+  <data name="FieldProps_CheckedByDefault" xml:space="preserve"><value>Được đánh dấu sẵn</value></data>
+  <data name="FieldProps_Options" xml:space="preserve"><value>Các lựa chọn (mỗi dòng một lựa chọn)</value></data>
+  <data name="FieldProps_Editable" xml:space="preserve"><value>Cho phép gõ giá trị khác</value></data>
+  <data name="FieldProps_MultiSelect" xml:space="preserve"><value>Cho phép chọn nhiều</value></data>
+  <data name="FieldProps_Format" xml:space="preserve"><value>Định dạng</value></data>
+  <data name="FieldProps_Format_None" xml:space="preserve"><value>Không</value></data>
+  <data name="FieldProps_Format_Number" xml:space="preserve"><value>Số</value></data>
+  <data name="FieldProps_Format_Date" xml:space="preserve"><value>Ngày</value></data>
+  <data name="FieldProps_Decimals" xml:space="preserve"><value>Số chữ số thập phân</value></data>
+  <data name="FieldProps_DotComma" xml:space="preserve"><value>Kiểu Việt Nam (1.234,56)</value></data>
+  <data name="FieldProps_DatePattern" xml:space="preserve"><value>Mẫu ngày (d = ngày, m = tháng, y = năm)</value></data>
+  <data name="FieldProps_Caption" xml:space="preserve"><value>Chữ trên nút</value></data>
+  <data name="FieldProps_NoChoice" xml:space="preserve"><value>(không)</value></data>
+  <data name="FieldProps_RadioNote" xml:space="preserve"><value>Thêm nút vào nhóm: giữ nhóm này được chọn rồi dùng công cụ Nút chọn.</value></data>
+  <data name="FieldProps_Apply" xml:space="preserve"><value>Áp dụng</value></data>
+  <data name="FieldProps_Reset" xml:space="preserve"><value>Hoàn lại</value></data>
+  <data name="FieldProps_Error_Name" xml:space="preserve"><value>Tên trường không được trống, không bắt đầu hay kết thúc bằng dấu chấm và không có hai dấu chấm liền nhau.</value></data>
+  <data name="FieldProps_Error_NameTaken" xml:space="preserve"><value>Tên này đã được một trường khác dùng.</value></data>
+  <data name="FieldProps_Error_Options" xml:space="preserve"><value>Danh sách cần ít nhất một lựa chọn và các lựa chọn không được trùng nhau.</value></data>
+  <data name="FieldProps_Error_Default" xml:space="preserve"><value>Giá trị mặc định không đúng định dạng đã chọn.</value></data>
+  <data name="FieldProps_Error_Size" xml:space="preserve"><value>Cỡ chữ phải từ 0 đến 200; số ký tự và số chữ số thập phân không được âm (tối đa 10 chữ số thập phân).</value></data>
 </root>

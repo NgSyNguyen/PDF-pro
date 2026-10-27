@@ -102,6 +102,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         TileCommand = new ActiveDocumentCommand(d => d.TileCommand);
         AddTextCommand = new ActiveDocumentCommand(d => d.AddTextCommand);
         ToggleContentEditingCommand = new ActiveDocumentCommand(d => d.ToggleContentEditingCommand);
+        ToggleFormDesignCommand = new ActiveDocumentCommand(d => d.ToggleFormDesignCommand);
         AddShapeCommand = new ActiveDocumentCommand(d => d.AddShapeCommand);
         AddImageCommand = new ActiveDocumentCommand(d => d.AddImageCommand);
         AddSignatureCommand = new ActiveDocumentCommand(d => d.AddSignatureCommand);
@@ -199,6 +200,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand AddTextCommand { get; }
 
     public ActiveDocumentCommand ToggleContentEditingCommand { get; }
+
+    public ActiveDocumentCommand ToggleFormDesignCommand { get; }
 
     public ActiveDocumentCommand AddShapeCommand { get; }
 
@@ -471,7 +474,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
             HighlightCommand, UnderlineCommand, StrikeOutCommand, SquigglyCommand, StickyNoteCommand,
@@ -710,6 +713,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Content,
                 [
                     new("edit.content", Strings.Cmd_EditContent, SymbolRegular.DocumentEdit24, ToggleContentEditingCommand, Strings.Cmd_EditContent_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Forms,
+                [
+                    new("forms.design", Strings.Cmd_DesignForm, SymbolRegular.Form24, ToggleFormDesignCommand, Strings.Cmd_DesignForm_ToolTip),
                 ]),
             ]),
             new("annotate", Strings.Ribbon_Tab_Annotate,

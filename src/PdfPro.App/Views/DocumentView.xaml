@@ -69,6 +69,8 @@
         <controls:FormFieldLayer Forms="{Binding DataContext.Forms, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- Annotations added in the session (the page image does not have them yet); only draws. -->
         <controls:AnnotationLayer Annotations="{Binding DataContext.Annotations, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
+        <!-- "Thiết kế biểu mẫu": the fields' frames, names and handles; only draws. -->
+        <controls:FormDesignLayer Designer="{Binding DataContext.FormDesigner, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- "Sửa nội dung": frames around the drawing under the mouse and the selected one; only draws. -->
         <controls:ContentObjectLayer Editor="{Binding DataContext.ContentEditor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- The page editor's objects, selection and guides; inactive (and transparent to the mouse) outside the editor. -->
@@ -517,6 +519,106 @@
             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
             Text="{loc:Tr ContentEditor_Hint}"
             TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- "Thiết kế biểu mẫu": the tools that place fields, delete, "Xong"; the properties are in the right panel. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="FormDesignerBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding FormDesigner}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="FormDesignerDelete"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Tr FormDesigner_Delete}"
+            Icon="{ui:SymbolIcon Delete24}"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            AutomationProperties.AutomationId="FormDesignerDone"
+            Command="{Binding DataContext.ToggleFormDesignCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr FormDesigner_Done}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_Select"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_Select}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Select}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_Select}">
+            <ui:SymbolIcon Symbol="Cursor24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_Text"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_Text}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Text}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_Text}">
+            <ui:SymbolIcon Symbol="TextField24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_CheckBox"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_CheckBox}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=CheckBox}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_CheckBox}">
+            <ui:SymbolIcon Symbol="CheckboxChecked24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_RadioButton"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_RadioButton}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=RadioButton}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_RadioButton}">
+            <ui:SymbolIcon Symbol="RadioButton24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_ComboBox"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_ComboBox}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=ComboBox}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_ComboBox}">
+            <ui:SymbolIcon Symbol="ChevronDown24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_ListBox"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_ListBox}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=ListBox}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_ListBox}">
+            <ui:SymbolIcon Symbol="TextBulletListSquare24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_Button"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_Button}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Button}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_Button}">
+            <ui:SymbolIcon Symbol="ControlButton24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_Signature"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_Signature}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Signature}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_Signature}">
+            <ui:SymbolIcon Symbol="Signature24" />
+          </RadioButton>
+          <TextBlock
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr FormDesigner_Hint}"
+            TextTrimming="CharacterEllipsis"
+            ToolTip="{loc:Tr FormDesigner_Hint}" />
         </StackPanel>
       </DockPanel>
     </Border>

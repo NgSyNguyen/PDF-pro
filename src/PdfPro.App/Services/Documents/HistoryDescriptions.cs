@@ -48,6 +48,7 @@ internal static class HistoryDescriptions
             EditFileAnnotationsParams p => Describe(p),
             EditContentParams p => Describe(p),
             FillFormParams p => Format(Strings.History_FillForm, p.Values.Count),
+            DesignFormParams p => Describe(p),
             FlattenAnnotationsParams p when string.IsNullOrWhiteSpace(p.Pages) => Strings.History_FlattenAnnotations,
             FlattenAnnotationsParams p => Format(Strings.History_FlattenAnnotationsOn, Count(p.Pages!, before)),
             _ => Strings.History_Other,
@@ -85,6 +86,25 @@ internal static class HistoryDescriptions
             FileAnnotationAction.SetContents => Strings.History_EditFileComment,
             FileAnnotationAction.Move => Strings.History_MoveFileComment,
             _ => Strings.History_DeleteFileComment,
+        };
+    }
+
+    /// <summary>"Thêm trường biểu mẫu", "Di chuyển trường biểu mẫu", "Sửa trường hoTen"… or "Thiết kế biểu mẫu".</summary>
+    public static string Describe(DesignFormParams parameters)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        var remove = parameters.Remove ?? [];
+        var add = parameters.Add ?? [];
+        var widgets = parameters.Widgets ?? [];
+        var update = parameters.Update ?? [];
+        return (remove.Count, add.Count, widgets.Count, update.Count) switch
+        {
+            (0, > 0, 0, 0) => Format(Strings.History_AddFormFields, add.Select(a => a.Name).Distinct(StringComparer.Ordinal).Count()),
+            (> 0, 0, 0, 0) => Format(Strings.History_RemoveFormFields, remove.Count),
+            (0, 0, > 0, 0) when widgets.All(w => w.Rect is null) => Format(Strings.History_RemoveFormFields, widgets.Count),
+            (0, 0, > 0, 0) => Strings.History_MoveFormField,
+            (0, 0, 0, 1) => Format(Strings.History_UpdateFormField, update[0].Properties.Name),
+            _ => Strings.History_DesignForm,
         };
     }
 

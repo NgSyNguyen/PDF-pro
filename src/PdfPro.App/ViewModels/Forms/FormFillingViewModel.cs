@@ -176,6 +176,9 @@ public sealed partial class FormFillingViewModel : ObservableObject
     /// <summary>The fields of the form, as read from the file.</summary>
     public IReadOnlyList<FormField> Fields => _form.Fields;
 
+    /// <summary>The form is XFA only: it has no AcroForm fields to fill or design.</summary>
+    public bool IsXfaOnly => _form.Type == FormType.XfaFull;
+
     /// <summary>An explanation for XFA forms, or null.</summary>
     public string? XfaNotice => _form.Type switch
     {
@@ -199,8 +202,7 @@ public sealed partial class FormFillingViewModel : ObservableObject
             return widgets;
         }
 
-        var plan = _plan();
-        if (plan.IndexOf(pageKey) is not (var index and >= 0) || plan[index] is not { IsBlank: false } page || page.SourceId != _baseSourceId())
+        if (SourcePageOf(pageKey) is not { } sourcePage)
         {
             return [];
         }
@@ -214,11 +216,20 @@ public sealed partial class FormFillingViewModel : ObservableObject
                 continue;
             }
 
-            list.AddRange(field.Widgets.Where(w => w.Page == page.SourcePageIndex && !w.Rect.IsEmpty).Select(w => new FormWidgetViewModel(this, pageKey, field, w, order)));
+            list.AddRange(field.Widgets.Where(w => w.Page == sourcePage && !w.Rect.IsEmpty).Select(w => new FormWidgetViewModel(this, pageKey, field, w, order)));
         }
 
         _widgets[pageKey] = list;
         return list;
+    }
+
+    /// <summary>The page of the form's file a plan page shows (its widgets are those of that page), or null.</summary>
+    public int? SourcePageOf(Guid pageKey)
+    {
+        var plan = _plan();
+        return plan.IndexOf(pageKey) is var index and >= 0 && plan[index] is { IsBlank: false } page && page.SourceId == _baseSourceId()
+            ? page.SourcePageIndex
+            : null;
     }
 
     /// <summary>The page space of a page as it will be written, when known.</summary>
@@ -275,6 +286,7 @@ public sealed partial class FormFillingViewModel : ObservableObject
             OnPropertyChanged(nameof(Fields));
             OnPropertyChanged(nameof(XfaNotice));
             OnPropertyChanged(nameof(HasXfaNotice));
+            OnPropertyChanged(nameof(IsXfaOnly));
             Changed?.Invoke(this, EventArgs.Empty);
         }
         catch (OperationCanceledException)

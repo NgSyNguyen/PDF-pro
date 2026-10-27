@@ -26,6 +26,7 @@ public sealed partial class DocumentTabViewModel
 
         IsOrganizing = false;
         Annotations.StopTool();
+        FormDesigner.IsActive = false;
         TextSelection.Clear();
         ContentEditor.IsActive = true;
     }
@@ -45,7 +46,7 @@ public sealed partial class DocumentTabViewModel
 
     /// <summary>The form's inputs take the mouse only while no other mode uses the viewer.</summary>
     private void UpdateFormsActive()
-        => Forms.IsActive = !ContentEditor.IsActive && !Editor.IsActive && !IsOrganizing && Annotations.Tool == Annotating.AnnotationTool.None;
+        => Forms.IsActive = !ContentEditor.IsActive && !FormDesigner.IsActive && !Editor.IsActive && !IsOrganizing && Annotations.Tool == Annotating.AnnotationTool.None;
 
     /// <summary>The content editing mode is on (the ribbon button shows it pressed).</summary>
     public bool IsEditingContent => ContentEditor.IsActive;
