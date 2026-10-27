@@ -113,6 +113,47 @@ public sealed class FormDataCommandsTests : IDisposable
         tab.Workspace.Session.History.CanUndo.ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData(DialogChoice.Primary, 1)]
+    [InlineData(DialogChoice.Cancel, 0)]
+    public async Task Flatten_AsksFirst_ThenAsksTheWindowForTheRevision(DialogChoice choice, int requested)
+    {
+        var tab = await OpenAsync();
+        var requests = new List<ContentChangeRequest>();
+        tab.ContentChangeRequested += (_, request) => requests.Add(request);
+        var message = string.Format(CultureInfo.CurrentCulture, Strings.FormFlatten_Message, 3);
+        _messages.AskAsync(Strings.FormFlatten_Title, message, Strings.FormFlatten_Confirm, null, Strings.Common_Cancel).Returns(choice);
+
+        await tab.FlattenFormCommand.ExecuteAsync(null);
+
+        requests.Count.ShouldBe(requested);
+        if (requested == 1)
+        {
+            requests[0].Operation.ShouldBeOfType<Operations.Forms.FlattenFormOperation>();
+            requests[0].Parameters.ShouldBe(new Operations.Forms.FlattenFormParams());
+            requests[0].Description.ShouldBe(Strings.History_FlattenForm);
+        }
+    }
+
+    [Fact]
+    public async Task Reset_PutsEveryFieldBack_InOneStep()
+    {
+        var tab = await OpenAsync();
+        tab.Forms.Fill(new FormValue("hoTen", "Bình"));
+        tab.Forms.Fill(new FormValue("dongY", "Yes"));
+
+        tab.ResetFormCommand.Execute(null);
+
+        var values = tab.Workspace.Session.Plan.FormValues;
+        values["hoTen"].Value.ShouldBe(string.Empty);
+        values["dongY"].Value.ShouldBe(FormField.Off);
+        values["soThich"].Selected.ShouldBeEmpty();
+        tab.Workspace.Session.History.UndoCount.ShouldBe(3);
+        tab.Workspace.Session.History.NextUndoDescription.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.History_ResetForm, 3));
+        tab.UndoCommand.Execute(null);
+        tab.Workspace.Session.Plan.FormValues["hoTen"].Value.ShouldBe("Bình");
+    }
+
     [Fact]
     public async Task WithoutAForm_TheDataCommandsAreOff()
     {
@@ -122,6 +163,8 @@ public sealed class FormDataCommandsTests : IDisposable
         tab.ExportFormDataCommand.CanExecute(null).ShouldBeFalse();
         tab.ImportFormDataCommand.CanExecute(null).ShouldBeFalse();
         tab.MergeFormDataCommand.CanExecute(null).ShouldBeFalse();
+        tab.FlattenFormCommand.CanExecute(null).ShouldBeFalse();
+        tab.ResetFormCommand.CanExecute(null).ShouldBeFalse();
     }
 
     [Fact]

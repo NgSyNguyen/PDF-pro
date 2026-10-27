@@ -106,6 +106,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ExportFormDataCommand = new ActiveDocumentCommand(d => d.ExportFormDataCommand);
         ImportFormDataCommand = new ActiveDocumentCommand(d => d.ImportFormDataCommand);
         MergeFormDataCommand = new ActiveDocumentCommand(d => d.MergeFormDataCommand);
+        FlattenFormCommand = new ActiveDocumentCommand(d => d.FlattenFormCommand);
+        ResetFormCommand = new ActiveDocumentCommand(d => d.ResetFormCommand);
         AddShapeCommand = new ActiveDocumentCommand(d => d.AddShapeCommand);
         AddImageCommand = new ActiveDocumentCommand(d => d.AddImageCommand);
         AddSignatureCommand = new ActiveDocumentCommand(d => d.AddSignatureCommand);
@@ -211,6 +213,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand ImportFormDataCommand { get; }
 
     public ActiveDocumentCommand MergeFormDataCommand { get; }
+
+    public ActiveDocumentCommand FlattenFormCommand { get; }
+
+    public ActiveDocumentCommand ResetFormCommand { get; }
 
     public ActiveDocumentCommand AddShapeCommand { get; }
 
@@ -486,7 +492,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
             AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand,
-            ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand,
+            ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand, FlattenFormCommand, ResetFormCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
             HighlightCommand, UnderlineCommand, StrikeOutCommand, SquigglyCommand, StickyNoteCommand,
@@ -732,6 +738,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("forms.exportData", Strings.Cmd_ExportFormData, SymbolRegular.ArrowExport24, ExportFormDataCommand, Strings.Cmd_ExportFormData_ToolTip),
                     new("forms.importData", Strings.Cmd_ImportFormData, SymbolRegular.ArrowImport24, ImportFormDataCommand, Strings.Cmd_ImportFormData_ToolTip),
                     new("forms.merge", Strings.Cmd_MergeFormData, SymbolRegular.DocumentTableArrowRight24, MergeFormDataCommand, Strings.Cmd_MergeFormData_ToolTip),
+                    new("forms.reset", Strings.Cmd_ResetForm, SymbolRegular.Eraser24, ResetFormCommand, Strings.Cmd_ResetForm_ToolTip),
+                    new("forms.flatten", Strings.Cmd_FlattenForm, SymbolRegular.Layer24, FlattenFormCommand, Strings.Cmd_FlattenForm_ToolTip),
                 ]),
             ]),
             new("annotate", Strings.Ribbon_Tab_Annotate,

@@ -49,6 +49,8 @@ internal static class HistoryDescriptions
             EditContentParams p => Describe(p),
             FillFormParams p => Format(Strings.History_FillForm, p.Values.Count),
             DesignFormParams p => Describe(p),
+            ResetFormParams p => Format(Strings.History_ResetForm, p.Values.Count),
+            FlattenFormParams => Strings.History_FlattenForm,
             FlattenAnnotationsParams p when string.IsNullOrWhiteSpace(p.Pages) => Strings.History_FlattenAnnotations,
             FlattenAnnotationsParams p => Format(Strings.History_FlattenAnnotationsOn, Count(p.Pages!, before)),
             _ => Strings.History_Other,

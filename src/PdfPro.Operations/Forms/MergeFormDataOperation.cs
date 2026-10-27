@@ -12,7 +12,8 @@ namespace PdfPro.Operations.Forms;
 /// <param name="DataPath">The table: CSV (.csv, .txt) or an Excel workbook (.xlsx); its first row names the fields.</param>
 /// <param name="FileNameColumn">The column naming each file; null or a blank cell gives "form name (row)".</param>
 /// <param name="Overwrite">Files of the same name in the output folder are replaced (else new names are found).</param>
-public sealed record MergeFormParams([property: Required] string DataPath, string? FileNameColumn = null, bool Overwrite = false);
+/// <param name="Flatten">The filled copies are flattened (their values drawn in, nothing left to change).</param>
+public sealed record MergeFormParams([property: Required] string DataPath, string? FileNameColumn = null, bool Overwrite = false, bool Flatten = false);
 
 /// <summary>A value of the table that does not fit its field (it is left empty in that file).</summary>
 /// <param name="Row">The row of the table, 1-based, header not counted.</param>
@@ -177,6 +178,11 @@ public sealed class MergeFormDataOperation : PdfOperation<MergeFormParams>
                 using (var document = PdfReader.Open(new MemoryStream(template), PdfDocumentOpenMode.Modify))
                 {
                     FormWriter.SetValues(document, [.. values.DistinctBy(v => v.Name)]);
+                    if (parameters.Flatten)
+                    {
+                        FormFlattener.Flatten(document);
+                    }
+
                     using var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None);
                     document.Save(stream, closeStream: false);
                     stream.Flush(flushToDisk: true);

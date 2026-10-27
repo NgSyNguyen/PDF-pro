@@ -1104,4 +1104,14 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="FormMerge_UnknownColumns" xml:space="preserve"><value>Columns that are not fields (left out): {0}</value></data>
   <data name="FormMerge_Problems" xml:space="preserve"><value>{0} values do not fit their field (left empty):</value></data>
   <data name="FormMerge_Problem" xml:space="preserve"><value>row {0}, column {1}</value></data>
+  <data name="Cmd_FlattenForm" xml:space="preserve"><value>Flatten form</value></data>
+  <data name="Cmd_FlattenForm_ToolTip" xml:space="preserve"><value>Draw the fields' values into the pages and remove the form: nobody can change them any more (can be undone)</value></data>
+  <data name="Cmd_ResetForm" xml:space="preserve"><value>Clear data</value></data>
+  <data name="Cmd_ResetForm_ToolTip" xml:space="preserve"><value>Put every field back to its default value (one undo step)</value></data>
+  <data name="FormFlatten_Title" xml:space="preserve"><value>Flatten form</value></data>
+  <data name="FormFlatten_Message" xml:space="preserve"><value>The form's {0} fields will be drawn into the pages with their current values and cannot be changed or filled again. This can be undone before saving.</value></data>
+  <data name="FormFlatten_Confirm" xml:space="preserve"><value>Flatten</value></data>
+  <data name="FormMerge_Flatten" xml:space="preserve"><value>Flatten the files (values cannot be changed)</value></data>
+  <data name="History_FlattenForm" xml:space="preserve"><value>Flatten form</value></data>
+  <data name="History_ResetForm" xml:space="preserve"><value>Clear {0} form fields</value></data>
 </root>

@@ -101,7 +101,7 @@ public sealed record FormFieldSpec(
 /// <param name="Name">The field's fully qualified name.</param>
 /// <param name="Widget">The widget's place among the field's widgets (as <see cref="FormReader"/> lists them).</param>
 /// <param name="Rect">Its new box in the page's PDF user space; null removes the widget (and the field with its last one).</param>
-public sealed record FormWidgetChange(string Name, int Widget, PdfRect? Rect);
+public sealed record FormWidgetChange(string Name, int Widget, PdfRect? Rect = null);
 
 /// <summary>
 /// New properties for a field, changed in place (its widgets, actions and colours stay): name, flags, tool tip, text
@@ -780,6 +780,25 @@ public static class FormWriter
                 }
 
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Draws the widgets that have no normal appearance (all of them with <paramref name="all"/>, when /NeedAppearances
+    /// asks readers to), so that flattening shows what readers show.
+    /// </summary>
+    internal static void DrawMissingAppearances(PdfDocument document, IReadOnlyList<(FormField Field, PdfDictionary Dictionary, IReadOnlyList<PdfDictionary> Widgets)> fields, bool all)
+    {
+        foreach (var (field, _, widgets) in fields.Where(f => f.Field.Kind != FormFieldKind.Signature))
+        {
+            for (var i = 0; i < widgets.Count; i++)
+            {
+                if (all || Annotating.AppearancePlacement.Normal(widgets[i]) is null)
+                {
+                    var page = field.Widgets[i].Page is var index and >= 0 ? document.Pages[index] : null;
+                    FormAppearances.Refresh(document, field, widgets[i], page is null ? 0 : PageBoxes.Rotation(page));
+                }
+            }
         }
     }
 

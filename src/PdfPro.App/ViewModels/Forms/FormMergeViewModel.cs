@@ -93,6 +93,10 @@ public sealed partial class FormMergeViewModel : ObservableObject
     [ObservableProperty]
     public partial bool OpenFolderWhenDone { get; set; } = true;
 
+    /// <summary>The filled copies are flattened: their values are drawn in and cannot be changed any more.</summary>
+    [ObservableProperty]
+    public partial bool Flatten { get; set; }
+
     /// <summary>The table is being read.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
@@ -165,7 +169,7 @@ public sealed partial class FormMergeViewModel : ObservableObject
             return;
         }
 
-        Result = new FormMergeDialogResult(table, new MergeFormParams(DataPath, NameColumn.Length > 0 ? NameColumn : null, Overwrite), OutputFolder.Trim(), OpenFolderWhenDone);
+        Result = new FormMergeDialogResult(table, new MergeFormParams(DataPath, NameColumn.Length > 0 ? NameColumn : null, Overwrite, Flatten), OutputFolder.Trim(), OpenFolderWhenDone);
         CloseRequested?.Invoke(this, true);
     }
 

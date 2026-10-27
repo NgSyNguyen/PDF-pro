@@ -28,18 +28,25 @@ public sealed class FillFormOperation(IPlanMaterializer materializer, IPdfDocume
     public override string Id => OperationId;
 
     protected override OperationValidationResult ValidateCore(FillFormParams parameters, DocumentInfo document)
+        => Check(parameters.Values);
+
+    protected override PagePlan Apply(PagePlan plan, FillFormParams parameters, PlanEditContext context)
+        => plan.WithFormValues(parameters.Values);
+
+    /// <summary>At least one value, each with a name (given once) and a value of a sensible length.</summary>
+    internal static OperationValidationResult Check(IReadOnlyList<FormValue>? values)
     {
-        if (parameters.Values is null || parameters.Values.Count == 0)
+        if (values is null || values.Count == 0)
         {
-            return OperationValidationResult.Failed(new OperationValidationError(nameof(parameters.Values), "At least one value is needed."));
+            return OperationValidationResult.Failed(new OperationValidationError(nameof(FillFormParams.Values), "At least one value is needed."));
         }
 
         var errors = new List<OperationValidationError>();
         var names = new HashSet<string>(StringComparer.Ordinal);
-        for (var i = 0; i < parameters.Values.Count; i++)
+        for (var i = 0; i < values.Count; i++)
         {
-            var member = $"{nameof(parameters.Values)}[{i}]";
-            var value = parameters.Values[i];
+            var member = $"{nameof(FillFormParams.Values)}[{i}]";
+            var value = values[i];
             if (value is null || string.IsNullOrWhiteSpace(value.Name) || value.Value is null)
             {
                 errors.Add(new OperationValidationError(member, "A value needs a field name and a value."));
@@ -59,7 +66,37 @@ public sealed class FillFormOperation(IPlanMaterializer materializer, IPdfDocume
 
         return errors.Count == 0 ? OperationValidationResult.Success : OperationValidationResult.Failed(errors);
     }
+}
 
-    protected override PagePlan Apply(PagePlan plan, FillFormParams parameters, PlanEditContext context)
+/// <param name="Values">The values the fields go back to (their defaults, else empty), computed from the form's fields.</param>
+public sealed record ResetFormParams([property: Required] IReadOnlyList<FormValue> Values);
+
+/// <summary>
+/// "forms.reset": puts fields back to their default values (/DV, else empty or off). The caller computes those values
+/// from the form; like forms.fill it only edits the plan (one undo step) and is written when the document is saved.
+/// </summary>
+public sealed class ResetFormOperation(IPlanMaterializer materializer, IPdfDocumentLoader loader)
+    : PlanOperation<ResetFormParams>(materializer, loader)
+{
+    public const string OperationId = "forms.reset";
+
+    public override string Id => OperationId;
+
+    /// <summary>The values that put fields back to their defaults (buttons and signatures have none).</summary>
+    public static IReadOnlyList<FormValue> Defaults(IEnumerable<FormField> fields)
+    {
+        ArgumentNullException.ThrowIfNull(fields);
+        return [.. fields.Where(f => f.IsFillable).Select(f => f.Kind switch
+        {
+            FormFieldKind.CheckBox or FormFieldKind.RadioGroup => new FormValue(f.Name, f.DefaultValue is { Length: > 0 } on ? on : FormField.Off),
+            FormFieldKind.ListBox => new FormValue(f.Name, f.DefaultValue ?? string.Empty, f.DefaultValue is { Length: > 0 } choice ? [choice] : []),
+            _ => new FormValue(f.Name, f.DefaultValue ?? string.Empty),
+        })];
+    }
+
+    protected override OperationValidationResult ValidateCore(ResetFormParams parameters, DocumentInfo document)
+        => FillFormOperation.Check(parameters.Values);
+
+    protected override PagePlan Apply(PagePlan plan, ResetFormParams parameters, PlanEditContext context)
         => plan.WithFormValues(parameters.Values);
 }

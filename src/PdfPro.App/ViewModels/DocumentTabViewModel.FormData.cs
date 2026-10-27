@@ -117,6 +117,8 @@ public sealed partial class DocumentTabViewModel
         ExportFormDataCommand.NotifyCanExecuteChanged();
         ImportFormDataCommand.NotifyCanExecuteChanged();
         MergeFormDataCommand.NotifyCanExecuteChanged();
+        FlattenFormCommand.NotifyCanExecuteChanged();
+        ResetFormCommand.NotifyCanExecuteChanged();
     }
 
     private static bool IsXfdf(string path)

@@ -120,6 +120,8 @@ internal static class AppHost
         services.AddOperation<FillFormOperation>();
         services.AddOperation<DesignFormOperation>();
         services.AddOperation<MergeFormDataOperation>();
+        services.AddOperation<FlattenFormOperation>();
+        services.AddOperation<ResetFormOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();

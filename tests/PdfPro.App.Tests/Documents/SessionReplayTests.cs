@@ -168,6 +168,46 @@ public sealed class SessionReplayTests
         rebuilt.IsDirty.ShouldBeTrue();
     }
 
+    [Fact]
+    public void FormSteps_ComeBackFromTheManifest_AsTheyWere()
+    {
+        var spec = new Operations.Forms.FormFieldSpec(
+            "nguoi.hoTen", Core.Forms.FormFieldKind.Text, 0, new PdfRect(100, 700, 300, 720), Core.Forms.FormFieldFlags.Required, "An",
+            ToolTip: "Họ và tên", FontSize: 11, Alignment: Core.Forms.FormTextAlignment.Right, MaxLength: 40,
+            Format: Core.Forms.FormTextFormat.Number(2), FontFamily: Core.Text.FontFamilies.NotoSerif);
+        object[] steps =
+        [
+            new Operations.Forms.DesignFormParams(
+                Remove: ["cu"],
+                Add: [spec, spec with { Name = "tinh", Kind = Core.Forms.FormFieldKind.ComboBox, Options = [new("HN", "Hà Nội")], Format = null }],
+                Widgets: [new Operations.Forms.FormWidgetChange("a", 1, new PdfRect(1, 2, 30, 40)), new Operations.Forms.FormWidgetChange("b", 0, null)],
+                Update: [new Operations.Forms.FormFieldUpdate("c", spec with { Format = Core.Forms.FormTextFormat.Date("yyyy-mm-dd") })]),
+            new Operations.Forms.FlattenFormParams(["hoTen"]),
+            new Operations.Forms.FillFormParams([new Core.Forms.FormValue("soThich", "doc", ["doc", "nhac"])]),
+            new Operations.Forms.ResetFormParams([new Core.Forms.FormValue("hoTen", string.Empty)]),
+        ];
+        var state = new SessionState(PagePlan.Identity(SourceIds.Original, 5, RandomPageKeys.Instance), SourceIds.Original, 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [Original],
+            State = state,
+            HistoryBase = state,
+            Undo = [.. steps.Select(p => new HistoryRecord(_operations.All.Single(o => o.ParamsType == p.GetType()).Id, p, []))],
+            Redo = [],
+        };
+        var created = DateTimeOffset.UtcNow;
+
+        var json = Infrastructure.Sessions.SessionManifestSerializer.Serialize(Infrastructure.Sessions.SessionManifestSerializer.ToManifest(snapshot, created));
+        var restored = Infrastructure.Sessions.SessionManifestSerializer.ToSnapshot(Infrastructure.Sessions.SessionManifestSerializer.Deserialize(json), _operations.ParameterType);
+
+        restored.Undo.Select(r => r.Parameters.GetType()).ShouldBe(steps.Select(p => p.GetType()));
+        static string WithoutTime(string text) => System.Text.RegularExpressions.Regex.Replace(text, "\"updatedUtc\":\"[^\"]*\"", string.Empty);
+        WithoutTime(Infrastructure.Sessions.SessionManifestSerializer.Serialize(Infrastructure.Sessions.SessionManifestSerializer.ToManifest(restored, created)))
+            .ShouldBe(WithoutTime(json), "every step and every part of it is written and read back the same");
+        restored.Undo[1].Parameters.ShouldBe(steps[1]);
+    }
+
     private static DocumentSession NewSession(params SessionSource[] sources)
         => new(
             Guid.NewGuid(),

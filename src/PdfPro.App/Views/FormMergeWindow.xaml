@@ -129,6 +129,11 @@
         IsChecked="{Binding Overwrite}" />
       <CheckBox
         Margin="0,4,0,0"
+        AutomationProperties.AutomationId="FormMergeFlatten"
+        Content="{loc:Tr FormMerge_Flatten}"
+        IsChecked="{Binding Flatten}" />
+      <CheckBox
+        Margin="0,4,0,0"
         AutomationProperties.AutomationId="FormMergeOpenFolder"
         Content="{loc:Tr FormMerge_OpenFolder}"
         IsChecked="{Binding OpenFolderWhenDone}" />

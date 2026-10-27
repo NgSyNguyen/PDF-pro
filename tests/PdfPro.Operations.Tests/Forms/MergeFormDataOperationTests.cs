@@ -73,6 +73,19 @@ public sealed class MergeFormDataOperationTests : IDisposable
     }
 
     [Fact]
+    public async Task FlattenedCopies_HaveNoFormLeft()
+    {
+        var table = CsvTable.Parse("hoTen,dongY\nAn,x\n");
+        var folder = _temp.Combine("phang");
+
+        var result = await _operation.WriteAsync(Template(), table, new MergeFormParams("du-lieu.csv", Flatten: true), folder, new RecordingProgress(), Token);
+
+        using var document = PdfReader.Open(result.OutputPaths.ShouldHaveSingleItem(), PdfDocumentOpenMode.Import);
+        FormReader.Read(document).ShouldBeEmpty();
+        document.Internals.Catalog.Elements.ContainsKey("/AcroForm").ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task ADocumentWithoutAForm_IsRefused()
     {
         var table = CsvTable.Parse("a\n1");
