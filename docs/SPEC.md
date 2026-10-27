@@ -71,13 +71,13 @@ Mức: **MVP** = bản dùng được đầu tiên · **Pro** = ngang app trả 
 ```text
 PdfPro/
 ├─ AGENTS.md                     // luật cho AI agent (P0)
-├─ CLAUDE.md                     // chứa dòng @AGENTS.md (cho Claude Code)
+├─ CLAUDE.md                     // nạp @AGENTS.md và @docs/PROGRESS.md (cho Claude Code)
 ├─ Directory.Build.props         // net10.0, Nullable, TreatWarningsAsErrors
 ├─ Directory.Packages.props      // version NuGet quản lý tập trung
 ├─ global.json                   // ghim .NET SDK 10
 ├─ PdfPro.slnx
 ├─ THIRD_PARTY_NOTICES.md        // license mọi thư viện, font, tessdata
-├─ docs/      SPEC.md · PROMPTS.md · adr/
+├─ docs/      SPEC.md · PROMPTS.md · PROGRESS.md (tiến độ, bàn giao) · adr/
 ├─ samples/                      // PDF mẫu để test (dữ liệu giả)
 ├─ assets/fonts/                 // font Unicode đóng gói (P4: Noto Sans + OFL.txt), nhúng vào PdfPro.Operations
 ├─ tools/                        // qpdf, tesseract + tessdata (tải bằng script)
