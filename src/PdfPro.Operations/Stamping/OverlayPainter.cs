@@ -48,6 +48,15 @@ internal static class OverlayPainter
         graphics.Restore(state);
     }
 
+    /// <summary>The pixel size of a picture file as shown (EXIF orientation applied).</summary>
+    public static (int Width, int Height) ImageSize(string path)
+    {
+        var bytes = File.ReadAllBytes(path);
+        using var stream = new MemoryStream(bytes, writable: false);
+        using var image = XImage.FromStream(stream);
+        return ExifOrientation.DisplayedSize(ExifOrientation.Read(bytes), image.PixelWidth, image.PixelHeight);
+    }
+
     public static XColor Color(RgbColor color) => XColor.FromArgb(color.R, color.G, color.B);
 
     public static XFont Font(TextStyle style)

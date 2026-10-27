@@ -97,6 +97,12 @@ internal static class AppHost
         services.AddOperation<BookletOperation>();
         services.AddOperation<TileOperation>();
         services.AddOperation<OverlayOperation>();
+        services.AddOperation<WatermarkOperation>();
+        services.AddOperation<BackgroundOperation>();
+        services.AddOperation<HeaderFooterOperation>();
+        services.AddOperation<PageNumbersOperation>();
+        services.AddOperation<BatesOperation>();
+        services.AddOperation<RemoveStampsOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();
