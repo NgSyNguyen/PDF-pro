@@ -80,6 +80,15 @@ internal static class PdfFile
         ];
     }
 
+    /// <summary>The /Subtype of every annotation on page <paramref name="pageIndex"/> ("/Highlight", "/Link"…), in order.</summary>
+    public static string[] Annotations(string path, int pageIndex)
+    {
+        using var document = PdfReader.Open(path, PdfDocumentOpenMode.Import);
+        return Resolve(document.Pages[pageIndex].Elements["/Annots"]) is PdfArray annotations
+            ? [.. annotations.Elements.Select(Resolve).OfType<PdfDictionary>().Select(a => a.Elements.GetName("/Subtype"))]
+            : [];
+    }
+
     /// <summary>The names of the file's optional content groups (layers): "Watermark", "Background", "Header/Footer"…</summary>
     public static string[] Layers(string path)
     {

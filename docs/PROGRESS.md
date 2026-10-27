@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 6, sau lát 9d.
+Cập nhật lần cuối: 27/10/2026 — Phase 6 xong (lát 9e); tiếp theo P7.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -50,7 +50,7 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | P3 Phiên tài liệu & tổ chức trang | Xong (`4ff9664` … `c1bbc4c`), có nghiệm thu FlaUI |
 | P4 Gộp, tách & bố cục | Xong (`b541fcd` … `1b0a5c2`), có nghiệm thu FlaUI và mục SPEC |
 | **P5 Chèn & đóng dấu** | **Đang làm** — xem bảng lát dưới |
-| **P6 Chú thích & tìm kiếm** | **Đang làm** — xem bảng lát Phase 6 |
+| P6 Chú thích & tìm kiếm | Xong về code (`66c9fc5` … lát 9e), có mục SPEC và `Phase6AcceptanceTests` (chưa chạy tay) |
 | P7–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
 
 ### Phase 5 — các lát
@@ -70,6 +70,8 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 
 Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5AcceptanceTests` trên Windows (`PDFPRO_UI_TESTS=1`), ghi số đo vào SPEC mục Phase 5, kiểm tay chữ tiếng Việt trong Acrobat Reader/Chrome.
 
+Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6AcceptanceTests` trên Windows, kiểm tay trong Acrobat Reader (chú thích hiển thị + sửa được; `annotated.pdf` do Acrobat tạo sửa/xóa/di chuyển được; tô sáng trên trang xoay 90°), copy tiếng Việt sang Word. **Lưu incremental (không phá chữ ký số) là việc của P8.**
+
 ### Phase 6 — các lát (kế hoạch do agent tự quyết, 27/10/2026)
 
 | Lát | Nội dung | Commit | Trạng thái |
@@ -88,8 +90,8 @@ Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5Acceptan
 | 9a | `annotate.flatten` (`Annotating/FlattenAnnotationsOperation.cs`): vẽ `/AP /N` (hoặc trạng thái `/AS`) của chú thích bình luận vào nội dung trang qua `PageStamper.Place` (BBox×Matrix khớp `/Rect`, 12.5.5; không nhân `/CA` vì `/AP` đã có độ mờ, như PDFium hiển thị), gỡ chúng cùng luồng `/IRT` + `/Popup` (`AnnotationThreads`); giữ liên kết, trường biểu mẫu, Redact, chú thích không có `/AP`; chú thích ẩn bị gỡ không vẽ; `Count(page)`. App: nhóm ribbon "Duyệt" (`annotate.comments` mở panel Bình luận, `annotate.flatten` hỏi "Cả tài liệu" / "Chỉ trang n" / "Chỉ n trang đã chọn" → cửa sổ chạy nền) | `38a8e9d` | Xong |
 | 9b | Làm phẳng **theo loại** (PROMPTS B8): Core `AnnotationGroup` (Ghi chú / Đánh dấu chữ / Hình vẽ / Con dấu) + `AnnotationGroups.Of(kind)`, `KindOf("/Subtype")`; `FlattenAnnotationsParams.Groups` (null = tất cả); hộp thoại `FlattenWindow` (`FlattenViewModel`: 4 ô loại + `PageTargetPanel`, mặc định cả tài liệu) thay hộp hỏi | `a989b20` | Xong |
 | 9c | Sửa nội dung bình luận ngay trong panel (nút "Sửa" → ô chữ, Lưu/Hủy): của phiên qua `AnnotationToolsViewModel.SetContents` (hộp chữ tự co giãn, 1 bước hoàn tác), của tệp qua `annotate.editFile` SetContents (revision). **Hộp chữ (FreeText) của tệp không sửa được chữ** (chữ nằm trong `/AP`, đổi `/Contents` không đổi chữ hiển thị) | `f950f6e` | Xong |
-| 9d | Chọn / di chuyển / xóa chú thích **có sẵn trong tệp** trên viewer (PROMPTS B7): `annotate.editFile` thêm `Move` (dời `/Rect`, `/QuadPoints`, `/Vertices`, `/L`, `/CL`, `/InkList` và `/Rect` của `/Popup`; `/AP` theo vì được khớp vào `/Rect`); Core `AnnotationHitTest.At(FileAnnotation…)` (markup theo dòng, còn lại theo hộp; bỏ trả lời/ẩn/không phải bình luận), `FileAnnotation.IsMovable`; App `AnnotationToolsViewModel.FileAnnotations.cs` (đọc nền theo (nguồn, trang), `SelectedFile`, kéo = khung nét đứt đi theo chuột → nhả = revision, Delete/Esc, thanh trạng thái hướng dẫn); `AnnotationLayer` vẽ khung | commit `feat: select, move and delete…` | Xong, chờ CI |
-| 9e | Mục SPEC Phase 6, `Phase6AcceptanceTests` (FlaUI) | — | Tiếp theo |
+| 9d | Chọn / di chuyển / xóa chú thích **có sẵn trong tệp** trên viewer (PROMPTS B7): `annotate.editFile` thêm `Move` (dời `/Rect`, `/QuadPoints`, `/Vertices`, `/L`, `/CL`, `/InkList` và `/Rect` của `/Popup`; `/AP` theo vì được khớp vào `/Rect`); Core `AnnotationHitTest.At(FileAnnotation…)` (markup theo dòng, còn lại theo hộp; bỏ trả lời/ẩn/không phải bình luận), `FileAnnotation.IsMovable`; App `AnnotationToolsViewModel.FileAnnotations.cs` (đọc nền theo (nguồn, trang), `SelectedFile`, kéo = khung nét đứt đi theo chuột → nhả = revision, Delete/Esc, thanh trạng thái hướng dẫn); `AnnotationLayer` vẽ khung | `35560c4` | Xong |
+| 9e | Mục SPEC "Chọn chữ, tìm kiếm & chú thích (Phase 6)" (thiết kế, quyết định, giới hạn, nghiệm thu); `Phase6AcceptanceTests` (FlaUI: tìm "doc lap" → tô sáng kết quả → panel Bình luận → Lưu có `/Highlight` → Làm phẳng 1 bước hoàn tác, chữ trang không đổi); `PdfFile.Annotations`, `AppUnderTest.ItemCount` | commit `docs: Phase 6 in the SPEC…` | Xong — **chưa chạy tay trên Windows** |
 
 **Quyết định Phase 6 (sẽ đưa vào SPEC mục Phase 6):**
 - PDFium 157 có API annotation nhưng **không ghi được** `/L` (đường), `/Vertices` (đa giác), `/IRT` (trả lời); PDFsharp 6.2.4 **không** lưu incremental. → Annotation được ghi bằng **PDFsharp ở tầng dictionary** (đủ loại, `/AP` sinh bằng XGraphics, trả lời có `/IRT`), giữ trên `PageRef` như dấu tách trang (thêm/sửa/hoàn tác tức thì, chỉ ghi ra PDF khi lưu/vật chất hóa). Annotation có sẵn trong tệp: sửa/xóa là thao tác nội dung (revision).
@@ -115,6 +117,14 @@ Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5Acceptan
   - Bates nhiều tệp: `Services/Documents/BatesService.cs` (đọc số trang bằng PDFium, từ chối tệp có mật khẩu), `ViewModels/Editing/BatesViewModel.cs`, `Views/BatesWindow.xaml`, `ViewModels/MainWindowViewModel.Bates.cs` (lệnh `BatesCommand`, chạy nền ở thanh trạng thái, mở thư mục khi xong).
   - Nối dây: `DocumentTabViewModel.cs` (`StampServices`, lệnh `Stamp*Command`, `RemoveStampsCommand`; `DocumentTabFactory` nhận `IDocumentSaver`), `MainWindowViewModel.cs` (ribbon nhóm "Đóng dấu"), `Services/Documents/ContentChanger.cs` (thao tác nội dung → revision mới → 1 bước hoàn tác), `HistoryDescriptions.cs`.
 - **Test:** `tests/PdfPro.Operations.Tests/Stamping/*`, `Fonts/*`; `tests/PdfPro.App.Tests/ViewModels/PageEditorViewModelTests.cs`, `StampDialogViewModelTests.cs`, `Services/SignatureTests.cs`; `tests/PdfPro.Core.Tests/Stamping|Overlay|Geometry/*`.
+
+## 5b. Bản đồ mã Phase 6
+
+- **Core:** `Text/PageText.cs`, `Text/TextSearch.cs`, `Annotations/AnnotationItems.cs` (mô hình + JSON), `AnnotationHitTest.cs` (của phiên + của tệp), `FileAnnotation.cs`, `AnnotationGroup.cs`, `CommentExport.cs`; `Organizing/PageRef.cs` (`Annotations`), `PagePlan.cs` (`HasSamePages`).
+- **Pdfium:** `PdfiumTextPage.GetLayer`, `PdfiumPage.GetAnnotations`, `AnnotationSafeHandle`; `IPdfDocument.GetPageTextLayerAsync/GetPageAnnotationsAsync`.
+- **Operations/Annotating:** `AnnotationWriter` (ghi + `/AP`; `AddToThread`), `AnnotateOperations.cs` (`annotate.add/update/delete`, thao tác plan), `EditFileAnnotationsOperation` (`annotate.editFile`: Reply/SetState/SetContents/Move/Delete), `FlattenAnnotationsOperation` (`annotate.flatten`, `Groups`), `AnnotationThreads` (gỡ cả luồng `/IRT` + `/Popup`). `PdfSharpPlanMaterializer` ghi chú thích của phiên.
+- **App:** `ViewModels/Viewer/TextSelectionViewModel.cs`, `SearchViewModel.cs`, `Services/.../TextLayerCache`; `ViewModels/Annotating/AnnotationToolsViewModel.cs` (+ `.Drawing.cs`, `.FileAnnotations.cs`), `CommentsViewModel.cs` (+ `CommentItemViewModel`), `FlattenViewModel.cs`; `Controls/AnnotationLayer.cs`, `TextHighlightLayer`; `Services/Annotating/AnnotationDrawing.cs`; `Views/FlattenWindow.xaml`, `SidebarView.xaml` (panel Tìm kiếm + Bình luận), `DocumentView.xaml(.cs)` (thanh công cụ chú thích, Popup bình luận, định tuyến chuột); `DocumentTabViewModel.Annotations.cs` (lệnh ribbon, `FlattenAnnotations`), `RequestFileCommentChange`; `HistoryDescriptions` (tên bước).
+- **Test:** `tests/PdfPro.Core.Tests/Annotations/*`, `Text/*`; `tests/PdfPro.Operations.Tests/Annotating/*`; `tests/PdfPro.App.Tests/ViewModels/AnnotationToolsViewModelTests.cs`, `AnnotationDrawingToolsTests.cs`, `CommentsViewModelTests.cs`, `DocumentTabViewModelTests.Flatten.cs`, `MainWindowViewModelTests.Search.cs`; `tests/PdfPro.App.UiTests/Phase6AcceptanceTests.cs`.
 
 ## 6. Quyết định & bài học (đọc trước khi sửa phần liên quan)
 

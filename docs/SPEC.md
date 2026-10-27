@@ -330,6 +330,55 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Kiểm tay: chữ có đủ dấu (ẳ, ỡ, ự, Ỷ…) bằng 3 phông đóng gói mở đúng trên máy không cài phông và trong Acrobat Reader / Chrome; đối tượng không lệch khi zoom 50–400 % và trên trang /Rotate 90.
 - Số đo trên máy phát triển: chưa đo (ghi lại khi chạy `Phase5AcceptanceTests` trên Windows — thời gian được in ra output của test).
 
+### Chọn chữ, tìm kiếm & chú thích (Phase 6)
+
+**Lớp chữ (PDFium → Core `PageText`)**
+- `PdfiumTextPage.GetLayer` đọc từng ký tự với hộp `FPDFText_GetLooseCharBox` (cao từ ascent tới descent của phông → ký tự cùng dòng cùng đỉnh/đáy), trong không gian PDF của trang nguồn = không gian của trang sau khi vật chất hóa (map bằng `MaterializedGeometry` như overlay). `TextLayerCache` (LRU 256 trang) dùng chung cho chọn chữ, tìm kiếm và đánh dấu.
+- `PageText`: dòng, từ, ký tự tại điểm, caret khi kéo, hình chữ nhật theo dòng; chép chữ NFC, nối dòng, bỏ gạch nối cuối dòng khi là từ bị bẻ, giữ ngắt đoạn.
+- Viewer: kéo = chọn, đúp = từ, ba lần = dòng (kéo tiếp theo từ/dòng), chọn xuyên trang, Ctrl+A cả tài liệu, Esc bỏ, Ctrl+C; con trỏ chữ I trên chữ. Vùng chọn gắn với chỉ số trang nên bị xóa khi các trang đổi (không xóa khi chỉ chú thích đổi: `PagePlan.HasSamePages`).
+
+**Tìm kiếm (Core `TextSearch`, App `SearchViewModel`)**
+- NFC = NFD; hoa/thường; dấu **Tự động** (truy vấn không dấu thì bỏ dấu, có dấu thì khớp dấu), **Bỏ qua**, **Khớp** — cả đ/Đ; toàn từ; regex (timeout 2 s); cụm từ khớp qua chỗ xuống dòng. Kết quả là khoảng ký tự kèm đoạn trích ngữ cảnh.
+- Chạy nền qua `TextLayerCache`, kết quả đổ dần, Dừng được; kết quả đang chọn được chọn chữ và cuộn tới; F3 / Shift+F3 vòng quanh; tự tìm lại khi đổi tùy chọn hoặc các trang đổi. Trang không có lớp chữ được đếm → gợi ý OCR (P10). `TextHighlightLayer` vẽ kết quả (vàng, đang chọn cam) và vùng chọn.
+
+**Mô hình chú thích (Core `Annotations/AnnotationItems.cs`)**
+- Record bất biến, JSON đa hình: markup (tô sáng, gạch chân, gạch ngang, lượn sóng — `QuadPoints` từ hộp ký tự), ghi chú, hộp chữ (có đường chỉ), mực, chữ nhật/elip, đường/mũi tên, đa giác/đường gấp khúc, con dấu chữ/ảnh. Mỗi chú thích có màu, độ mờ, nét, tác giả (Cài đặt → "Tên tác giả chú thích", trống = tên Windows), ngày tạo/sửa, nội dung, **trả lời** và **trạng thái duyệt** (Chấp nhận/Từ chối/Hủy/Hoàn thành). `Validate`, `MoveBy`, hit-test (`AnnotationHitTest`).
+- `AnnotationGroup`: Ghi chú (ghi chú, hộp chữ, dấu chèn, tệp đính kèm, âm thanh) · Đánh dấu chữ · Hình vẽ · Con dấu — dùng cho bộ lọc của panel và cho làm phẳng theo loại.
+
+**Ghi vào PDF (`AnnotationWriter`, PDFsharp tầng dictionary)**
+- PDFium 157 có API annotation nhưng **không ghi được** `/L`, `/Vertices`, `/IRT`; PDFsharp 6.2.4 không có API annotation đủ loại → chú thích được ghi bằng PDFsharp **ở tầng dictionary**: đủ khóa chuẩn (12.5), **luôn có `/AP`** sinh bằng XGraphics (để mọi trình đọc hiển thị như nhau), tô sáng nhân màu (`/BM /Multiply`), chữ tiếng Việt bằng phông đóng gói nhúng subset, thẳng theo góc xoay trang. `/AP`: `/BBox` = `/Rect` trong không gian trang, ma trận đơn vị; nét viết thẳng content stream (số invariant); chữ vẽ bằng `StampForms` rồi đặt bằng `FormToLocal.Then(mapper.ScreenToPdfMatrix)`. FreeText theo Acrobat: `/C` = màu nền, màu viền trong `/DA`. Trả lời/trạng thái = `/Text` ẩn có `/IRT` (`/State`, `/StateModel`). Mảng `/Annots` luôn được chép thành mảng riêng của trang.
+
+**Chú thích của phiên — thao tác trang, tức thì**
+- Chú thích mới nằm trên `PageRef.Annotations` (đi theo trang khi di chuyển/xoay/cắt/nhân bản; là nội dung: `HasSameContent`, `IsIdentity`), trong **không gian PDF của trang nguồn**. Thêm/sửa/xóa = `annotate.add/update/delete` (thao tác plan, một bước hoàn tác, tài liệu "chưa lưu"); manifest phiên lưu chúng (`PageDto.Annotations`); ảnh của con dấu ảnh nằm trong thư mục phiên.
+- Mọi lần vật chất hóa (lưu, xuất, xem trước đóng dấu, đầu vào của thao tác nội dung) ghi chúng vào tệp bằng `AnnotationWriter` → sau một thao tác nội dung chúng trở thành chú thích có sẵn trong tệp.
+- Hiển thị: ảnh trang do PDFium vẽ từ tệp nguồn (chưa có chúng) → `AnnotationLayer` vẽ đè bằng WPF (`AnnotationDrawing`, cùng hình như bản ghi; tô sáng vẽ trong suốt 40 % vì WPF không nhân màu); in ấn vẽ đè như vậy. **Thumbnail chưa hiện chú thích của phiên.**
+- Công cụ (ribbon "Chú thích" + thanh công cụ trên trang): đánh dấu vùng chọn ngay hoặc bật công cụ rồi kéo qua chữ; ghi chú (bấm đặt, nhả chuột mở ô bình luận — Popup `StaysOpen=False` chỉ mở sau `Release`, bấm ra ngoài giữ chữ, Esc bỏ, Ctrl+Enter xong); hộp chữ (kéo khung → gõ → tự cao theo chữ); vẽ tay (mỗi lần kéo một nét); chữ nhật/elip, đường/mũi tên (kéo; bấm = cỡ mặc định); đa giác/đường gấp khúc (bấm thêm điểm, đúp xong); con dấu (ĐÃ DUYỆT, ĐÃ XEM, KHÔNG DUYỆT, KHẨN, MẬT, BẢN NHÁP, SAO Y BẢN CHÍNH hoặc chữ gõ, kèm ngày). Bấm chọn, kéo di chuyển (markup đứng yên trên chữ), Delete, màu, nét, "Bình luận…". Chuột: `DocumentView` gọi `Annotations.Press` trước, không trúng chú thích mới tới chọn chữ.
+
+**Chú thích có sẵn trong tệp — thao tác nội dung (revision)**
+- Đọc bằng PDFium (`PdfiumPage.GetAnnotations` → `FileAnnotation`: loại, `/Rect`, `/NM`, `/T`, `/Contents`, `/M`, `/IRT` → chỉ số, `/State`, `/F`, `QuadPoints`; mọi handle bọc `AnnotationSafeHandle`). Màu không đọc (PDFium trả lỗi khi có `/AP`).
+- `annotate.editFile` (`EditFileAnnotationsOperation`): trả lời, đặt trạng thái, sửa nội dung, **di chuyển** (dời `/Rect`, `/QuadPoints`, `/Vertices`, `/L`, `/CL`, `/InkList`, `/Rect` của `/Popup`; `/AP` đi theo vì được khớp vào `/Rect`), **xóa** (cả luồng `/IRT` và `/Popup`). Chú thích được tìm theo chỉ số + loại + `/NM` (không có thì `/Rect` ±0,5 pt); tệp đổi mà không thấy thì **từ chối** chứ không sửa nhầm chú thích khác.
+- Viewer: chú thích của tệp được đọc nền cho các trang đang hiện; bấm chọn (khung nét đứt), kéo khung theo chuột → nhả = revision mới; Delete xóa; Esc bỏ chọn. Panel Bình luận: trả lời, trạng thái, sửa nội dung, xóa. Mỗi thay đổi là một bước hoàn tác, chạy nền ở thanh trạng thái; bị chặn khi trình chỉnh sửa trang còn đối tượng chờ áp dụng. **Hộp chữ của tệp không sửa được chữ** (chữ nằm trong `/AP`).
+
+**Panel "Bình luận" (sidebar, mục thứ 4; ribbon "Duyệt → Bình luận")**
+- Chú thích của phiên + của tệp, theo trang rồi trên → dưới như hiển thị; trả lời/trạng thái của tệp gom theo `/IRT`. Lọc theo loại, tác giả, trạng thái, chữ (bỏ dấu như tìm kiếm). Chọn → cuộn tới (và chọn chú thích của phiên). Chỉ đọc khi panel hiện, đọc lại khi các trang đổi.
+- Xuất (`CommentExport`): Markdown theo trang; CSV 1 dòng/bình luận + 1 dòng/trả lời, ngày ISO, chống công thức bảng tính (`'` đầu ô), UTF-8 có BOM.
+
+**Làm phẳng (`annotate.flatten`, ribbon "Duyệt → Làm phẳng")**
+- Vẽ `/AP /N` (hoặc trạng thái theo `/AS`) của chú thích bình luận vào nội dung trang qua `PageStamper` (BBox × Matrix khớp `/Rect`, 12.5.5; theo thứ tự `/Annots`; không nhân thêm `/CA` vì `/AP` đã mang độ mờ, đúng như PDFium hiển thị), rồi gỡ chúng cùng luồng trả lời và `/Popup`. Giữ liên kết, trường biểu mẫu, Redact và chú thích không có `/AP` (không có gì để vẽ); chú thích ẩn bị gỡ không vẽ.
+- Hộp thoại: 4 loại (`AnnotationGroup`, mặc định tất cả) + trang (mặc định cả tài liệu; trang hiện tại / vùng chọn của Sắp xếp, lẻ, chẵn, khoảng). Một bước hoàn tác.
+
+**Quyết định / giới hạn**
+- **Lưu incremental để không phá chữ ký số dời sang P8** (PDFsharp 6.2.4 không lưu incremental; P8 phải viết bộ ghi incremental cho ký nhiều người, kèm `signed.pdf` và bộ xác minh). Tới lúc đó lưu tệp đã ký vẫn cảnh báo như P3.
+- Panel không lọc theo màu (màu chú thích của tệp không đọc được qua PDFium khi có `/AP`).
+- Thumbnail chưa vẽ chú thích của phiên; tô sáng trên màn hình vẽ bằng độ trong suốt thay vì nhân màu.
+- Namespace `PdfPro.Operations.Annotating` (không phải `Annotations`: đụng `PdfGraph.Annotations(page)`). `PdfRect` có `[JsonConstructor]` và `[JsonIgnore]` cho thuộc tính tính toán (struct deserialize ra toàn 0 nếu thiếu).
+
+**Nghiệm thu**
+- Unit/golden: chú thích mọi loại ghi ra được PDFium đọc lại đúng loại/vị trí/trả lời/trạng thái và render đúng màu/chỗ; hộp chữ và con dấu trên trang /Rotate 0/90/180/270 có CropBox lệch gốc đứng thẳng như trang hiển thị (quad của tô sáng lấy từ hộp ký tự trong không gian trang nguồn nên không phụ thuộc góc xoay); chữ tiếng Việt trong hộp chữ/con dấu đọc lại đúng; làm phẳng xong trang render như lúc có chú thích (lệch < 0,5 % điểm ảnh), liên kết còn nguyên; di chuyển chú thích của tệp → nét mực vẽ ở chỗ mới; tìm "hoa" khớp "Hòa", "hóa" (chế độ dấu Tự động).
+- Kịch bản FlaUI `Phase6AcceptanceTests` (chạy tay, `PDFPRO_UI_TESTS=1`): tìm "doc lap" (không dấu) trên `basic-vi.pdf` ra "Độc lập"; "Tô sáng" đánh dấu ngay kết quả đang chọn → panel Bình luận liệt kê nó; Lưu → tệp có `/Highlight` (đọc bằng PDFsharp); Làm phẳng là một bước hoàn tác, lưu xong không còn `/Highlight` và chữ các trang (PdfPig) y như ban đầu.
+- Kiểm tay: lưu rồi mở bằng Acrobat Reader — chú thích hiển thị đúng và sửa được; tô sáng trên trang xoay 90° nằm đúng dòng chữ; mở `annotated.pdf` do Acrobat tạo — trả lời/xóa/di chuyển được; copy đoạn tiếng Việt dán vào Word đúng dấu, không vỡ dòng; tìm trên tệp 1.000 trang không treo UI và Dừng được.
+- Số đo trên máy phát triển: chưa đo (ghi khi chạy `Phase6AcceptanceTests` trên Windows).
+
 ### Hệ tọa độ — nguồn bug số một
 
 PDF dùng đơn vị point (1/72 inch), gốc ở góc **dưới-trái**, trang có thể có `/Rotate` 90/180/270 và CropBox không bắt đầu từ (0,0). WPF dùng DIP (1/96 inch), gốc ở góc **trên-trái**. Mọi chuyển đổi bắt buộc đi qua một lớp duy nhất, có unit test cho cả 4 góc xoay × CropBox lệch gốc × nhiều mức zoom.
