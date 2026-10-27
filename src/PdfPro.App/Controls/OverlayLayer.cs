@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using PdfPro.App.Services.Editing;
@@ -33,6 +34,9 @@ public sealed class OverlayLayer : FrameworkElement
     private static readonly Pen GuidePen = Freeze(new Pen(Freeze(new SolidColorBrush(Color.FromRgb(0xE0, 0x00, 0x8A))), 1));
     private static readonly Pen EmptyTextPen = Freeze(new Pen(Brushes.Gray, 1) { DashStyle = DashStyles.Dash });
 
+    /// <summary>A bare text box (the app theme's would paint it as a dark input field over the page).</summary>
+    private static readonly ControlTemplate PlainTextBoxTemplate = CreatePlainTextBoxTemplate();
+
     private Gesture _gesture;
     private Point _start;
     private bool _recorded;
@@ -43,12 +47,39 @@ public sealed class OverlayLayer : FrameworkElement
     private List<(OverlayObjectViewModel Object, OverlayItem Item)> _startItems = [];
     private OverlayItem? _preview;
     private IReadOnlyList<SnapGuide> _guides = [];
+    private TextBox? _textBox;
+    private OverlayObjectViewModel? _textTarget;
 
     public OverlayLayer()
     {
         Focusable = false;
         Unloaded += (_, _) => Detach(Editor);
         Loaded += (_, _) => Attach(Editor);
+    }
+
+    protected override int VisualChildrenCount => _textBox is null ? 0 : 1;
+
+    protected override Visual GetVisualChild(int index)
+        => index == 0 && _textBox is not null ? _textBox : throw new ArgumentOutOfRangeException(nameof(index));
+
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        _textBox?.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        return default;
+    }
+
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        if (_textBox is not null && _textTarget?.Item is TextOverlay text && Mapper() is { } mapper)
+        {
+            var box = text.Box.ToView(mapper);
+            _textBox.Width = box.Width;
+            _textBox.MinHeight = box.Height;
+            _textBox.RenderTransform = new RotateTransform(box.Angle, box.Width / 2, box.Height / 2);
+            _textBox.Arrange(new Rect(box.Center.X - (box.Width / 2), box.Center.Y - (box.Height / 2), box.Width, Math.Max(box.Height, _textBox.DesiredSize.Height)));
+        }
+
+        return finalSize;
     }
 
     private enum Gesture
@@ -86,6 +117,13 @@ public sealed class OverlayLayer : FrameworkElement
         var pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
         foreach (var target in editor.ObjectsOn(PageKey))
         {
+            if (target == editor.EditingText && target.Item is TextOverlay typing)
+            {
+                // The text box shows the text while it is typed.
+                DrawPolygon(drawingContext, typing.Box.ToView(mapper).Corners(), EmptyTextPen);
+                continue;
+            }
+
             DrawItem(drawingContext, editor, target.Item, mapper, pixelsPerDip);
         }
 
@@ -119,6 +157,21 @@ public sealed class OverlayLayer : FrameworkElement
         _start = e.GetPosition(this);
         _recorded = false;
         _guides = [];
+        if (editor.EditingText is not null)
+        {
+            // A click outside the text being typed ends typing (and does nothing else).
+            editor.EndTextEdit();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.ClickCount == 2 && editor.Tool == OverlayTool.Select && ObjectAt(editor, mapper, _start) is { Item: TextOverlay } text)
+        {
+            editor.BeginTextEdit(text);
+            e.Handled = true;
+            return;
+        }
+
         if (editor.Tool is OverlayTool.Text or OverlayTool.Rectangle or OverlayTool.Ellipse or OverlayTool.Line or OverlayTool.Arrow or OverlayTool.Whiteout)
         {
             _gesture = Gesture.Creating;
@@ -202,7 +255,12 @@ public sealed class OverlayLayer : FrameworkElement
         {
             if (NewItem(editor, mapper, e.GetPosition(this)) is { } item)
             {
-                editor.Add(PageKey, item);
+                var added = editor.Add(PageKey, item);
+                if (item is TextOverlay)
+                {
+                    // Typing starts at once; adding and typing are one undoable step.
+                    editor.BeginTextEdit(added, record: false);
+                }
             }
 
             // Back to selecting, so the new object can be adjusted at once.
@@ -232,6 +290,20 @@ public sealed class OverlayLayer : FrameworkElement
     {
         freezable.Freeze();
         return freezable;
+    }
+
+    private static ControlTemplate CreatePlainTextBoxTemplate()
+    {
+        var border = new FrameworkElementFactory(typeof(Border));
+        border.SetValue(Border.BackgroundProperty, new TemplateBindingExtension(Control.BackgroundProperty));
+        border.SetValue(Border.PaddingProperty, new TemplateBindingExtension(Control.PaddingProperty));
+        var host = new FrameworkElementFactory(typeof(ScrollViewer), "PART_ContentHost");
+        host.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+        host.SetValue(ScrollViewer.VerticalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+        border.AppendChild(host);
+        var template = new ControlTemplate(typeof(TextBox)) { VisualTree = border };
+        template.Seal();
+        return template;
     }
 
     private static void OnEditorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -296,6 +368,7 @@ public sealed class OverlayLayer : FrameworkElement
             editor.Invalidated += OnInvalidated;
         }
 
+        SyncTextBox();
         InvalidateVisual();
     }
 
@@ -305,9 +378,110 @@ public sealed class OverlayLayer : FrameworkElement
         {
             editor.Invalidated -= OnInvalidated;
         }
+
+        RemoveTextBox();
     }
 
-    private void OnInvalidated(object? sender, EventArgs e) => InvalidateVisual();
+    private void OnInvalidated(object? sender, EventArgs e)
+    {
+        SyncTextBox();
+        InvalidateVisual();
+    }
+
+    /// <summary>Shows a text box over the object being typed in when it is on this page, styled like its text.</summary>
+    private void SyncTextBox()
+    {
+        if (Editor is not { EditingText: { PageKey: var key, Item: TextOverlay text } target } editor || key != PageKey || Mapper() is not { } mapper)
+        {
+            RemoveTextBox();
+            return;
+        }
+
+        if (_textBox is null)
+        {
+            _textBox = new TextBox
+            {
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.Wrap,
+                BorderThickness = new Thickness(0),
+                Background = Freeze(new SolidColorBrush(Color.FromArgb(0xD9, 0xFF, 0xFF, 0xFF))),
+                VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Template = PlainTextBoxTemplate,
+                CaretBrush = Brushes.Black,
+            };
+            System.Windows.Automation.AutomationProperties.SetAutomationId(_textBox, "EditorTextBox");
+            _textBox.TextChanged += (_, _) =>
+            {
+                if (_textTarget is not null && Editor?.EditingText == _textTarget)
+                {
+                    Editor.UpdateEditingText(_textBox.Text);
+                }
+            };
+            _textBox.LostKeyboardFocus += (_, _) => Dispatcher.BeginInvoke(() =>
+            {
+                if (_textBox is not null && !_textBox.IsKeyboardFocusWithin && Editor?.EditingText == _textTarget)
+                {
+                    Editor?.EndTextEdit();
+                }
+            });
+            _textBox.PreviewKeyDown += (_, e) =>
+            {
+                if (e.Key == Key.Escape)
+                {
+                    Editor?.EndTextEdit();
+                    e.Handled = true;
+                }
+            };
+            AddVisualChild(_textBox);
+            AddLogicalChild(_textBox);
+        }
+
+        var style = text.Style;
+        _textBox.FontSize = style.FontSize * mapper.Scale;
+        _textBox.FontWeight = style.Bold ? FontWeights.Bold : FontWeights.Normal;
+        _textBox.FontStyle = style.Italic ? FontStyles.Italic : FontStyles.Normal;
+        _textBox.Foreground = new SolidColorBrush(OverlayDrawing.ToColor(style.Color));
+        _textBox.Padding = new Thickness(Math.Max(0, (text.Padding * mapper.Scale) - 2));
+        _textBox.TextAlignment = style.Alignment switch
+        {
+            Core.Overlay.TextAlignment.Center => System.Windows.TextAlignment.Center,
+            Core.Overlay.TextAlignment.Right => System.Windows.TextAlignment.Right,
+            Core.Overlay.TextAlignment.Justify => System.Windows.TextAlignment.Justify,
+            _ => System.Windows.TextAlignment.Left,
+        };
+        if (editor.Fonts?.Face(style) is { } face)
+        {
+            var file = face.Typeface.FontUri;
+            var family = face.Typeface.FamilyNames.TryGetValue(System.Globalization.CultureInfo.GetCultureInfo("en-US"), out var name) ? name : face.Typeface.FamilyNames.Values.FirstOrDefault() ?? style.FontFamily;
+            _textBox.FontFamily = new FontFamily(new Uri(file, "."), "./" + System.IO.Path.GetFileName(file.LocalPath) + "#" + family);
+        }
+
+        if (_textTarget != target)
+        {
+            _textTarget = target;
+            _textBox.Text = text.Text;
+            _textBox.CaretIndex = _textBox.Text.Length;
+            Dispatcher.BeginInvoke(() => _textBox?.Focus(), System.Windows.Threading.DispatcherPriority.Input);
+        }
+
+        InvalidateMeasure();
+        InvalidateArrange();
+    }
+
+    private void RemoveTextBox()
+    {
+        if (_textBox is null)
+        {
+            return;
+        }
+
+        var textBox = _textBox;
+        _textBox = null;
+        _textTarget = null;
+        RemoveLogicalChild(textBox);
+        RemoveVisualChild(textBox);
+        InvalidateMeasure();
+    }
 
     /// <summary>The page's mapper at the size it is shown, or null while its geometry is unknown.</summary>
     private PageCoordinateMapper? Mapper()

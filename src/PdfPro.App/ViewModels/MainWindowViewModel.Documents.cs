@@ -29,15 +29,23 @@ public sealed partial class MainWindowViewModel : IExitGuard
     /// </summary>
     public bool ExitConfirmed { get; set; }
 
-    public bool HasUnsavedDocuments => Documents.Any(d => d.IsDirty);
+    public bool HasUnsavedDocuments => Documents.Any(d => d.IsDirty || d.HasPendingEdits);
 
     /// <summary>
-    /// Asks about every document with unsaved changes, one after the other (Lưu / Không lưu / Hủy), then stops the
-    /// running print job. Returns false when the user cancelled or a save failed: the application keeps running and
-    /// nothing has been discarded.
+    /// Applies what waits in page editors, asks about every document with unsaved changes, one after the other (Lưu /
+    /// Không lưu / Hủy), then stops the running print job. Returns false when the user cancelled or a save (or an
+    /// apply) failed: the application keeps running and nothing has been discarded.
     /// </summary>
     public async Task<bool> ConfirmExitAsync()
     {
+        foreach (var document in Documents.Where(d => d.HasPendingEdits).ToList())
+        {
+            if (!await ApplyPendingEditsAsync(document))
+            {
+                return false;
+            }
+        }
+
         var discarded = new List<DocumentTabViewModel>();
         foreach (var document in Documents.Where(d => d.IsDirty && !d.DiscardChanges).ToList())
         {
@@ -103,7 +111,7 @@ public sealed partial class MainWindowViewModel : IExitGuard
         }
     }
 
-    private bool CanSave() => ActiveDocument is { IsReadOnly: false, IsDirty: true } && !StatusBar.IsTaskRunning;
+    private bool CanSave() => ActiveDocument is { IsReadOnly: false } document && (document.IsDirty || document.HasPendingEdits) && !StatusBar.IsTaskRunning;
 
     /// <summary>Ctrl+Shift+S: writes the active document to a new file, which becomes the document's file.</summary>
     [RelayCommand(CanExecute = nameof(CanSaveAs))]
@@ -118,6 +126,23 @@ public sealed partial class MainWindowViewModel : IExitGuard
     private bool CanSaveAs() => ActiveDocument is { IsReadOnly: false } && !StatusBar.IsTaskRunning;
 
     /// <summary>
+    /// Applies the objects waiting in a document's page editor (one content change). True when there were none or they
+    /// were written; false when writing them failed or was cancelled (they stay in the editor).
+    /// </summary>
+    internal async Task<bool> ApplyPendingEditsAsync(DocumentTabViewModel document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        if (document.PendingEditsRequest() is not { } request)
+        {
+            return true;
+        }
+
+        var applied = await ChangeContentAsync(document, request);
+        request.Completed?.Invoke(applied);
+        return applied;
+    }
+
+    /// <summary>
     /// Saves a document with progress and cancel in the status bar. Returns true once the document is saved; false
     /// when the user cancelled or the save failed (the user has been told why; the original file is unchanged).
     /// </summary>
@@ -128,6 +153,12 @@ public sealed partial class MainWindowViewModel : IExitGuard
     {
         ArgumentNullException.ThrowIfNull(document);
         if (document.IsReadOnly)
+        {
+            return false;
+        }
+
+        // Objects waiting in the page editor are applied first, so the file holds what the user sees.
+        if (!await ApplyPendingEditsAsync(document))
         {
             return false;
         }

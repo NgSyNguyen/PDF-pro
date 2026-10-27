@@ -1,0 +1,186 @@
+<UserControl
+  x:Class="PdfPro.App.Views.OverlayPropertiesView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:editing="clr-namespace:PdfPro.App.ViewModels.Editing"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=editing:OverlayPropertiesViewModel}"
+  d:DesignWidth="300">
+  <UserControl.Resources>
+    <Style x:Key="SectionTitle" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,12,0,4" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,6,0,2" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+    <!-- A row of colour squares; the command and its target come from the Tag of the ItemsControl. -->
+    <DataTemplate x:Key="SwatchTemplate" DataType="{x:Type editing:ColorSwatch}">
+      <Button
+        Width="20"
+        Height="20"
+        Margin="0,0,4,4"
+        Padding="0"
+        AutomationProperties.Name="{Binding Hex}"
+        Background="{Binding Hex, Converter={StaticResource HexBrush}}"
+        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        Command="{Binding Tag, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+        CommandParameter="{Binding Hex}"
+        ToolTip="{Binding Hex}" />
+    </DataTemplate>
+    <ItemsPanelTemplate x:Key="SwatchPanel">
+      <WrapPanel />
+    </ItemsPanelTemplate>
+  </UserControl.Resources>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="12,0,12,12">
+      <TextBlock
+        AutomationProperties.AutomationId="PropsScope"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{Binding Scope}"
+        TextWrapping="Wrap" />
+
+      <!-- Text -->
+      <StackPanel Visibility="{Binding ShowsText, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Style="{StaticResource SectionTitle}" Text="{loc:Tr Props_Text}" />
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Props_Font}" />
+        <ComboBox
+          AutomationProperties.AutomationId="PropsFont"
+          AutomationProperties.Name="{loc:Tr Props_Font}"
+          ItemsSource="{Binding FontFamilies}"
+          SelectedItem="{Binding FontFamily}" />
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Props_Size}" />
+        <TextBox
+          AutomationProperties.AutomationId="PropsFontSize"
+          AutomationProperties.Name="{loc:Tr Props_Size}"
+          Text="{Binding FontSize, UpdateSourceTrigger=LostFocus}" />
+        <WrapPanel Margin="0,6,0,0">
+          <CheckBox
+            Margin="0,0,12,0"
+            AutomationProperties.AutomationId="PropsBold"
+            Content="{loc:Tr Props_Bold}"
+            IsChecked="{Binding Bold}"
+            IsEnabled="{Binding CanBold}" />
+          <CheckBox
+            AutomationProperties.AutomationId="PropsItalic"
+            Content="{loc:Tr Props_Italic}"
+            IsChecked="{Binding Italic}" />
+        </WrapPanel>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Props_Color}" />
+        <ItemsControl
+          ItemTemplate="{StaticResource SwatchTemplate}"
+          ItemsPanel="{StaticResource SwatchPanel}"
+          ItemsSource="{Binding Swatches}"
+          Tag="{Binding SetTextColorCommand}" />
+        <TextBox
+          AutomationProperties.AutomationId="PropsTextColor"
+          AutomationProperties.Name="{loc:Tr Props_HexColor}"
+          Text="{Binding TextColor, UpdateSourceTrigger=LostFocus}"
+          ToolTip="{loc:Tr Props_HexColor}" />
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Props_Alignment}" />
+        <WrapPanel>
+          <RadioButton
+            Margin="0,0,8,0"
+            AutomationProperties.AutomationId="PropsAlignLeft"
+            Content="{loc:Tr Props_Align_Left}"
+            GroupName="PropsAlign"
+            IsChecked="{Binding Alignment, Converter={StaticResource EnumMatch}, ConverterParameter=Left}" />
+          <RadioButton
+            Margin="0,0,8,0"
+            AutomationProperties.AutomationId="PropsAlignCenter"
+            Content="{loc:Tr Props_Align_Center}"
+            GroupName="PropsAlign"
+            IsChecked="{Binding Alignment, Converter={StaticResource EnumMatch}, ConverterParameter=Center}" />
+          <RadioButton
+            Margin="0,0,8,0"
+            AutomationProperties.AutomationId="PropsAlignRight"
+            Content="{loc:Tr Props_Align_Right}"
+            GroupName="PropsAlign"
+            IsChecked="{Binding Alignment, Converter={StaticResource EnumMatch}, ConverterParameter=Right}" />
+          <RadioButton
+            AutomationProperties.AutomationId="PropsAlignJustify"
+            Content="{loc:Tr Props_Align_Justify}"
+            GroupName="PropsAlign"
+            IsChecked="{Binding Alignment, Converter={StaticResource EnumMatch}, ConverterParameter=Justify}" />
+        </WrapPanel>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Props_LineSpacing}" />
+        <TextBox
+          AutomationProperties.AutomationId="PropsLineSpacing"
+          AutomationProperties.Name="{loc:Tr Props_LineSpacing}"
+          Text="{Binding LineSpacing, UpdateSourceTrigger=LostFocus}" />
+      </StackPanel>
+
+      <!-- Border and fill of text boxes and shapes -->
+      <StackPanel Visibility="{Binding ShowsBox, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Style="{StaticResource SectionTitle}" Text="{loc:Tr Props_Shape}" />
+        <CheckBox
+          AutomationProperties.AutomationId="PropsBorder"
+          Content="{loc:Tr Props_Border}"
+          IsChecked="{Binding HasBorder}" />
+        <ItemsControl
+          Margin="0,4,0,0"
+          ItemTemplate="{StaticResource SwatchTemplate}"
+          ItemsPanel="{StaticResource SwatchPanel}"
+          ItemsSource="{Binding Swatches}"
+          Tag="{Binding SetBorderColorCommand}" />
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Props_BorderWidth}" />
+        <TextBox
+          AutomationProperties.AutomationId="PropsBorderWidth"
+          AutomationProperties.Name="{loc:Tr Props_BorderWidth}"
+          Text="{Binding BorderWidth, UpdateSourceTrigger=LostFocus}" />
+        <CheckBox
+          Margin="0,8,0,0"
+          AutomationProperties.AutomationId="PropsFill"
+          Content="{loc:Tr Props_Fill}"
+          IsChecked="{Binding HasFill}" />
+        <ItemsControl
+          Margin="0,4,0,0"
+          ItemTemplate="{StaticResource SwatchTemplate}"
+          ItemsPanel="{StaticResource SwatchPanel}"
+          ItemsSource="{Binding Swatches}"
+          Tag="{Binding SetFillColorCommand}" />
+      </StackPanel>
+
+      <!-- Lines -->
+      <StackPanel Visibility="{Binding ShowsLine, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Style="{StaticResource SectionTitle}" Text="{loc:Tr Props_Line}" />
+        <ItemsControl
+          ItemTemplate="{StaticResource SwatchTemplate}"
+          ItemsPanel="{StaticResource SwatchPanel}"
+          ItemsSource="{Binding Swatches}"
+          Tag="{Binding SetLineColorCommand}" />
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Props_LineWidth}" />
+        <TextBox
+          AutomationProperties.AutomationId="PropsLineWidth"
+          AutomationProperties.Name="{loc:Tr Props_LineWidth}"
+          Text="{Binding LineWidth, UpdateSourceTrigger=LostFocus}" />
+        <CheckBox
+          Margin="0,8,0,0"
+          AutomationProperties.AutomationId="PropsArrowStart"
+          Content="{loc:Tr Props_ArrowStart}"
+          IsChecked="{Binding ArrowAtStart}" />
+        <CheckBox
+          Margin="0,4,0,0"
+          AutomationProperties.AutomationId="PropsArrowEnd"
+          Content="{loc:Tr Props_ArrowEnd}"
+          IsChecked="{Binding ArrowAtEnd}" />
+      </StackPanel>
+
+      <TextBlock Style="{StaticResource SectionTitle}" Text="{loc:Tr Props_Opacity}" />
+      <Slider
+        AutomationProperties.AutomationId="PropsOpacity"
+        AutomationProperties.Name="{loc:Tr Props_Opacity}"
+        IsSnapToTickEnabled="True"
+        Maximum="100"
+        Minimum="5"
+        TickFrequency="5"
+        Value="{Binding OpacityPercent}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -291,12 +291,18 @@
             DockPanel.Dock="Top"
             FontWeight="SemiBold"
             Text="{loc:Tr Properties_Title}" />
-          <TextBlock
-            Margin="16"
-            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-            Text="{loc:Tr Properties_Empty}"
-            TextAlignment="Center"
-            TextWrapping="Wrap" />
+          <Grid>
+            <TextBlock
+              Margin="16"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Properties_Empty}"
+              TextAlignment="Center"
+              TextWrapping="Wrap"
+              Visibility="{Binding ActiveDocument.Editor.IsActive, Converter={StaticResource InverseBoolToVisibility}, FallbackValue=Visible}" />
+            <views:OverlayPropertiesView
+              DataContext="{Binding ActiveDocument.EditorProperties}"
+              Visibility="{Binding DataContext.ActiveDocument.Editor.IsActive, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+          </Grid>
         </DockPanel>
       </Border>
     </Grid>

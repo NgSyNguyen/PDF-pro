@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Editing;
+using PdfPro.Operations.Fonts;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Overlay;
@@ -161,7 +162,9 @@ public sealed partial class PageEditorViewModel : ObservableObject
                 return new TextOverlay(0, new OverlayBox(mapper.ScreenToPdf(center), size), string.Empty, TextStyle);
             case OverlayTool.Rectangle:
             case OverlayTool.Ellipse:
-                return new ShapeOverlay(0, BoxFor(DefaultShapeSize), tool == OverlayTool.Ellipse ? ShapeKind.Ellipse : ShapeKind.Rectangle, ShapeStroke, ShapeFill);
+                // A shape needs a border or a fill to be seen (and written).
+                var stroke = ShapeStroke is { Width: > 0 } || ShapeFill is not null ? ShapeStroke : new StrokeStyle(ShapeStroke.Color, 2);
+                return new ShapeOverlay(0, BoxFor(DefaultShapeSize), tool == OverlayTool.Ellipse ? ShapeKind.Ellipse : ShapeKind.Rectangle, stroke, ShapeFill);
             case OverlayTool.Whiteout:
                 return new ShapeOverlay(0, BoxFor(DefaultWhiteoutSize), ShapeKind.Whiteout);
             case OverlayTool.Line:
@@ -280,12 +283,122 @@ public sealed partial class PageEditorViewModel : ObservableObject
         OnSelectionChanged();
     }
 
+    /// <summary>The text box being typed in, on the page (null when none).</summary>
+    [ObservableProperty]
+    public partial OverlayObjectViewModel? EditingText { get; private set; }
+
+    /// <summary>Starts typing in a text box (double-click, or a new box); its edits become one undoable step.</summary>
+    public void BeginTextEdit(OverlayObjectViewModel target, bool record = true)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        if (target.Item is not TextOverlay || EditingText == target)
+        {
+            return;
+        }
+
+        EndTextEdit();
+        if (record)
+        {
+            Record();
+        }
+
+        Select(target);
+        EditingText = target;
+        Invalidate();
+    }
+
+    /// <summary>The typed text so far: the box grows (downwards, as shown) to hold every line.</summary>
+    public void UpdateEditingText(string text)
+    {
+        if (EditingText is { Item: TextOverlay item } target)
+        {
+            target.Item = FitHeight(target.PageKey, item with { Text = text });
+            Invalidate();
+        }
+    }
+
+    /// <summary>Stops typing; a box left empty is removed.</summary>
+    public void EndTextEdit()
+    {
+        if (EditingText is not { } target)
+        {
+            return;
+        }
+
+        EditingText = null;
+        if (target.Item is TextOverlay { Text: var text } && string.IsNullOrWhiteSpace(text))
+        {
+            Objects.Remove(target);
+        }
+
+        Invalidate();
+    }
+
+    /// <summary>A picture placed in the middle of a page, at its own size or shrunk to half the page.</summary>
+    public OverlayObjectViewModel? AddImage(Guid pageKey, ImportedImage image, bool isSignature = false)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        if (GeometryOf(pageKey) is not { } geometry)
+        {
+            return null;
+        }
+
+        var shown = geometry.DisplaySize;
+        var size = image.SizeWithin(new PdfSize(shown.Width / 2, shown.Height / 2));
+        var center = new PageCoordinateMapper(geometry, 1).ScreenToPdf(new ViewPoint(shown.Width / 2, shown.Height / 2));
+        Tool = OverlayTool.Select;
+        return Add(pageKey, new ImageOverlay(0, new OverlayBox(center, size), image.Path, isSignature));
+    }
+
+    /// <summary>Changes the selected objects (one undoable step); text boxes are refitted to their text.</summary>
+    public void ApplyToSelection(Func<OverlayItem, OverlayItem> change)
+    {
+        ArgumentNullException.ThrowIfNull(change);
+        var selection = Selection;
+        if (selection.Count == 0)
+        {
+            return;
+        }
+
+        Record();
+        foreach (var target in selection)
+        {
+            var changed = change(target.Item);
+            target.Item = changed is TextOverlay text ? FitHeight(target.PageKey, text) : changed;
+        }
+
+        Invalidate();
+    }
+
+    /// <summary>A text box made tall enough for its text, its top edge (as shown) staying put.</summary>
+    public TextOverlay FitHeight(Guid pageKey, TextOverlay text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        if (GeometryOf(pageKey) is not { } geometry)
+        {
+            return text;
+        }
+
+        var size = text.Box.Size;
+        var needed = TextHeight(text.Style, text.Text, size.Width - (2 * text.Padding)) + (2 * text.Padding);
+        if (Math.Abs(needed - size.Height) < 0.01)
+        {
+            return text;
+        }
+
+        var mapper = new PageCoordinateMapper(geometry, 1);
+        var shown = text.Box.ToView(mapper);
+        var center = shown.ToView(0, (needed - size.Height) / 2);
+        return text with { Box = OverlayBox.FromView(new RotatedBox(center, shown.Width, needed, shown.Angle), mapper) };
+    }
+
     /// <summary>The pages changed (moved, turned, cropped): the layers redraw.</summary>
     public void Refresh() => Invalidate();
 
     /// <summary>Empties the editor (after applying, or on cancel).</summary>
     public void Clear()
     {
+        EditingText = null;
         Objects.Clear();
         _undo.Clear();
         _redo.Clear();
@@ -343,6 +456,7 @@ public sealed partial class PageEditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanUndo))]
     private void Undo()
     {
+        EndTextEdit();
         if (_undo.TryPop(out var previous))
         {
             _redo.Push(Capture());
@@ -355,6 +469,7 @@ public sealed partial class PageEditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRedo))]
     private void Redo()
     {
+        EndTextEdit();
         if (_redo.TryPop(out var next))
         {
             _undo.Push(Capture());
@@ -367,6 +482,7 @@ public sealed partial class PageEditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasObjects))]
     private void Apply()
     {
+        EndTextEdit();
         if (BuildParameters() is { } parameters)
         {
             ApplyRequested?.Invoke(this, parameters);
@@ -390,6 +506,7 @@ public sealed partial class PageEditorViewModel : ObservableObject
     {
         if (!value)
         {
+            EndTextEdit();
             Tool = OverlayTool.Select;
         }
 

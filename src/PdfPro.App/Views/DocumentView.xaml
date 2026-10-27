@@ -179,6 +179,15 @@
             ToolTip="{loc:Tr Editor_Tool_Whiteout_ToolTip}">
             <ui:SymbolIcon Symbol="Eraser24" />
           </RadioButton>
+          <Button
+            Margin="0,0,4,0"
+            Padding="8,4"
+            AutomationProperties.AutomationId="EditorImage"
+            AutomationProperties.Name="{loc:Tr Editor_Tool_Image}"
+            Command="{Binding DataContext.AddImageCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            ToolTip="{loc:Tr Editor_Tool_Image}">
+            <ui:SymbolIcon Symbol="ImageAdd24" />
+          </Button>
           <TextBlock
             Margin="10,0,0,0"
             VerticalAlignment="Center"

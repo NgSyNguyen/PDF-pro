@@ -118,6 +118,11 @@ public interface IFileDialogService
     /// <returns>The chosen path, or null when cancelled.</returns>
     string? PickSavePath(string suggestedFileName, string? initialDirectory);
 
+    /// <summary>Asks for a picture file (PNG, JPEG, BMP, GIF, TIFF) to place on a page.</summary>
+    /// <param name="title">The dialog title.</param>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickImageFile(string title);
+
     /// <summary>Asks for a folder (where split files go).</summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="initialDirectory">Folder shown first (or its nearest existing parent), or null.</param>

@@ -99,6 +99,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         TileCommand = new ActiveDocumentCommand(d => d.TileCommand);
         AddTextCommand = new ActiveDocumentCommand(d => d.AddTextCommand);
         AddShapeCommand = new ActiveDocumentCommand(d => d.AddShapeCommand);
+        AddImageCommand = new ActiveDocumentCommand(d => d.AddImageCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
@@ -175,6 +176,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand AddTextCommand { get; }
 
     public ActiveDocumentCommand AddShapeCommand { get; }
+
+    public ActiveDocumentCommand AddImageCommand { get; }
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -271,6 +274,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
             return;
         }
 
+        // Objects placed in the page editor and not applied yet are applied first (then asked about like any change).
+        if (!await ApplyPendingEditsAsync(document) || !Tabs.Contains(document))
+        {
+            return;
+        }
+
         // Unsaved changes: Lưu / Không lưu / Hủy. A save that fails keeps the tab open.
         if (document.IsDirty && !document.DiscardChanges)
         {
@@ -314,6 +323,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private async Task PrintAsync()
     {
         if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        // What is printed is what is shown: objects waiting in the page editor are applied first.
+        if (!await ApplyPendingEditsAsync(document))
         {
             return;
         }
@@ -389,7 +404,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -405,7 +420,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UpdateHistoryToolTips();
         }
 
-        if (e.PropertyName == nameof(DocumentTabViewModel.IsDirty))
+        if (e.PropertyName is nameof(DocumentTabViewModel.IsDirty) or nameof(DocumentTabViewModel.HasPendingEdits))
         {
             NotifySaveCommands();
         }
@@ -555,7 +570,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Add,
                 [
                     new("edit.addText", Strings.Cmd_AddText, SymbolRegular.TextAddT24, AddTextCommand),
-                    new("edit.addImage", Strings.Cmd_AddImage, SymbolRegular.ImageAdd24),
+                    new("edit.addImage", Strings.Cmd_AddImage, SymbolRegular.ImageAdd24, AddImageCommand),
                     new("edit.addShape", Strings.Cmd_AddShape, SymbolRegular.Shapes24, AddShapeCommand),
                     new("edit.handSignature", Strings.Cmd_HandSignature, SymbolRegular.Signature24),
                 ]),

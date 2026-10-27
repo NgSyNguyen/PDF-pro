@@ -138,6 +138,13 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// <summary>The page editor: text, pictures, shapes and lines placed on pages until applied.</summary>
     public PageEditorViewModel Editor { get; }
 
+    /// <summary>Objects wait in the page editor: saving, printing and closing apply them first.</summary>
+    public bool HasPendingEdits => Editor.HasObjects;
+
+    /// <summary>The editor's properties panel, made the first time the editor opens (it lists the installed fonts).</summary>
+    [ObservableProperty]
+    public partial OverlayPropertiesViewModel? EditorProperties { get; private set; }
+
     /// <summary>The page organizer grid, created the first time the organizer is shown.</summary>
     [ObservableProperty]
     public partial PageOrganizerViewModel? Organizer { get; private set; }
@@ -368,6 +375,59 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// <summary>"Thêm chữ": opens the page editor with the text tool.</summary>
     [RelayCommand(CanExecute = nameof(CanEditContent))]
     private void AddText() => StartEditing(OverlayTool.Text);
+
+    /// <summary>
+    /// "Ảnh": asks for a picture, copies it into the session (so the document never depends on the original file) and
+    /// places it in the middle of the current page, selected, in the page editor.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanEditContent))]
+    private async Task AddImageAsync()
+    {
+        if (_services.FileDialogs.PickImageFile(Strings.Editor_PickImage_Title) is not { } path)
+        {
+            return;
+        }
+
+        try
+        {
+            await PlaceImageAsync(ImageImporter.Import(path, ImagesDirectory));
+        }
+        catch (Exception ex) when (ex is IOException or NotSupportedException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            _logger.LogWarning("A picture could not be inserted: {ErrorType}", ex.GetType().Name);
+            _ = _messages.ShowErrorAsync(Strings.Editor_Error_Title, string.Format(CultureInfo.CurrentCulture, Strings.Editor_Error_Image, Path.GetFileName(path)));
+        }
+    }
+
+    /// <summary>Places a picture (pasted from the clipboard) on the current page in the page editor.</summary>
+    public async Task PastePictureAsync(System.Windows.Media.Imaging.BitmapSource bitmap)
+    {
+        ArgumentNullException.ThrowIfNull(bitmap);
+        try
+        {
+            await PlaceImageAsync(ImageImporter.ImportBitmap(bitmap, ImagesDirectory));
+        }
+        catch (Exception ex) when (ex is IOException or NotSupportedException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            _logger.LogWarning("A pasted picture could not be inserted: {ErrorType}", ex.GetType().Name);
+        }
+    }
+
+    /// <summary>Pictures placed in the editor are copied here, inside the document's session.</summary>
+    private string ImagesDirectory => Path.Combine(Workspace.WorkDirectory, "images");
+
+    private async Task PlaceImageAsync(ImportedImage image)
+    {
+        if (!CanEditContent() || Viewer.PageCount == 0)
+        {
+            return;
+        }
+
+        StartEditing(OverlayTool.Select);
+        var page = Workspace.Pages.Pages[Math.Clamp(Viewer.CurrentPageIndex, 0, Viewer.PageCount - 1)];
+        await Editor.GetGeometryAsync(page.Key);
+        Editor.AddImage(page.Key, image);
+    }
 
     /// <summary>"Thêm hình": opens the page editor with the rectangle tool (the editor's bar has the other shapes).</summary>
     [RelayCommand(CanExecute = nameof(CanEditContent))]
@@ -834,16 +894,29 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
     }
 
+    /// <summary>
+    /// The objects waiting in the page editor as one content change, or null when there are none: saving, printing and
+    /// closing apply them first ("tự áp dụng khi rời chế độ chỉnh sửa").
+    /// </summary>
+    public ContentChangeRequest? PendingEditsRequest()
+    {
+        Editor.EndTextEdit();
+        return Editor.HasObjects && CanEditPages && Editor.BuildParameters() is { } parameters ? EditsRequest(parameters) : null;
+    }
+
     /// <summary>"Áp dụng": the window writes the objects as one content change; the editor empties once it is made.</summary>
     private void OnEditorApplyRequested(object? sender, OverlayParams parameters)
     {
-        if (!CanEditPages)
+        if (CanEditPages)
         {
-            return;
+            ContentChangeRequested?.Invoke(this, EditsRequest(parameters));
         }
+    }
 
+    private ContentChangeRequest EditsRequest(OverlayParams parameters)
+    {
         var description = string.Format(CultureInfo.CurrentCulture, Strings.History_Overlay, parameters.Items.Count);
-        ContentChangeRequested?.Invoke(this, new ContentChangeRequest(_operations.Get<OverlayOperation>(), parameters, description, applied =>
+        return new ContentChangeRequest(_operations.Get<OverlayOperation>(), parameters, description, applied =>
         {
             if (applied)
             {
@@ -855,11 +928,21 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             }
 
             _closeEditorWhenApplied = false;
-        }));
+        });
     }
 
     private void OnEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(PageEditorViewModel.IsActive) && Editor.IsActive)
+        {
+            EditorProperties ??= new OverlayPropertiesViewModel(Editor);
+        }
+
+        if (e.PropertyName == nameof(PageEditorViewModel.HasObjects))
+        {
+            OnPropertyChanged(nameof(HasPendingEdits));
+        }
+
         if (e.PropertyName is nameof(PageEditorViewModel.HasObjects) or nameof(PageEditorViewModel.CanUndo) or nameof(PageEditorViewModel.CanRedo) or nameof(PageEditorViewModel.IsActive))
         {
             NotifyCommands();
@@ -895,6 +978,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         TileCommand.NotifyCanExecuteChanged();
         AddTextCommand.NotifyCanExecuteChanged();
         AddShapeCommand.NotifyCanExecuteChanged();
+        AddImageCommand.NotifyCanExecuteChanged();
     }
 }
 

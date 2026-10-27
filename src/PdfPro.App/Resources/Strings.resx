@@ -649,4 +649,35 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Editor_Tool_Whiteout" xml:space="preserve"><value>Che trắng</value></data>
   <data name="Editor_Tool_Whiteout_ToolTip" xml:space="preserve"><value>Che trắng: chỉ che phần nhìn thấy, chữ bên dưới vẫn còn trong tệp (xóa vĩnh viễn ở tab Bảo mật)</value></data>
   <data name="Editor_Hint" xml:space="preserve"><value>Kéo trên trang để vẽ · Shift: giữ tỉ lệ, xoay từng 15° · Alt: không hít cạnh · Mũi tên: dịch 1 pt (Shift 10 pt)</value></data>
+  <data name="Image_Dialog_Filter" xml:space="preserve"><value>Ảnh (*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff|Tất cả tệp (*.*)|*.*</value></data>
+  <data name="Editor_PickImage_Title" xml:space="preserve"><value>Chọn ảnh để chèn</value></data>
+  <data name="Editor_Error_Title" xml:space="preserve"><value>Không chèn được ảnh</value></data>
+  <data name="Editor_Error_Image" xml:space="preserve"><value>Không đọc được “{0}” như một ảnh. Hãy chọn tệp PNG, JPEG, BMP, GIF hoặc TIFF.</value></data>
+  <data name="Editor_Tool_Image" xml:space="preserve"><value>Ảnh</value></data>
+  <data name="Props_Text" xml:space="preserve"><value>Chữ</value></data>
+  <data name="Props_Font" xml:space="preserve"><value>Phông chữ</value></data>
+  <data name="Props_Size" xml:space="preserve"><value>Cỡ (pt)</value></data>
+  <data name="Props_Bold" xml:space="preserve"><value>Đậm</value></data>
+  <data name="Props_Bold_Unavailable" xml:space="preserve"><value>Phông này không có kiểu đậm</value></data>
+  <data name="Props_Italic" xml:space="preserve"><value>Nghiêng</value></data>
+  <data name="Props_Color" xml:space="preserve"><value>Màu</value></data>
+  <data name="Props_Alignment" xml:space="preserve"><value>Căn lề</value></data>
+  <data name="Props_Align_Left" xml:space="preserve"><value>Trái</value></data>
+  <data name="Props_Align_Center" xml:space="preserve"><value>Giữa</value></data>
+  <data name="Props_Align_Right" xml:space="preserve"><value>Phải</value></data>
+  <data name="Props_Align_Justify" xml:space="preserve"><value>Đều hai bên</value></data>
+  <data name="Props_LineSpacing" xml:space="preserve"><value>Giãn dòng</value></data>
+  <data name="Props_Opacity" xml:space="preserve"><value>Độ mờ (%)</value></data>
+  <data name="Props_Border" xml:space="preserve"><value>Viền</value></data>
+  <data name="Props_BorderWidth" xml:space="preserve"><value>Độ dày viền (pt)</value></data>
+  <data name="Props_Fill" xml:space="preserve"><value>Nền</value></data>
+  <data name="Props_Shape" xml:space="preserve"><value>Hình</value></data>
+  <data name="Props_Line" xml:space="preserve"><value>Đường</value></data>
+  <data name="Props_LineWidth" xml:space="preserve"><value>Độ dày (pt)</value></data>
+  <data name="Props_ArrowStart" xml:space="preserve"><value>Mũi tên ở đầu</value></data>
+  <data name="Props_ArrowEnd" xml:space="preserve"><value>Mũi tên ở cuối</value></data>
+  <data name="Props_Image" xml:space="preserve"><value>Ảnh</value></data>
+  <data name="Props_ForNew" xml:space="preserve"><value>Áp dụng cho đối tượng sẽ tạo</value></data>
+  <data name="Props_ForSelection" xml:space="preserve"><value>Áp dụng cho {0} đối tượng đang chọn</value></data>
+  <data name="Props_HexColor" xml:space="preserve"><value>Mã màu #RRGGBB</value></data>
 </root>

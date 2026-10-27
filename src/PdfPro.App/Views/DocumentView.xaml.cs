@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using PdfPro.App.ViewModels;
@@ -67,6 +68,12 @@ public partial class DocumentView : UserControl
     private static bool HandleEditorKey(DocumentTabViewModel document, Key key)
     {
         var editor = document.Editor;
+        if (editor.EditingText is not null)
+        {
+            // Typing: every key belongs to the text box (it ends typing on Esc itself).
+            return false;
+        }
+
         var control = Keyboard.Modifiers == ModifierKeys.Control;
         var step = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 10 : 1;
         var currentPage = document.Workspace.Pages.Pages is { Count: > 0 } pages
@@ -87,9 +94,10 @@ public partial class DocumentView : UserControl
                 return editor.Nudge(0, step);
             case Key.C when control && editor.HasSelection:
                 editor.CopyCommand.Execute(null);
+                MarkClipboard();
                 return true;
             case Key.V when control:
-                editor.PasteOn(currentPage);
+                Paste(document, currentPage);
                 return true;
             case Key.A when control:
                 editor.SelectAll(currentPage);
@@ -104,6 +112,43 @@ public partial class DocumentView : UserControl
                 return false;
         }
     }
+
+    /// <summary>
+    /// Objects copied in the editor stay in the editor; the Windows clipboard gets a marker so that a later Ctrl+V knows
+    /// whether to paste them or what another program copied since.
+    /// </summary>
+    private static void MarkClipboard()
+    {
+        try
+        {
+            Clipboard.SetDataObject(new DataObject(EditorClipboardFormat, Guid.NewGuid().ToString("N")), copy: false);
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            // The clipboard is busy: pasting falls back to the editor's own copy.
+        }
+    }
+
+    /// <summary>Ctrl+V: the editor's own objects, or a picture or text another program copied.</summary>
+    private static void Paste(DocumentTabViewModel document, Guid currentPage)
+    {
+        try
+        {
+            if (!Clipboard.ContainsData(EditorClipboardFormat) && Clipboard.ContainsImage() && Clipboard.GetImage() is { } picture)
+            {
+                _ = document.PastePictureAsync(picture);
+                return;
+            }
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            // The clipboard is busy: paste what the editor copied.
+        }
+
+        document.Editor.PasteOn(currentPage);
+    }
+
+    private const string EditorClipboardFormat = "PdfPro.EditorObjects";
 
     private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e) => Scroller.Focus();
 }

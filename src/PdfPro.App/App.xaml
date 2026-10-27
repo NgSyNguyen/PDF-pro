@@ -17,6 +17,7 @@
       <controls:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" IsInverted="True" />
       <controls:NullToCollapsedConverter x:Key="NullToCollapsed" />
       <controls:EnumMatchConverter x:Key="EnumMatch" />
+      <controls:HexColorBrushConverter x:Key="HexBrush" />
     </ResourceDictionary>
   </Application.Resources>
 </Application>

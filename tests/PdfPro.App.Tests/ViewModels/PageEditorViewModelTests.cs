@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
+using PdfPro.App.Services.Editing;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels;
@@ -198,6 +199,110 @@ public sealed class PageEditorViewModelTests : IDisposable
         tab.UndoCommand.Execute(null);
         tab.Workspace.Session.Plan[0].RotationDelta.ShouldBe(0);
     }
+
+    [Fact]
+    public async Task Typing_GrowsTheBoxDownwards_AndAnEmptyBoxIsDropped()
+    {
+        await using var tab = await OpenAsync(1);
+        var (editor, key, geometry) = await EditorOnPageAsync(tab, 0);
+        var item = (TextOverlay)editor.NewItem(OverlayTool.Text, geometry, new ViewPoint(100, 100), new ViewPoint(100, 100))!;
+        var box = editor.Add(key, item);
+        editor.BeginTextEdit(box, record: false);
+        var top = Top(geometry, (TextOverlay)box.Item);
+
+        editor.UpdateEditingText("Dòng một\nDòng hai\nDòng ba");
+
+        var grown = (TextOverlay)box.Item;
+        grown.Box.Size.Height.ShouldBeGreaterThan(item.Box.Size.Height * 2.5);
+        Top(geometry, grown).ShouldBe(top, 1e-6, "the top edge stays where it was");
+        editor.EndTextEdit();
+        editor.EditingText.ShouldBeNull();
+        editor.Objects.ShouldContain(box);
+
+        var empty = editor.Add(key, item);
+        editor.BeginTextEdit(empty, record: false);
+        editor.UpdateEditingText("   ");
+        editor.EndTextEdit();
+        editor.Objects.ShouldNotContain(empty);
+    }
+
+    [Fact]
+    public async Task APicture_GoesInTheMiddleOfThePage_NoBiggerThanHalfOfIt()
+    {
+        await using var tab = await OpenAsync(1);
+        var (editor, key, geometry) = await EditorOnPageAsync(tab, 0);
+
+        var placed = editor.AddImage(key, new ImportedImage(@"C:\session\images\a.png", 2000, 1000, 96, 96)).ShouldNotBeNull();
+
+        var image = (ImageOverlay)placed.Item;
+        image.Box.Size.Width.ShouldBe(297.5, 0.01, "half of the 595 pt page");
+        image.Box.Size.Height.ShouldBe(148.75, 0.01);
+        Shown(geometry, image.Box.Center).ShouldBe(new ViewPoint(297.5, 421));
+        editor.Tool.ShouldBe(OverlayTool.Select);
+        placed.IsSelected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ThePropertiesPanel_ShowsTheSelection_AndChangesItInOneStep()
+    {
+        await using var tab = await OpenAsync(1);
+        var (editor, key, geometry) = await EditorOnPageAsync(tab, 0);
+        var text = editor.Add(key, new TextOverlay(0, new OverlayBox(new PdfPoint(200, 600), new PdfSize(200, 30)), "Cộng hòa", TextStyle.Default with { FontSize = 18, Bold = true }));
+        var shape = editor.Add(key, Shape(geometry, 300, 300));
+        editor.Select(text);
+        editor.Select(shape, add: true);
+        var panel = new OverlayPropertiesViewModel(editor);
+
+        panel.ShowsText.ShouldBeTrue();
+        panel.ShowsShape.ShouldBeTrue();
+        panel.FontSize.ShouldBe(18);
+        panel.Bold.ShouldBeTrue();
+        panel.Scope.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Props_ForSelection, 2));
+
+        panel.OpacityPercent = 50;
+        ((TextOverlay)text.Item).Opacity.ShouldBe(0.5);
+        ((ShapeOverlay)shape.Item).Opacity.ShouldBe(0.5);
+        panel.SetTextColorCommand.Execute("#1D4ED8");
+        ((TextOverlay)text.Item).Style.Color.ShouldBe(new RgbColor(0x1D, 0x4E, 0xD8));
+        editor.TextStyle.Color.ShouldBe(new RgbColor(0x1D, 0x4E, 0xD8), "new text gets the same style");
+
+        editor.UndoCommand.Execute(null);
+        ((TextOverlay)editor.Objects[0].Item).Style.Color.ShouldBe(RgbColor.Black, "each change is one step");
+        ((TextOverlay)editor.Objects[0].Item).Opacity.ShouldBe(0.5);
+    }
+
+    [Fact]
+    public async Task WithNothingSelected_ThePanelSetsTheStyleOfNewObjects()
+    {
+        await using var tab = await OpenAsync(1);
+        tab.AddShapeCommand.Execute(null);
+        var panel = tab.EditorProperties.ShouldNotBeNull();
+
+        panel.ShowsShape.ShouldBeTrue();
+        panel.ShowsText.ShouldBeFalse();
+        panel.Scope.ShouldBe(Strings.Props_ForNew);
+        panel.SetFillColorCommand.Execute("#16A34A");
+
+        tab.Editor.ShapeFill.ShouldBe(new RgbColor(0x16, 0xA3, 0x4A));
+        tab.Editor.Objects.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task PendingEdits_AreAContentChangeForSavingAndClosing()
+    {
+        await using var tab = await OpenAsync(1);
+        tab.PendingEditsRequest().ShouldBeNull();
+        var (editor, key, geometry) = await EditorOnPageAsync(tab, 0);
+        editor.Add(key, Shape(geometry, 100, 100));
+
+        tab.HasPendingEdits.ShouldBeTrue();
+        var request = tab.PendingEditsRequest().ShouldNotBeNull();
+        request.Operation.ShouldBeOfType<OverlayOperation>();
+        request.Completed!(true);
+        tab.HasPendingEdits.ShouldBeFalse();
+    }
+
+    private static double Top(PageGeometry geometry, TextOverlay text) => text.Box.ToView(new PageCoordinateMapper(geometry, 1)).HandlePosition(Core.Geometry.BoxHandle.Top).Y;
 
     private static ShapeOverlay Shape(PageGeometry geometry, double shownX, double shownY)
         => new(0, new OverlayBox(new PageCoordinateMapper(geometry, 1).ScreenToPdf(new ViewPoint(shownX, shownY)), new PdfSize(40, 20)), ShapeKind.Rectangle, new StrokeStyle(RgbColor.Red, 2));
