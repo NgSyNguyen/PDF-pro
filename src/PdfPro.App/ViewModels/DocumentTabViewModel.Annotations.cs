@@ -23,6 +23,19 @@ public sealed partial class DocumentTabViewModel
     [RelayCommand(CanExecute = nameof(CanAnnotate))]
     private Task StickyNoteAsync() => UseAnnotationToolAsync(AnnotationTool.Note);
 
+    [RelayCommand(CanExecute = nameof(CanAnnotate))]
+    private Task TextBoxAsync() => UseAnnotationToolAsync(AnnotationTool.FreeText);
+
+    [RelayCommand(CanExecute = nameof(CanAnnotate))]
+    private Task InkAsync() => UseAnnotationToolAsync(AnnotationTool.Ink);
+
+    /// <summary>"Hình học": rectangles first; the tool bar offers the other shapes.</summary>
+    [RelayCommand(CanExecute = nameof(CanAnnotate))]
+    private Task ShapesAsync() => UseAnnotationToolAsync(AnnotationTool.Rectangle);
+
+    [RelayCommand(CanExecute = nameof(CanAnnotate))]
+    private Task StampAnnotationAsync() => UseAnnotationToolAsync(AnnotationTool.Stamp);
+
     /// <summary>Annotating needs an editable document shown in the viewer, with the page editor closed.</summary>
     private bool CanAnnotate() => CanEditPages && !IsOrganizing && !Editor.IsActive;
 
@@ -39,5 +52,9 @@ public sealed partial class DocumentTabViewModel
         StrikeOutCommand.NotifyCanExecuteChanged();
         SquigglyCommand.NotifyCanExecuteChanged();
         StickyNoteCommand.NotifyCanExecuteChanged();
+        TextBoxCommand.NotifyCanExecuteChanged();
+        InkCommand.NotifyCanExecuteChanged();
+        ShapesCommand.NotifyCanExecuteChanged();
+        StampAnnotationCommand.NotifyCanExecuteChanged();
     }
 }

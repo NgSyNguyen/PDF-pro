@@ -649,6 +649,29 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Annotation_Done" xml:space="preserve"><value>Xong</value></data>
   <data name="Annotation_Contents_Name" xml:space="preserve"><value>Nội dung bình luận</value></data>
   <data name="Annotation_ToolActive" xml:space="preserve"><value>Đang dùng: {0} — Esc để tắt</value></data>
+  <data name="Annotation_PolygonHint" xml:space="preserve"><value>bấm để thêm điểm, bấm đúp để xong</value></data>
+  <data name="Annotation_Tool_Polygon" xml:space="preserve"><value>Đa giác</value></data>
+  <data name="Annotation_Tool_Polyline" xml:space="preserve"><value>Đường gấp khúc</value></data>
+  <data name="Annotation_Tool_None" xml:space="preserve"><value>Chọn chữ hoặc chú thích</value></data>
+  <data name="Annotation_TextBoxHeader" xml:space="preserve"><value>Hộp chữ — gõ nội dung</value></data>
+  <data name="Annotation_Comment" xml:space="preserve"><value>Bình luận…</value></data>
+  <data name="Annotation_Delete" xml:space="preserve"><value>Xóa</value></data>
+  <data name="Annotation_Width" xml:space="preserve"><value>Nét (pt)</value></data>
+  <data name="Annotation_StampWithDate" xml:space="preserve"><value>Kèm ngày</value></data>
+  <data name="Annotation_StampText" xml:space="preserve"><value>Chữ trên con dấu</value></data>
+  <data name="AnnotationStamp_Approved" xml:space="preserve"><value>ĐÃ DUYỆT</value></data>
+  <data name="AnnotationStamp_Seen" xml:space="preserve"><value>ĐÃ XEM</value></data>
+  <data name="AnnotationStamp_NotApproved" xml:space="preserve"><value>KHÔNG DUYỆT</value></data>
+  <data name="AnnotationStamp_Urgent" xml:space="preserve"><value>KHẨN</value></data>
+  <data name="AnnotationStamp_Confidential" xml:space="preserve"><value>MẬT</value></data>
+  <data name="AnnotationStamp_Draft" xml:space="preserve"><value>BẢN NHÁP</value></data>
+  <data name="AnnotationStamp_Copy" xml:space="preserve"><value>SAO Y BẢN CHÍNH</value></data>
+  <data name="Cmd_TextBox_ToolTip" xml:space="preserve"><value>Bấm hoặc kéo trên trang để tạo hộp chữ, rồi gõ nội dung</value></data>
+  <data name="Cmd_Ink_ToolTip" xml:space="preserve"><value>Vẽ tay lên trang (công cụ giữ nguyên tới khi Esc)</value></data>
+  <data name="Cmd_Shapes_ToolTip" xml:space="preserve"><value>Hình chữ nhật, elip, đường thẳng, mũi tên, đa giác — chọn trên thanh công cụ</value></data>
+  <data name="Cmd_StampAnnotation_ToolTip" xml:space="preserve"><value>Bấm vào trang để đóng con dấu (ĐÃ DUYỆT, ĐÃ XEM…) kèm ngày</value></data>
+  <data name="Settings_AnnotationAuthor" xml:space="preserve"><value>Tên tác giả chú thích</value></data>
+  <data name="Settings_AnnotationAuthor_Hint" xml:space="preserve"><value>Hiện cho người đọc tài liệu bên cạnh chú thích của bạn. Để trống: dùng tên người dùng Windows.</value></data>
   <data name="Editor_Delete" xml:space="preserve"><value>Xóa</value></data>
   <data name="Editor_Cancel" xml:space="preserve"><value>Hủy</value></data>
   <data name="Editor_Apply" xml:space="preserve"><value>Áp dụng</value></data>

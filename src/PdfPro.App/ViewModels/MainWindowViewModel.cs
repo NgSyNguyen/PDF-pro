@@ -114,6 +114,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
         StrikeOutCommand = new ActiveDocumentCommand(d => d.StrikeOutCommand);
         SquigglyCommand = new ActiveDocumentCommand(d => d.SquigglyCommand);
         StickyNoteCommand = new ActiveDocumentCommand(d => d.StickyNoteCommand);
+        TextBoxCommand = new ActiveDocumentCommand(d => d.TextBoxCommand);
+        InkCommand = new ActiveDocumentCommand(d => d.InkCommand);
+        ShapesCommand = new ActiveDocumentCommand(d => d.ShapesCommand);
+        StampAnnotationCommand = new ActiveDocumentCommand(d => d.StampAnnotationCommand);
         FindNextCommand = new ActiveDocumentCommand(d => d.Search.NextCommand);
         FindPreviousCommand = new ActiveDocumentCommand(d => d.Search.PreviousCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
@@ -216,6 +220,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand SquigglyCommand { get; }
 
     public ActiveDocumentCommand StickyNoteCommand { get; }
+
+    public ActiveDocumentCommand TextBoxCommand { get; }
+
+    public ActiveDocumentCommand InkCommand { get; }
+
+    public ActiveDocumentCommand ShapesCommand { get; }
+
+    public ActiveDocumentCommand StampAnnotationCommand { get; }
 
     /// <summary>F3: the next match of the search.</summary>
     public ActiveDocumentCommand FindNextCommand { get; }
@@ -455,6 +467,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
             HighlightCommand, UnderlineCommand, StrikeOutCommand, SquigglyCommand, StickyNoteCommand,
+            TextBoxCommand, InkCommand, ShapesCommand, StampAnnotationCommand,
         })
         {
             command.Attach(_trackedDocument);
@@ -668,13 +681,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Notes,
                 [
                     new("annotate.note", Strings.Cmd_StickyNote, SymbolRegular.Note24, StickyNoteCommand, Strings.Cmd_StickyNote_ToolTip),
-                    new("annotate.textBox", Strings.Cmd_TextBox, SymbolRegular.Textbox24),
+                    new("annotate.textBox", Strings.Cmd_TextBox, SymbolRegular.Textbox24, TextBoxCommand, Strings.Cmd_TextBox_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Draw,
                 [
-                    new("annotate.ink", Strings.Cmd_Ink, SymbolRegular.InkStroke24),
-                    new("annotate.shapes", Strings.Cmd_Shapes, SymbolRegular.DrawShape24),
-                    new("annotate.stamp", Strings.Cmd_StampAnnotation, SymbolRegular.DocumentCheckmark24),
+                    new("annotate.ink", Strings.Cmd_Ink, SymbolRegular.InkStroke24, InkCommand, Strings.Cmd_Ink_ToolTip),
+                    new("annotate.shapes", Strings.Cmd_Shapes, SymbolRegular.DrawShape24, ShapesCommand, Strings.Cmd_Shapes_ToolTip),
+                    new("annotate.stamp", Strings.Cmd_StampAnnotation, SymbolRegular.DocumentCheckmark24, StampAnnotationCommand, Strings.Cmd_StampAnnotation_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Search,
                 [

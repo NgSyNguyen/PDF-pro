@@ -29,6 +29,25 @@ public enum AnnotationTool
 
     /// <summary>A click places a sticky note and opens its comment.</summary>
     Note,
+
+    /// <summary>A click or a drag makes a text box, then its text is typed.</summary>
+    FreeText,
+
+    /// <summary>Free-hand strokes, one annotation each (the tool stays on).</summary>
+    Ink,
+    Rectangle,
+    Ellipse,
+    Line,
+    Arrow,
+
+    /// <summary>Clicks add corners, a double-click closes it.</summary>
+    Polygon,
+
+    /// <summary>Clicks add points, a double-click ends it.</summary>
+    Polyline,
+
+    /// <summary>A click places a stamp ("ĐÃ DUYỆT" and the date).</summary>
+    Stamp,
 }
 
 /// <summary>An annotation of the session: its page and its name there.</summary>
@@ -65,6 +84,8 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
     private readonly TimeProvider _time;
     private readonly ILogger _logger;
     private Move? _move;
+    private Draw? _draw;
+    private FreeTextAnnotation? _newTextBox;
     private AnnotationTarget? _openContents;
 
     /// <param name="viewer">The viewer whose pages are annotated.</param>
@@ -139,12 +160,18 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
     /// <summary>A tool is on (the bar above the pages says which).</summary>
     public bool IsToolActive => Tool != AnnotationTool.None;
 
-    /// <summary>"Đang dùng: Tô sáng — Esc để tắt".</summary>
+    /// <summary>"Đang dùng: Tô sáng — Esc để tắt" (with how to draw a polygon).</summary>
     public string? ToolText => Tool switch
     {
         AnnotationTool.None => null,
+        AnnotationTool.Polygon or AnnotationTool.Polyline => string.Format(CultureInfo.CurrentCulture, Strings.Annotation_ToolActive, NameOf(Tool)) + " · " + Strings.Annotation_PolygonHint,
         _ => string.Format(CultureInfo.CurrentCulture, Strings.Annotation_ToolActive, NameOf(Tool)),
     };
+
+    /// <summary>The tool bar shows: a tool is on, or an annotation is selected (its colour, comment, delete).</summary>
+    public bool IsBarVisible => IsToolActive || Selected is not null;
+
+    public bool HasSelection => Selected is not null;
 
     /// <summary>The session's annotations of a page, in drawing order.</summary>
     public IReadOnlyList<AnnotationItem> AnnotationsOn(Guid pageKey)
@@ -202,6 +229,11 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
             return true;
         }
 
+        if (IsDrawingTool)
+        {
+            return PressDrawing(found.Index, found.Page, found.Point, clickCount);
+        }
+
         var tolerance = PickTolerancePixels / _viewer.Layout.Scale;
         if (AnnotationHitTest.At(AnnotationsOn(found.Page.Key), found.Point, tolerance) is not { } hit)
         {
@@ -229,9 +261,15 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
     /// <summary>A move is under way (the mouse is captured for it).</summary>
     public bool IsMoving => _move is not null;
 
-    /// <summary>The mouse moved to <paramref name="viewport"/> while moving an annotation.</summary>
+    /// <summary>The mouse moved to <paramref name="viewport"/> while moving or drawing an annotation.</summary>
     public void DragTo(ViewPoint viewport)
     {
+        if (_draw is not null)
+        {
+            DrawTo(viewport);
+            return;
+        }
+
         if (_move is not { } move || PointOn(move.PageIndex, viewport) is not { } point)
         {
             return;
@@ -248,6 +286,12 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         {
             _openContents = null;
             BeginEditContents(open);
+        }
+
+        if (_draw is not null)
+        {
+            ReleaseDrawing();
+            return;
         }
 
         if (_move is not { } move)
@@ -320,7 +364,7 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         return true;
     }
 
-    /// <summary>Opens the comment of an annotation for writing.</summary>
+    /// <summary>Opens the comment of an annotation (the text of a text box) for writing.</summary>
     public void BeginEditContents(AnnotationTarget target)
     {
         ArgumentNullException.ThrowIfNull(target);
@@ -334,7 +378,10 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         EditingContents = target;
     }
 
-    /// <summary>Keeps the comment as written (one undoable step when it changed) and closes it.</summary>
+    /// <summary>
+    /// Keeps the comment as written (one undoable step when it changed) and closes it. A new text box is added with
+    /// its text (nothing is added when none was typed); a text box grows to hold its text.
+    /// </summary>
     [RelayCommand]
     public void CommitContents()
     {
@@ -345,18 +392,29 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
 
         EditingContents = null;
         var text = TextNormalizer.ToNfc(ContentsDraft.Replace("\r\n", "\n", StringComparison.Ordinal)).TrimEnd();
-        if (Find(target) is { } item && IndexOf(target.PageKey) is { } index && !string.Equals(item.Contents, text, StringComparison.Ordinal))
+        text = text[..Math.Min(text.Length, AnnotationItem.MaxContentsLength)];
+        if (_newTextBox is { } draft)
         {
-            var length = Math.Min(text.Length, AnnotationItem.MaxContentsLength);
-            _apply(_operations.Get<UpdateAnnotationsOperation>(), new UpdateAnnotationsParams(index + 1, [item with { Contents = text[..length], Modified = _time.GetLocalNow() }]));
+            _newTextBox = null;
+            AddTextBox(target.PageKey, draft, text);
+        }
+        else if (Find(target) is { } item && IndexOf(target.PageKey) is { } index && !string.Equals(item.Contents, text, StringComparison.Ordinal))
+        {
+            var changed = item is FreeTextAnnotation box ? Fit(target.PageKey, box, text) : item with { Contents = text };
+            _apply(_operations.Get<UpdateAnnotationsOperation>(), new UpdateAnnotationsParams(index + 1, [changed with { Modified = _time.GetLocalNow() }]));
         }
 
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>Closes the comment without keeping what was typed.</summary>
+    /// <summary>Closes the comment without keeping what was typed (a new text box is not added).</summary>
     [RelayCommand]
-    public void CancelContents() => EditingContents = null;
+    public void CancelContents()
+    {
+        _newTextBox = null;
+        EditingContents = null;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
 
     /// <summary>
     /// Ribbon "Tô sáng", "Gạch chân"…: marks the selected text at once, otherwise the tool stays on for the next text
@@ -390,12 +448,22 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
 
     public bool CanDelete => Selected is not null;
 
-    /// <summary>Esc: closes the comment, else turns the tool off, else clears the selection. False when nothing was to undo.</summary>
+    /// <summary>
+    /// Esc: closes the comment, else drops a polygon being drawn, else turns the tool off, else clears the selection.
+    /// False when there was nothing to undo.
+    /// </summary>
     public bool Escape()
     {
         if (EditingContents is not null)
         {
             CancelContents();
+            return true;
+        }
+
+        if (_draw is not null)
+        {
+            _draw = null;
+            Changed?.Invoke(this, EventArgs.Empty);
             return true;
         }
 
@@ -423,7 +491,7 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
             Selected = null;
         }
 
-        if (EditingContents is { } editing && Find(editing) is null)
+        if (EditingContents is { } editing && _newTextBox is null && Find(editing) is null)
         {
             EditingContents = null;
         }
@@ -437,9 +505,25 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
 
     partial void OnToolChanged(AnnotationTool value)
     {
+        if (_draw is not null)
+        {
+            _draw = null; // a polygon left unfinished is dropped
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+
         OnPropertyChanged(nameof(IsMarkupTool));
+        OnPropertyChanged(nameof(IsDrawingTool));
         OnPropertyChanged(nameof(IsToolActive));
+        OnPropertyChanged(nameof(IsBarVisible));
         OnPropertyChanged(nameof(ToolText));
+        OnPropertyChanged(nameof(HasWidth));
+    }
+
+    partial void OnSelectedChanged(AnnotationTarget? value)
+    {
+        OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(IsBarVisible));
+        EditCommentCommand.NotifyCanExecuteChanged();
     }
 
     private static string NameOf(AnnotationTool tool) => tool switch
@@ -449,6 +533,15 @@ public sealed partial class AnnotationToolsViewModel : ObservableObject
         AnnotationTool.StrikeOut => Strings.Cmd_Strikeout,
         AnnotationTool.Squiggly => Strings.Cmd_Squiggly,
         AnnotationTool.Note => Strings.Cmd_StickyNote,
+        AnnotationTool.FreeText => Strings.Cmd_TextBox,
+        AnnotationTool.Ink => Strings.Cmd_Ink,
+        AnnotationTool.Rectangle => Strings.Editor_Tool_Rectangle,
+        AnnotationTool.Ellipse => Strings.Editor_Tool_Ellipse,
+        AnnotationTool.Line => Strings.Editor_Tool_Line,
+        AnnotationTool.Arrow => Strings.Editor_Tool_Arrow,
+        AnnotationTool.Polygon => Strings.Annotation_Tool_Polygon,
+        AnnotationTool.Polyline => Strings.Annotation_Tool_Polyline,
+        AnnotationTool.Stamp => Strings.Cmd_StampAnnotation,
         _ => string.Empty,
     };
 

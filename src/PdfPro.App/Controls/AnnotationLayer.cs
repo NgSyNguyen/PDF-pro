@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Media;
 using PdfPro.App.Services.Annotating;
 using PdfPro.App.ViewModels.Annotating;
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Geometry;
 
 namespace PdfPro.App.Controls;
@@ -50,7 +51,8 @@ public sealed class AnnotationLayer : FrameworkElement
         }
 
         var items = annotations.AnnotationsOn(PageKey);
-        if (items.Count == 0 || annotations.GeometryOf(PageKey) is not { } geometry)
+        var preview = annotations.PreviewOn(PageKey);
+        if ((items.Count == 0 && preview is null) || annotations.GeometryOf(PageKey) is not { } geometry)
         {
             return;
         }
@@ -76,6 +78,16 @@ public sealed class AnnotationLayer : FrameworkElement
                 var frame = AnnotationDrawing.ScreenBounds(shown, mapper);
                 frame.Inflate(3, 3);
                 drawingContext.DrawRectangle(null, SelectionPen, frame);
+            }
+        }
+
+        if (preview is not null)
+        {
+            // What is being drawn; a text box has no text yet, so its place is outlined.
+            AnnotationDrawing.Draw(drawingContext, preview, mapper, annotations.Fonts, annotations.Images, pixelsPerDip);
+            if (preview is FreeTextAnnotation)
+            {
+                drawingContext.DrawRectangle(null, SelectionPen, AnnotationDrawing.ScreenBounds(preview, mapper));
             }
         }
     }

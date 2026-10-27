@@ -184,8 +184,8 @@ public partial class DocumentView : UserControl
             var point = new ViewPoint(position.X, position.Y);
             if (document.Annotations.Press(point, e.ClickCount))
             {
-                // A note was placed or an annotation picked (and maybe grabbed to move it).
-                if (document.Annotations.IsMoving)
+                // A note was placed, something is being drawn, or an annotation was picked (maybe grabbed to move it).
+                if (document.Annotations.IsMoving || document.Annotations.IsDrawing)
                 {
                     Surface.CaptureMouse();
                 }
@@ -215,9 +215,11 @@ public partial class DocumentView : UserControl
 
         var position = e.GetPosition(Surface);
         var point = new ViewPoint(position.X, position.Y);
-        if (document.Annotations.IsMoving && e.LeftButton == MouseButtonState.Pressed)
+        if ((document.Annotations.IsMoving && e.LeftButton == MouseButtonState.Pressed) || document.Annotations.IsDrawing)
         {
+            // A polygon follows the mouse between clicks too.
             document.Annotations.DragTo(point);
+            Surface.Cursor = Cursors.Cross;
             return;
         }
 
@@ -227,7 +229,7 @@ public partial class DocumentView : UserControl
             return;
         }
 
-        if (document.Annotations.Tool == AnnotationTool.Note)
+        if (document.Annotations.Tool == AnnotationTool.Note || document.Annotations.IsDrawingTool)
         {
             Surface.Cursor = Cursors.Cross;
         }

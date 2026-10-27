@@ -67,6 +67,25 @@
           SelectedValuePath="Value" />
       </ui:CardControl>
 
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Person24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_AnnotationAuthor}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_AnnotationAuthor_Hint}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <TextBox
+          MinWidth="200"
+          AutomationProperties.AutomationId="SettingsAnnotationAuthor"
+          AutomationProperties.Name="{loc:Tr Settings_AnnotationAuthor}"
+          MaxLength="128"
+          Text="{Binding AnnotationAuthor, UpdateSourceTrigger=LostFocus}" />
+      </ui:CardControl>
+
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Ram20}">
         <ui:CardControl.Header>
           <StackPanel>

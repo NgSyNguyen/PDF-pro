@@ -99,7 +99,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
                 "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature",
                 "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
-                "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note"],
+                "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
+                "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>

@@ -649,6 +649,29 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Annotation_Done" xml:space="preserve"><value>Done</value></data>
   <data name="Annotation_Contents_Name" xml:space="preserve"><value>Comment</value></data>
   <data name="Annotation_ToolActive" xml:space="preserve"><value>Tool: {0} — Esc turns it off</value></data>
+  <data name="Annotation_PolygonHint" xml:space="preserve"><value>click to add points, double-click to finish</value></data>
+  <data name="Annotation_Tool_Polygon" xml:space="preserve"><value>Polygon</value></data>
+  <data name="Annotation_Tool_Polyline" xml:space="preserve"><value>Polyline</value></data>
+  <data name="Annotation_Tool_None" xml:space="preserve"><value>Select text or annotations</value></data>
+  <data name="Annotation_TextBoxHeader" xml:space="preserve"><value>Text box — type its text</value></data>
+  <data name="Annotation_Comment" xml:space="preserve"><value>Comment…</value></data>
+  <data name="Annotation_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Annotation_Width" xml:space="preserve"><value>Width (pt)</value></data>
+  <data name="Annotation_StampWithDate" xml:space="preserve"><value>With the date</value></data>
+  <data name="Annotation_StampText" xml:space="preserve"><value>Stamp text</value></data>
+  <data name="AnnotationStamp_Approved" xml:space="preserve"><value>APPROVED</value></data>
+  <data name="AnnotationStamp_Seen" xml:space="preserve"><value>REVIEWED</value></data>
+  <data name="AnnotationStamp_NotApproved" xml:space="preserve"><value>NOT APPROVED</value></data>
+  <data name="AnnotationStamp_Urgent" xml:space="preserve"><value>URGENT</value></data>
+  <data name="AnnotationStamp_Confidential" xml:space="preserve"><value>CONFIDENTIAL</value></data>
+  <data name="AnnotationStamp_Draft" xml:space="preserve"><value>DRAFT</value></data>
+  <data name="AnnotationStamp_Copy" xml:space="preserve"><value>CERTIFIED COPY</value></data>
+  <data name="Cmd_TextBox_ToolTip" xml:space="preserve"><value>Click or drag on the page to make a text box, then type its text</value></data>
+  <data name="Cmd_Ink_ToolTip" xml:space="preserve"><value>Draw free-hand on the page (the tool stays on until Esc)</value></data>
+  <data name="Cmd_Shapes_ToolTip" xml:space="preserve"><value>Rectangles, ellipses, lines, arrows, polygons — chosen on the tool bar</value></data>
+  <data name="Cmd_StampAnnotation_ToolTip" xml:space="preserve"><value>Click on the page to stamp it (APPROVED, REVIEWED…) with the date</value></data>
+  <data name="Settings_AnnotationAuthor" xml:space="preserve"><value>Annotation author</value></data>
+  <data name="Settings_AnnotationAuthor_Hint" xml:space="preserve"><value>Shown to the readers of the document next to your annotations. Blank: your Windows user name.</value></data>
   <data name="Editor_Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Editor_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Editor_Apply" xml:space="preserve"><value>Apply</value></data>
