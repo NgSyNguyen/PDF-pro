@@ -67,6 +67,8 @@
           Selection="{Binding DataContext.TextSelection, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         <!-- Annotations added in the session (the page image does not have them yet); only draws. -->
         <controls:AnnotationLayer Annotations="{Binding DataContext.Annotations, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
+        <!-- "Sửa nội dung": frames around the drawing under the mouse and the selected one; only draws. -->
+        <controls:ContentObjectLayer Editor="{Binding DataContext.ContentEditor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- The page editor's objects, selection and guides; inactive (and transparent to the mouse) outside the editor. -->
         <controls:OverlayLayer Editor="{Binding DataContext.Editor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
       </Grid>
@@ -426,6 +428,146 @@
         </WrapPanel>
       </StackPanel>
     </Border>
+
+    <!-- "Sửa nội dung": what is selected and what can be done to it; "Xong" leaves the mode. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="ContentEditorBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding ContentEditor}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentEditText"
+            Command="{Binding EditTextCommand}"
+            Content="{loc:Tr ContentEditor_EditText}"
+            Icon="{ui:SymbolIcon TextEditStyle24}"
+            Visibility="{Binding IsTextSelected, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentReplaceImage"
+            Command="{Binding ReplaceImageCommand}"
+            Content="{loc:Tr ContentEditor_ReplaceImage}"
+            Icon="{ui:SymbolIcon ImageEdit24}"
+            Visibility="{Binding IsImageSelected, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentSaveImage"
+            Command="{Binding SaveImageCommand}"
+            Content="{loc:Tr ContentEditor_SaveImage}"
+            Icon="{ui:SymbolIcon ArrowDownload24}"
+            Visibility="{Binding IsImageSelected, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentRotateLeft"
+            AutomationProperties.Name="{loc:Tr ContentEditor_RotateLeft}"
+            Command="{Binding RotateLeftCommand}"
+            Icon="{ui:SymbolIcon ArrowRotateCounterclockwise24}"
+            ToolTip="{loc:Tr ContentEditor_RotateLeft}"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentRotateRight"
+            AutomationProperties.Name="{loc:Tr ContentEditor_RotateRight}"
+            Command="{Binding RotateRightCommand}"
+            Icon="{ui:SymbolIcon ArrowRotateClockwise24}"
+            ToolTip="{loc:Tr ContentEditor_RotateRight}"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentDelete"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Tr ContentEditor_Delete}"
+            Icon="{ui:SymbolIcon Delete24}"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            AutomationProperties.AutomationId="ContentDone"
+            Command="{Binding DataContext.ToggleContentEditingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr ContentEditor_Done}" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+          <ui:SymbolIcon Margin="0,0,8,0" Symbol="DocumentEdit24" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="ContentSelection"
+            FontWeight="SemiBold"
+            Text="{Binding SelectionText}"
+            TextTrimming="CharacterEllipsis"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <TextBlock
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr ContentEditor_Hint}"
+            TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- The words of a text block, typed over it; clicking elsewhere keeps what was typed. -->
+    <Popup
+      x:Name="ContentTextPopup"
+      AllowsTransparency="True"
+      Closed="OnContentTextPopupClosed"
+      DataContext="{Binding ContentEditor}"
+      HorizontalOffset="{Binding TextBox.X}"
+      IsOpen="{Binding IsEditingText, Mode=OneWay}"
+      Opened="OnContentTextPopupOpened"
+      Placement="Relative"
+      PlacementTarget="{Binding ElementName=Surface}"
+      StaysOpen="False"
+      VerticalOffset="{Binding TextBox.Y}">
+      <Border
+        Padding="8"
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="4">
+        <StackPanel MinWidth="{Binding TextBox.Width}" MaxWidth="640">
+          <TextBox
+            x:Name="ContentTextBox"
+            MinWidth="220"
+            AcceptsReturn="True"
+            AutomationProperties.AutomationId="ContentTextBox"
+            AutomationProperties.Name="{loc:Tr ContentEditor_TextBox_Name}"
+            PreviewKeyDown="OnContentTextKeyDown"
+            Text="{Binding TextDraft, UpdateSourceTrigger=PropertyChanged}"
+            TextWrapping="Wrap" />
+          <CheckBox
+            Margin="0,6,0,0"
+            AutomationProperties.AutomationId="ContentTextWrap"
+            Content="{loc:Tr ContentEditor_Wrap}"
+            IsChecked="{Binding WrapText}" />
+          <TextBlock
+            Margin="0,4,0,0"
+            MaxWidth="420"
+            HorizontalAlignment="Left"
+            FontSize="11"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr ContentEditor_TextLimit}"
+            TextWrapping="Wrap" />
+          <StackPanel
+            Margin="0,6,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <ui:Button
+              Margin="0,0,6,0"
+              Command="{Binding CancelTextCommand}"
+              Content="{loc:Tr Common_Cancel}" />
+            <ui:Button
+              Appearance="Primary"
+              AutomationProperties.AutomationId="ContentTextDone"
+              Command="{Binding CommitTextCommand}"
+              Content="{loc:Tr ContentEditor_Done}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Popup>
 
     <!-- The comment of a note: opens where it was clicked; clicking elsewhere keeps what was written. -->
     <Popup

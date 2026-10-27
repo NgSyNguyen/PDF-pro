@@ -51,6 +51,57 @@ public static class ImageImporter
         return ImportBitmap(frame, folder);
     }
 
+    /// <summary>
+    /// A picture to be written by PDFium, which ignores EXIF orientation: an upright JPEG is kept byte for byte, a JPEG
+    /// that is turned by its EXIF data and every other format become an upright 8-bit RGBA PNG.
+    /// </summary>
+    /// <exception cref="IOException">The file cannot be read or the copy written.</exception>
+    /// <exception cref="NotSupportedException">The file is not a picture WPF can decode.</exception>
+    public static ImportedImage ImportUpright(string sourcePath, string folder)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
+        var bytes = File.ReadAllBytes(sourcePath);
+        var frame = Decode(bytes);
+        var orientation = IsJpeg(bytes) ? ExifOrientation.Read(bytes) : 1;
+        if (IsJpeg(bytes) && orientation == 1)
+        {
+            return new ImportedImage(Store(bytes, ".jpg", folder), frame.PixelWidth, frame.PixelHeight, Dpi(frame.DpiX), Dpi(frame.DpiY));
+        }
+
+        return ImportBitmap(Upright(frame, orientation), folder);
+    }
+
+    /// <summary>The picture turned and flipped as its EXIF orientation (1–8) says it is to be shown.</summary>
+    private static BitmapSource Upright(BitmapSource frame, int orientation)
+    {
+        var (turn, flip) = orientation switch
+        {
+            2 => (0, true),
+            3 => (180, false),
+            4 => (180, true),
+            5 => (90, true),
+            6 => (90, false),
+            7 => (270, true),
+            8 => (270, false),
+            _ => (0, false),
+        };
+        if (turn == 0 && !flip)
+        {
+            return frame;
+        }
+
+        var transform = new TransformGroup();
+        transform.Children.Add(new RotateTransform(turn));
+        if (flip)
+        {
+            transform.Children.Add(new ScaleTransform(-1, 1));
+        }
+
+        var upright = new TransformedBitmap(frame, transform);
+        upright.Freeze();
+        return upright;
+    }
+
     /// <summary>A PNG made by the app (a hand signature), stored as it is.</summary>
     /// <exception cref="IOException">The copy cannot be written.</exception>
     /// <exception cref="NotSupportedException">The bytes are not a picture.</exception>

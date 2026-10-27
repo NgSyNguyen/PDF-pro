@@ -61,6 +61,7 @@ public sealed partial class DocumentTabViewModel
 
     private Task UseAnnotationToolAsync(AnnotationTool tool)
     {
+        ContentEditor.IsActive = false;
         TextSelection.Release();
         return Annotations.UseToolAsync(tool);
     }

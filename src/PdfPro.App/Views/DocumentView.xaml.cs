@@ -11,8 +11,9 @@ namespace PdfPro.App.Views;
 
 /// <summary>
 /// Document view. Code-behind only routes input to the view model: Ctrl + wheel zooms around the mouse,
-/// Home/End/PageUp/PageDown navigate by page (arrow keys and the wheel scroll through the ScrollViewer). While the
-/// page editor is open, Delete, the arrow keys (1 point, with Shift 10), Ctrl+C, Ctrl+V, Ctrl+A and Esc act on its
+/// Home/End/PageUp/PageDown navigate by page (arrow keys and the wheel scroll through the ScrollViewer). In "Sửa nội
+/// dung" the mouse frames, selects and drags the page's drawings, Delete removes one, Enter or a double-click opens a
+/// text block for typing. While the page editor is open, Delete, the arrow keys (1 point, with Shift 10), Ctrl+C, Ctrl+V, Ctrl+A and Esc act on its
 /// objects; otherwise the mouse selects text (the text cursor shows over it) and Ctrl+C copies it, Ctrl+A selects the
 /// whole document's text, Esc clears the selection.
 /// </summary>
@@ -40,6 +41,12 @@ public partial class DocumentView : UserControl
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (Document is { ContentEditor.IsActive: true } editing && HandleContentKey(editing.ContentEditor, e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (Document is { Editor.IsActive: true } document && HandleEditorKey(document, e.Key))
         {
             e.Handled = true;
@@ -75,6 +82,68 @@ public partial class DocumentView : UserControl
         if (command is not null)
         {
             command.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>"Sửa nội dung": Delete removes the selected drawing, Enter opens a selected text block, Esc lets go.</summary>
+    private static bool HandleContentKey(ContentEditorViewModel editor, Key key)
+    {
+        if (Keyboard.Modifiers != ModifierKeys.None || editor.IsEditingText)
+        {
+            return false;
+        }
+
+        switch (key)
+        {
+            case Key.Delete when editor.HasSelection:
+                editor.DeleteCommand.Execute(null);
+                return true;
+            case Key.Enter when editor.IsTextSelected:
+                editor.EditTextCommand.Execute(null);
+                return true;
+            case Key.Escape:
+                return editor.Escape();
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>The typing box takes the keyboard as soon as it opens, with all its words selected.</summary>
+    private void OnContentTextPopupOpened(object? sender, EventArgs e)
+        => Dispatcher.BeginInvoke(() =>
+        {
+            ContentTextBox.Focus();
+            ContentTextBox.SelectAll();
+        }, System.Windows.Threading.DispatcherPriority.Input);
+
+    /// <summary>Clicking away from the typing box keeps what was typed.</summary>
+    private void OnContentTextPopupClosed(object? sender, EventArgs e)
+    {
+        if (Document is { ContentEditor.IsEditingText: true } document)
+        {
+            document.ContentEditor.CommitTextCommand.Execute(null);
+        }
+
+        Scroller.Focus();
+    }
+
+    /// <summary>Enter keeps the words (Shift+Enter starts a new line), Esc drops them.</summary>
+    private void OnContentTextKeyDown(object sender, KeyEventArgs e)
+    {
+        if (Document is not { } document)
+        {
+            return;
+        }
+
+        if (e.Key == Key.Escape)
+        {
+            document.ContentEditor.CancelTextCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter && !Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+        {
+            document.ContentEditor.CommitTextCommand.Execute(null);
             e.Handled = true;
         }
     }
@@ -178,6 +247,17 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (Document is { ContentEditor.IsActive: true } editing)
+        {
+            var at = e.GetPosition(Surface);
+            if (editing.ContentEditor.Press(new ViewPoint(at.X, at.Y), e.ClickCount) && editing.ContentEditor.IsMoving)
+            {
+                Surface.CaptureMouse();
+            }
+
+            return;
+        }
+
         if (Document is { Editor.IsActive: false } document)
         {
             var position = e.GetPosition(Surface);
@@ -207,6 +287,30 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseMove(object sender, MouseEventArgs e)
     {
+        if (Document is { ContentEditor.IsActive: true } editing)
+        {
+            var at = e.GetPosition(Surface);
+            var content = editing.ContentEditor;
+            if (content.IsMoving && e.LeftButton == MouseButtonState.Pressed)
+            {
+                content.DragTo(new ViewPoint(at.X, at.Y));
+                Surface.Cursor = Cursors.SizeAll;
+                return;
+            }
+
+            content.HoverAt(new ViewPoint(at.X, at.Y));
+            if (content.Hovered is null)
+            {
+                Surface.ClearValue(CursorProperty);
+            }
+            else
+            {
+                Surface.Cursor = Cursors.Hand;
+            }
+
+            return;
+        }
+
         if (Document is not { Editor.IsActive: false } document)
         {
             Surface.ClearValue(CursorProperty);
@@ -245,7 +349,11 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (Document is { } document)
+        if (Document is { ContentEditor.IsActive: true } editing)
+        {
+            editing.ContentEditor.Release();
+        }
+        else if (Document is { } document)
         {
             if (document.TextSelection.IsDragging)
             {

@@ -128,6 +128,12 @@ public interface IFileDialogService
     /// <returns>The chosen path, or null when cancelled.</returns>
     string? PickCommentExportPath(string suggestedFileName);
 
+    /// <summary>Asks where to save an image taken out of a page (overwriting asks for confirmation).</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog, with its extension.</param>
+    /// <param name="extension">".jpg", ".jp2" or ".png": the only type offered.</param>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickImageSavePath(string suggestedFileName, string extension);
+
     /// <summary>Asks for a folder (where split files go).</summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="initialDirectory">Folder shown first (or its nearest existing parent), or null.</param>

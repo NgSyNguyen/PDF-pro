@@ -136,10 +136,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         {
             Fonts = Editor.Fonts,
             Images = Editor.Images,
-            RequestContentChange = RequestFileCommentChange,
+            RequestContentChange = RequestContentChange,
         };
         Comments = new CommentsViewModel(viewer, Annotations, Editor.GeometryOf, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), services.FileDialogs, _messages, () => Workspace.FileName, logger,
-            requestContentChange: RequestFileCommentChange);
+            requestContentChange: RequestContentChange);
+        ContentEditor = new ContentEditorViewModel(viewer, Editor.GeometryOf, RequestContentChange, _operations, document => Workspace.SourcePathOf(document), () => ImagesDirectory, services.FileDialogs, _messages, logger);
+        ContentEditor.PropertyChanged += OnContentEditorPropertyChanged;
         _shownPlan = workspace.Session.Plan;
         Editor.ApplyRequested += OnEditorApplyRequested;
         Editor.PropertyChanged += OnEditorPropertyChanged;
@@ -181,6 +183,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>"Bình luận": every comment of the document, with their conversations.</summary>
     public CommentsViewModel Comments { get; }
+
+    /// <summary>"Sửa nội dung": the drawings of the pages, edited in the viewer.</summary>
+    public ContentEditorViewModel ContentEditor { get; }
 
     /// <summary>Objects wait in the page editor: saving, printing and closing apply them first.</summary>
     public bool HasPendingEdits => Editor.HasObjects;
@@ -597,6 +602,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         if (value)
         {
             Annotations.StopTool();
+            ContentEditor.IsActive = false;
             if (Organizer is null)
             {
                 var organizer = _services.CreateOrganizer(Workspace, this);
@@ -687,8 +693,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
     }
 
-    /// <summary>A change to an annotation already in the file (comments panel, viewer): the window writes the next revision.</summary>
-    private bool RequestFileCommentChange(ContentChangeRequest request)
+    /// <summary>A change to the file (its annotations, its drawings): the window writes the next revision; false when not possible now.</summary>
+    private bool RequestContentChange(ContentChangeRequest request)
     {
         if (!CanChangeContent())
         {
@@ -1043,6 +1049,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
 
         Annotations.Refresh();
+        ContentEditor.Refresh();
         Comments.Invalidate();
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
@@ -1130,6 +1137,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         {
             EditorProperties ??= new OverlayPropertiesViewModel(Editor);
             Annotations.StopTool(); // the page editor takes the mouse
+            ContentEditor.IsActive = false;
         }
 
         if (e.PropertyName == nameof(PageEditorViewModel.HasObjects))
@@ -1180,6 +1188,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         StampPageNumbersCommand.NotifyCanExecuteChanged();
         RemoveStampsCommand.NotifyCanExecuteChanged();
         NotifyAnnotationCommands();
+        ToggleContentEditingCommand.NotifyCanExecuteChanged();
     }
 }
 

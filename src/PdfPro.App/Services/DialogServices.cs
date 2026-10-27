@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Windows;
 using Microsoft.Win32;
 using PdfPro.App.Resources;
@@ -91,6 +92,21 @@ internal sealed class FileDialogService : IFileDialogService
             Filter = Strings.Image_Dialog_Filter,
             Multiselect = false,
             CheckFileExists = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickImageSavePath(string suggestedFileName, string extension)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.ContentEditor_SaveImage_Title,
+            Filter = string.Format(CultureInfo.CurrentCulture, Strings.ContentEditor_SaveImage_Filter, extension),
+            FileName = suggestedFileName,
+            DefaultExt = extension,
+            AddExtension = true,
+            OverwritePrompt = true,
         };
 
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;

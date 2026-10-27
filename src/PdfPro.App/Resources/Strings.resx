@@ -659,6 +659,31 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="History_MoveObject" xml:space="preserve"><value>Di chuyển đối tượng</value></data>
   <data name="History_RotateObject" xml:space="preserve"><value>Xoay đối tượng</value></data>
   <data name="History_ReplaceImage" xml:space="preserve"><value>Thay ảnh</value></data>
+  <data name="Cmd_EditContent_ToolTip" xml:space="preserve"><value>Sửa chữ, ảnh và hình vẽ có sẵn trên trang: rê chuột để thấy khung, bấm để chọn, kéo để di chuyển, bấm đúp vào chữ để sửa</value></data>
+  <data name="ContentEditor_Hint" xml:space="preserve"><value>Sửa nội dung — chữ chỉ sửa chính xác trong phạm vi một khối chữ</value></data>
+  <data name="ContentEditor_TextBlock" xml:space="preserve"><value>Khối chữ · {0} {1} pt</value></data>
+  <data name="ContentEditor_Image" xml:space="preserve"><value>Ảnh {0} × {1}</value></data>
+  <data name="ContentEditor_Form" xml:space="preserve"><value>Nhóm đối tượng</value></data>
+  <data name="ContentEditor_Drawing" xml:space="preserve"><value>Hình vẽ</value></data>
+  <data name="ContentEditor_UnknownFont" xml:space="preserve"><value>(không rõ phông)</value></data>
+  <data name="ContentEditor_EditText" xml:space="preserve"><value>Sửa chữ</value></data>
+  <data name="ContentEditor_RotateLeft" xml:space="preserve"><value>Xoay trái</value></data>
+  <data name="ContentEditor_RotateRight" xml:space="preserve"><value>Xoay phải</value></data>
+  <data name="ContentEditor_ReplaceImage" xml:space="preserve"><value>Thay ảnh…</value></data>
+  <data name="ContentEditor_SaveImage" xml:space="preserve"><value>Lưu ảnh…</value></data>
+  <data name="ContentEditor_Delete" xml:space="preserve"><value>Xóa</value></data>
+  <data name="ContentEditor_Done" xml:space="preserve"><value>Xong</value></data>
+  <data name="ContentEditor_Wrap" xml:space="preserve"><value>Xuống dòng trong độ rộng cũ</value></data>
+  <data name="ContentEditor_TextLimit" xml:space="preserve"><value>Chữ chỉ sửa chính xác trong phạm vi một khối chữ. Enter để xong, Shift+Enter xuống dòng, Esc để bỏ.</value></data>
+  <data name="ContentEditor_TextBox_Name" xml:space="preserve"><value>Chữ của khối chữ</value></data>
+  <data name="ContentEditor_FontReplaced_Title" xml:space="preserve"><value>Đã thay phông chữ</value></data>
+  <data name="ContentEditor_FontReplaced" xml:space="preserve"><value>Phông "{0}" nhúng trong tệp không có các ký tự: {1}
+Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto) cùng cỡ, màu và vị trí.</value></data>
+  <data name="ContentEditor_SaveImage_Title" xml:space="preserve"><value>Lưu ảnh</value></data>
+  <data name="ContentEditor_SaveImage_Filter" xml:space="preserve"><value>Ảnh (*{0})|*{0}</value></data>
+  <data name="ContentEditor_ImageFileName" xml:space="preserve"><value>Trang {0} - ảnh {1}</value></data>
+  <data name="ContentEditor_Error_Title" xml:space="preserve"><value>Không lưu được ảnh</value></data>
+  <data name="ContentEditor_Error_SaveImage" xml:space="preserve"><value>Không đọc được ảnh này trong tệp hoặc không ghi được tệp ảnh. Hãy thử lại hoặc chọn thư mục khác.</value></data>
   <data name="History_EditContent" xml:space="preserve"><value>Sửa nội dung ({0} thay đổi)</value></data>
   <data name="Cmd_Squiggly" xml:space="preserve"><value>Lượn sóng</value></data>
   <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Tô sáng chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ (Esc để tắt)</value></data>
