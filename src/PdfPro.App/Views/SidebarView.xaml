@@ -600,8 +600,8 @@
                       FontSize="11"
                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                       Text="{loc:Tr Comments_FromFile}"
-                      Visibility="{Binding CanEdit, Converter={StaticResource InverseBoolToVisibility}}" />
-                    <!-- Answering, reviewing and deleting a comment of the session, once it is chosen. -->
+                      Visibility="{Binding IsFromFile, Converter={StaticResource BoolToVisibility}}" />
+                    <!-- Answering, reviewing and deleting a comment, once it is chosen. -->
                     <StackPanel Margin="0,6,0,0" Visibility="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource BoolToVisibility}}">
                       <StackPanel Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel>

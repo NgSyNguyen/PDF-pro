@@ -137,7 +137,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             Fonts = Editor.Fonts,
             Images = Editor.Images,
         };
-        Comments = new CommentsViewModel(viewer, Annotations, Editor.GeometryOf, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), services.FileDialogs, _messages, () => Workspace.FileName, logger);
+        Comments = new CommentsViewModel(viewer, Annotations, Editor.GeometryOf, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), services.FileDialogs, _messages, () => Workspace.FileName, logger,
+            requestContentChange: RequestFileCommentChange);
         _shownPlan = workspace.Session.Plan;
         Editor.ApplyRequested += OnEditorApplyRequested;
         Editor.PropertyChanged += OnEditorPropertyChanged;
@@ -683,6 +684,18 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             var description = Workspace.Describe(new Core.Sessions.HistoryRecord(ChangePageSizeOperation.OperationId, parameters, []), Workspace.Session.Plan);
             ContentChangeRequested?.Invoke(this, new ContentChangeRequest(_operations.Get<ChangePageSizeOperation>(), parameters, description));
         }
+    }
+
+    /// <summary>A change to a comment already in the file (from the comments panel): the window writes the next revision.</summary>
+    private bool RequestFileCommentChange(ContentChangeRequest request)
+    {
+        if (!CanChangeContent())
+        {
+            return false;
+        }
+
+        ContentChangeRequested?.Invoke(this, request);
+        return true;
     }
 
     /// <summary>"Hình mờ": the dialog with a live preview of the current page, then the window stamps the pages in the background.</summary>

@@ -637,6 +637,11 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="History_AddAnnotations" xml:space="preserve"><value>Thêm {0} chú thích</value></data>
   <data name="History_UpdateAnnotations" xml:space="preserve"><value>Sửa {0} chú thích</value></data>
   <data name="History_DeleteAnnotations" xml:space="preserve"><value>Xóa {0} chú thích</value></data>
+  <data name="History_EditFileComments" xml:space="preserve"><value>Sửa {0} bình luận của tệp</value></data>
+  <data name="History_ReplyFileComment" xml:space="preserve"><value>Trả lời bình luận</value></data>
+  <data name="History_ReviewFileComment" xml:space="preserve"><value>Đặt trạng thái bình luận</value></data>
+  <data name="History_EditFileComment" xml:space="preserve"><value>Sửa bình luận</value></data>
+  <data name="History_DeleteFileComment" xml:space="preserve"><value>Xóa bình luận</value></data>
   <data name="Cmd_Squiggly" xml:space="preserve"><value>Lượn sóng</value></data>
   <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Tô sáng chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ (Esc để tắt)</value></data>
   <data name="Cmd_Underline_ToolTip" xml:space="preserve"><value>Gạch chân chữ đang chọn; nếu chưa chọn, bật công cụ rồi kéo qua chữ</value></data>
@@ -696,7 +701,7 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Comments_Kind_Other" xml:space="preserve"><value>Chú thích</value></data>
   <data name="Comments_Kind_Attachment" xml:space="preserve"><value>Tệp đính kèm</value></data>
   <data name="Comments_Kind_Caret" xml:space="preserve"><value>Chèn chữ</value></data>
-  <data name="Comments_FromFile" xml:space="preserve"><value>Có sẵn trong tệp — chỉ xem</value></data>
+  <data name="Comments_FromFile" xml:space="preserve"><value>Có sẵn trong tệp — mỗi thay đổi tạo một bản sửa mới của tài liệu</value></data>
   <data name="Comments_Reply" xml:space="preserve"><value>Trả lời</value></data>
   <data name="Comments_ReplyPlaceholder" xml:space="preserve"><value>Viết trả lời…</value></data>
   <data name="Comments_Delete" xml:space="preserve"><value>Xóa bình luận</value></data>

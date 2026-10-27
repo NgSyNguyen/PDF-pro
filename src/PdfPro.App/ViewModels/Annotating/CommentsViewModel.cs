@@ -37,9 +37,9 @@ public enum CommentKindFilter
 }
 
 /// <summary>
-/// One comment of the list: an annotation of the session (it can be answered, given a review state or deleted here) or
-/// one already in the file (read only for now). Shows its kind, page, author, date, text, marked text, review state
-/// and conversation.
+/// One comment of the list: an annotation of the session or one already in the file; both can be answered, given a
+/// review state or deleted here (the file's as a content change). Shows its kind, page, author, date, text, marked
+/// text, review state and conversation.
 /// </summary>
 public sealed partial class CommentItemViewModel : ObservableObject
 {
@@ -50,7 +50,7 @@ public sealed partial class CommentItemViewModel : ObservableObject
         int pageIndex,
         Guid pageKey,
         AnnotationTarget? target,
-        int? fileIndex,
+        FileAnnotation? fromFile,
         CommentKindFilter group,
         string kind,
         string author,
@@ -65,7 +65,7 @@ public sealed partial class CommentItemViewModel : ObservableObject
         PageIndex = pageIndex;
         PageKey = pageKey;
         Target = target;
-        FileIndex = fileIndex;
+        FromFile = fromFile;
         Group = group;
         KindLabel = kind;
         Author = author.Length > 0 ? author : Strings.Annotation_NoAuthor;
@@ -84,8 +84,11 @@ public sealed partial class CommentItemViewModel : ObservableObject
     /// <summary>The annotation of the session, or null for one already in the file.</summary>
     public AnnotationTarget? Target { get; }
 
+    /// <summary>The annotation as read from the file, or null for one of the session.</summary>
+    public FileAnnotation? FromFile { get; }
+
     /// <summary>The annotation's place in its page's /Annots for one already in the file, or null.</summary>
-    public int? FileIndex { get; }
+    public int? FileIndex => FromFile?.Index;
 
     public CommentKindFilter Group { get; }
 
@@ -106,8 +109,14 @@ public sealed partial class CommentItemViewModel : ObservableObject
     /// <summary>Where it is on its page (PDF user space).</summary>
     public PdfRect Bounds { get; }
 
-    /// <summary>Made in this session: it can be answered, given a state and deleted here.</summary>
-    public bool CanEdit => Target is not null;
+    /// <summary>
+    /// It can be answered, given a state and deleted here: made in this session (instant), or already in the file when
+    /// the document can be changed (written as the next revision).
+    /// </summary>
+    public bool CanEdit => Target is not null || (FromFile is not null && _owner.CanEditFile);
+
+    /// <summary>Already in the file: changing it writes a new revision of the document.</summary>
+    public bool IsFromFile => FromFile is not null;
 
     public bool HasContents => Contents.Length > 0;
 
@@ -168,9 +177,10 @@ public sealed partial class CommentItemViewModel : ObservableObject
 /// <summary>
 /// "Bình luận": every comment of the document — the annotations made in this session and those already in the file —
 /// page by page, top to bottom, with their conversation; filtered by kind, author, review state and text. Choosing a
-/// comment shows it (and selects it when it was made in this session). Comments of the session can be answered, given
-/// a review state and deleted, each one undoable step. The list can be exported as Markdown or CSV. It is read in the
-/// background while the panel is open, again when the pages change. Must be used on the UI thread.
+/// comment shows it (and selects it when it was made in this session). Comments can be answered, given a review state
+/// and deleted, each one undoable step: instantly for the session's, as the next revision for the file's. The list can
+/// be exported as Markdown or CSV. It is read in the background while the panel is open, again when the pages change.
+/// Must be used on the UI thread.
 /// </summary>
 public sealed partial class CommentsViewModel : ObservableObject
 {
@@ -185,6 +195,7 @@ public sealed partial class CommentsViewModel : ObservableObject
     private readonly Func<string> _documentName;
     private readonly ILogger _logger;
     private readonly TimeProvider _time;
+    private readonly Func<ContentChangeRequest, bool>? _requestContentChange;
     private List<CommentItemViewModel> _all = [];
     private CancellationTokenSource? _loading;
     private bool _stale = true;
@@ -201,7 +212,8 @@ public sealed partial class CommentsViewModel : ObservableObject
         IMessageService messages,
         Func<string> documentName,
         ILogger logger,
-        TimeProvider? time = null)
+        TimeProvider? time = null,
+        Func<ContentChangeRequest, bool>? requestContentChange = null)
     {
         _viewer = viewer;
         _tools = tools;
@@ -214,7 +226,11 @@ public sealed partial class CommentsViewModel : ObservableObject
         _documentName = documentName;
         _logger = logger;
         _time = time ?? TimeProvider.System;
+        _requestContentChange = requestContentChange;
     }
+
+    /// <summary>Comments already in the file can be changed (each change written as the next revision).</summary>
+    public bool CanEditFile => _requestContentChange is not null;
 
     /// <summary>The comments shown (filtered), page by page.</summary>
     public ObservableCollection<CommentItemViewModel> Items { get; } = [];
@@ -379,6 +395,11 @@ public sealed partial class CommentsViewModel : ObservableObject
         }
 
         var now = _time.GetLocalNow();
+        if (item.FromFile is { } annotation)
+        {
+            return EditFile(item, annotation, FileAnnotationAction.Reply, contents, ReviewState.None, now);
+        }
+
         return Update(item, a => a with { Replies = [.. a.Replies, new AnnotationReply(NewId(), _author(), now, contents)] });
     }
 
@@ -391,15 +412,43 @@ public sealed partial class CommentsViewModel : ObservableObject
         }
 
         var now = _time.GetLocalNow();
+        if (item.FromFile is { } annotation)
+        {
+            EditFile(item, annotation, FileAnnotationAction.SetState, null, state, now);
+            return;
+        }
+
         Update(item, a => a with { Reviews = [.. a.Reviews, new AnnotationReview(NewId(), _author(), now, state)] });
     }
 
     internal void Delete(CommentItemViewModel item)
     {
+        if (item.FromFile is { } annotation)
+        {
+            EditFile(item, annotation, FileAnnotationAction.Delete, null, ReviewState.None, _time.GetLocalNow());
+            return;
+        }
+
         if (item.Target is { } target && _viewer.Document.IndexOf(target.PageKey) is var index and >= 0)
         {
             _apply(_operations.Get<DeleteAnnotationsOperation>(), new DeleteAnnotationsParams(index + 1, [target.Id]));
         }
+    }
+
+    /// <summary>
+    /// A change to a comment already in the file: run by the window as a content change (the next revision); false when
+    /// the document cannot be changed now.
+    /// </summary>
+    private bool EditFile(CommentItemViewModel item, FileAnnotation annotation, FileAnnotationAction action, string? text, ReviewState state, DateTimeOffset when)
+    {
+        if (_requestContentChange is not { } request || _viewer.Document.IndexOf(item.PageKey) is not (var index and >= 0))
+        {
+            return false;
+        }
+
+        var edit = new FileAnnotationEdit(index + 1, annotation.Index, annotation.Kind, annotation.Name, annotation.Rect, action, text, state, _author(), when, NewId());
+        var parameters = new EditFileAnnotationsParams([edit]);
+        return request(new ContentChangeRequest(_operations.Get<EditFileAnnotationsOperation>(), parameters, HistoryDescriptions.Describe(parameters)));
     }
 
     partial void OnKindFilterChanged(CommentKindFilter value) => ApplyFilter();
@@ -609,7 +658,7 @@ public sealed partial class CommentsViewModel : ObservableObject
                 FileAnnotationKind.Stamp => (CommentKindFilter.Stamps, Strings.Cmd_StampAnnotation),
                 _ => (CommentKindFilter.All, Strings.Comments_Kind_Other),
             };
-            yield return new CommentItemViewModel(this, pageIndex, pageKey, null, annotation.Index, group, kind, annotation.Author ?? string.Empty, annotation.Modified, annotation.Contents ?? string.Empty, null, state, replies, annotation.Rect);
+            yield return new CommentItemViewModel(this, pageIndex, pageKey, null, annotation, group, kind, annotation.Author ?? string.Empty, annotation.Modified, annotation.Contents ?? string.Empty, null, state, replies, annotation.Rect);
         }
     }
 }

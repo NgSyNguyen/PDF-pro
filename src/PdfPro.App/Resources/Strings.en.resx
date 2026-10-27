@@ -637,6 +637,11 @@ The original file was not changed and your changes are still here.</value></data
   <data name="History_AddAnnotations" xml:space="preserve"><value>Add {0} annotations</value></data>
   <data name="History_UpdateAnnotations" xml:space="preserve"><value>Edit {0} annotations</value></data>
   <data name="History_DeleteAnnotations" xml:space="preserve"><value>Delete {0} annotations</value></data>
+  <data name="History_EditFileComments" xml:space="preserve"><value>Edit {0} comments of the file</value></data>
+  <data name="History_ReplyFileComment" xml:space="preserve"><value>Reply to a comment</value></data>
+  <data name="History_ReviewFileComment" xml:space="preserve"><value>Set a comment's state</value></data>
+  <data name="History_EditFileComment" xml:space="preserve"><value>Edit a comment</value></data>
+  <data name="History_DeleteFileComment" xml:space="preserve"><value>Delete a comment</value></data>
   <data name="Cmd_Squiggly" xml:space="preserve"><value>Squiggly</value></data>
   <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Highlight the selected text; with nothing selected, turn the tool on and drag over text (Esc turns it off)</value></data>
   <data name="Cmd_Underline_ToolTip" xml:space="preserve"><value>Underline the selected text; with nothing selected, turn the tool on and drag over text</value></data>
@@ -696,7 +701,7 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Comments_Kind_Other" xml:space="preserve"><value>Annotation</value></data>
   <data name="Comments_Kind_Attachment" xml:space="preserve"><value>File attachment</value></data>
   <data name="Comments_Kind_Caret" xml:space="preserve"><value>Insert text</value></data>
-  <data name="Comments_FromFile" xml:space="preserve"><value>Already in the file — view only</value></data>
+  <data name="Comments_FromFile" xml:space="preserve"><value>Already in the file — each change makes a new revision of the document</value></data>
   <data name="Comments_Reply" xml:space="preserve"><value>Reply</value></data>
   <data name="Comments_ReplyPlaceholder" xml:space="preserve"><value>Write a reply…</value></data>
   <data name="Comments_Delete" xml:space="preserve"><value>Delete comment</value></data>

@@ -43,7 +43,45 @@ public static class AnnotationWriter
             }
         }
 
-        // A page array of its own: /Annots may be an indirect array other pages share.
+        var annotations = OwnAnnotations(document, page);
+        foreach (var item in list)
+        {
+            var annotation = Annotation(document, page, item);
+            annotations.Elements.Add(annotation.Reference!);
+            foreach (var reply in item.Replies)
+            {
+                annotations.Elements.Add(Thread(document, page, annotation, item.Bounds, reply.Id, reply.Author, reply.Modified, reply.Contents, state: null).Reference!);
+            }
+
+            foreach (var review in item.Reviews)
+            {
+                annotations.Elements.Add(Thread(document, page, annotation, item.Bounds, review.Id, review.Author, review.Modified, string.Empty, review.State).Reference!);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Adds an answer — or, with <paramref name="state"/>, a review state — to an annotation already in the page (a
+    /// comment of the file), as Acrobat does: a /Text annotation pointing at it (/IRT) that draws nothing.
+    /// </summary>
+    /// <param name="parent">The annotation answered; it must be an indirect object.</param>
+    /// <param name="bounds">Where the answer is (the answered annotation's place).</param>
+    internal static void AddToThread(PdfDocument document, PdfPage page, PdfDictionary parent, PdfRect bounds, string id, string author, DateTimeOffset when, string contents, ReviewState? state)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(page);
+        ArgumentNullException.ThrowIfNull(parent);
+        if (parent.Reference is null)
+        {
+            throw new ArgumentException("The answered annotation must be an indirect object.", nameof(parent));
+        }
+
+        OwnAnnotations(document, page).Elements.Add(Thread(document, page, parent, bounds, id, author, when, contents, state).Reference!);
+    }
+
+    /// <summary>The page's /Annots as an array of its own: /Annots may be an indirect array other pages share.</summary>
+    private static PdfArray OwnAnnotations(PdfDocument document, PdfPage page)
+    {
         var annotations = new PdfArray(document);
         foreach (var existing in Annotations(page)?.Elements ?? Enumerable.Empty<PdfItem>())
         {
@@ -51,25 +89,7 @@ public static class AnnotationWriter
         }
 
         page.Elements["/Annots"] = annotations;
-
-        foreach (var item in list)
-        {
-            var annotation = Annotation(document, page, item);
-            annotations.Elements.Add(annotation.Reference!);
-            foreach (var reply in item.Replies)
-            {
-                var entry = Thread(document, page, annotation, item, reply.Id, reply.Author, reply.Modified, reply.Contents);
-                annotations.Elements.Add(entry.Reference!);
-            }
-
-            foreach (var review in item.Reviews)
-            {
-                var entry = Thread(document, page, annotation, item, review.Id, review.Author, review.Modified, $"{review.State} set by {review.Author}");
-                entry.Elements.SetName("/State", "/" + review.State);
-                entry.Elements.SetName("/StateModel", "/Review");
-                annotations.Elements.Add(entry.Reference!);
-            }
-        }
+        return annotations;
     }
 
     private static PdfDictionary Annotation(PdfDocument document, PdfPage page, AnnotationItem item)
@@ -195,13 +215,19 @@ public static class AnnotationWriter
     }
 
     /// <summary>A reply or a review state: a /Text annotation in the comment's thread, drawing nothing on the page.</summary>
-    private static PdfDictionary Thread(PdfDocument document, PdfPage page, PdfDictionary parent, AnnotationItem item, string id, string author, DateTimeOffset modified, string contents)
+    private static PdfDictionary Thread(PdfDocument document, PdfPage page, PdfDictionary parent, PdfRect bounds, string id, string author, DateTimeOffset modified, string contents, ReviewState? state)
     {
-        var bounds = item.Bounds;
-        var entry = Base(document, page, "/Text", bounds, Print | NoZoom | NoRotate, id, author, modified, modified, contents);
+        var text = state is { } review ? $"{review} set by {author}" : contents;
+        var entry = Base(document, page, "/Text", bounds, Print | NoZoom | NoRotate, id, author, modified, modified, text);
         entry.Elements["/IRT"] = parent.Reference;
         entry.Elements.SetName("/RT", "/R");
         entry.Elements.SetName("/Name", "/Comment");
+        if (state is { } value)
+        {
+            entry.Elements.SetName("/State", "/" + value);
+            entry.Elements.SetName("/StateModel", "/Review");
+        }
+
         entry.Elements["/AP"] = Appearance(document, Form(document, new PdfRect(bounds.Left, bounds.Bottom, bounds.Left + 1, bounds.Bottom + 1), string.Empty, null));
         return entry;
     }

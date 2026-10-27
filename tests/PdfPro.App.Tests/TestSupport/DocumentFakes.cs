@@ -70,6 +70,7 @@ internal static class TestOperations
             new Operations.Annotating.AddAnnotationsOperation(materializer, loader),
             new Operations.Annotating.UpdateAnnotationsOperation(materializer, loader),
             new Operations.Annotating.DeleteAnnotationsOperation(materializer, loader),
+            new Operations.Annotating.EditFileAnnotationsOperation(),
         ]);
     }
 }

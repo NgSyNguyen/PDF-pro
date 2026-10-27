@@ -42,7 +42,26 @@ internal static class HistoryDescriptions
             AddAnnotationsParams p => Format(Strings.History_AddAnnotations, p.Count),
             UpdateAnnotationsParams p => Format(Strings.History_UpdateAnnotations, p.Items.Count),
             DeleteAnnotationsParams p => Format(Strings.History_DeleteAnnotations, p.Ids.Count),
+            EditFileAnnotationsParams p => Describe(p),
             _ => Strings.History_Other,
+        };
+    }
+
+    /// <summary>"Trả lời bình luận", "Xóa bình luận"… or "Sửa 3 bình luận của tệp".</summary>
+    public static string Describe(EditFileAnnotationsParams parameters)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        if (parameters.Edits.Count != 1)
+        {
+            return Format(Strings.History_EditFileComments, parameters.Edits.Count);
+        }
+
+        return parameters.Edits[0].Action switch
+        {
+            FileAnnotationAction.Reply => Strings.History_ReplyFileComment,
+            FileAnnotationAction.SetState => Strings.History_ReviewFileComment,
+            FileAnnotationAction.SetContents => Strings.History_EditFileComment,
+            _ => Strings.History_DeleteFileComment,
         };
     }
 

@@ -67,13 +67,15 @@ public sealed class CommentsViewModelTests : IDisposable
             (2, Strings.Cmd_Ink),
         ]);
         var fromFile = comments.Items[0];
-        fromFile.CanEdit.ShouldBeFalse();
+        fromFile.IsFromFile.ShouldBeTrue();
+        fromFile.CanEdit.ShouldBeTrue("changed as the next revision");
         fromFile.Author.ShouldBe("Minh");
         fromFile.Contents.ShouldBe("Số liệu sai");
         fromFile.Replies.ShouldHaveSingleItem().ShouldBe(new CommentReplyRecord("Lan", When.AddHours(1), "Đã sửa theo báo cáo"));
         fromFile.State.ShouldBe(ReviewState.Accepted);
         fromFile.StateText.ShouldBe(Strings.Comments_State_Accepted);
         var mine = comments.Items[1];
+        mine.IsFromFile.ShouldBeFalse();
         mine.CanEdit.ShouldBeTrue();
         mine.Author.ShouldBe("Lan");
         mine.Contents.ShouldBe("Kiểm tra ngày ký");
@@ -115,7 +117,7 @@ public sealed class CommentsViewModelTests : IDisposable
         await using var tab = await OpenAsync();
         AddNote(tab, page: 1, "n1", new PdfPoint(100, 500), "Kiểm tra ngày ký");
         var comments = await ShowAsync(tab);
-        var mine = comments.Items.Single(i => i.CanEdit);
+        var mine = comments.Items.Single(i => i.Target != null);
 
         mine.ReplyCommand.CanExecute(null).ShouldBeFalse("nothing typed yet");
         mine.ReplyDraft = "  Đã kiểm tra  ";
@@ -127,33 +129,66 @@ public sealed class CommentsViewModelTests : IDisposable
         reply.Contents.ShouldBe("Đã kiểm tra");
         reply.Author.ShouldBe("Lan");
         tab.Workspace.Session.History.NextUndoDescription.ShouldBe(Format(Strings.History_UpdateAnnotations, 1));
-        comments.Items.Single(i => i.CanEdit).Replies.ShouldHaveSingleItem().Contents.ShouldBe("Đã kiểm tra");
+        comments.Items.Single(i => i.Target != null).Replies.ShouldHaveSingleItem().Contents.ShouldBe("Đã kiểm tra");
 
-        comments.Items.Single(i => i.CanEdit).SetStateCommand.Execute(nameof(ReviewState.Completed));
+        comments.Items.Single(i => i.Target != null).SetStateCommand.Execute(nameof(ReviewState.Completed));
         await comments.RefreshAsync();
         tab.Workspace.Session.Plan[0].FindAnnotation("n1")!.State.ShouldBe(ReviewState.Completed);
-        comments.Items.Single(i => i.CanEdit).StateText.ShouldBe(Strings.Comments_State_Completed);
+        comments.Items.Single(i => i.Target != null).StateText.ShouldBe(Strings.Comments_State_Completed);
 
-        comments.Items.Single(i => i.CanEdit).DeleteCommand.Execute(null);
+        comments.Items.Single(i => i.Target != null).DeleteCommand.Execute(null);
         await comments.RefreshAsync();
         tab.Workspace.Session.Plan[0].Annotations.ShouldBeEmpty();
-        comments.Items.ShouldAllBe(i => !i.CanEdit);
+        comments.Items.ShouldAllBe(i => i.IsFromFile);
     }
 
     [Fact]
-    public async Task ACommentOfTheFile_CannotBeChangedHereYet()
+    public async Task ACommentOfTheFile_IsAnswered_Reviewed_AndDeleted_AsTheNextRevision()
     {
         await using var tab = await OpenAsync();
+        var requests = new List<ContentChangeRequest>();
+        tab.ContentChangeRequested += (_, request) => requests.Add(request);
         var comments = await ShowAsync(tab);
         var fromFile = comments.Items[0];
         var steps = tab.Workspace.Session.History.UndoCount;
 
-        fromFile.ReplyDraft = "trả lời";
-        fromFile.ReplyCommand.CanExecute(null).ShouldBeFalse();
+        fromFile.ReplyDraft = "  Đồng ý  ";
+        fromFile.ReplyCommand.Execute(null);
         fromFile.SetStateCommand.Execute(nameof(ReviewState.Rejected));
         fromFile.DeleteCommand.Execute(null);
 
-        tab.Workspace.Session.History.UndoCount.ShouldBe(steps);
+        fromFile.ReplyDraft.ShouldBeEmpty("the answer was sent");
+        tab.Workspace.Session.History.UndoCount.ShouldBe(steps, "the window runs the change in the background");
+        requests.Select(r => r.Operation.Id).ShouldAllBe(id => id == EditFileAnnotationsOperation.OperationId);
+        requests.Select(r => r.Description).ShouldBe([Strings.History_ReplyFileComment, Strings.History_ReviewFileComment, Strings.History_DeleteFileComment]);
+        var edits = requests.Select(r => ((EditFileAnnotationsParams)r.Parameters).Edits.ShouldHaveSingleItem()).ToArray();
+        edits.ShouldAllBe(e => e.Page == 1 && e.Index == 0 && e.Kind == FileAnnotationKind.Highlight && e.Name == "h" && e.Rect == new PdfRect(72, 700, 300, 712));
+        edits[0].Action.ShouldBe(FileAnnotationAction.Reply);
+        edits[0].Text.ShouldBe("Đồng ý");
+        edits[0].Author.ShouldBe("Lan");
+        edits[0].Id.ShouldNotBeNullOrEmpty();
+        edits[1].Action.ShouldBe(FileAnnotationAction.SetState);
+        edits[1].State.ShouldBe(ReviewState.Rejected);
+        edits[1].Id.ShouldNotBe(edits[0].Id);
+        edits[2].Action.ShouldBe(FileAnnotationAction.Delete);
+        new EditFileAnnotationsOperation().Validate(new EditFileAnnotationsParams(edits), new Core.Documents.DocumentInfo(3)).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ACommentOfTheFile_IsNotChanged_WhileObjectsWaitInTheEditor()
+    {
+        await using var tab = await OpenAsync();
+        var requests = new List<ContentChangeRequest>();
+        tab.ContentChangeRequested += (_, request) => requests.Add(request);
+        var comments = await ShowAsync(tab);
+        tab.Editor.Add(tab.Workspace.Pages.Pages[0].Key, new ShapeOverlay(0, new OverlayBox(new PdfPoint(100, 100), new PdfSize(20, 20)), ShapeKind.Whiteout));
+
+        var fromFile = comments.Items[0];
+        fromFile.ReplyDraft = "Đồng ý";
+        fromFile.ReplyCommand.Execute(null);
+
+        requests.ShouldBeEmpty();
+        fromFile.ReplyDraft.ShouldBe("Đồng ý", "kept to be sent later");
     }
 
     [Fact]
@@ -163,7 +198,7 @@ public sealed class CommentsViewModelTests : IDisposable
         AddNote(tab, page: 3, "n3", new PdfPoint(100, 500), "Trang cuối");
         var comments = await ShowAsync(tab);
 
-        comments.SelectedItem = comments.Items.Single(i => i.CanEdit);
+        comments.SelectedItem = comments.Items.Single(i => i.Target != null);
 
         await WaitUntilAsync(() => tab.Viewer.CurrentPageIndex == 2);
         tab.Annotations.Selected.ShouldBe(new AnnotationTarget(tab.Workspace.Pages.Pages[2].Key, "n3"));
