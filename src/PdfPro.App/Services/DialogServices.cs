@@ -225,6 +225,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new StampWindow(viewModel));
     }
 
+    public bool ShowBates(ViewModels.Editing.BatesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new BatesWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

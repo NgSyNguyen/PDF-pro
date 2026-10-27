@@ -67,7 +67,10 @@ public abstract partial class StampDialogViewModel : ObservableObject, IAsyncDis
     /// <summary>Families that can write Vietnamese into PDFs.</summary>
     public IReadOnlyList<string> FontNames => field ??= [.. FontLibrary.Instance.Families.Select(f => f.Name)];
 
-    public IReadOnlyList<ColorSwatch> Swatches { get; } =
+    public IReadOnlyList<ColorSwatch> Swatches => StandardSwatches;
+
+    /// <summary>The colours offered by every stamp dialog.</summary>
+    internal static IReadOnlyList<ColorSwatch> StandardSwatches { get; } =
     [
         new("#000000"), new("#808080"), new("#A0A0A0"), new("#DC2626"), new("#EA580C"),
         new("#CA8A04"), new("#16A34A"), new("#0EA5E9"), new("#1D4ED8"), new("#7C3AED"),
@@ -126,7 +129,7 @@ public abstract partial class StampDialogViewModel : ObservableObject, IAsyncDis
     ];
 
     /// <summary>Places on the page with their names ("Dưới giữa").</summary>
-    protected static IReadOnlyList<StampOption<StampAnchor>> AnchorOptions(IEnumerable<StampAnchor> anchors)
+    internal static IReadOnlyList<StampOption<StampAnchor>> AnchorOptions(IEnumerable<StampAnchor> anchors)
         => [.. anchors.Select(a => new StampOption<StampAnchor>(a, a switch
         {
             StampAnchor.TopLeft => Strings.Anchor_TopLeft,

@@ -28,6 +28,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
     private readonly IPrintDialogService _printDialogs = Substitute.For<IPrintDialogService>();
     private readonly IDocumentPrinter _printer = Substitute.For<IDocumentPrinter>();
     private readonly IDocumentSaver _saver = Substitute.For<IDocumentSaver>();
+    private readonly IBatesService _bates = Substitute.For<IBatesService>();
     private readonly IRecoveryService _recovery = Substitute.For<IRecoveryService>();
     private readonly IContentChanger _contentChanger = Substitute.For<IContentChanger>();
     private readonly IPageDialogService _pageDialogs = Substitute.For<IPageDialogService>();
@@ -97,7 +98,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
                 "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature",
-                "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove"],
+                "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -518,7 +519,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         return viewModel;
     }
 
-    private MainWindowViewModel Create(bool isDebugBuild)
+    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true)
         => new(
             _dialogs,
             _lifetime,
@@ -537,5 +538,6 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _contentChanger,
             _pageDialogs,
             _merge,
-            NullLogger<MainWindowViewModel>.Instance);
+            NullLogger<MainWindowViewModel>.Instance,
+            withBates ? _bates : null);
 }

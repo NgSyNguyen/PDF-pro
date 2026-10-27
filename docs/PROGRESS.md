@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 27/10/2026 — Phase 5, sau lát 8.
+Cập nhật lần cuối: 27/10/2026 — Phase 5, sau lát 9.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -64,8 +64,8 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | 6 | Gõ chữ tại chỗ, panel thuộc tính, chèn ảnh, áp dụng trước khi lưu/đóng | `f145f5d` | Xong |
 | 7 | Chữ ký tay (vẽ / gõ / ảnh), thư viện mã hóa DPAPI | `11cf4ed` | Xong |
 | 8 | Hộp thoại đóng dấu có xem trước (Hình mờ, Nền, Đầu & chân trang, Số trang, Gỡ dấu), nút ribbon | `8846ae0`, `292e6a3` | Xong, CI xanh |
-| 9 | Hộp thoại Bates nhiều tệp (`stamp.bates`) | — | Tiếp theo |
-| 10 | Mục Phase 5 trong SPEC + `Phase5AcceptanceTests` (FlaUI) | — | Chưa |
+| 9 | Hộp thoại Bates nhiều tệp (`stamp.bates`): danh sách tệp, số chạy nối tiếp, nhãn, thư mục ra, chạy nền | commit `feat(app): Bates numbering…` | Xong, chờ CI |
+| 10 | Mục Phase 5 trong SPEC + `Phase5AcceptanceTests` (FlaUI) | — | Tiếp theo |
 
 Sau lát 10: sang **Phase 6** theo `docs/PROMPTS.md` (chọn chữ, tìm kiếm có/không dấu, annotation chuẩn PDF, bình luận).
 
@@ -78,6 +78,7 @@ Sau lát 10: sang **Phase 6** theo `docs/PROMPTS.md` (chọn chữ, tìm kiếm 
   - Trình chỉnh sửa: `ViewModels/Editing/PageEditorViewModel.cs`, `OverlayObjectViewModel.cs`, `OverlayPropertiesViewModel.cs`, `Controls/OverlayLayer.cs`, `Services/Editing/OverlayDrawing.cs`, `ScreenFonts.cs`, `ImageImporter.cs`.
   - Chữ ký tay: `SignatureViewModel.cs`, `Services/Editing/SignatureLibrary.cs` (DPAPI, 20 mục), `SignatureRenderer.cs`, `Views/SignatureWindow.xaml`.
   - Đóng dấu: `ViewModels/Editing/StampDialogViewModel.cs` (lớp chung: trang áp dụng, xem trước sau 250 ms), `StampDialogs.cs` (5 hộp thoại), `Views/StampWindow.xaml`, `Services/Editing/StampPreview.cs` (`StampPreview` + `DocumentStamps.ScanAsync`).
+  - Bates nhiều tệp: `Services/Documents/BatesService.cs` (đọc số trang bằng PDFium, từ chối tệp có mật khẩu), `ViewModels/Editing/BatesViewModel.cs`, `Views/BatesWindow.xaml`, `ViewModels/MainWindowViewModel.Bates.cs` (lệnh `BatesCommand`, chạy nền ở thanh trạng thái, mở thư mục khi xong).
   - Nối dây: `DocumentTabViewModel.cs` (`StampServices`, lệnh `Stamp*Command`, `RemoveStampsCommand`; `DocumentTabFactory` nhận `IDocumentSaver`), `MainWindowViewModel.cs` (ribbon nhóm "Đóng dấu"), `Services/Documents/ContentChanger.cs` (thao tác nội dung → revision mới → 1 bước hoàn tác), `HistoryDescriptions.cs`.
 - **Test:** `tests/PdfPro.Operations.Tests/Stamping/*`, `Fonts/*`; `tests/PdfPro.App.Tests/ViewModels/PageEditorViewModelTests.cs`, `StampDialogViewModelTests.cs`, `Services/SignatureTests.cs`; `tests/PdfPro.Core.Tests/Stamping|Overlay|Geometry/*`.
 
@@ -88,6 +89,8 @@ Sau lát 10: sang **Phase 6** theo `docs/PROMPTS.md` (chọn chữ, tìm kiếm 
 - **Gỡ dấu quét "tài liệu như đang hiển thị"**: xuất toàn bộ plan ra `work\stamps-*.pdf`, `Scan` ở luồng nền, xóa bản tạm. Tài liệu 1.000 trang có thể mất 1–2 s, chưa có thanh tiến độ (rủi ro đã biết).
 - **`DocumentSaveException` kế thừa thẳng `Exception`** — mọi bộ lọc `catch (… when ex is …)` quanh `IDocumentSaver` phải liệt kê nó.
 - **Tránh đặt tên thuộc tính trùng tên lớp tĩnh** đang dùng trong cùng lớp (lỗi CS0236 với `FontFamilies.Default`; thuộc tính đã đổi thành `FontNames`).
+- **Bates của tài liệu đang sửa:** xuất bản sao vào `work\bates-{guid}\{tên tài liệu}` — bản đánh số lấy tên theo tệp vào, nên bản sao phải mang đúng tên tài liệu; thư mục tạm bị xóa sau khi chạy. Tệp có mật khẩu bị từ chối cho tới P8 (PDFsharp mở không mật khẩu). Thư mục ra mặc định `…\Đã đánh số Bates` cạnh tệp đầu; "Ghi đè" + thư mục chứa tệp gốc bị chặn.
+- `MainWindowViewModel` nhận `IBatesService?` là tham số tùy chọn cuối (test: `Create(isDebugBuild, withBates)`).
 - `DocumentTabFactory` có tham số tùy chọn ở cuối (`screenFonts`, `screenImages`, `signatures`, `saver`): test dựng factory không truyền chúng thì tính năng tương ứng tắt — test của tính năng phải truyền vào (ví dụ `saver: _saver`).
 - Test ribbon `Ribbon_OnlyImplementedCommandsAreAvailable` liệt kê đủ id lệnh đã có — thêm nút mới phải thêm id vào đó.
 - PDFsharp **ghim 6.2.4** (6.5+ là AGPL, có test canh). Không thêm package mới nếu stack hiện có làm được.

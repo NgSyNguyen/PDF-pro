@@ -35,6 +35,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IContentChanger _contentChanger;
     private readonly IPageDialogService _pageDialogs;
     private readonly IMergeService _merge;
+    private readonly IBatesService? _bates;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -57,7 +58,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IContentChanger contentChanger,
         IPageDialogService pageDialogs,
         IMergeService merge,
-        ILogger<MainWindowViewModel> logger)
+        ILogger<MainWindowViewModel> logger,
+        IBatesService? bates = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _dialogs = dialogs;
@@ -76,6 +78,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _contentChanger = contentChanger;
         _pageDialogs = pageDialogs;
         _merge = merge;
+        _bates = bates;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -600,6 +603,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("stamp.headerFooter", Strings.Cmd_HeaderFooter, SymbolRegular.DocumentHeader24, StampHeaderFooterCommand),
                     new("stamp.pageNumbers", Strings.Cmd_PageNumbers, SymbolRegular.NumberSymbol24, StampPageNumbersCommand),
                     new("stamp.remove", Strings.Cmd_RemoveStamps, SymbolRegular.EraserTool24, RemoveStampsCommand, Strings.Cmd_RemoveStamps_ToolTip),
+                    new("stamp.bates", Strings.Cmd_Bates, SymbolRegular.NumberRow24, BatesCommand, Strings.Cmd_Bates_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Content,
                 [

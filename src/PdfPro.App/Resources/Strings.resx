@@ -781,4 +781,36 @@ Tệp gốc không bị thay đổi; các thay đổi của bạn vẫn còn ngu
   <data name="Cmd_Background" xml:space="preserve"><value>Nền trang</value></data>
   <data name="Cmd_RemoveStamps" xml:space="preserve"><value>Gỡ dấu</value></data>
   <data name="Cmd_RemoveStamps_ToolTip" xml:space="preserve"><value>Gỡ hình mờ, nền, đầu/chân trang và số trang do PDF_Pro đóng</value></data>
+  <data name="Cmd_Bates" xml:space="preserve"><value>Số Bates</value></data>
+  <data name="Cmd_Bates_ToolTip" xml:space="preserve"><value>Đánh số Bates liên tục cho các trang của nhiều tệp</value></data>
+  <data name="Bates_Title" xml:space="preserve"><value>Đánh số Bates</value></data>
+  <data name="Bates_Files_Header" xml:space="preserve"><value>Các tệp theo thứ tự đánh số (kéo để đổi thứ tự, thả tệp từ Explorer vào đây)</value></data>
+  <data name="Bates_Column_Numbers" xml:space="preserve"><value>Số Bates</value></data>
+  <data name="Bates_Label_Header" xml:space="preserve"><value>Nhãn số</value></data>
+  <data name="Bates_Prefix" xml:space="preserve"><value>Tiền tố</value></data>
+  <data name="Bates_Suffix" xml:space="preserve"><value>Hậu tố</value></data>
+  <data name="Bates_Digits" xml:space="preserve"><value>Số chữ số</value></data>
+  <data name="Bates_StartNumber" xml:space="preserve"><value>Số bắt đầu</value></data>
+  <data name="Bates_Sample" xml:space="preserve"><value>Nhãn của trang đầu tiên</value></data>
+  <data name="Bates_Output_Label" xml:space="preserve"><value>Lưu bản đánh số vào</value></data>
+  <data name="Bates_PickFolder_Title" xml:space="preserve"><value>Chọn thư mục lưu bản đánh số Bates</value></data>
+  <data name="Bates_Overwrite" xml:space="preserve"><value>Ghi đè tệp trùng tên</value></data>
+  <data name="Bates_Run" xml:space="preserve"><value>Đánh số</value></data>
+  <data name="Bates_Note" xml:space="preserve"><value>Tệp gốc không bị thay đổi: bản đánh số giữ nguyên tên tệp và được ghi vào thư mục đã chọn.</value></data>
+  <data name="Bates_DefaultFolder" xml:space="preserve"><value>Đã đánh số Bates</value></data>
+  <data name="Bates_Range" xml:space="preserve"><value>{0} – {1}</value></data>
+  <data name="Bates_Summary" xml:space="preserve"><value>{0} tệp · {1} trang · {2} → {3}</value></data>
+  <data name="Bates_Warning_Digits" xml:space="preserve"><value>Số cuối {0} dài hơn {1} chữ số đã chọn; các số lớn hơn sẽ có thêm chữ số.</value></data>
+  <data name="Bates_Error_NoFiles" xml:space="preserve"><value>Hãy thêm ít nhất 1 tệp.</value></data>
+  <data name="Bates_Error_Affix" xml:space="preserve"><value>Tiền tố và hậu tố dài tối đa {0} ký tự và không chứa ký tự điều khiển.</value></data>
+  <data name="Bates_Error_Output" xml:space="preserve"><value>Hãy chọn thư mục lưu bản đánh số.</value></data>
+  <data name="Bates_Error_OutputIsInput" xml:space="preserve"><value>Khi ghi đè, thư mục lưu không được là thư mục chứa tệp gốc (bản đánh số sẽ thay mất tệp gốc).</value></data>
+  <data name="Bates_Error_AddTitle" xml:space="preserve"><value>Không thêm được tệp</value></data>
+  <data name="Bates_Error_Encrypted" xml:space="preserve"><value>Tệp "{0}" có mật khẩu. Đánh số Bates cho tệp có mật khẩu sẽ có khi ứng dụng hỗ trợ mã hóa.</value></data>
+  <data name="Bates_Progress" xml:space="preserve"><value>Đang đánh số Bates {0} tệp…</value></data>
+  <data name="Bates_Done" xml:space="preserve"><value>Đã đánh số Bates {0} tệp: {1} → {2}</value></data>
+  <data name="Bates_Cancelled" xml:space="preserve"><value>Đã hủy đánh số Bates</value></data>
+  <data name="Bates_FailedStatus" xml:space="preserve"><value>Đánh số Bates không thành công</value></data>
+  <data name="Bates_Error_Title" xml:space="preserve"><value>Không đánh số Bates được</value></data>
+  <data name="Bates_Error_File" xml:space="preserve"><value>Không đọc hoặc ghi được tệp "{0}". Không có tệp nào được tạo.</value></data>
 </root>

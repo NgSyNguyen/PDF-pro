@@ -153,4 +153,7 @@ public interface IPageDialogService
 
     /// <summary>A stamp dialog (watermark, background, header and footer, page numbers, removing stamps).</summary>
     bool ShowStamp(ViewModels.Editing.StampDialogViewModel viewModel);
+
+    /// <summary>"Số Bates": numbering the pages of several files.</summary>
+    bool ShowBates(ViewModels.Editing.BatesViewModel viewModel);
 }
