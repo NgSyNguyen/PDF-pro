@@ -66,7 +66,7 @@ public partial class DocumentView : UserControl
             return;
         }
 
-        if (Document is { Editor.IsActive: false } reader && HandleSelectionKey(reader.TextSelection, e.Key))
+        if (Document is { Editor.IsActive: false } reader && HandleSelectionKey(reader, reader.TextSelection, e.Key))
         {
             e.Handled = true;
             return;
@@ -234,11 +234,15 @@ public partial class DocumentView : UserControl
         }
     }
 
-    private static bool HandleSelectionKey(TextSelectionViewModel selection, Key key)
+    private static bool HandleSelectionKey(DocumentTabViewModel document, TextSelectionViewModel selection, Key key)
     {
         var control = Keyboard.Modifiers == ModifierKeys.Control;
         switch (key)
         {
+            case Key.C when control && selection.HasSelection && !document.CanCopyText:
+                // The author of a protected file forbade copying (its owner password lifts that).
+                document.ExplainCopyRefused();
+                return true;
             case Key.C when control && selection.HasSelection:
                 _ = CopyAsync(selection);
                 return true;

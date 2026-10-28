@@ -1,6 +1,7 @@
 using System.Text.Json;
 using PdfPro.Core.Annotations;
 using PdfPro.Core.Forms;
+using PdfPro.Core.Security;
 using PdfPro.Core.Sessions;
 
 namespace PdfPro.Infrastructure.Sessions;
@@ -56,7 +57,8 @@ public sealed record FileStampDto(long Length, DateTime LastWriteTimeUtc);
 public sealed record SourceDto(string Id, string File, SessionSourceKind Kind, int PageCount, string? DisplayName = null);
 
 /// <param name="FormValues">Values given in the session to the form's fields (absent when none).</param>
-public sealed record StateDto(string BaseSourceId, int Revision, IReadOnlyList<PageDto> Plan, IReadOnlyList<FormValue>? FormValues = null);
+/// <param name="Protection">The protection the document is saved with, without its passwords (absent when none).</param>
+public sealed record StateDto(string BaseSourceId, int Revision, IReadOnlyList<PageDto> Plan, IReadOnlyList<FormValue>? FormValues = null, ProtectionSetting? Protection = null);
 
 /// <param name="Source">Source id ("blank" for blank pages).</param>
 /// <param name="Page">0-based page index in the source.</param>

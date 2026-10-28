@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 28/10/2026 — Phase 8 lát 1 (mật khẩu & quyền: Core + Operations). Tiếp theo: lát 2 (App).
+Cập nhật lần cuối: 28/10/2026 — Phase 8 lát 2 (mật khẩu & quyền trong App). Tiếp theo: lát 3 (redaction).
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -150,7 +150,7 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | Lát | Nội dung | Commit | Trạng thái |
 |---|---|---|---|
 | 1 | Core `Security/DocumentSecurity.cs` (`EncryptionAlgorithm`, `DocumentPermissions`, record ẩn mật khẩu trong `ToString`, `Problem()`), `Security/PasswordStrength.cs` (bit = bảng chữ × độ dài, trừ lặp/dãy phím/ngày/mật khẩu phổ biến kể cả "matkhau"); Operations `Security/EncryptionWriter.cs` (`Protect`, `Unprotect`, `PermissionsOf(/P)`, `OpenForChange`), `ProtectionOperations.cs` (`security.encrypt`, `security.decrypt`; `WriteAsync` một tệp cho App); test kiểm bằng PDFium **và** PdfPig (không mở được khi thiếu/sai mật khẩu, mở bằng mật khẩu đúng ra cùng chữ, R6/R4, đúng quyền, mật khẩu chủ mở mọi quyền, mật khẩu tiếng Việt, gỡ bảo vệ chỉ với mật khẩu chủ). Sửa test named pipe chập chờn (xem mục 6) | commit `feat: protect documents with passwords and permissions` | Xong |
-| 2 | App: hộp thoại "Mật khẩu & quyền" (ribbon `security.encrypt`): đặt/đổi/gỡ bảo vệ cho tài liệu đang mở (giữ trong bộ nhớ, áp dụng khi Lưu / Lưu thành), thước độ mạnh mật khẩu + lời khuyên tiếng Việt; mở tài liệu có mật khẩu chủ thì sửa được (bỏ chỉ đọc của P3) | | |
+| 2 | Tài liệu có mật khẩu sửa được: Core `ProtectionSetting` (không chứa mật khẩu) trên `PagePlan.Protection` (đi theo mọi chỉnh sửa, là nội dung, không đổi `IsIdentity`/`HasSamePages`; `NextRevision` giữ), manifest `StateDto.Protection`; thao tác trang `security.protection` (`SetProtectionOperation`, chạy trên tệp thì `NotSupported`); `MaterializeRequest.Security` (vật chất hóa mã hóa trước khi ghi); PDFium `UserPermissions` (`FPDF_GetDocUserPermissions`) + `HasEveryPermission`. App: `IDocumentOpener` trả `OpenedDocument(Document, Password)`; `DocumentWorkspaceService` mở bằng mật khẩu chủ → giải mã bản sao `s0` (PDFsharp quyết định có phải mật khẩu chủ) → `ProtectionSetting.OfFile`, `OpenUnlockedAsync` (mở khóa, `UnlockFailure`); `ProtectionPasswordVault` + `DocumentPasswords` (chỉ bộ nhớ) trên workspace (`Protection`, `NeedsPasswordsToSave`, `OpenPassword`); `DocumentSaver` mã hóa + kiểm tệp tạm phải mã hóa, thiếu mật khẩu thì từ chối; hộp thoại `SecurityWindow` + `SecurityViewModel` (chỉ xem: quyền của tệp + mở khóa bằng mật khẩu chủ → tab được thay, cùng trang; sửa: không bảo vệ / mật khẩu mở + mật khẩu chủ (ô trống = giữ mật khẩu đã biết), AES-256/128, quyền, thước độ mạnh, cảnh báo mật khẩu yếu một lần); ribbon `security.encrypt` (`MainWindowViewModel.Security.cs`), lưu hỏi mật khẩu khi thiếu; `DocumentTabViewModel.SetProtection`; Ctrl+C bị từ chối khi tệp cấm sao chép; Thuộc tính tài liệu hiện "Có, khi lưu (AES…)" | commit `feat(app): edit protected documents and set their password and permissions` | Xong (App test chỉ chạy trên CI) |
 | 3–4 | Redaction (`security.redact`): đánh dấu vùng / chữ / mẫu (CCCD, SĐT, email, STK, ngày sinh, regex), danh sách xem lại; áp dụng raster 300 DPI (mặc định) hoặc giữ vector; hậu kiểm PdfPig bắt buộc; xóa chú thích/liên kết/trường/bookmark/metadata chứa nội dung bị xóa; nhãn + màu ô | | |
 | 5 | Làm sạch (`security.sanitize`) + báo cáo | | |
 | 6 | Bộ ghi incremental + ký số (`security.sign`: .pfx / kho chứng thư Windows, hiển thị/ẩn, timestamp RFC 3161) | | |
@@ -206,9 +206,13 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - **`Forms.Changed` bắn trước khi đọc lại revision xong** (danh sách field còn cũ): trình thiết kế giữ tên cần chọn lại cho tới khi field xuất hiện.
 - `NullToCollapsedConverter` không có chế độ đảo — cần bool thì thêm thuộc tính `Has…` vào ViewModel.
 - **Named pipe một phiên bản (`SingleInstanceChannel`)**: server tạo với giới hạn `MaxAllowedServerInstances` dù chỉ nghe một kết nối một lúc — phiên bản cũ còn sống tới khi client đóng đầu của nó; giới hạn 1 làm lần tạo kế tiếp báo "bận", 5 lần liền (mở nhiều tệp cùng lúc) là ngừng nghe luôn (CI `573ef0c` đỏ vì vậy).
+- **PDFium báo `0xFFFFFFFC` (không phải `0xFFFFFFFF`) khi mở bằng mật khẩu chủ** — giống tệp cho phép mọi quyền mở bằng mật khẩu mở. Chỉ PDFsharp (`PdfDocumentOpenMode.Modify` đòi mật khẩu chủ) phân biệt được → luồng mở khóa luôn có nhánh "vẫn chỉ xem".
+- PDFsharp mở tệp bảo vệ bằng mật khẩu chủ ở chế độ Modify thì `IsEncrypted = false` và **lưu ra không mã hóa** — muốn giữ bảo vệ phải gọi `EncryptionWriter.Protect` lại.
+- `IDocumentOpener.OpenAsync(path, name, password = null, ct)`: test mock phải dùng 4 tham số (`Arg.Any<string?>()` thứ ba) và trả `OpenedDocument`.
 - `PdfOperation.ExecuteAsync` **chỉ kiểm DataAnnotations**, không gọi `ValidateCore` — thao tác tự gọi `Validate` trong `ExecuteCoreAsync` khi cần (như `BatesOperation`, `ProtectDocumentOperation`).
 
 ## 7. Rủi ro / nợ đang mở
 
 - Gỡ dấu trên tài liệu lớn: không có tiến độ khi quét.
+- Tài liệu có mật khẩu đã mở khóa: Bates/Trộn biểu mẫu dùng tệp gốc khi không có gì chưa lưu → tệp gốc mã hóa bị từ chối (cần dùng bản sao như khi có thay đổi). Xuất trang của tài liệu có bảo vệ ra tệp **không** bảo vệ.
 - `PdfPro.Benchmarks`, `PdfPro.Worker` chưa tạo (để P13).

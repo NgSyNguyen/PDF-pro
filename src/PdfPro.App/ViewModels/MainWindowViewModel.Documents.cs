@@ -168,6 +168,12 @@ public sealed partial class MainWindowViewModel : IExitGuard
             return false;
         }
 
+        // Never saved unprotected: a protection whose passwords are unknown asks for them first.
+        if (!EnsureProtectionPasswords(document))
+        {
+            return false;
+        }
+
         // Its folder may be gone (renamed or removed since the document was opened): ask where to save instead.
         var target = saveAs || string.IsNullOrEmpty(document.FilePath) || !Directory.Exists(Path.GetDirectoryName(document.FilePath))
             ? null
@@ -366,6 +372,7 @@ public sealed partial class MainWindowViewModel : IExitGuard
         SaveAsCommand.NotifyCanExecuteChanged();
         MergeCommand.NotifyCanExecuteChanged();
         BatesCommand.NotifyCanExecuteChanged();
+        ProtectCommand.NotifyCanExecuteChanged();
     }
 
     private static string Format(string template, params object?[] arguments) => string.Format(CultureInfo.CurrentCulture, template, arguments);

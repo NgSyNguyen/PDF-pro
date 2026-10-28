@@ -2,6 +2,7 @@ using System.Collections;
 using PdfPro.Core.Annotations;
 using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Security;
 
 namespace PdfPro.Core.Organizing;
 
@@ -21,12 +22,14 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
 
     private readonly PageRef[] _pages;
     private readonly IReadOnlyDictionary<string, FormValue> _formValues;
+    private readonly ProtectionSetting? _protection;
     private Dictionary<Guid, int>? _indexByKey;
 
-    private PagePlan(PageRef[] pages, IReadOnlyDictionary<string, FormValue> formValues)
+    private PagePlan(PageRef[] pages, IReadOnlyDictionary<string, FormValue> formValues, ProtectionSetting? protection)
     {
         _pages = pages;
         _formValues = formValues;
+        _protection = protection;
     }
 
     public int Count => _pages.Length;
@@ -52,7 +55,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             }
         }
 
-        return new PagePlan(array, NoFormValues);
+        return new PagePlan(array, NoFormValues, null);
     }
 
     /// <summary>A plan from explicit pages and the values given to the form's fields (restoring a saved plan).</summary>
@@ -179,7 +182,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         }
 
         result.InsertRange(insertAt, selected.Select(i => _pages[i]));
-        return SameOrder(result) ? this : new PagePlan([.. result], _formValues);
+        return SameOrder(result) ? this : new PagePlan([.. result], _formValues, _protection);
     }
 
     /// <summary>Turns pages clockwise by <paramref name="delta"/> degrees (any multiple of 90; negative turns left).</summary>
@@ -202,7 +205,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             pages[index] = pages[index].WithRotation(pages[index].RotationDelta + delta);
         }
 
-        return new PagePlan(pages, _formValues);
+        return new PagePlan(pages, _formValues, _protection);
     }
 
     /// <summary>Removes pages. A document keeps at least one page.</summary>
@@ -221,7 +224,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             removed[index] = true;
         }
 
-        return new PagePlan(_pages.Where((_, i) => !removed[i]).ToArray(), _formValues);
+        return new PagePlan(_pages.Where((_, i) => !removed[i]).ToArray(), _formValues, _protection);
     }
 
     /// <summary>
@@ -296,10 +299,9 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             }
         }
 
-        return pages is null ? this : new PagePlan(pages, _formValues);
+        return pages is null ? this : new PagePlan(pages, _formValues, _protection);
     }
 
-    /// <summary>True when at least one page carries annotations added in the session.</summary>
     /// <summary>The values given in the session to the fields of the form (by fully qualified name), written when materialized.</summary>
     public IReadOnlyDictionary<string, FormValue> FormValues => _formValues;
 
@@ -321,13 +323,21 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             merged[value.Name] = value;
         }
 
-        return new PagePlan(_pages, merged);
+        return new PagePlan(_pages, merged, _protection);
     }
+
+    /// <summary>The protection the document is saved with (passwords aside), or null for none.</summary>
+    public ProtectionSetting? Protection => _protection;
+
+    /// <summary>The plan with this protection (null: saved without protection); this plan when it is the same.</summary>
+    public PagePlan WithProtection(ProtectionSetting? protection)
+        => Equals(protection, _protection) ? this : new PagePlan(_pages, _formValues, protection);
 
     private bool SameFormValues(PagePlan other)
         => _formValues.Count == other._formValues.Count
             && _formValues.All(v => other._formValues.TryGetValue(v.Key, out var value) && value.Equals(v.Value));
 
+    /// <summary>True when at least one page carries annotations added in the session.</summary>
     public bool HasAnnotations => Array.Exists(_pages, p => p.Annotations.Count > 0);
 
     /// <summary>Gives the page at <paramref name="index"/> these session annotations.</summary>
@@ -344,7 +354,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
 
         var pages = (PageRef[])_pages.Clone();
         pages[index] = page;
-        return new PagePlan(pages, _formValues);
+        return new PagePlan(pages, _formValues, _protection);
     }
 
     /// <summary>True when at least one page carries a split mark.</summary>
@@ -399,7 +409,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         return previous.Count != Count ? this : ReplaceMarks(Enumerable.Range(0, Count), (index, _) => previous[index].SplitMark);
     }
 
-    /// <summary>True when both plans show the same pages, in the same order and the same way, with the same form values (split marks aside).</summary>
+    /// <summary>True when both plans show the same pages, in the same order and the same way, with the same form values and protection (split marks aside).</summary>
     public bool HasSameContent(PagePlan other)
     {
         ArgumentNullException.ThrowIfNull(other);
@@ -408,7 +418,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             return true;
         }
 
-        if (other.Count != Count || !SameFormValues(other))
+        if (other.Count != Count || !SameFormValues(other) || !Equals(other._protection, _protection))
         {
             return false;
         }
@@ -465,7 +475,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
             }
         }
 
-        return pages is null ? this : new PagePlan(pages, _formValues);
+        return pages is null ? this : new PagePlan(pages, _formValues, _protection);
     }
 
     /// <summary>Validated, sorted, distinct page positions.</summary>
@@ -494,7 +504,7 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         Array.Copy(_pages, 0, pages, 0, index);
         Array.Copy(inserted, 0, pages, index, inserted.Length);
         Array.Copy(_pages, index, pages, index + inserted.Length, Count - index);
-        return new PagePlan(pages, _formValues);
+        return new PagePlan(pages, _formValues, _protection);
     }
 
     private Guid[] NewUniqueKeys(IPageKeyGenerator keys, int count)

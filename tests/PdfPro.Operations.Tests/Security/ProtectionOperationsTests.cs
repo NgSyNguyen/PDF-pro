@@ -92,11 +92,28 @@ public sealed class ProtectionOperationsTests(PdfiumFixture pdfium) : IDisposabl
 
         await using var opened = await PdfInspector.OpenAsync(pdfium.Gate, output);
         opened.Features.IsEncrypted.ShouldBeTrue();
-        EncryptionWriter.PermissionsOf(opened.Features.Permissions).ShouldBe(permissions);
+        PermissionBits.ToPermissions(opened.Features.Permissions).ShouldBe(permissions);
         (opened.Features.Permissions & (1u << 9)).ShouldNotBe(0u, "text can always be read out for accessibility");
 
         await using var owner = await PdfDocumentHandle.OpenAsync(pdfium.Gate, output, OwnerPassword, Token);
-        EncryptionWriter.PermissionsOf(owner.Features.Permissions).ShouldBe(DocumentPermissions.All, "the owner password lifts every restriction");
+        PermissionBits.ToPermissions(owner.Features.Permissions).ShouldBe(DocumentPermissions.All, "the owner password lifts every restriction");
+    }
+
+    [Fact]
+    public async Task Pdfium_SeesEveryPermissionWithTheOwnerPassword_AndKeepsTheFilesPermissions()
+    {
+        const DocumentPermissions permitted = DocumentPermissions.Print | DocumentPermissions.FillForms;
+        var output = await ProtectAsync(new DocumentSecurity(OpenPassword, OwnerPassword, Permissions: permitted));
+
+        await using var user = await PdfDocumentHandle.OpenAsync(pdfium.Gate, output, OpenPassword, Token);
+        await using var owner = await PdfDocumentHandle.OpenAsync(pdfium.Gate, output, OwnerPassword, Token);
+        await using var plain = await PdfInspector.OpenAsync(pdfium.Gate, Samples.BasicVi);
+
+        user.Features.HasEveryPermission.ShouldBeFalse();
+        owner.Features.HasEveryPermission.ShouldBeTrue();
+        plain.Features.HasEveryPermission.ShouldBeFalse();
+        PermissionBits.ToPermissions(owner.Features.UserPermissions).ShouldBe(permitted, "what the file permits, though the owner may do anything");
+        PermissionBits.ToPermissions(user.Features.UserPermissions).ShouldBe(permitted);
     }
 
     [Fact]

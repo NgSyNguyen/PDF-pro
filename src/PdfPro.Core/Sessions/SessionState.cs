@@ -42,13 +42,13 @@ public sealed record SessionState
 
     /// <summary>
     /// The state after a content operation wrote <paramref name="revisionSourceId"/>: the plan shows the revision's
-    /// pages, keeping the split marks page for page when the page count did not change, and the revision number goes
-    /// up by one (the same rule when the step is replayed after a crash).
+    /// pages, keeping the split marks page for page when the page count did not change and the protection the document
+    /// is saved with, and the revision number goes up by one (the same rule when the step is replayed after a crash).
     /// </summary>
     public SessionState NextRevision(string revisionSourceId, PagePlan plan)
     {
         ArgumentNullException.ThrowIfNull(plan);
-        return new(plan.WithSplitMarksOf(Plan), revisionSourceId, Revision + 1);
+        return new(plan.WithSplitMarksOf(Plan).WithProtection(Plan.Protection), revisionSourceId, Revision + 1);
     }
 }
 

@@ -194,6 +194,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// <summary>The document whose structure the tab shows (metadata, security, bookmarks): the base source.</summary>
     public IPdfDocument Document => Workspace.BaseDocument;
 
+    /// <summary>The author lets text be copied (a protected file opened without its owner password may forbid it).</summary>
+    public bool CanCopyText => Workspace.BaseDocument.Features.CanCopyContent;
+
+    /// <summary>Tells the user why the selected text was not copied.</summary>
+    public void ExplainCopyRefused() => _ = _messages.ShowInfoAsync(Strings.Copy_Refused_Title, Strings.Copy_NotAllowed);
+
     /// <summary>Where the document is saved.</summary>
     public string FilePath => Workspace.FilePath ?? string.Empty;
 

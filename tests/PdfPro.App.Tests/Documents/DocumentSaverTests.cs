@@ -3,12 +3,15 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Security;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Security;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Security;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.Documents;
@@ -283,6 +286,69 @@ public sealed class DocumentSaverTests : IDisposable
 
         await Should.ThrowAsync<Core.Operations.OperationValidationException>(
             () => _saver.ExportAsync(workspace, [7], Path.Combine(Path.GetDirectoryName(path)!, "x.pdf"), _progress, TestToken));
+    }
+
+    [Fact]
+    public async Task Save_OfAProtectedDocument_EncryptsItWithItsPasswords_AndChecksItWithTheOpenPassword()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        Protect(workspace, new DocumentPasswords("mở-ra", "chủ-nhân"), DocumentPermissions.Print);
+        MaterializeRequest? request = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(call => request = call.ArgAt<MaterializeRequest>(0));
+        _loader.LoadAsync(Arg.Any<string>(), "mở-ra", Arg.Any<CancellationToken>()).Returns(_ => Task.FromResult<IPdfDocument>(ProtectedFake(3)));
+
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        request.ShouldNotBeNull().Security.ShouldBe(new DocumentSecurity("mở-ra", "chủ-nhân", EncryptionAlgorithm.Aes256, DocumentPermissions.Print));
+        request.ToString().ShouldNotContain("chủ-nhân", Case.Sensitive, "a request never shows the passwords");
+        await _loader.Received(1).LoadAsync(Arg.Is<string>(p => p != path), "mở-ra", Arg.Any<CancellationToken>());
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(NewContent);
+        workspace.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Save_WhenTheWrittenFileIsNotProtected_KeepsTheOriginal()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        Protect(workspace, new DocumentPasswords(null, "chủ-nhân"), DocumentPermissions.None);
+
+        var error = await Should.ThrowAsync<DocumentSaveException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        error.Failure.ShouldBe(SaveFailure.VerificationFailed);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+        LeftoversNextTo(path).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Save_OfAProtectionWithoutItsPasswords_IsRefused_NeverWrittenUnprotected()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        var unknown = new ProtectionSetting(Guid.NewGuid(), EncryptionAlgorithm.Aes256, DocumentPermissions.All, HasOpenPassword: true);
+        workspace.Apply(TestOperations.Catalog().Get<SetProtectionOperation>(), new SetProtectionParams(unknown)).ShouldBeTrue();
+        workspace.NeedsPasswordsToSave.ShouldBeTrue("a recovered session knows the protection but not its passwords");
+
+        await Should.ThrowAsync<InvalidOperationException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+    }
+
+    private static void Protect(DocumentWorkspace workspace, DocumentPasswords passwords, DocumentPermissions permissions)
+    {
+        var setting = new ProtectionSetting(workspace.Passwords.Add(passwords), EncryptionAlgorithm.Aes256, permissions, passwords.Open is not null);
+        workspace.Apply(TestOperations.Catalog().Get<SetProtectionOperation>(), new SetProtectionParams(setting)).ShouldBeTrue();
+        workspace.NeedsPasswordsToSave.ShouldBeFalse();
+    }
+
+    private static FakePdfDocument ProtectedFake(int pages)
+    {
+        var document = FakePdfDocument.WithPages(pages);
+        document.Features = new PdfDocumentFeatures("2.0", 6, 0xFFFFF0C4, 0, PdfFormType.None, false, 0xFFFFF0C4);
+        return document;
     }
 
     private async Task<DocumentWorkspace> DirtyWorkspaceAsync(string path)

@@ -428,6 +428,27 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Kiểm tay: sửa một dòng trong tệp Word xuất PDF tiếng Việt — hiển thị đúng, tìm được chuỗi mới; biểu mẫu tạo bằng PDF_Pro mở và điền được trong Acrobat Reader và Chrome, nhóm nút chọn chỉ chọn được một; làm phẳng rồi mở bằng Acrobat Reader — không sửa được nữa.
 - Số đo trên máy phát triển: chưa đo (ghi khi chạy `Phase7AcceptanceTests` trên Windows).
 
+### Bảo mật, xóa vĩnh viễn & chữ ký số (Phase 8)
+
+> Đang làm theo lát (xem `docs/PROGRESS.md`); mục này ghi các quyết định đã chốt và được bổ sung ở mỗi lát.
+
+**Mật khẩu & quyền (`security.encrypt`, `security.decrypt`, `security.protection`)**
+- Mô hình (Core `Security/`): `DocumentSecurity` = mật khẩu mở (tùy chọn), mật khẩu chủ (bắt buộc, khác mật khẩu mở), AES-256 (mặc định, R6) hoặc AES-128 (R4, trình đọc cũ), quyền `DocumentPermissions` (in thấp/cao, sửa, sao chép, chú thích, điền biểu mẫu, ghép trang). Quyền "trợ năng" **luôn bật** (PDF 2.0 bỏ quyền này; trình đọc màn hình luôn đọc được). Mật khẩu ≤ 127 byte UTF-8; AES-128 chỉ nhận ASCII in được, ≤ 32 ký tự (R4 cắt/đệm 32 byte — dài hơn sẽ mất đuôi âm thầm). `ToString` không bao giờ hiện mật khẩu.
+- `PasswordStrength`: bit ≈ log2(bảng chữ) × độ dài, trừ cho lặp, dãy phím/chữ cái (1234, abcd, qwerty), ngày tháng, mật khẩu phổ biến (cả "matkhau", "anhyeuem"…); dưới 8 ký tự không quá "Yếu". Hộp thoại hiện thước + lời khuyên tiếng Việt; mật khẩu yếu được cảnh báo một lần, bấm "Áp dụng" lần nữa thì vẫn dùng.
+- Ghi bằng **PDFsharp 6.2.4** (`SecuritySettings`, `SetEncryptionToV5` / `SetEncryptionToV4UsingAES`, `SetEncryptionToNoneAndResetPasswords`). PDFsharp tự chặn sửa tệp bảo vệ khi chỉ có mật khẩu mở ("owner password is required") → `EncryptionWriter.OpenForChange` dịch thành `DocumentPasswordException` (`WrongPassword` / `OwnerPasswordRequired`). Mở bằng mật khẩu chủ, PDFsharp **bỏ hẳn mã hóa** khi lưu → bảo vệ luôn phải áp lại tường minh.
+- `security.encrypt` / `security.decrypt` (Export, cho tệp/lô/CLI): ghi bản sao vào thư mục ra, qua tệp tạm rồi đổi tên — lỗi một tệp thì không tệp nào xuất hiện. Gỡ bảo vệ chỉ với mật khẩu chủ.
+- **Tài liệu đang mở**:
+  - Mở bằng mật khẩu mở → **chỉ xem** như P3 (in/sao chép theo quyền của tác giả: Ctrl+C bị từ chối khi tệp cấm sao chép). Hộp thoại "Mật khẩu & quyền" cho nhập mật khẩu chủ → tài liệu được mở lại **có thể sửa** ngay trong tab đó, cùng trang.
+  - Mở bằng mật khẩu chủ (gõ ở hộp hỏi mật khẩu, hoặc mở khóa như trên): bản sao `s0` trong thư mục phiên được **ghi lại không mã hóa** (thư mục phiên thuộc người dùng, bị xóa khi đóng tài liệu) để mọi phần (vật chất hóa, biểu mẫu, sửa nội dung, thumbnail) đọc như tệp thường; `PagePlan.Protection` (`ProtectionSetting`: thuật toán, quyền, có mật khẩu mở không, `PasswordsId`) ghi bảo vệ của tệp để **lưu lại vẫn được bảo vệ** (RC4 R2/R3 lên AES-256, R4 giữ AES-128).
+  - **Mật khẩu chỉ nằm trong bộ nhớ** (`ProtectionPasswordVault` của workspace, theo `PasswordsId`); `ProtectionSetting` không chứa mật khẩu nên vào được lịch sử hoàn tác và manifest. Đổi/gỡ bảo vệ = thao tác trang `security.protection` (một bước hoàn tác, tên "Đặt mật khẩu & quyền" / "Gỡ bảo vệ"), áp dụng khi lưu. Cung cấp mật khẩu còn thiếu cho cùng bảo vệ không phải là một bước.
+  - Khi lưu: `DocumentSaver` lấy `DocumentSecurity` từ vault → `MaterializeRequest.Security` → bộ vật chất hóa mã hóa trước khi ghi; tệp tạm được mở lại bằng mật khẩu mở và **phải là tệp mã hóa**, không thì không thay tệp gốc. Thiếu mật khẩu (phiên khôi phục sau sự cố; mở bằng mật khẩu chủ nên chưa biết mật khẩu mở) → hộp thoại hỏi trước khi lưu; bỏ qua thì **không lưu** — không bao giờ lưu mất bảo vệ do nhầm. Vật chất hóa cho sửa nội dung/xem trước/xuất trang thì không mã hóa (đầu vào của thao tác khác); revision mới giữ `Protection`.
+- PDFium: `FPDF_GetDocPermissions` trả mọi bit quyền (bit 1–2 bằng 0, `0xFFFFFFFC`) khi mở bằng mật khẩu chủ — **giống hệt** tệp cho phép mọi quyền mở bằng mật khẩu mở → `HasEveryPermission` chỉ là ứng viên, PDFsharp quyết định (mật khẩu không phải của chủ → tài liệu vẫn chỉ xem). `FPDF_GetDocUserPermissions` cho quyền gốc của tệp (`UserPermissions`) dù mở bằng mật khẩu nào.
+
+**Ký số (sẽ làm)**: PDFsharp 6.2.4 không lưu incremental → ký nhiều người cần bộ ghi incremental tự viết (đối tượng mới + xref + trailer `/Prev`, chữ ký `adbe.pkcs7.detached` bằng `SignedCms`, vá `/ByteRange` sau khi ghi); xác minh = ByteRange + `SignedCms.CheckSignature` + `X509Chain`.
+
+**Nghiệm thu (đến lát hiện tại)**
+- Tệp sau mã hóa không mở được khi thiếu/sai mật khẩu, mở được bằng mật khẩu đúng ra cùng chữ — kiểm bằng **cả PDFium và PdfPig**; R6/R4 đúng thuật toán; đúng quyền đã chọn, mật khẩu chủ mở mọi quyền; mật khẩu tiếng Việt; gỡ bảo vệ chỉ với mật khẩu chủ; lưu tài liệu đã mở khóa ra tệp vẫn mã hóa với mật khẩu đã biết/mới; `ProtectionSetting` khứ hồi qua manifest không có mật khẩu.
+
 ### Hệ tọa độ — nguồn bug số một
 
 PDF dùng đơn vị point (1/72 inch), gốc ở góc **dưới-trái**, trang có thể có `/Rotate` 90/180/270 và CropBox không bắt đầu từ (0,0). WPF dùng DIP (1/96 inch), gốc ở góc **trên-trái**. Mọi chuyển đổi bắt buộc đi qua một lớp duy nhất, có unit test cho cả 4 góc xoay × CropBox lệch gốc × nhiều mức zoom.

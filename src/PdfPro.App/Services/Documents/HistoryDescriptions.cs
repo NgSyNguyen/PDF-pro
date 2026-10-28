@@ -7,6 +7,7 @@ using PdfPro.Operations.Annotating;
 using PdfPro.Operations.Editing;
 using PdfPro.Operations.Forms;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Security;
 using PdfPro.Operations.Stamping;
 
 namespace PdfPro.App.Services.Documents;
@@ -51,6 +52,8 @@ internal static class HistoryDescriptions
             DesignFormParams p => Describe(p),
             ResetFormParams p => Format(Strings.History_ResetForm, p.Values.Count),
             FlattenFormParams => Strings.History_FlattenForm,
+            SetProtectionParams { Protection: null } => Strings.History_RemoveProtection,
+            SetProtectionParams => Strings.History_SetProtection,
             FlattenAnnotationsParams p when string.IsNullOrWhiteSpace(p.Pages) => Strings.History_FlattenAnnotations,
             FlattenAnnotationsParams p => Format(Strings.History_FlattenAnnotationsOn, Count(p.Pages!, before)),
             _ => Strings.History_Other,

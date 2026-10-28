@@ -208,6 +208,28 @@ public sealed class SessionReplayTests
         restored.Undo[1].Parameters.ShouldBe(steps[1]);
     }
 
+    [Fact]
+    public void ProtectionSteps_ComeBackAfterACrash_WithoutTheirPasswords()
+    {
+        var protection = new Core.Security.ProtectionSetting(Guid.NewGuid(), Core.Security.EncryptionAlgorithm.Aes128, Core.Security.DocumentPermissions.Print, HasOpenPassword: true);
+        var session = NewSession();
+        Apply(session, new RotatePagesParams("1", 90));
+        Apply(session, new Operations.Security.SetProtectionParams(protection));
+        Apply(session, new Operations.Security.SetProtectionParams(null));
+        session.History.Undo();
+        var json = Infrastructure.Sessions.SessionManifestSerializer.Serialize(Infrastructure.Sessions.SessionManifestSerializer.ToManifest(session.CreateSnapshot(), DateTimeOffset.UtcNow));
+        var snapshot = Infrastructure.Sessions.SessionManifestSerializer.ToSnapshot(Infrastructure.Sessions.SessionManifestSerializer.Deserialize(json), _operations.ParameterType);
+
+        var rebuilt = SessionReplay.Rebuild(snapshot, Directory, Sizes, _operations, out var historyLost);
+
+        historyLost.ShouldBeFalse();
+        rebuilt.Plan.Protection.ShouldBe(protection);
+        rebuilt.History.NextUndoDescription.ShouldBe(Strings.History_SetProtection);
+        rebuilt.History.Redo();
+        rebuilt.Plan.Protection.ShouldBeNull();
+        rebuilt.History.NextUndoDescription.ShouldBe(Strings.History_RemoveProtection);
+    }
+
     private static DocumentSession NewSession(params SessionSource[] sources)
         => new(
             Guid.NewGuid(),

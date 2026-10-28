@@ -144,8 +144,13 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
         baseDocument.Version = documents.Values.Max(d => d.Version);
         if (baseDocument.SecuritySettings.IsEncrypted)
         {
-            // Only reached when a password was given (merging protected files): the output is never encrypted.
+            // Only reached when a password was given (merging protected files): the protection is not carried over.
             baseDocument.SecurityHandler.SetEncryptionToNoneAndResetPasswords();
+        }
+
+        if (request.Security is { } security)
+        {
+            Security.EncryptionWriter.Protect(baseDocument, security);
         }
 
         finish?.Invoke(baseDocument, placed);

@@ -4,6 +4,7 @@ using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Overlay;
+using PdfPro.Core.Security;
 using PdfPro.Core.Sessions;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
@@ -183,6 +184,32 @@ public sealed class SessionManifestSerializerTests
         var plain = new SessionState(PagePlan.Identity("s0", 2, RandomPageKeys.Instance), "s0", 0);
         var empty = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot with { State = plain, HistoryBase = plain }, DateTimeOffset.UtcNow));
         empty.ShouldNotContain("formValues", Case.Sensitive, "nothing is written without values");
+    }
+
+    [Fact]
+    public void RoundTrip_KeepsTheProtection_WithoutAnyPassword()
+    {
+        var protection = new ProtectionSetting(Guid.NewGuid(), EncryptionAlgorithm.Aes128, DocumentPermissions.Print | DocumentPermissions.FillForms, HasOpenPassword: true);
+        var state = new SessionState(PagePlan.Identity("s0", 2, RandomPageKeys.Instance).WithProtection(protection), "s0", 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [new SessionSource("s0", "sources/s0.pdf", SessionSourceKind.Original, 2)],
+            State = state,
+            HistoryBase = state,
+            Undo = [],
+            Redo = [],
+        };
+
+        var json = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot, DateTimeOffset.UtcNow));
+        var restored = SessionManifestSerializer.ToSnapshot(SessionManifestSerializer.Deserialize(json), ParameterType).State.Plan;
+
+        restored.Protection.ShouldBe(protection);
+        json.ShouldNotContain("ownerPassword", Case.Insensitive, "a protection carries no password");
+        json.ShouldNotContain("userPassword", Case.Insensitive);
+        var plain = new SessionState(PagePlan.Identity("s0", 2, RandomPageKeys.Instance), "s0", 0);
+        SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot with { State = plain, HistoryBase = plain }, DateTimeOffset.UtcNow))
+            .ShouldNotContain("protection", Case.Sensitive, "nothing is written without a protection");
     }
 
     [Fact]

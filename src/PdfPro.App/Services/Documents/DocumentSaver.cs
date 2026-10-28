@@ -2,6 +2,7 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Security;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
 using PdfPro.Operations.Organizing;
@@ -81,9 +82,13 @@ internal sealed class DocumentSaver(
         ArgumentNullException.ThrowIfNull(progress);
         if (workspace.IsReadOnly)
         {
-            throw new InvalidOperationException("Password protected documents cannot be saved yet.");
+            throw new InvalidOperationException("A view-only protected document cannot be saved: it needs its owner password.");
         }
 
+        // Never saved unprotected by mistake: a protection without its passwords stops the save.
+        var security = workspace.Protection is { } protection
+            ? workspace.Passwords.SecurityOf(protection) ?? throw new InvalidOperationException("The passwords of the document's protection are needed to save it.")
+            : null;
         var path = Path.GetFullPath(targetPath);
         var request = new MaterializeRequest
         {
@@ -91,6 +96,7 @@ internal sealed class DocumentSaver(
             BaseSourceId = workspace.Session.BaseSourceId,
             SourcePaths = workspace.SourcePaths,
             WorkingDirectory = workspace.WorkDirectory,
+            Security = security,
         };
 
         workspace.IsBusy = true;
@@ -162,7 +168,7 @@ internal sealed class DocumentSaver(
                 {
                     BackupPath = backup,
                     DeleteBackupAfterSwap = true,
-                    VerifyAsync = (temp, token) => VerifyAsync(temp, request.Plan.Count, token),
+                    VerifyAsync = (temp, token) => VerifyAsync(temp, request.Plan.Count, request.Security, token),
                     BeforeWriteAsync = (temp, backupPath, _) => workspace.RecordPendingSaveAsync(new PendingSaveDto(path, temp, backupPath)),
                 },
                 cancellationToken);
@@ -195,13 +201,16 @@ internal sealed class DocumentSaver(
         }
     }
 
-    /// <summary>The finished temporary file must open and have every page, or it does not replace anything.</summary>
-    private async Task VerifyAsync(string path, int expectedPages, CancellationToken cancellationToken)
+    /// <summary>
+    /// The finished temporary file must open (with its open password when protected) and have every page — and be
+    /// protected when it should be — or it does not replace anything.
+    /// </summary>
+    private async Task VerifyAsync(string path, int expectedPages, DocumentSecurity? security, CancellationToken cancellationToken)
     {
         IPdfDocument document;
         try
         {
-            document = await loader.LoadAsync(path, password: null, cancellationToken).ConfigureAwait(false);
+            document = await loader.LoadAsync(path, security?.UserPassword, cancellationToken).ConfigureAwait(false);
         }
         catch (PdfDocumentException ex)
         {
@@ -213,6 +222,11 @@ internal sealed class DocumentSaver(
             if (document.PageCount != expectedPages)
             {
                 throw new InvalidDataException($"The written file has {document.PageCount} pages instead of {expectedPages}.");
+            }
+
+            if (security is not null && !document.Features.IsEncrypted)
+            {
+                throw new InvalidDataException("The written file is not protected.");
             }
         }
     }

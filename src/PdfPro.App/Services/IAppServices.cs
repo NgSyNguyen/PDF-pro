@@ -64,8 +64,15 @@ public interface IDocumentOpener
     /// </summary>
     /// <param name="path">The file to open (a copy in a session folder).</param>
     /// <param name="displayName">The name shown in prompts and messages (the original file name).</param>
+    /// <param name="password">A password to try first (asked for when it is wrong); null to try without one.</param>
     /// <param name="cancellationToken">Cancels the open.</param>
-    Task<Pdfium.IPdfDocument?> OpenAsync(string path, string displayName, CancellationToken cancellationToken = default);
+    Task<OpenedDocument?> OpenAsync(string path, string displayName, string? password = null, CancellationToken cancellationToken = default);
+}
+
+/// <summary>An opened document and the password it took (null when it opened without one); never shows the password.</summary>
+public sealed record OpenedDocument(Pdfium.IPdfDocument Document, string? Password)
+{
+    public override string ToString() => $"OpenedDocument {{ {Document.PageCount} pages, password: {(Password is null ? "no" : "yes")} }}";
 }
 
 /// <summary>Asks the user for a document password. Never stores it.</summary>
@@ -186,4 +193,7 @@ public interface IPageDialogService
 
     /// <summary>"Trộn dữ liệu": the table, the file names and the output folder of a form merge.</summary>
     bool ShowFormMerge(ViewModels.Forms.FormMergeViewModel viewModel);
+
+    /// <summary>"Mật khẩu &amp; quyền"; true when the user confirmed (or unlocked the document).</summary>
+    bool ShowSecurity(ViewModels.Security.SecurityViewModel viewModel);
 }

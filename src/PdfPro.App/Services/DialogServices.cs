@@ -311,6 +311,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new FormMergeWindow(viewModel));
     }
 
+    public bool ShowSecurity(ViewModels.Security.SecurityViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SecurityWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

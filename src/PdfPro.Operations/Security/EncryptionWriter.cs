@@ -64,21 +64,6 @@ public static class EncryptionWriter
         document.SecurityHandler.SetEncryptionToNoneAndResetPasswords();
     }
 
-    /// <summary>The permissions of a /P value (12.6.4.2): bits 3 print, 4 modify, 5 copy, 6 annotate, 9 fill, 11 assemble, 12 high-quality print.</summary>
-    public static DocumentPermissions PermissionsOf(uint value)
-    {
-        var permissions = DocumentPermissions.None;
-        bool Bit(int n) => (value & (1u << (n - 1))) != 0;
-        permissions |= Bit(3) ? DocumentPermissions.Print : 0;
-        permissions |= Bit(3) && Bit(12) ? DocumentPermissions.PrintHighQuality : 0;
-        permissions |= Bit(4) ? DocumentPermissions.Modify : 0;
-        permissions |= Bit(5) ? DocumentPermissions.Copy : 0;
-        permissions |= Bit(6) ? DocumentPermissions.Annotate : 0;
-        permissions |= Bit(9) ? DocumentPermissions.FillForms : 0;
-        permissions |= Bit(11) ? DocumentPermissions.Assemble : 0;
-        return permissions;
-    }
-
     /// <summary>
     /// Opens a file to change it: with its password when it is protected — which must then be the owner password, as
     /// changing a protected document takes it.

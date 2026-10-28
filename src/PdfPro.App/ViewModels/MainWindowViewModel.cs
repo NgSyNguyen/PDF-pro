@@ -145,7 +145,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ProtectCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -776,7 +776,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             [
                 new(Strings.Ribbon_Group_Protect,
                 [
-                    new("security.encrypt", Strings.Cmd_Password, SymbolRegular.LockClosed24),
+                    new("security.encrypt", Strings.Cmd_Password, SymbolRegular.LockClosed24, ProtectCommand, Strings.Cmd_Password_ToolTip),
                     new("security.redact", Strings.Cmd_Redact, SymbolRegular.EraserSegment24),
                     new("security.sanitize", Strings.Cmd_Sanitize, SymbolRegular.Broom24),
                 ]),

@@ -169,7 +169,8 @@ public sealed partial class PdfiumDocument : IDisposable
                 3 => PdfFormType.XfaForeground,
                 _ => PdfFormType.None,
             },
-            fpdf_javascript.FPDFDocGetJavaScriptActionCount(native) > 0);
+            fpdf_javascript.FPDFDocGetJavaScriptActionCount(native) > 0,
+            (uint)(fpdfview.FPDF_GetDocUserPermissions(native) & 0xFFFFFFFF));
     }
 
     /// <summary>The outline tree. Cycles and absurd depths in hostile files are cut off.</summary>

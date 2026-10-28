@@ -25,7 +25,7 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     public DocumentWorkspaceServiceTests()
     {
         _splitMarks = new SplitMarkMemory(_fixture.Paths, NullLogger<SplitMarkMemory>.Instance);
-        _service = new DocumentWorkspaceService(_fixture.Store, _opener, _splitMarks, _messages, NullLoggerFactory.Instance);
+        _service = new DocumentWorkspaceService(_fixture.Store, _opener, Substitute.For<IPdfDocumentLoader>(), _splitMarks, _messages, NullLoggerFactory.Instance);
     }
 
     private static CancellationToken TestToken => TestContext.Current.CancellationToken;
@@ -37,14 +37,14 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     {
         var file = _fixture.CreateFile("Hợp đồng.pdf", [1, 2, 3, 4, 5]);
         var document = FakePdfDocument.WithPages(3);
-        _opener.OpenAsync(Arg.Any<string>(), "Hợp đồng.pdf", Arg.Any<CancellationToken>()).Returns(document);
+        _opener.OpenAsync(Arg.Any<string>(), "Hợp đồng.pdf", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(new OpenedDocument(document, null));
 
         await using var workspace = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
 
         var copy = workspace.Sources.ShouldHaveSingleItem().Path;
         copy.ShouldStartWith(_fixture.Store.RootDirectory);
         (await File.ReadAllBytesAsync(copy, TestToken)).ShouldBe(new byte[] { 1, 2, 3, 4, 5 });
-        await _opener.Received(1).OpenAsync(copy, "Hợp đồng.pdf", Arg.Any<CancellationToken>());
+        await _opener.Received(1).OpenAsync(copy, "Hợp đồng.pdf", Arg.Any<string?>(), Arg.Any<CancellationToken>());
         workspace.FilePath.ShouldBe(file);
         workspace.FileName.ShouldBe("Hợp đồng.pdf");
         workspace.BaseDocument.ShouldBeSameAs(document);
@@ -57,7 +57,7 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     public async Task Open_BringsBackTheMarksRememberedForTheUnchangedFile()
     {
         var file = _fixture.CreateFile("Hồ sơ scan.pdf", [1, 2, 3]);
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(6));
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(_ => new OpenedDocument(FakePdfDocument.WithPages(6), null));
         await _splitMarks.RememberAsync(file, FileStamp.Read(file)!.Value, 6, [new(0, "Tờ trình"), new(3)], TestToken);
 
         await using var workspace = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
@@ -72,7 +72,7 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     public async Task ClosingAnUnchangedDocument_RemembersItsMarks_AndAChangedFileForgetsThem()
     {
         var file = _fixture.CreateFile("Hồ sơ scan.pdf", [1, 2, 3]);
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(6));
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(_ => new OpenedDocument(FakePdfDocument.WithPages(6), null));
         var workspace = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
         workspace.Apply(TestOperations.Catalog().Get<MarkSplitOperation>(), new MarkSplitParams("3, 5"));
 
@@ -93,7 +93,7 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     {
         var file = _fixture.CreateFile("Hồ sơ scan.pdf", [1, 2, 3]);
         var stamp = FileStamp.Read(file)!.Value;
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(_ => FakePdfDocument.WithPages(6));
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(_ => new OpenedDocument(FakePdfDocument.WithPages(6), null));
         await _splitMarks.RememberAsync(file, stamp, 6, [new(1)], TestToken);
         var workspace = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
         var operations = TestOperations.Catalog();
@@ -113,7 +113,7 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
         (await _service.OpenAsync(missing, TestToken)).ShouldBeNull();
 
         await _messages.Received(1).ShowErrorAsync(Strings.Open_Error_Title, string.Format(CultureInfo.CurrentCulture, Strings.Open_Error_FileNotFound, "gone.pdf"));
-        await _opener.DidNotReceiveWithAnyArgs().OpenAsync(default!, default!, TestToken);
+        await _opener.DidNotReceiveWithAnyArgs().OpenAsync(default!, default!, default, TestToken);
         Directory.GetDirectories(_fixture.Store.RootDirectory).ShouldBeEmpty();
     }
 
@@ -121,7 +121,7 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     public async Task Open_CancelledAtThePasswordPrompt_LeavesNoSession()
     {
         var file = _fixture.CreateFile("secret.pdf");
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns((IPdfDocument?)null);
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns((OpenedDocument?)null);
 
         (await _service.OpenAsync(file, TestToken)).ShouldBeNull();
 
@@ -133,7 +133,7 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     {
         var file = _fixture.CreateFile("empty.pdf");
         var document = new FakePdfDocument([]);
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(document);
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(new OpenedDocument(document, null));
 
         (await _service.OpenAsync(file, TestToken)).ShouldBeNull();
 
@@ -146,7 +146,7 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     public async Task Open_WhenOpeningThrows_RemovesTheSession()
     {
         var file = _fixture.CreateFile("boom.pdf");
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("boom"));
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("boom"));
 
         await Should.ThrowAsync<InvalidOperationException>(() => _service.OpenAsync(file, TestToken));
 
@@ -157,7 +157,7 @@ public sealed class DocumentWorkspaceServiceTests : IDisposable
     public async Task Workspace_WritesItsFirstManifestRightAway()
     {
         var file = _fixture.CreateFile("a.pdf");
-        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(FakePdfDocument.WithPages(2));
+        _opener.OpenAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(new OpenedDocument(FakePdfDocument.WithPages(2), null));
 
         await using var workspace = (await _service.OpenAsync(file, TestToken)).ShouldNotBeNull();
         await workspace.FlushManifestAsync();

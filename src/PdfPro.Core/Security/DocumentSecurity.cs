@@ -43,6 +43,25 @@ public enum DocumentPermissions
     All = Print | PrintHighQuality | Modify | Copy | Annotate | FillForms | Assemble,
 }
 
+/// <summary>The permissions of a /P value of a protected file (12.6.4.2, table 22).</summary>
+public static class PermissionBits
+{
+    /// <summary>Bits 3 print, 4 modify, 5 copy, 6 annotate, 9 fill forms, 11 assemble, 12 high-quality print.</summary>
+    public static DocumentPermissions ToPermissions(uint value)
+    {
+        bool Bit(int n) => (value & (1u << (n - 1))) != 0;
+        var permissions = DocumentPermissions.None;
+        permissions |= Bit(3) ? DocumentPermissions.Print : 0;
+        permissions |= Bit(3) && Bit(12) ? DocumentPermissions.PrintHighQuality : 0;
+        permissions |= Bit(4) ? DocumentPermissions.Modify : 0;
+        permissions |= Bit(5) ? DocumentPermissions.Copy : 0;
+        permissions |= Bit(6) ? DocumentPermissions.Annotate : 0;
+        permissions |= Bit(9) ? DocumentPermissions.FillForms : 0;
+        permissions |= Bit(11) ? DocumentPermissions.Assemble : 0;
+        return permissions;
+    }
+}
+
 /// <summary>
 /// The protection of a document: the password to open it (none: anyone opens it, the permissions still apply), the
 /// owner password that lifts every restriction, the algorithm and the permissions. Passwords stay in memory only:

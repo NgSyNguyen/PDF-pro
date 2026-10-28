@@ -83,6 +83,7 @@ internal static class TestOperations
             new Operations.Forms.ResetFormOperation(materializer, loader),
             new Operations.Security.ProtectDocumentOperation(),
             new Operations.Security.UnprotectDocumentOperation(),
+            new Operations.Security.SetProtectionOperation(materializer, loader),
         ]);
     }
 }
