@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 28/10/2026 — Phase 7 xong về code (lát 9). Tiếp theo: Phase 8.
+Cập nhật lần cuối: 28/10/2026 — Phase 8 lát 1 (mật khẩu & quyền: Core + Operations). Tiếp theo: lát 2 (App).
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -19,7 +19,7 @@ Cập nhật lần cuối: 28/10/2026 — Phase 7 xong về code (lát 9). Tiế
 | Nhánh làm việc | `claude/laughing-pasteur-x9yt44` |
 | PR | NgSyNguyen/PDF-pro#1 (draft → `main`) — gom toàn bộ phần còn lại của Phase 5 |
 | CI | `.github/workflows/build.yml`, `windows-latest`; chạy khi push vào `main` hoặc trên pull request (nhánh không có PR thì **không** chạy CI) |
-| CI gần nhất | `d156858` (P7 lát 8b): xanh — mọi commit Phase 7 tới đây đều xanh. Mốc đếm: `292e6a3` có 1.740 test, 1.726 đạt, 14 bỏ qua (UI test FlaUI tự bỏ qua khi không đặt `PDFPRO_UI_TESTS=1`) |
+| CI gần nhất | `573ef0c` (P7 lát 9): **đỏ** vì test named pipe `SingleInstanceChannelTests.SimultaneousLaunches_AreAllDelivered` chập chờn (2.154 test, 2.134 đạt, 19 bỏ qua) — đã sửa gốc ở P8 lát 1 (xem mục 6). `d156858` trở về trước: xanh |
 
 - Trên máy chủ dự án có `README.md` chưa track (không rõ nguồn) — **chưa commit**; README chính thức để tới P13.
 - Máy chủ dự án cần `git config user.name/user.email` trong repo (đã từng thiếu → commit thất bại im lặng).
@@ -52,7 +52,7 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | **P5 Chèn & đóng dấu** | **Đang làm** — xem bảng lát dưới |
 | P6 Chú thích & tìm kiếm | Xong về code (`66c9fc5` … lát 9e), có mục SPEC và `Phase6AcceptanceTests` (chưa chạy tay) |
 | P7 Sửa nội dung gốc & biểu mẫu | Xong về code (`d5d3523` … lát 9), có mục SPEC và `Phase7AcceptanceTests` (chưa chạy tay) |
-| **P8 Bảo mật, xóa vĩnh viễn & chữ ký số** | **Tiếp theo** — đọc PROMPTS P8 + SPEC; nhớ: lưu incremental để không phá chữ ký số (nợ từ P6) |
+| **P8 Bảo mật, xóa vĩnh viễn & chữ ký số** | **Đang làm** — xem bảng lát Phase 8; nhớ: lưu incremental để không phá chữ ký số (nợ từ P6) |
 | P9–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
 
 ### Phase 5 — các lát
@@ -138,6 +138,26 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | 8b | `forms.autodetect`: Core `Forms/FormAutodetect.cs` (`FieldSuggestion`: chuỗi ≥ 4 dấu chấm/gạch dưới/"…" (cho phép khoảng trắng xen) → ô văn bản cao ≥ 12 pt, nhãn = chữ trước nó trên dòng (sau ô trống trước đó); đường kẻ ngang (dày ≤ 1,5, dài ≥ 36 pt) không gạch dưới chữ → ô văn bản 16 pt đứng trên đường kẻ, nhãn = chữ bên trái; ô vuông vẽ (6–24 pt) hoặc ký tự ☐ □ ❑ ❒ ▢ → ô đánh dấu, nhãn = chữ sau nó (tới ô kế); bỏ chỗ đã có field (chồng > 30 %) và trùng nhau; nhãn NFC, bỏ ":", tối đa 40 ký tự). App: nút "Nhận diện trường" trong thanh thiết kế (`FormDesignerViewModel.Suggestions.cs`: đọc nền lớp chữ + đối tượng của mọi trang thuộc tệp gốc (tài liệu > 50 trang: chỉ trang hiện tại), đề xuất cam nét đứt, bấm để chọn/bỏ (con trỏ bàn tay), thanh "n đề xuất — m được chọn", "Thêm các trường đã chọn" = một `forms.design` Add (tên = nhãn, trùng thì thêm số; chú thích = nhãn), "Bỏ đề xuất"; đề xuất mất khi trang đổi/tắt chế độ) | `d156858` | Xong, CI xanh |
 | 9 | Mục SPEC "Sửa nội dung gốc & biểu mẫu (Phase 7)" (thiết kế, quyết định, giới hạn, nghiệm thu); `Phase7AcceptanceTests` (FlaUI: tờ khai in sẵn → Nhận diện trường → thêm 3 trường → điền + tích → Lưu → Làm phẳng (hỏi, 1 bước hoàn tác) → không còn field, tên thành chữ của trang; trộn CSV 100 dòng → 100 tệp đúng dữ liệu); `PdfFile.FieldValues`, `PdfFile.WritePrintedForm` (Helvetica không nhúng, không cần resolver phông); ô nhập biểu mẫu có AutomationId `FormField_{tên}` | commit `docs: Phase 7 in the SPEC…` | Xong — **chưa chạy tay trên Windows** |
 
+### Phase 8 — các lát (kế hoạch do agent tự quyết, 28/10/2026)
+
+**Khả thi / quyết định (sẽ vào SPEC mục Phase 8):**
+- Mã hóa bằng **PDFsharp 6.2.4** (`SecuritySettings` + `SecurityHandler.SetEncryptionToV5` = AES-256 R6, `SetEncryptionToV4UsingAES` = AES-128 R4, `SetEncryptionToNoneAndResetPasswords`). PDFsharp **tự chặn** sửa tệp có mật khẩu khi chỉ có mật khẩu mở ("To modify the document the owner password is required") → đổi/gỡ bảo vệ luôn cần mật khẩu chủ; `EncryptionWriter.OpenForChange` dịch thông báo của PDFsharp thành `DocumentPasswordException` (`WrongPassword` / `OwnerPasswordRequired`).
+- Quyền "trợ năng" (bit 10) **luôn bật**: PDF 2.0 bỏ quyền này, PDFsharp không cho tắt; trình đọc màn hình luôn đọc được (test kiểm bit 10).
+- AES-128: mật khẩu chỉ ASCII in được, tối đa 32 ký tự (R4 cắt/đệm 32 byte PDFDocEncoding — dài hơn sẽ mất đuôi âm thầm). AES-256: tối đa 127 byte UTF-8, tiếng Việt được.
+- `security.encrypt` / `security.decrypt` là thao tác **Export** (không vào lịch sử phiên → mật khẩu không bao giờ nằm trong manifest); ghi tệp tạm trong thư mục ra rồi đổi tên, lỗi một tệp thì không tệp nào xuất hiện (`ProtectionFileException.FileIndex`).
+- Ký nhiều người cần **bộ ghi incremental tự viết** (PDFsharp không lưu incremental): nối thêm đối tượng + bảng xref (hoặc xref stream nếu tệp gốc dùng xref stream) + trailer `/Prev`, chữ ký `adbe.pkcs7.detached` bằng `SignedCms` (System.Security.Cryptography.Pkcs, đã có), `/ByteRange` vá sau khi ghi. Xác minh = ByteRange + `SignedCms.CheckSignature` + `X509Chain`.
+
+| Lát | Nội dung | Commit | Trạng thái |
+|---|---|---|---|
+| 1 | Core `Security/DocumentSecurity.cs` (`EncryptionAlgorithm`, `DocumentPermissions`, record ẩn mật khẩu trong `ToString`, `Problem()`), `Security/PasswordStrength.cs` (bit = bảng chữ × độ dài, trừ lặp/dãy phím/ngày/mật khẩu phổ biến kể cả "matkhau"); Operations `Security/EncryptionWriter.cs` (`Protect`, `Unprotect`, `PermissionsOf(/P)`, `OpenForChange`), `ProtectionOperations.cs` (`security.encrypt`, `security.decrypt`; `WriteAsync` một tệp cho App); test kiểm bằng PDFium **và** PdfPig (không mở được khi thiếu/sai mật khẩu, mở bằng mật khẩu đúng ra cùng chữ, R6/R4, đúng quyền, mật khẩu chủ mở mọi quyền, mật khẩu tiếng Việt, gỡ bảo vệ chỉ với mật khẩu chủ). Sửa test named pipe chập chờn (xem mục 6) | commit `feat: protect documents with passwords and permissions` | Xong |
+| 2 | App: hộp thoại "Mật khẩu & quyền" (ribbon `security.encrypt`): đặt/đổi/gỡ bảo vệ cho tài liệu đang mở (giữ trong bộ nhớ, áp dụng khi Lưu / Lưu thành), thước độ mạnh mật khẩu + lời khuyên tiếng Việt; mở tài liệu có mật khẩu chủ thì sửa được (bỏ chỉ đọc của P3) | | |
+| 3–4 | Redaction (`security.redact`): đánh dấu vùng / chữ / mẫu (CCCD, SĐT, email, STK, ngày sinh, regex), danh sách xem lại; áp dụng raster 300 DPI (mặc định) hoặc giữ vector; hậu kiểm PdfPig bắt buộc; xóa chú thích/liên kết/trường/bookmark/metadata chứa nội dung bị xóa; nhãn + màu ô | | |
+| 5 | Làm sạch (`security.sanitize`) + báo cáo | | |
+| 6 | Bộ ghi incremental + ký số (`security.sign`: .pfx / kho chứng thư Windows, hiển thị/ẩn, timestamp RFC 3161) | | |
+| 7 | Panel "Chữ ký" (`security.verify`) | | |
+| 8 | Lưu incremental cho tệp đã ký (nợ P6), ký hàng loạt | | |
+| 9 | Mục SPEC Phase 8 + `Phase8AcceptanceTests` | | |
+
 ## 5. Bản đồ mã Phase 5
 
 - **Core:** `Overlay/OverlayItems.cs` (đối tượng, `OverlayLimits`), `Overlay/OverlaySnapping.cs`, `Geometry/RotatedBox.cs`, `Geometry/PdfMatrix.cs`, `Text/TextLayout.cs`, `Text/FontFamilies.cs`, `Stamping/StampTemplate.cs` (`Parse`, `Render`, `Escape`), `Stamping/PageNumbering.cs`, `Stamping/BatesNumbering.cs`, `Stamping/StampPlacement.cs`, `Imaging/SignatureImages.cs`, `Imaging/ExifOrientation.cs`, `Organizing/MaterializedGeometry.cs`.
@@ -185,6 +205,8 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - **`InvalidDataException` không kế thừa `IOException`** — bộ lọc `catch` quanh thao tác đọc tệp phải liệt kê riêng.
 - **`Forms.Changed` bắn trước khi đọc lại revision xong** (danh sách field còn cũ): trình thiết kế giữ tên cần chọn lại cho tới khi field xuất hiện.
 - `NullToCollapsedConverter` không có chế độ đảo — cần bool thì thêm thuộc tính `Has…` vào ViewModel.
+- **Named pipe một phiên bản (`SingleInstanceChannel`)**: server tạo với giới hạn `MaxAllowedServerInstances` dù chỉ nghe một kết nối một lúc — phiên bản cũ còn sống tới khi client đóng đầu của nó; giới hạn 1 làm lần tạo kế tiếp báo "bận", 5 lần liền (mở nhiều tệp cùng lúc) là ngừng nghe luôn (CI `573ef0c` đỏ vì vậy).
+- `PdfOperation.ExecuteAsync` **chỉ kiểm DataAnnotations**, không gọi `ValidateCore` — thao tác tự gọi `Validate` trong `ExecuteCoreAsync` khi cần (như `BatesOperation`, `ProtectDocumentOperation`).
 
 ## 7. Rủi ro / nợ đang mở
 

@@ -217,7 +217,10 @@ public sealed class SingleInstanceChannel : IAsyncDisposable
             NamedPipeServerStream server;
             try
             {
-                server = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+                // One instance listens at a time, but the limit must allow more: the previous instance lives on until its
+                // client closes its end, and a limit of one made the next instance fail as "busy" meanwhile — enough
+                // failures in a burst of launches (several files opened at once) stopped the listening for good.
+                server = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

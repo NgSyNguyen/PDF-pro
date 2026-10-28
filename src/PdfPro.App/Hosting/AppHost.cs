@@ -20,6 +20,7 @@ using PdfPro.Operations.Materializing;
 using PdfPro.Operations.Layout;
 using PdfPro.Operations.Merging;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Security;
 using PdfPro.Operations.Splitting;
 using PdfPro.Operations.Stamping;
 using PdfPro.Pdfium;
@@ -122,6 +123,8 @@ internal static class AppHost
         services.AddOperation<MergeFormDataOperation>();
         services.AddOperation<FlattenFormOperation>();
         services.AddOperation<ResetFormOperation>();
+        services.AddOperation<ProtectDocumentOperation>();
+        services.AddOperation<UnprotectDocumentOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();
