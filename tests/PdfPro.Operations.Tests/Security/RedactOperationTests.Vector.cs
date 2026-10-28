@@ -27,7 +27,7 @@ public sealed partial class RedactOperationTests
     {
         var input = WriteDrawings();
 
-        var output = await RedactAsync(input, new RedactParams([new RedactionArea(1, [DrawingArea])], Red));
+        var output = await RedactAsync(input, new RedactParams([new RedactionArea(1, [DrawingArea])], Red, Mode: RedactionMode.Vector));
 
         var report = RedactOperation.ReportOf(Last!).ShouldNotBeNull();
         report.PicturePages.ShouldBeEmpty();
@@ -102,7 +102,7 @@ public sealed partial class RedactOperationTests
 
         var hits = await FindAsync(input, RedactionPattern.NationalId);
 
-        var output = await RedactAsync(input, new RedactParams(Areas(hits)));
+        var output = await RedactAsync(input, new RedactParams(Areas(hits), Mode: RedactionMode.Vector));
 
         RedactOperation.ReportOf(Last!).ShouldNotBeNull().PicturePages.ShouldBe([1], "page 2 is rewritten keeping its text");
         using var pig = PigDocument.Open(output);
@@ -117,7 +117,7 @@ public sealed partial class RedactOperationTests
         var hits = await FindAsync(input, RedactionPattern.NationalId);
         hits.ShouldHaveSingleItem();
 
-        var output = await RedactAsync(input, new RedactParams(Areas(hits)));
+        var output = await RedactAsync(input, new RedactParams(Areas(hits), Mode: RedactionMode.Vector));
 
         var report = RedactOperation.ReportOf(Last!).ShouldNotBeNull();
         report.PicturePages.ShouldBeEmpty();
@@ -159,7 +159,7 @@ public sealed partial class RedactOperationTests
         }
 
         areas.ShouldNotBeEmpty();
-        var output = await RedactAsync(input, new RedactParams(areas));
+        var output = await RedactAsync(input, new RedactParams(areas, Mode: RedactionMode.Vector));
 
         RedactOperation.ReportOf(Last!).ShouldNotBeNull().PicturePages.ShouldBeEmpty("every page could be rewritten exactly");
         using var pig = PigDocument.Open(output);

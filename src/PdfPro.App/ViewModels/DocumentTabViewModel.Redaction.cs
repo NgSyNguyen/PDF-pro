@@ -72,7 +72,7 @@ public sealed partial class DocumentTabViewModel
     {
         var fill = RgbColor.Black;
         string? label = null;
-        var mode = RedactionMode.Vector;
+        var mode = RedactionMode.Raster;
         if (confirm)
         {
             var dialog = new RedactionApplyViewModel(Redaction.Marks.Count, Redaction.Marks.Select(m => m.PageKey).Distinct().Count());

@@ -163,7 +163,7 @@ public sealed class RedactionViewModelTests : IDisposable
         parameters.Areas.ShouldHaveSingleItem().Page.ShouldBe(2);
         parameters.Fill.ShouldBe(RgbColor.Gray);
         parameters.Label.ShouldBe(Strings.Redaction_DefaultLabel);
-        parameters.Mode.ShouldBe(RedactionMode.Vector, "the other text and drawings are kept by default");
+        parameters.Mode.ShouldBe(RedactionMode.Raster, "pages become pictures unless the vector mode is chosen");
         request.Description.ShouldBe(string.Format(System.Globalization.CultureInfo.CurrentCulture, Strings.History_Redact, 1));
         redaction.HasMarks.ShouldBeTrue("until the window has applied them");
         request.Completed!(true);
@@ -171,7 +171,7 @@ public sealed class RedactionViewModelTests : IDisposable
     }
 
     [Fact]
-    public async Task ChoosingPictures_RedactsInTheRasterMode()
+    public async Task ChoosingToKeepTheText_RedactsInTheVectorMode()
     {
         var (tab, redaction) = await RedactingAsync();
         Drag(tab, redaction, 0, new PdfPoint(100, 700), new PdfPoint(300, 650));
@@ -180,16 +180,16 @@ public sealed class RedactionViewModelTests : IDisposable
         _dialogs.ShowRedactionApply(Arg.Any<RedactionApplyViewModel>()).Returns(call =>
         {
             var apply = call.Arg<RedactionApplyViewModel>();
-            apply.KeepText.ShouldBeTrue();
-            apply.AsPictures = true;
-            apply.KeepText.ShouldBeFalse();
+            apply.AsPictures.ShouldBeTrue();
+            apply.KeepText = true;
+            apply.AsPictures.ShouldBeFalse();
             apply.ApplyCommand.Execute(null);
             return true;
         });
 
         tab.ApplyRedactionsCommand.Execute(null);
 
-        request.ShouldNotBeNull().Parameters.ShouldBeOfType<RedactParams>().Mode.ShouldBe(RedactionMode.Raster);
+        request.ShouldNotBeNull().Parameters.ShouldBeOfType<RedactParams>().Mode.ShouldBe(RedactionMode.Vector);
     }
 
     [Fact]

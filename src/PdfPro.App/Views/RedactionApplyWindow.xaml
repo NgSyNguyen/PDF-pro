@@ -40,25 +40,25 @@
       <TextBlock FontWeight="SemiBold" Text="{loc:Tr RedactionApply_Mode}" />
       <RadioButton
         Margin="0,6,0,0"
-        AutomationProperties.AutomationId="RedactionKeepText"
-        Content="{loc:Tr RedactionApply_KeepText}"
-        GroupName="RedactionMode"
-        IsChecked="{Binding KeepText}" />
-      <TextBlock
-        Margin="28,0,0,0"
-        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-        Text="{loc:Tr RedactionApply_KeepText_Hint}"
-        TextWrapping="Wrap" />
-      <RadioButton
-        Margin="0,8,0,0"
         AutomationProperties.AutomationId="RedactionAsPictures"
         Content="{loc:Tr RedactionApply_AsPictures}"
         GroupName="RedactionMode"
         IsChecked="{Binding AsPictures}" />
       <TextBlock
-        Margin="28,0,0,12"
+        Margin="28,0,0,0"
         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
         Text="{loc:Tr RedactionApply_AsPictures_Hint}"
+        TextWrapping="Wrap" />
+      <RadioButton
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="RedactionKeepText"
+        Content="{loc:Tr RedactionApply_KeepText}"
+        GroupName="RedactionMode"
+        IsChecked="{Binding KeepText}" />
+      <TextBlock
+        Margin="28,0,0,12"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr RedactionApply_KeepText_Hint}"
         TextWrapping="Wrap" />
 
       <Grid>

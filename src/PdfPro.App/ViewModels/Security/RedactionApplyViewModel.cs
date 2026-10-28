@@ -8,7 +8,7 @@ namespace PdfPro.App.ViewModels.Security;
 
 /// <summary>
 /// "Áp dụng xóa vĩnh viễn": says what will happen (the marked content goes for good, and what else names it), how
-/// (keeping the pages' other text and drawings, or turning the pages into pictures), the colour of the boxes and an
+/// (turning the pages into pictures, the default, or keeping their other text and drawings), the colour of the boxes and an
 /// optional label. The marks themselves are reviewed on the pages.
 /// </summary>
 public sealed partial class RedactionApplyViewModel : ObservableObject
@@ -35,10 +35,10 @@ public sealed partial class RedactionApplyViewModel : ObservableObject
     [ObservableProperty]
     public partial RgbColor Fill { get; set; } = RgbColor.Black;
 
-    /// <summary>Keep the text and drawings outside the areas (vector mode, the default); otherwise pages become pictures.</summary>
+    /// <summary>Keep the text and drawings outside the areas (vector mode, advanced); otherwise pages become pictures (the default).</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AsPictures))]
-    public partial bool KeepText { get; set; } = true;
+    public partial bool KeepText { get; set; }
 
     public bool AsPictures
     {

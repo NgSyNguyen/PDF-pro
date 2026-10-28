@@ -218,7 +218,7 @@ public sealed class SessionReplayTests
                 [new Operations.Security.RedactionArea(1, [new PdfRect(1, 2, 3, 4)])],
                 Core.Overlay.RgbColor.Gray,
                 "Đã xóa theo quy định",
-                Operations.Security.RedactionMode.Raster),
+                Operations.Security.RedactionMode.Vector),
         ];
         var state = new SessionState(PagePlan.Identity(SourceIds.Original, 5, RandomPageKeys.Instance), SourceIds.Original, 0);
         var snapshot = new SessionSnapshot
@@ -239,9 +239,9 @@ public sealed class SessionReplayTests
         WithoutTime(Infrastructure.Sessions.SessionManifestSerializer.Serialize(Infrastructure.Sessions.SessionManifestSerializer.ToManifest(restored, created)))
             .ShouldBe(WithoutTime(json));
         var first = restored.Undo[0].Parameters.ShouldBeOfType<Operations.Security.RedactParams>();
-        first.Mode.ShouldBe(Operations.Security.RedactionMode.Vector);
+        first.Mode.ShouldBe(Operations.Security.RedactionMode.Raster);
         first.Areas.ShouldHaveSingleItem().Rects.Count.ShouldBe(2);
-        restored.Undo[1].Parameters.ShouldBeOfType<Operations.Security.RedactParams>().Mode.ShouldBe(Operations.Security.RedactionMode.Raster);
+        restored.Undo[1].Parameters.ShouldBeOfType<Operations.Security.RedactParams>().Mode.ShouldBe(Operations.Security.RedactionMode.Vector);
     }
 
     [Fact]

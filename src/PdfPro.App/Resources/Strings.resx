@@ -1218,9 +1218,9 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="RedactionApply_Color" xml:space="preserve"><value>Màu ô</value></data>
   <data name="RedactionApply_UseLabel" xml:space="preserve"><value>Ghi nhãn trên ô</value></data>
   <data name="RedactionApply_Mode" xml:space="preserve"><value>Cách xóa</value></data>
-  <data name="RedactionApply_KeepText" xml:space="preserve"><value>Giữ chữ và hình vẽ ngoài vùng xóa (khuyến nghị)</value></data>
+  <data name="RedactionApply_KeepText" xml:space="preserve"><value>Giữ chữ và hình vẽ ngoài vùng xóa (nâng cao)</value></data>
   <data name="RedactionApply_KeepText_Hint" xml:space="preserve"><value>Chữ còn lại vẫn chọn, tìm và sao chép được. Trang nào không xóa chính xác được sẽ tự chuyển thành ảnh.</value></data>
-  <data name="RedactionApply_AsPictures" xml:space="preserve"><value>Chuyển các trang có vùng xóa thành ảnh</value></data>
+  <data name="RedactionApply_AsPictures" xml:space="preserve"><value>An toàn tuyệt đối: chuyển các trang có vùng xóa thành ảnh (mặc định)</value></data>
   <data name="RedactionApply_AsPictures_Hint" xml:space="preserve"><value>Không còn chút chữ nào trên các trang đó: chữ ngoài vùng xóa cũng không chọn hay tìm được nữa.</value></data>
   <data name="RedactionApply_Apply" xml:space="preserve"><value>Xóa vĩnh viễn</value></data>
   <data name="Redaction_Color_Black" xml:space="preserve"><value>Đen</value></data>

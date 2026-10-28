@@ -1218,9 +1218,9 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="RedactionApply_Color" xml:space="preserve"><value>Box colour</value></data>
   <data name="RedactionApply_UseLabel" xml:space="preserve"><value>Write a label in the boxes</value></data>
   <data name="RedactionApply_Mode" xml:space="preserve"><value>How to remove</value></data>
-  <data name="RedactionApply_KeepText" xml:space="preserve"><value>Keep the text and drawings outside the areas (recommended)</value></data>
+  <data name="RedactionApply_KeepText" xml:space="preserve"><value>Keep the text and drawings outside the areas (advanced)</value></data>
   <data name="RedactionApply_KeepText_Hint" xml:space="preserve"><value>The rest of the text can still be selected, searched and copied. A page that cannot be redacted exactly becomes a picture.</value></data>
-  <data name="RedactionApply_AsPictures" xml:space="preserve"><value>Turn the pages with areas into pictures</value></data>
+  <data name="RedactionApply_AsPictures" xml:space="preserve"><value>Completely safe: turn the pages with areas into pictures (default)</value></data>
   <data name="RedactionApply_AsPictures_Hint" xml:space="preserve"><value>No text at all is left on those pages: the text outside the areas can no longer be selected or searched either.</value></data>
   <data name="RedactionApply_Apply" xml:space="preserve"><value>Remove for good</value></data>
   <data name="Redaction_Color_Black" xml:space="preserve"><value>Black</value></data>

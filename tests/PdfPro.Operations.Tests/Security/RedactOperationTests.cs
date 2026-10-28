@@ -27,10 +27,11 @@ public sealed partial class RedactOperationTests(PdfiumFixture pdfium) : IDispos
     public void Dispose() => _temp.Dispose();
 
     [Fact]
-    public void Operation_IsAContentChange()
+    public void Operation_IsAContentChange_AndPicturesAreTheDefault()
     {
         _operation.Id.ShouldBe("security.redact");
         _operation.Kind.ShouldBe(OperationKind.Content);
+        new RedactParams([]).Mode.ShouldBe(RedactionMode.Raster, "the safe mode unless the vector mode is chosen");
     }
 
     [Fact]
@@ -39,7 +40,7 @@ public sealed partial class RedactOperationTests(PdfiumFixture pdfium) : IDispos
         var hits = await FindAsync(Samples.Pii, RedactionPattern.NationalId);
         hits.Select(h => h.Text).ShouldBe(["001203004567", "079095001234", "036187009876"]);
 
-        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas(hits)));
+        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas(hits), Mode: RedactionMode.Vector));
 
         AllText(output).ShouldNotContain("001203004567");
         AllText(output).ShouldNotContain("079095001234");
@@ -109,7 +110,7 @@ public sealed partial class RedactOperationTests(PdfiumFixture pdfium) : IDispos
     {
         var hits = (await FindAsync(Samples.Pii, RedactionPattern.NationalId)).Where(h => h.PageIndex == 0).ToList();
 
-        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas(hits), RgbColor.Black, "Đã xóa"));
+        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas(hits), RgbColor.Black, "Đã xóa", RedactionMode.Vector));
 
         using var pig = PigDocument.Open(output);
         var page = pig.GetPage(1);

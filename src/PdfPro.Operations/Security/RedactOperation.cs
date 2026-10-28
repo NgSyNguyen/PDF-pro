@@ -24,24 +24,28 @@ public sealed record RedactionArea(int Page, IReadOnlyList<PdfRect> Rects);
 public enum RedactionMode
 {
     /// <summary>
-    /// Only what lies under the areas goes; the rest of the page keeps its text (selectable, searchable) and drawings.
-    /// A page that cannot be rewritten exactly is redacted as a picture instead.
+    /// Advanced: only what lies under the areas goes; the rest of the page keeps its text (selectable, searchable) and
+    /// drawings. A page that cannot be rewritten exactly, or on which any letter is found under an area afterwards, is
+    /// redacted as a picture instead.
     /// </summary>
     Vector,
 
-    /// <summary>Every page with an area becomes a picture of itself without the areas (nothing of its text is left).</summary>
+    /// <summary>
+    /// Safe (the default): every page with an area becomes a picture of itself without the areas (nothing of its text
+    /// is left).
+    /// </summary>
     Raster,
 }
 
 /// <param name="Areas">What to remove.</param>
 /// <param name="Fill">The colour of the boxes left in place of the removed content (black by default).</param>
 /// <param name="Label">Words written in every box ("Đã xóa theo quy định"), or null.</param>
-/// <param name="Mode">Keep the pages' text and drawings (default) or turn the pages into pictures.</param>
+/// <param name="Mode">Turn the pages into pictures (default) or keep their other text and drawings.</param>
 public sealed record RedactParams(
     [property: Required] IReadOnlyList<RedactionArea> Areas,
     RgbColor? Fill = null,
     string? Label = null,
-    RedactionMode Mode = RedactionMode.Vector);
+    RedactionMode Mode = RedactionMode.Raster);
 
 /// <summary>What a redaction did, for the user: the pages redacted, those turned into pictures, and what else went.</summary>
 /// <param name="Areas">Rectangles removed.</param>
@@ -65,14 +69,15 @@ public sealed record RedactionReport(
     int Structure);
 
 /// <summary>
-/// "security.redact" — true redaction (SPEC P8 B), a content change. In the vector mode PDFium takes out of each page
-/// only what lies under its areas (characters, parts of lines and shapes, pixels of pictures), draws the boxes and checks
-/// the page it wrote: no character under an area, every other one where it was, the page looking as before elsewhere —
-/// a page that fails, or one in the raster mode, is rendered by PDFium at 300 DPI without its annotations, painted over
-/// and replaced by that picture. Annotations, links, form fields, bookmarks, metadata and tag texts that show what was
-/// removed go too. Afterwards an independent extractor (PdfPig) reads the redacted pages: a letter under an area (or
-/// any letter on a picture page) stops the operation, and nothing is written. Labels are drawn last. The parameters
-/// hold only rectangles, never the removed text.
+/// "security.redact" — true redaction (SPEC P8 B), a content change. In the raster mode (the default) each page with an
+/// area is rendered by PDFium at 300 DPI without its annotations, painted over and replaced by that picture. In the
+/// vector mode PDFium takes out of each page only what lies under its areas (characters, parts of lines and shapes,
+/// pixels of pictures), draws the boxes and checks the page it wrote: no character under an area, every other one where
+/// it was, the page looking as before elsewhere — a page that fails becomes a picture instead. Annotations, links, form
+/// fields, bookmarks, metadata and tag texts that show what was removed go too. Afterwards an independent extractor
+/// (PdfPig) reads the redacted pages: a vector page with a letter under an area becomes a picture too; a letter left on
+/// a picture page stops the operation, and nothing is written. Labels are drawn last. The parameters hold only
+/// rectangles, never the removed text.
 /// </summary>
 public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<RedactParams>
 {
@@ -122,8 +127,21 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
         var (bytes, cleanup) = await Task.Run(() => Write(inputPath, rewritten, pages, areas, fill, cancellationToken), cancellationToken).ConfigureAwait(false);
         progress.Report(new OperationProgress(total - 2, total, Stage));
 
-        // The mandatory check, with an extractor that is not PDFium; the labels are ours and come after it.
-        await Task.Run(() => Check(bytes, pages, areas), cancellationToken).ConfigureAwait(false);
+        // The mandatory check, with an extractor that is not PDFium; the labels are ours and come after it. A page that
+        // kept its text and still shows a letter under an area becomes a picture, and the check runs again.
+        var leaks = await Task.Run(() => Leaks(bytes, pages, areas), cancellationToken).ConfigureAwait(false);
+        if (leaks.Count > 0 && leaks.All(i => pages.Single(p => p.PageIndex == i).Raster is null))
+        {
+            pages = await gate.RunAsync(() => AsPictures(inputPath, pages, leaks, areas, fill), PdfiumPriority.Normal, cancellationToken).ConfigureAwait(false);
+            (bytes, cleanup) = await Task.Run(() => Write(inputPath, rewritten, pages, areas, fill, cancellationToken), cancellationToken).ConfigureAwait(false);
+            leaks = await Task.Run(() => Leaks(bytes, pages, areas), cancellationToken).ConfigureAwait(false);
+        }
+
+        if (leaks.Count > 0)
+        {
+            throw new InvalidOperationException($"Text is left under an area of redacted page {leaks[0] + 1}; the redaction was not written.");
+        }
+
         progress.Report(new OperationProgress(total - 1, total, Stage));
         if (!string.IsNullOrWhiteSpace(request.Label))
         {
@@ -389,13 +407,13 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
     }
 
     /// <summary>
-    /// Reads the written document with PdfPig: a picture page may not carry any letter, a rewritten page no letter
-    /// whose glyph lies (by its centre) under an area.
+    /// Reads the written document with PdfPig: the redacted pages (0-based) showing text they may not — a picture page
+    /// any letter, a page that kept its text a letter whose glyph lies (by its centre) under an area.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Text is left under an area; nothing is written.</exception>
-    private static void Check(byte[] bytes, IReadOnlyList<RedactedPage> pages, IReadOnlyDictionary<int, IReadOnlyList<PdfRect>> areas)
+    private static List<int> Leaks(byte[] bytes, IReadOnlyList<RedactedPage> pages, IReadOnlyDictionary<int, IReadOnlyList<PdfRect>> areas)
     {
         using var pig = PigDocument.Open(bytes);
+        var leaks = new List<int>();
         foreach (var redacted in pages)
         {
             var letters = pig.GetPage(redacted.PageIndex + 1).Letters.Where(l => !string.IsNullOrWhiteSpace(l.Value));
@@ -404,9 +422,23 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
                 : letters.Any(l => areas[redacted.PageIndex].Any(r => Inside(l.BoundingBox.Centroid, r)));
             if (left)
             {
-                throw new InvalidOperationException($"Text is left under an area of redacted page {redacted.PageIndex + 1}; the redaction was not written.");
+                leaks.Add(redacted.PageIndex);
             }
         }
+
+        return leaks;
+    }
+
+    /// <summary>On the PDFium thread: the given pages rendered as pictures from the document as it was.</summary>
+    private List<RedactedPage> AsPictures(
+        string inputPath,
+        IReadOnlyList<RedactedPage> pages,
+        IReadOnlyList<int> indexes,
+        IReadOnlyDictionary<int, IReadOnlyList<PdfRect>> areas,
+        RgbColor fill)
+    {
+        using var original = Open(inputPath);
+        return [.. pages.Select(p => indexes.Contains(p.PageIndex) ? p with { Raster = RedactionRaster.Render(original, p.PageIndex, areas[p.PageIndex], fill) } : p)];
     }
 
     private static bool Inside(UglyToad.PdfPig.Core.PdfPoint point, PdfRect rect)

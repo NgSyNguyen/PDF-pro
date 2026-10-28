@@ -232,7 +232,7 @@ public sealed partial class RedactionViewModel : ObservableObject
     }
 
     /// <summary>The marks as the parameters of security.redact (pages 1-based as shown), or null without marks.</summary>
-    public RedactParams? Parameters(RgbColor fill, string? label, RedactionMode mode = RedactionMode.Vector)
+    public RedactParams? Parameters(RgbColor fill, string? label, RedactionMode mode = RedactionMode.Raster)
     {
         var areas = _marks
             .Select(m => (Page: _viewer.Document.IndexOf(m.PageKey), Mark: m))
