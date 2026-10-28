@@ -21,6 +21,7 @@ ISample[] samples =
     new LinksAnnotsSample(),
     new VanBanSample(),
     new ScanSample(Path.Combine(outputDirectory, "vanban-vi.pdf")),
+    new PiiSample(),
 ];
 
 Console.WriteLine($"Writing samples to {outputDirectory}");

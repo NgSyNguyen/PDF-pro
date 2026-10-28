@@ -1178,4 +1178,5 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="DocProps_EncryptedOnSave" xml:space="preserve"><value>Có, khi lưu ({0}) — in: {1}, sao chép nội dung: {2}</value></data>
   <data name="DocProps_Aes256" xml:space="preserve"><value>AES 256-bit</value></data>
   <data name="DocProps_Aes128" xml:space="preserve"><value>AES 128-bit</value></data>
+  <data name="History_Redact" xml:space="preserve"><value>Xóa vĩnh viễn {0} vùng</value></data>
 </root>

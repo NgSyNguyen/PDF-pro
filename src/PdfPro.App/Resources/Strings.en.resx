@@ -1178,4 +1178,5 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="DocProps_EncryptedOnSave" xml:space="preserve"><value>Yes, when saved ({0}) — printing: {1}, copying content: {2}</value></data>
   <data name="DocProps_Aes256" xml:space="preserve"><value>AES 256-bit</value></data>
   <data name="DocProps_Aes128" xml:space="preserve"><value>AES 128-bit</value></data>
+  <data name="History_Redact" xml:space="preserve"><value>Redact {0} area(s)</value></data>
 </root>

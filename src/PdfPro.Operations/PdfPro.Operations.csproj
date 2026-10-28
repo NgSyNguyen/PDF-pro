@@ -8,6 +8,8 @@
   <ItemGroup>
     <!-- Pinned at 6.2.4 in Directory.Packages.props: 6.5+ is AGPL (LicenseGuardTests). -->
     <PackageReference Include="PDFsharp" />
+    <!-- Apache-2.0: an extractor independent of PDFium, for the mandatory check after a redaction (SPEC P8 B). -->
+    <PackageReference Include="PdfPig" />
   </ItemGroup>
 
   <ItemGroup>

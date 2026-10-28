@@ -56,7 +56,7 @@ The complete license texts will be collected in this file before the first relea
 | [FlaUI.UIA3 / FlaUI.Core](https://github.com/FlaUI/FlaUI) | 5.0.0 | MIT | UI acceptance tests that drive the built app through UI Automation (`tests/PdfPro.App.UiTests`, run by hand) |
 | [Interop.UIAutomationClient](https://github.com/Roemer/UIAutomation-Interop) | 10.19041.0 | MIT | UI Automation COM interop (dependency of FlaUI.UIA3) |
 | Arial, Times New Roman (Windows fonts) | — | Monotype (embedding allowed) | Subsets embedded in the generated sample PDFs only |
-| [PdfPig](https://github.com/UglyToad/PdfPig) | 0.1.16 | Apache-2.0 | Second, independent text extractor in `PdfPro.Operations.Tests` (text PDF_Pro writes must read back exactly); shipped from Phase 6 (search, redaction) |
+| [PdfPig](https://github.com/UglyToad/PdfPig) | 0.1.16 | Apache-2.0 | Second, independent text extractor: in `PdfPro.Operations` for the mandatory check after a redaction (no text may remain under a removed area, Phase 8), and in `PdfPro.Operations.Tests` (text PDF_Pro writes must read back exactly) |
 
 Fonts installed on the user's computer are embedded (as subsets) into documents only when the font's own license
 bits (OS/2 `fsType`) allow editable embedding; PDF_Pro never ships them.
