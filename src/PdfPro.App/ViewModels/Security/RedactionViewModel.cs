@@ -232,7 +232,7 @@ public sealed partial class RedactionViewModel : ObservableObject
     }
 
     /// <summary>The marks as the parameters of security.redact (pages 1-based as shown), or null without marks.</summary>
-    public RedactParams? Parameters(RgbColor fill, string? label)
+    public RedactParams? Parameters(RgbColor fill, string? label, RedactionMode mode = RedactionMode.Vector)
     {
         var areas = _marks
             .Select(m => (Page: _viewer.Document.IndexOf(m.PageKey), Mark: m))
@@ -241,7 +241,7 @@ public sealed partial class RedactionViewModel : ObservableObject
             .OrderBy(g => g.Key)
             .Select(g => new RedactionArea(g.Key + 1, [.. g.SelectMany(m => m.Mark.Rects)]))
             .ToList();
-        return areas.Count == 0 ? null : new RedactParams(areas, fill, string.IsNullOrWhiteSpace(label) ? null : label.Trim());
+        return areas.Count == 0 ? null : new RedactParams(areas, fill, string.IsNullOrWhiteSpace(label) ? null : label.Trim(), mode);
     }
 
     /// <summary>Forgets every mark (after they were applied, or on request).</summary>

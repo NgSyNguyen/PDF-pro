@@ -163,10 +163,49 @@ public sealed class RedactionViewModelTests : IDisposable
         parameters.Areas.ShouldHaveSingleItem().Page.ShouldBe(2);
         parameters.Fill.ShouldBe(RgbColor.Gray);
         parameters.Label.ShouldBe(Strings.Redaction_DefaultLabel);
+        parameters.Mode.ShouldBe(RedactionMode.Vector, "the other text and drawings are kept by default");
         request.Description.ShouldBe(string.Format(System.Globalization.CultureInfo.CurrentCulture, Strings.History_Redact, 1));
         redaction.HasMarks.ShouldBeTrue("until the window has applied them");
         request.Completed!(true);
         redaction.HasMarks.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ChoosingPictures_RedactsInTheRasterMode()
+    {
+        var (tab, redaction) = await RedactingAsync();
+        Drag(tab, redaction, 0, new PdfPoint(100, 700), new PdfPoint(300, 650));
+        ContentChangeRequest? request = null;
+        tab.ContentChangeRequested += (_, r) => request = r;
+        _dialogs.ShowRedactionApply(Arg.Any<RedactionApplyViewModel>()).Returns(call =>
+        {
+            var apply = call.Arg<RedactionApplyViewModel>();
+            apply.KeepText.ShouldBeTrue();
+            apply.AsPictures = true;
+            apply.KeepText.ShouldBeFalse();
+            apply.ApplyCommand.Execute(null);
+            return true;
+        });
+
+        tab.ApplyRedactionsCommand.Execute(null);
+
+        request.ShouldNotBeNull().Parameters.ShouldBeOfType<RedactParams>().Mode.ShouldBe(RedactionMode.Raster);
+    }
+
+    [Fact]
+    public void TheReport_SaysWhichPagesBecamePictures()
+    {
+        var report = new RedactionReport(3, [1, 2, 4], [4], 1, 0, 0, [], Xmp: false, Structure: 2);
+
+        var text = DocumentTabViewModel.Describe(report, RedactionMode.Vector);
+
+        text.ShouldStartWith(string.Format(System.Globalization.CultureInfo.CurrentCulture, Strings.Redaction_Done, 3, 3));
+        text.ShouldContain(string.Format(System.Globalization.CultureInfo.CurrentCulture, Strings.Redaction_Done_PicturesSome, "4"));
+        text.ShouldContain(string.Format(System.Globalization.CultureInfo.CurrentCulture, Strings.Redaction_Done_Annotations, 1));
+        text.ShouldContain(Strings.Redaction_Done_Metadata, Case.Sensitive, "tag texts naming the data went");
+        text.ShouldNotContain(string.Format(System.Globalization.CultureInfo.CurrentCulture, Strings.Redaction_Done_Fields, 0));
+        DocumentTabViewModel.Describe(report with { PicturePages = [1, 2, 4] }, RedactionMode.Raster).ShouldContain(Strings.Redaction_Done_PicturesAll);
+        DocumentTabViewModel.Describe(report with { PicturePages = [] }, RedactionMode.Vector).ShouldNotContain(Strings.Redaction_Done_PicturesAll);
     }
 
     [Fact]

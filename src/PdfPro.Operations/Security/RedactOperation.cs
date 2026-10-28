@@ -20,28 +20,59 @@ namespace PdfPro.Operations.Security;
 /// <summary>Areas to remove on one page (1-based), in the page's PDF space.</summary>
 public sealed record RedactionArea(int Page, IReadOnlyList<PdfRect> Rects);
 
+/// <summary>How redacted pages are rewritten.</summary>
+public enum RedactionMode
+{
+    /// <summary>
+    /// Only what lies under the areas goes; the rest of the page keeps its text (selectable, searchable) and drawings.
+    /// A page that cannot be rewritten exactly is redacted as a picture instead.
+    /// </summary>
+    Vector,
+
+    /// <summary>Every page with an area becomes a picture of itself without the areas (nothing of its text is left).</summary>
+    Raster,
+}
+
 /// <param name="Areas">What to remove.</param>
 /// <param name="Fill">The colour of the boxes left in place of the removed content (black by default).</param>
 /// <param name="Label">Words written in every box ("Đã xóa theo quy định"), or null.</param>
-public sealed record RedactParams([property: Required] IReadOnlyList<RedactionArea> Areas, RgbColor? Fill = null, string? Label = null);
+/// <param name="Mode">Keep the pages' text and drawings (default) or turn the pages into pictures.</param>
+public sealed record RedactParams(
+    [property: Required] IReadOnlyList<RedactionArea> Areas,
+    RgbColor? Fill = null,
+    string? Label = null,
+    RedactionMode Mode = RedactionMode.Vector);
 
-/// <summary>What a redaction did, for the user: pages turned into pictures, and what else went with the areas.</summary>
+/// <summary>What a redaction did, for the user: the pages redacted, those turned into pictures, and what else went.</summary>
 /// <param name="Areas">Rectangles removed.</param>
-/// <param name="Pages">The pages redacted (1-based): each is now a picture of itself without the areas.</param>
+/// <param name="Pages">The pages redacted (1-based).</param>
+/// <param name="PicturePages">Of those, the pages that are now pictures of themselves (all of them in the raster mode).</param>
 /// <param name="Annotations">Comments and links removed because they were over an area or named what was removed.</param>
 /// <param name="Fields">Form fields removed for the same reasons.</param>
 /// <param name="Bookmarks">Bookmarks removed because their title named what was removed.</param>
 /// <param name="Metadata">Document information entries removed ("Author", "Keywords"…).</param>
 /// <param name="Xmp">The XMP metadata was removed.</param>
-public sealed record RedactionReport(int Areas, IReadOnlyList<int> Pages, int Annotations, int Fields, int Bookmarks, IReadOnlyList<string> Metadata, bool Xmp);
+/// <param name="Structure">Texts of the tag structure (alternate texts, titles) removed because they named what was removed.</param>
+public sealed record RedactionReport(
+    int Areas,
+    IReadOnlyList<int> Pages,
+    IReadOnlyList<int> PicturePages,
+    int Annotations,
+    int Fields,
+    int Bookmarks,
+    IReadOnlyList<string> Metadata,
+    bool Xmp,
+    int Structure);
 
 /// <summary>
-/// "security.redact" — true redaction (SPEC P8 B), a content change: every page with an area to remove is rendered by
-/// PDFium at 300 DPI without its annotations, the areas are painted over in the picture and the page's content is
-/// replaced by that picture with the boxes (and their label) drawn on top — nothing that was under an area can be
-/// selected, copied, searched or extracted any more. Annotations, links, form fields, bookmarks and metadata that show
-/// what was removed go too. Afterwards an independent extractor (PdfPig) reads the redacted pages: any text other than
-/// the labels stops the operation, and nothing is written. The parameters hold only rectangles, never the removed text.
+/// "security.redact" — true redaction (SPEC P8 B), a content change. In the vector mode PDFium takes out of each page
+/// only what lies under its areas (characters, parts of lines and shapes, pixels of pictures), draws the boxes and checks
+/// the page it wrote: no character under an area, every other one where it was, the page looking as before elsewhere —
+/// a page that fails, or one in the raster mode, is rendered by PDFium at 300 DPI without its annotations, painted over
+/// and replaced by that picture. Annotations, links, form fields, bookmarks, metadata and tag texts that show what was
+/// removed go too. Afterwards an independent extractor (PdfPig) reads the redacted pages: a letter under an area (or
+/// any letter on a picture page) stops the operation, and nothing is written. Labels are drawn last. The parameters
+/// hold only rectangles, never the removed text.
 /// </summary>
 public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<RedactParams>
 {
@@ -78,63 +109,39 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
             .GroupBy(a => a.Page - 1)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<PdfRect>)[.. g.SelectMany(a => a.Rects)]);
         var fill = request.Fill ?? RgbColor.Black;
-        var total = areas.Count + 2;
+        var total = areas.Count + 3;
         progress.Report(new OperationProgress(0, total, Stage));
 
-        // PDFium: what each page shows under its areas, and the page as a picture with them painted over.
-        var pages = await gate.RunAsync(
-            () =>
-            {
-                PdfiumDocument document;
-                try
-                {
-                    document = PdfiumDocument.Open(gate, inputPath);
-                }
-                catch (PdfDocumentException ex)
-                {
-                    throw new InvalidDataException("The document cannot be read.", ex);
-                }
-
-                using (document)
-                {
-                    var validation = Validate(request, new DocumentInfo(document.PageCount));
-                    if (!validation.IsValid)
-                    {
-                        throw new OperationValidationException(Id, validation.Errors);
-                    }
-
-                    var done = 0;
-                    var result = new List<RedactedPage>();
-                    foreach (var (index, rects) in areas.OrderBy(a => a.Key))
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        var under = RedactionRaster.TextUnder(document.GetPageTextLayer(index), rects);
-                        result.Add(new RedactedPage(index, under, RedactionRaster.Render(document, index, rects, fill)));
-                        progress.Report(new OperationProgress(++done, total, Stage));
-                    }
-
-                    return result;
-                }
-            },
+        // PDFium: what each page shows under its areas; the pages rewritten keeping their text, or as pictures.
+        var (pages, rewritten) = await gate.RunAsync(
+            () => Redact(inputPath, request, areas, fill, progress, total, cancellationToken),
             PdfiumPriority.Normal,
             cancellationToken).ConfigureAwait(false);
 
-        // PDFsharp: the pages become their pictures, then what else showed the removed content goes.
-        var (bytes, cleanup) = await Task.Run(() => Write(inputPath, pages, areas, fill, request.Label, cancellationToken), cancellationToken).ConfigureAwait(false);
-        progress.Report(new OperationProgress(total - 1, total, Stage));
+        // PDFsharp: picture pages replace theirs, then what else showed the removed content goes.
+        var (bytes, cleanup) = await Task.Run(() => Write(inputPath, rewritten, pages, areas, fill, cancellationToken), cancellationToken).ConfigureAwait(false);
+        progress.Report(new OperationProgress(total - 2, total, Stage));
 
-        // The mandatory check, with an extractor that is not PDFium: no text but the labels on a redacted page.
-        await Task.Run(() => Check(bytes, pages, request.Label), cancellationToken).ConfigureAwait(false);
+        // The mandatory check, with an extractor that is not PDFium; the labels are ours and come after it.
+        await Task.Run(() => Check(bytes, pages, areas), cancellationToken).ConfigureAwait(false);
+        progress.Report(new OperationProgress(total - 1, total, Stage));
+        if (!string.IsNullOrWhiteSpace(request.Label))
+        {
+            bytes = await Task.Run(() => Label(bytes, areas, fill, TextNormalizer.ToNfc(request.Label.Trim())), cancellationToken).ConfigureAwait(false);
+        }
+
         cancellationToken.ThrowIfCancellationRequested();
         await output.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
         Reports.AddOrUpdate(request, new RedactionReport(
             areas.Values.Sum(r => r.Count),
             [.. pages.Select(p => p.PageIndex + 1)],
+            [.. pages.Where(p => p.Raster is not null).Select(p => p.PageIndex + 1)],
             cleanup.Annotations,
             cleanup.Fields,
             cleanup.Bookmarks,
             cleanup.Metadata,
-            cleanup.Xmp));
+            cleanup.Xmp,
+            cleanup.Structure));
         progress.Report(new OperationProgress(total, total, Stage));
     }
 
@@ -168,23 +175,98 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
         return errors.Count == 0 ? OperationValidationResult.Success : OperationValidationResult.Failed(errors);
     }
 
+    /// <summary>
+    /// On the PDFium thread: reads the text under the areas of each page, rewrites the pages keeping their text (vector
+    /// mode) into a copy of the document, and renders as pictures the pages that are not rewritten that way — from the
+    /// document as it was.
+    /// </summary>
+    private (List<RedactedPage> Pages, byte[]? Rewritten) Redact(
+        string inputPath,
+        RedactParams request,
+        IReadOnlyDictionary<int, IReadOnlyList<PdfRect>> areas,
+        RgbColor fill,
+        IProgress<OperationProgress> progress,
+        int total,
+        CancellationToken cancellationToken)
+    {
+        using var original = Open(inputPath);
+        var validation = Validate(request, new DocumentInfo(original.PageCount));
+        if (!validation.IsValid)
+        {
+            throw new OperationValidationException(Id, validation.Errors);
+        }
+
+        var texts = areas.ToDictionary(a => a.Key, a => RedactionRaster.TextUnder(original.GetPageTextLayer(a.Key), a.Value));
+        var pictures = new HashSet<int>(request.Mode == RedactionMode.Raster ? areas.Keys : []);
+        byte[]? rewritten = null;
+        if (request.Mode == RedactionMode.Vector)
+        {
+            using var copy = Open(inputPath);
+            foreach (var (index, rects) in areas.OrderBy(a => a.Key))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var needles = RedactionCleanup.Needles(texts[index]);
+                if (!copy.RedactPageKeepingVectors(index, rects, fill, value => RedactionCleanup.Names(value, needles)).Done)
+                {
+                    pictures.Add(index);
+                }
+            }
+
+            using var stream = new MemoryStream();
+            copy.SaveCopy(stream);
+            rewritten = stream.ToArray();
+        }
+
+        var done = 0;
+        var pages = new List<RedactedPage>();
+        foreach (var (index, rects) in areas.OrderBy(a => a.Key))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            pages.Add(new RedactedPage(index, texts[index], pictures.Contains(index) ? RedactionRaster.Render(original, index, rects, fill) : null));
+            progress.Report(new OperationProgress(++done, total, Stage));
+        }
+
+        return (pages, rewritten);
+    }
+
+    private PdfiumDocument Open(string path)
+    {
+        try
+        {
+            return PdfiumDocument.Open(gate, path);
+        }
+        catch (PdfDocumentException ex)
+        {
+            throw new InvalidDataException("The document cannot be read.", ex);
+        }
+    }
+
+    /// <summary>
+    /// PDFsharp, on the rewritten copy (or the input in the raster mode): picture pages replace theirs, rewritten pages
+    /// lose their old thumbnails and private data, then the cleanup.
+    /// </summary>
     private static (byte[] Bytes, CleanupResult Cleanup) Write(
         string inputPath,
+        byte[]? rewritten,
         IReadOnlyList<RedactedPage> pages,
         IReadOnlyDictionary<int, IReadOnlyList<PdfRect>> areas,
         RgbColor fill,
-        string? label,
         CancellationToken cancellationToken)
     {
-        using var document = DocumentContentOperation<RedactParams>.OpenForChange(inputPath);
+        using var document = rewritten is null ? DocumentContentOperation<RedactParams>.OpenForChange(inputPath) : OpenForChange(rewritten);
         foreach (var redacted in pages)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var page = document.Pages[redacted.PageIndex];
-            ReplaceContent(document, page, redacted.Raster!, areas[redacted.PageIndex], fill);
-            if (!string.IsNullOrWhiteSpace(label))
+            if (redacted.Raster is { } raster)
             {
-                DrawLabels(page, areas[redacted.PageIndex], fill, TextNormalizer.ToNfc(label.Trim()));
+                ReplaceContent(document, page, raster, areas[redacted.PageIndex], fill);
+            }
+
+            // Old pictures of the page and private data of the program that made it could show the content.
+            foreach (var key in new[] { "/Thumb", "/PieceInfo", "/Metadata" })
+            {
+                page.Elements.Remove(key);
             }
         }
 
@@ -192,6 +274,32 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
         using var stream = new MemoryStream();
         document.Save(stream, closeStream: false);
         return (stream.ToArray(), cleanup);
+    }
+
+    private static PdfDocument OpenForChange(byte[] bytes)
+    {
+        try
+        {
+            return PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Modify);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException and not IOException)
+        {
+            throw new InvalidDataException("The rewritten document cannot be read.", ex);
+        }
+    }
+
+    /// <summary>The label in the boxes of every redacted page, as a last step.</summary>
+    private static byte[] Label(byte[] bytes, IReadOnlyDictionary<int, IReadOnlyList<PdfRect>> areas, RgbColor fill, string label)
+    {
+        using var document = OpenForChange(bytes);
+        foreach (var (index, rects) in areas)
+        {
+            DrawLabels(document.Pages[index], rects, fill, label);
+        }
+
+        using var stream = new MemoryStream();
+        document.Save(stream, closeStream: false);
+        return stream.ToArray();
     }
 
     /// <summary>The page shows its picture and the boxes; its old content, resources and thumbnail are gone.</summary>
@@ -281,38 +389,28 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
     }
 
     /// <summary>
-    /// Reads the written document with PdfPig: a redacted page may only carry the letters of its labels.
+    /// Reads the written document with PdfPig: a picture page may not carry any letter, a rewritten page no letter
+    /// whose glyph lies (by its centre) under an area.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Text is left on a redacted page; nothing is written.</exception>
-    private static void Check(byte[] bytes, IReadOnlyList<RedactedPage> pages, string? label)
+    /// <exception cref="InvalidOperationException">Text is left under an area; nothing is written.</exception>
+    private static void Check(byte[] bytes, IReadOnlyList<RedactedPage> pages, IReadOnlyDictionary<int, IReadOnlyList<PdfRect>> areas)
     {
-        var allowed = string.IsNullOrWhiteSpace(label) ? string.Empty : Letters(TextNormalizer.ToNfc(label.Trim()));
         using var pig = PigDocument.Open(bytes);
         foreach (var redacted in pages)
         {
-            var found = Letters(TextNormalizer.ToNfc(string.Concat(pig.GetPage(redacted.PageIndex + 1).Letters.Select(l => l.Value))));
-            var rest = allowed.Length == 0 ? found : RemoveLabels(found, allowed);
-            if (rest.Length > 0)
+            var letters = pig.GetPage(redacted.PageIndex + 1).Letters.Where(l => !string.IsNullOrWhiteSpace(l.Value));
+            var left = redacted.Raster is not null
+                ? letters.Any()
+                : letters.Any(l => areas[redacted.PageIndex].Any(r => Inside(l.BoundingBox.Centroid, r)));
+            if (left)
             {
-                throw new InvalidOperationException($"Text is left on redacted page {redacted.PageIndex + 1}; the redaction was not written.");
+                throw new InvalidOperationException($"Text is left under an area of redacted page {redacted.PageIndex + 1}; the redaction was not written.");
             }
         }
     }
 
-    private static string Letters(string text) => string.Concat(text.Where(c => !char.IsWhiteSpace(c)));
-
-    /// <summary>What remains of <paramref name="found"/> once every copy of the label is taken out.</summary>
-    private static string RemoveLabels(string found, string label)
-    {
-        var rest = found;
-        int at;
-        while ((at = rest.IndexOf(label, StringComparison.Ordinal)) >= 0)
-        {
-            rest = rest.Remove(at, label.Length);
-        }
-
-        return rest;
-    }
+    private static bool Inside(UglyToad.PdfPig.Core.PdfPoint point, PdfRect rect)
+        => point.X > rect.Left && point.X < rect.Right && point.Y > rect.Bottom && point.Y < rect.Top;
 
     private static string N(double value) => Math.Round(value, 5).ToString("0.#####", CultureInfo.InvariantCulture);
 }

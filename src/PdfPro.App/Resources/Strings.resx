@@ -1195,7 +1195,7 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Redaction_Delete" xml:space="preserve"><value>Bỏ đánh dấu</value></data>
   <data name="Redaction_ClearAll" xml:space="preserve"><value>Bỏ tất cả</value></data>
   <data name="Redaction_Apply" xml:space="preserve"><value>Áp dụng…</value></data>
-  <data name="Redaction_Done" xml:space="preserve"><value>Đã xóa vĩnh viễn {0} vùng trên {1} trang và kiểm tra lại: không còn chữ nào dưới các vùng đó. Các trang này giờ là ảnh. Lưu tài liệu để ghi ra tệp.</value></data>
+  <data name="Redaction_Done" xml:space="preserve"><value>Đã xóa vĩnh viễn {0} vùng trên {1} trang và kiểm tra lại: không còn chữ nào dưới các vùng đó. Lưu tài liệu để ghi ra tệp.</value></data>
   <data name="Redaction_Tool_Area" xml:space="preserve"><value>Đánh dấu vùng (kéo khung)</value></data>
   <data name="Redaction_Tool_Text" xml:space="preserve"><value>Đánh dấu chữ (kéo qua chữ)</value></data>
   <data name="RedactionSearch_Title" xml:space="preserve"><value>Tìm &amp; đánh dấu thông tin cần xóa</value></data>
@@ -1214,9 +1214,14 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="RedactionSearch_Error_NoPattern" xml:space="preserve"><value>Hãy chọn ít nhất một loại thông tin hoặc nhập biểu thức riêng.</value></data>
   <data name="RedactionSearch_Error_Timeout" xml:space="preserve"><value>Biểu thức riêng chạy quá lâu nên đã bị bỏ qua; các mẫu khác vẫn được tìm.</value></data>
   <data name="RedactionApply_Title" xml:space="preserve"><value>Áp dụng xóa vĩnh viễn</value></data>
-  <data name="RedactionApply_Message" xml:space="preserve"><value>{0} vùng trên {1} trang sẽ bị xóa vĩnh viễn: nội dung bên dưới không chọn, sao chép, tìm hay trích ra được nữa. Các trang có vùng đánh dấu được chuyển thành ảnh (chữ còn lại trên các trang đó cũng không tìm được). Chú thích, liên kết, trường biểu mẫu, bookmark và thông tin tài liệu nhắc tới nội dung bị xóa cũng bị gỡ. Có thể hoàn tác trước khi lưu.</value></data>
+  <data name="RedactionApply_Message" xml:space="preserve"><value>{0} vùng trên {1} trang sẽ bị xóa vĩnh viễn: nội dung bên dưới không chọn, sao chép, tìm hay trích ra được nữa. Chú thích, liên kết, trường biểu mẫu, bookmark và thông tin tài liệu nhắc tới nội dung bị xóa cũng bị gỡ. Có thể hoàn tác trước khi lưu.</value></data>
   <data name="RedactionApply_Color" xml:space="preserve"><value>Màu ô</value></data>
   <data name="RedactionApply_UseLabel" xml:space="preserve"><value>Ghi nhãn trên ô</value></data>
+  <data name="RedactionApply_Mode" xml:space="preserve"><value>Cách xóa</value></data>
+  <data name="RedactionApply_KeepText" xml:space="preserve"><value>Giữ chữ và hình vẽ ngoài vùng xóa (khuyến nghị)</value></data>
+  <data name="RedactionApply_KeepText_Hint" xml:space="preserve"><value>Chữ còn lại vẫn chọn, tìm và sao chép được. Trang nào không xóa chính xác được sẽ tự chuyển thành ảnh.</value></data>
+  <data name="RedactionApply_AsPictures" xml:space="preserve"><value>Chuyển các trang có vùng xóa thành ảnh</value></data>
+  <data name="RedactionApply_AsPictures_Hint" xml:space="preserve"><value>Không còn chút chữ nào trên các trang đó: chữ ngoài vùng xóa cũng không chọn hay tìm được nữa.</value></data>
   <data name="RedactionApply_Apply" xml:space="preserve"><value>Xóa vĩnh viễn</value></data>
   <data name="Redaction_Color_Black" xml:space="preserve"><value>Đen</value></data>
   <data name="Redaction_Color_White" xml:space="preserve"><value>Trắng</value></data>
@@ -1228,6 +1233,8 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Redaction_Done_Fields" xml:space="preserve"><value>Đã gỡ {0} trường biểu mẫu</value></data>
   <data name="Redaction_Done_Bookmarks" xml:space="preserve"><value>Đã gỡ {0} bookmark</value></data>
   <data name="Redaction_Done_Metadata" xml:space="preserve"><value>Đã gỡ thông tin tài liệu (tác giả, từ khóa…) nhắc tới nội dung bị xóa</value></data>
+  <data name="Redaction_Done_PicturesAll" xml:space="preserve"><value>Các trang có vùng xóa giờ là ảnh</value></data>
+  <data name="Redaction_Done_PicturesSome" xml:space="preserve"><value>Trang {0} không xóa chính xác được trên chữ gốc nên đã được chuyển thành ảnh</value></data>
   <data name="Redaction_Pending_Title" xml:space="preserve"><value>Còn vùng đánh dấu chưa áp dụng</value></data>
   <data name="Redaction_Pending_Save" xml:space="preserve"><value>Có {0} vùng đánh dấu xóa chưa áp dụng: nếu lưu bây giờ, nội dung của chúng vẫn còn trong tệp.</value></data>
   <data name="Redaction_Pending_Apply" xml:space="preserve"><value>Áp dụng rồi lưu</value></data>

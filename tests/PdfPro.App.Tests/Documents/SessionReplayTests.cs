@@ -209,6 +209,42 @@ public sealed class SessionReplayTests
     }
 
     [Fact]
+    public void RedactionSteps_ComeBackFromTheManifest_AsTheyWere()
+    {
+        object[] steps =
+        [
+            new Operations.Security.RedactParams([new Operations.Security.RedactionArea(2, [new PdfRect(10, 20, 30, 40), new PdfRect(50, 60, 70, 80)])]),
+            new Operations.Security.RedactParams(
+                [new Operations.Security.RedactionArea(1, [new PdfRect(1, 2, 3, 4)])],
+                Core.Overlay.RgbColor.Gray,
+                "Đã xóa theo quy định",
+                Operations.Security.RedactionMode.Raster),
+        ];
+        var state = new SessionState(PagePlan.Identity(SourceIds.Original, 5, RandomPageKeys.Instance), SourceIds.Original, 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [Original],
+            State = state,
+            HistoryBase = state,
+            Undo = [.. steps.Select(p => new HistoryRecord(Operations.Security.RedactOperation.OperationId, p, []))],
+            Redo = [],
+        };
+        var created = DateTimeOffset.UtcNow;
+
+        var json = Infrastructure.Sessions.SessionManifestSerializer.Serialize(Infrastructure.Sessions.SessionManifestSerializer.ToManifest(snapshot, created));
+        var restored = Infrastructure.Sessions.SessionManifestSerializer.ToSnapshot(Infrastructure.Sessions.SessionManifestSerializer.Deserialize(json), _operations.ParameterType);
+
+        static string WithoutTime(string text) => System.Text.RegularExpressions.Regex.Replace(text, "\"updatedUtc\":\"[^\"]*\"", string.Empty);
+        WithoutTime(Infrastructure.Sessions.SessionManifestSerializer.Serialize(Infrastructure.Sessions.SessionManifestSerializer.ToManifest(restored, created)))
+            .ShouldBe(WithoutTime(json));
+        var first = restored.Undo[0].Parameters.ShouldBeOfType<Operations.Security.RedactParams>();
+        first.Mode.ShouldBe(Operations.Security.RedactionMode.Vector);
+        first.Areas.ShouldHaveSingleItem().Rects.Count.ShouldBe(2);
+        restored.Undo[1].Parameters.ShouldBeOfType<Operations.Security.RedactParams>().Mode.ShouldBe(Operations.Security.RedactionMode.Raster);
+    }
+
+    [Fact]
     public void ProtectionSteps_ComeBackAfterACrash_WithoutTheirPasswords()
     {
         var protection = new Core.Security.ProtectionSetting(Guid.NewGuid(), Core.Security.EncryptionAlgorithm.Aes128, Core.Security.DocumentPermissions.Print, HasOpenPassword: true);

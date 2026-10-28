@@ -10,13 +10,15 @@ using static PdfPro.Operations.Materializing.PdfGraph;
 namespace PdfPro.Operations.Security;
 
 /// <summary>What else went with the removed areas.</summary>
-internal sealed record CleanupResult(int Annotations, int Fields, int Bookmarks, IReadOnlyList<string> Metadata, bool Xmp);
+/// <param name="Structure">Texts of the tag structure (alternate, actual and expansion texts, titles) removed.</param>
+internal sealed record CleanupResult(int Annotations, int Fields, int Bookmarks, IReadOnlyList<string> Metadata, bool Xmp, int Structure);
 
 /// <summary>
 /// After areas are removed, what else shows their content goes too (SPEC P8 B4): annotations and links over an area or
 /// whose text, address or rich text names what was removed, form fields with a widget over an area or such a value,
 /// bookmarks whose title names it (their children move up), document information entries and the XMP metadata stream
-/// that contain it. Matching is on NFC text, case-insensitive, white space collapsed, and on digits alone for numbers.
+/// that contain it, and the texts of the tag structure (what screen readers read and copying may take: /Alt,
+/// /ActualText, /E, /T) that name it. Matching is on NFC text, case-insensitive, white space collapsed, and on digits alone for numbers.
 /// </summary>
 internal static class RedactionCleanup
 {
@@ -25,6 +27,10 @@ internal static class RedactionCleanup
 
     private static readonly string[] AnnotationTexts = ["/Contents", "/Subj", "/RC", "/TU", "/T"];
     private static readonly string[] InfoKeys = ["/Title", "/Author", "/Subject", "/Keywords", "/Creator", "/Producer"];
+    private static readonly string[] StructureTexts = ["/Alt", "/ActualText", "/E", "/T"];
+
+    /// <summary>Upper bound for the tag structure elements visited (defends against hostile files).</summary>
+    private const int MaxStructureElements = 500_000;
 
     public static CleanupResult Apply(PdfDocument document, IReadOnlyDictionary<int, IReadOnlyList<PdfRect>> areas, IReadOnlyList<string> removedTexts)
     {
@@ -33,7 +39,8 @@ internal static class RedactionCleanup
         var annotations = RemoveAnnotations(document, areas, needles);
         var bookmarks = RemoveBookmarks(document, needles);
         var (metadata, xmp) = RemoveMetadata(document, needles);
-        return new CleanupResult(annotations, fields, bookmarks, metadata, xmp);
+        var structure = RemoveStructureTexts(document, needles);
+        return new CleanupResult(annotations, fields, bookmarks, metadata, xmp, structure);
     }
 
     /// <summary>The forms of removed text looked for: as written and, for numbers, digits only.</summary>
@@ -247,5 +254,49 @@ internal static class RedactionCleanup
         }
 
         return (keys, xmp);
+    }
+
+    /// <summary>
+    /// Texts of the tag structure naming what was removed go; the elements stay (their content is what the page shows).
+    /// Only /K is followed, so marked-content and object references (to pages, annotations) are not entered.
+    /// </summary>
+    private static int RemoveStructureTexts(PdfDocument document, IReadOnlyList<string> needles)
+    {
+        if (needles.Count == 0 || AsDictionary(document.Internals.Catalog.Elements["/StructTreeRoot"]) is not { } root)
+        {
+            return 0;
+        }
+
+        var removed = 0;
+        var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        var pending = new Stack<PdfItem?>();
+        pending.Push(root.Elements["/K"]);
+        while (pending.Count > 0 && visited.Count < MaxStructureElements)
+        {
+            switch (Resolve(pending.Pop()))
+            {
+                case PdfArray array:
+                    foreach (var item in array.Elements)
+                    {
+                        pending.Push(item);
+                    }
+
+                    break;
+                case PdfDictionary element when visited.Add(element):
+                    foreach (var key in StructureTexts)
+                    {
+                        if (element.Elements.ContainsKey(key) && Names(element.Elements.GetString(key), needles))
+                        {
+                            element.Elements.Remove(key);
+                            removed++;
+                        }
+                    }
+
+                    pending.Push(element.Elements["/K"]);
+                    break;
+            }
+        }
+
+        return removed;
     }
 }

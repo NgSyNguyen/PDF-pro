@@ -72,6 +72,7 @@ public sealed partial class DocumentTabViewModel
     {
         var fill = RgbColor.Black;
         string? label = null;
+        var mode = RedactionMode.Vector;
         if (confirm)
         {
             var dialog = new RedactionApplyViewModel(Redaction.Marks.Count, Redaction.Marks.Select(m => m.PageKey).Distinct().Count());
@@ -82,9 +83,10 @@ public sealed partial class DocumentTabViewModel
 
             fill = dialog.Fill;
             label = dialog.ChosenLabel;
+            mode = dialog.Mode;
         }
 
-        if (Redaction.Parameters(fill, label) is not { } parameters || !CanChangeContent())
+        if (Redaction.Parameters(fill, label, mode) is not { } parameters || !CanChangeContent())
         {
             return null;
         }
@@ -97,30 +99,40 @@ public sealed partial class DocumentTabViewModel
                 Redaction.ClearAll();
                 if (RedactOperation.ReportOf(parameters) is { } report)
                 {
-                    _ = _messages.ShowInfoAsync(Strings.Redaction_Done_Title, Describe(report));
+                    _ = _messages.ShowInfoAsync(Strings.Redaction_Done_Title, Describe(report, parameters.Mode));
                 }
             }
         });
     }
 
-    /// <summary>The report of a redaction for the user: what went, and that the pages are now pictures.</summary>
-    internal static string Describe(RedactionReport report)
+    /// <summary>The report of a redaction for the user: what went, and which pages are now pictures.</summary>
+    internal static string Describe(RedactionReport report, RedactionMode mode)
     {
         var text = new StringBuilder(string.Format(CultureInfo.CurrentCulture, Strings.Redaction_Done, report.Areas, report.Pages.Count));
-        void Line(int count, string template)
+        void Line(string line) => text.AppendLine().Append("• ").Append(line);
+        void Count(int count, string template)
         {
             if (count > 0)
             {
-                text.AppendLine().Append("• ").Append(string.Format(CultureInfo.CurrentCulture, template, count));
+                Line(string.Format(CultureInfo.CurrentCulture, template, count));
             }
         }
 
-        Line(report.Annotations, Strings.Redaction_Done_Annotations);
-        Line(report.Fields, Strings.Redaction_Done_Fields);
-        Line(report.Bookmarks, Strings.Redaction_Done_Bookmarks);
-        if (report.Metadata.Count > 0 || report.Xmp)
+        if (report.PicturePages.Count > 0)
         {
-            text.AppendLine().Append("• ").Append(Strings.Redaction_Done_Metadata);
+            const int MaxListed = 10;
+            var pages = string.Join(", ", report.PicturePages.Take(MaxListed)) + (report.PicturePages.Count > MaxListed ? ", …" : string.Empty);
+            Line(mode == RedactionMode.Raster
+                ? Strings.Redaction_Done_PicturesAll
+                : string.Format(CultureInfo.CurrentCulture, Strings.Redaction_Done_PicturesSome, pages));
+        }
+
+        Count(report.Annotations, Strings.Redaction_Done_Annotations);
+        Count(report.Fields, Strings.Redaction_Done_Fields);
+        Count(report.Bookmarks, Strings.Redaction_Done_Bookmarks);
+        if (report.Metadata.Count > 0 || report.Xmp || report.Structure > 0)
+        {
+            Line(Strings.Redaction_Done_Metadata);
         }
 
         return text.ToString();

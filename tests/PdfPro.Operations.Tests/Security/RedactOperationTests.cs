@@ -17,7 +17,7 @@ namespace PdfPro.Operations.Tests.Security;
 /// True redaction (SPEC P8 B) checked from outside: the removed data cannot be read back by PDFium nor by PdfPig, from
 /// the page or from anywhere else in the file (metadata, bookmarks, notes, links, fields), while the rest stays.
 /// </summary>
-public sealed class RedactOperationTests(PdfiumFixture pdfium) : IDisposable
+public sealed partial class RedactOperationTests(PdfiumFixture pdfium) : IDisposable
 {
     private readonly TempDirectory _temp = new();
     private readonly RedactOperation _operation = new(pdfium.Gate);
@@ -50,20 +50,25 @@ public sealed class RedactOperationTests(PdfiumFixture pdfium) : IDisposable
         pdf.Info.Keywords.ShouldNotContain("001203004567", Case.Sensitive, "keywords naming the number are removed");
         pdf.Info.Author.ShouldBe(PiiName, "what does not name the removed data stays");
         pdf.Outlines.Count.ShouldBe(1, "the bookmark does not name a CCCD");
+        var report = RedactOperation.ReportOf(Last!).ShouldNotBeNull();
+        report.PicturePages.ShouldBeEmpty("the pages are rewritten keeping their text");
+        Squeeze(AllText(output)).ShouldContain("SốCCCD:", Case.Sensitive, "what was next to the number stays as text");
     }
 
     [Fact]
-    public async Task RedactedPages_KeepNoTextAtAll_UnlikeTheOthers()
+    public async Task InTheRasterMode_RedactedPages_KeepNoTextAtAll_UnlikeTheOthers()
     {
         var hits = await FindAsync(Samples.Pii, RedactionPattern.Email);
         var onFirstPage = hits.Where(h => h.PageIndex == 0).ToList();
 
-        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas(onFirstPage)));
+        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas(onFirstPage), Mode: RedactionMode.Raster));
 
         using var pig = PigDocument.Open(output);
         pig.GetPage(1).Letters.ShouldBeEmpty("a redacted page is a picture: nothing on it can be selected or copied");
         Squeeze(pig.GetPage(2).Text).ShouldContain("tran.van.binh@example.org", Case.Sensitive, "an untouched page keeps its text");
-        RedactOperation.ReportOf(Last!).ShouldNotBeNull().Pages.ShouldBe([1]);
+        var report = RedactOperation.ReportOf(Last!).ShouldNotBeNull();
+        report.Pages.ShouldBe([1]);
+        report.PicturePages.ShouldBe([1]);
     }
 
     [Fact]
@@ -89,21 +94,41 @@ public sealed class RedactOperationTests(PdfiumFixture pdfium) : IDisposable
     }
 
     [Fact]
-    public async Task ALabel_IsWrittenInTheBoxes_AndIsTheOnlyTextLeftOnThePage()
+    public async Task ALabel_IsWrittenInTheBoxes_AndIsTheOnlyTextLeftOnAPicturePage()
     {
         var hits = (await FindAsync(Samples.Pii, RedactionPattern.NationalId)).Where(h => h.PageIndex == 0).ToList();
 
-        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas(hits), RgbColor.Black, "Đã xóa theo quy định"));
+        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas(hits), RgbColor.Black, "Đã xóa theo quy định", RedactionMode.Raster));
 
         using var pig = PigDocument.Open(output);
         TextNormalizer.ToNfc(Squeeze(pig.GetPage(1).Text)).ShouldBe("Đãxóatheoquyđịnh");
     }
 
     [Fact]
-    public async Task TheBox_IsPaintedWhereTheDataWas_AndTheRestLooksTheSame()
+    public async Task ALabel_IsWrittenInTheBoxes_OfAPageThatKeepsItsText()
+    {
+        var hits = (await FindAsync(Samples.Pii, RedactionPattern.NationalId)).Where(h => h.PageIndex == 0).ToList();
+
+        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas(hits), RgbColor.Black, "Đã xóa"));
+
+        using var pig = PigDocument.Open(output);
+        var page = pig.GetPage(1);
+        var text = TextNormalizer.ToNfc(Squeeze(page.Text));
+        text.ShouldContain("SốCCCD:", Case.Sensitive);
+        text.ShouldContain("Đãxóa", Case.Sensitive);
+        text.ShouldNotContain("001203004567");
+        var box = hits.ShouldHaveSingleItem().Rects.ShouldHaveSingleItem();
+        page.Letters.Count(l => l.Value != " " && box.Contains(new PdfPoint(l.BoundingBox.Centroid.X, l.BoundingBox.Centroid.Y)))
+            .ShouldBe("Đãxóa".Length, "the label, and only the label, sits where the number was");
+    }
+
+    [Theory]
+    [InlineData(RedactionMode.Vector)]
+    [InlineData(RedactionMode.Raster)]
+    public async Task TheBox_IsPaintedWhereTheDataWas_AndTheRestLooksTheSame(RedactionMode mode)
     {
         var hit = (await FindAsync(Samples.Pii, RedactionPattern.NationalId)).First();
-        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas([hit]), new RgbColor(200, 0, 0)));
+        var output = await RedactAsync(Samples.Pii, new RedactParams(Areas([hit]), new RgbColor(200, 0, 0), Mode: mode));
 
         var box = hit.Rects[0];
         var inside = new PdfPoint((box.Left + box.Right) / 2, (box.Bottom + box.Top) / 2);
@@ -113,19 +138,23 @@ public sealed class RedactOperationTests(PdfiumFixture pdfium) : IDisposable
     }
 
     [Theory]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    public async Task OnTurnedAndCroppedPages_ThePictureStillLinesUp(int pageIndex)
+    [InlineData(1, RedactionMode.Vector)]
+    [InlineData(2, RedactionMode.Vector)]
+    [InlineData(3, RedactionMode.Vector)]
+    [InlineData(1, RedactionMode.Raster)]
+    [InlineData(2, RedactionMode.Raster)]
+    [InlineData(3, RedactionMode.Raster)]
+    public async Task OnTurnedAndCroppedPages_TheBoxesAndTheRestLineUp(int pageIndex, RedactionMode mode)
     {
         // samples/rotated-cropbox.pdf: /Rotate 90/180/270, boxes not starting at (0, 0), coloured corner marks.
         var geometry = await GeometryAsync(Samples.RotatedCropBox, pageIndex);
         var box = geometry.Box;
         var area = new PdfRect(box.Left + (box.Width * 0.4), box.Bottom + (box.Height * 0.4), box.Left + (box.Width * 0.6), box.Bottom + (box.Height * 0.6));
 
-        var output = await RedactAsync(Samples.RotatedCropBox, new RedactParams([new RedactionArea(pageIndex + 1, [area])]));
+        var output = await RedactAsync(Samples.RotatedCropBox, new RedactParams([new RedactionArea(pageIndex + 1, [area])], Mode: mode));
 
         (await GeometryAsync(output, pageIndex)).ShouldBe(geometry, "the page keeps its boxes and turn");
+        RedactOperation.ReportOf(Last!)!.PicturePages.ShouldBe(mode == RedactionMode.Raster ? [pageIndex + 1] : []);
         (await PixelAsync(output, pageIndex, new PdfPoint(box.Left + (box.Width / 2), box.Bottom + (box.Height / 2)))).ShouldBe((B: (byte)0, G: (byte)0, R: (byte)0));
         foreach (var corner in new[] { new PdfPoint(box.Left + 6, box.Bottom + 6), new PdfPoint(box.Right - 6, box.Top - 6), new PdfPoint(box.Left + 6, box.Top - 6), new PdfPoint(box.Right - 6, box.Bottom + 6) })
         {

@@ -7,9 +7,9 @@ using PdfPro.Operations.Security;
 namespace PdfPro.App.ViewModels.Security;
 
 /// <summary>
-/// "Áp dụng xóa vĩnh viễn": says what will happen (the marked content goes for good; the pages with marks become
-/// pictures, their text no longer selectable or searchable), the colour of the boxes and an optional label. The marks
-/// themselves are reviewed on the pages.
+/// "Áp dụng xóa vĩnh viễn": says what will happen (the marked content goes for good, and what else names it), how
+/// (keeping the pages' other text and drawings, or turning the pages into pictures), the colour of the boxes and an
+/// optional label. The marks themselves are reviewed on the pages.
 /// </summary>
 public sealed partial class RedactionApplyViewModel : ObservableObject
 {
@@ -34,6 +34,19 @@ public sealed partial class RedactionApplyViewModel : ObservableObject
 
     [ObservableProperty]
     public partial RgbColor Fill { get; set; } = RgbColor.Black;
+
+    /// <summary>Keep the text and drawings outside the areas (vector mode, the default); otherwise pages become pictures.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AsPictures))]
+    public partial bool KeepText { get; set; } = true;
+
+    public bool AsPictures
+    {
+        get => !KeepText;
+        set => KeepText = !value;
+    }
+
+    public RedactionMode Mode => KeepText ? RedactionMode.Vector : RedactionMode.Raster;
 
     [ObservableProperty]
     public partial bool UseLabel { get; set; }
