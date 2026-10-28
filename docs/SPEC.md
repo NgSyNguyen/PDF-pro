@@ -379,6 +379,55 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Kiểm tay: lưu rồi mở bằng Acrobat Reader — chú thích hiển thị đúng và sửa được; tô sáng trên trang xoay 90° nằm đúng dòng chữ; mở `annotated.pdf` do Acrobat tạo — trả lời/xóa/di chuyển được; copy đoạn tiếng Việt dán vào Word đúng dấu, không vỡ dòng; tìm trên tệp 1.000 trang không treo UI và Dừng được.
 - Số đo trên máy phát triển: chưa đo (ghi khi chạy `Phase6AcceptanceTests` trên Windows).
 
+### Sửa nội dung gốc & biểu mẫu (Phase 7)
+
+**Đối tượng của trang (PDFium → Core `Editing/PageObjects.cs`)**
+- `PdfiumPage.GetObjects` liệt kê page object như PDFium thấy: chỉ số, loại (chữ, ảnh, đường, shading, form), hộp bao + 4 góc, ma trận, màu tô; chữ có tên phông, cỡ, nhúng hay không, đậm/nghiêng/serif theo cờ phông, chữ ẩn (lớp OCR); ảnh có cỡ điểm ảnh. PDF không có "đoạn văn": đơn vị sửa là **một text object** (một lần vẽ chữ — thường một dòng hoặc một đoạn dòng); UI ghi rõ "chỉ chính xác trong phạm vi một khối chữ".
+
+**`edit.content` — thao tác nội dung chạy bằng PDFium**
+- `EditContentParams` = danh sách `ContentEdit` (JSON đa hình): `ReplaceTextEdit` (tràn hoặc xuống dòng trong bề rộng cũ, đo bằng `FPDFFontGetGlyphWidth`), `DeleteObjectEdit`, `MoveObjectEdit`, `RotateObjectEdit` (quanh tâm hộp), `ReplaceImageEdit`. Đối tượng nhận theo `PageObjectRef` = trang + chỉ số + loại + hộp bao ±1 pt; tệp đã đổi mà không khớp thì **từ chối**, không sửa nhầm. Mọi đối tượng được tìm trước khi sửa cái nào.
+- Thay chữ: `FontCoverage` (PDFsharp đọc ToUnicode bfchar/bfrange; WinAnsi khi phông không nhúng; còn lại coi như không biết) cho biết phông của object có đủ chữ không. Đủ → `FPDFTextSetText`, giữ phông/cỡ/màu/ma trận/chế độ vẽ. Thiếu (phông subset của Word thiếu chữ có dấu) → xóa object, tạo object mới cùng ma trận/cỡ/màu bằng phông đóng gói gần nhất (serif/sans, đậm/nghiêng) qua `FPDFTextLoadFont` (CID, nhúng đủ) và **báo đã thay phông** sau khi áp dụng.
+- Ảnh: thay bằng ảnh khác giữ khung (mặc định giữ tỉ lệ, căn giữa); JPEG nhúng nguyên byte (`FPDFImageObjLoadJpegFileInline`), PNG giải mã bằng `PngCodec` tự viết (không thêm package); **luôn tạo object ảnh mới** ở cùng vị trí thứ tự vẽ vì XObject ảnh có thể dùng chung giữa các trang. Trích ảnh: DCT/JPX nguyên byte, còn lại PNG ở độ phân giải gốc.
+- `FPDFPageGenerateContent` viết lại toàn bộ content stream của trang → chỉ gọi cho trang có sửa; `FPDF_SaveAsCopy` ghi revision mới (một bước hoàn tác).
+- Viewer "Sửa nội dung": rê = khung, bấm = chọn, kéo = di chuyển, đúp/Enter = gõ chữ tại chỗ (Popup trên đúng hộp chữ; Enter xong, Shift+Enter xuống dòng, Esc bỏ, bấm ra ngoài giữ), Delete, xoay, Thay ảnh…, Lưu ảnh…; nền phủ > 80 % trang chỉ chọn được khi không còn gì khác; chữ OCR ẩn bỏ qua.
+
+**Biểu mẫu — mô hình và ghi (PDFsharp ở tầng dictionary)**
+- `FormReader`: cây `/Fields` (thuộc tính kế thừa `/FT /Ff /V /DV /DA /Q /Opt /MaxLen`), widget gộp hoặc `/Kids`, trang của widget, `/Opt` cặp, on-state từ `/AP /N`, cỡ chữ của `/DA`, định dạng số/ngày từ `/AA /F` (AFNumber_Format, AFDate_FormatEx), họ phông đóng gói từ phông trong `/AP`, chữ trên nút từ `/MK /CA`, XFA (chỉ XFA / XFA kèm AcroForm).
+- `FormWriter` + `FormAppearances`: `/AcroForm` với `/Helv` và `/ZaDb` trong `/DR`; `/DA` ghi `/Helv` để trình khác vẫn gõ được, còn `/AP` **luôn vẽ bằng phông đóng gói** (Noto Sans mặc định; Noto Serif, Be Vietnam Pro chọn được) nên tiếng Việt hiển thị/in đúng ở mọi trình đọc; `/NeedAppearances` bị xóa. Chữ 1 dòng/nhiều dòng/mật khẩu/comb, dấu tích, chấm radio, danh sách có dòng chọn, nút; trang `/Rotate` thì `/AP` xoay theo (`/MK /R`, `/Matrix`). Tên phân cấp `a.b` = cha "a" + `/T` "b" (tên bộ phận không có dấu chấm); `/Ff` luôn ghi (vì kế thừa); giá trị ban đầu cũng là `/DV`.
+- Định dạng (`Core/Forms/FormTextFormat`): số (số lẻ, dấu phân cách 1.234,56 hoặc 1,234.56) lưu dạng thường "1234.5", hiển thị có định dạng; ngày theo 5 mẫu (`dd/mm/yyyy`…) lưu theo mẫu. Ghi thành `/AA /K` + `/F` (`AFNumber_Keystroke/Format`, `AFDate_KeystrokeEx/FormatEx`) như Acrobat.
+- **PDFium không vẽ widget trong `FPDF_RenderPageBitmap`** — chỉ qua `FPDF_FFLDraw` với môi trường form-fill: tài liệu có biểu mẫu được tạo môi trường (không callback, version 1) ở lần render đầu và vẽ thêm bằng `FPDF_FFLDraw`; struct `FPDF_FORMFILLINFO` của PDFiumCore không xóa bộ nhớ native nên mọi callback được đặt null tường minh.
+
+**Điền biểu mẫu — thao tác trang, tức thì**
+- Giá trị điền nằm trên `PagePlan.FormValues` (cấp tài liệu, theo tên đầy đủ; đi theo mọi chỉnh sửa trang; là nội dung nhưng không đổi `HasSamePages`), `forms.fill` = một bước hoàn tác; manifest phiên lưu chúng. Khi vật chất hóa, `FormWriter.SetValues` ghi `/V`, `/AS`, `/I` và vẽ lại `/AP` trong tài liệu gốc (field của nguồn chèn thêm không được gộp). Không dùng trạng thái form-fill của PDFium (không hoàn tác được, phông `/DA` thường thiếu chữ có dấu).
+- Viewer (`FormFieldLayer`): ô nhập WPF thật đặt lên widget qua `PageCoordinateMapper` — ô chữ (giá trị ghi khi rời ô; Enter sang ô sau), mật khẩu, ô tích/nút chọn, danh sách thả (gõ được khi cờ Edit), danh sách (chọn nhiều); Tab theo thứ tự field; chữ NFC, cắt theo `/MaxLen`; nhận chuột chỉ khi không có chế độ khác dùng viewer. Lưu khi còn trường bắt buộc trống: liệt kê tối đa 10 → "Vẫn lưu" / "Quay lại điền". XFA: InfoBar giải thích; biểu mẫu chỉ XFA không thiết kế được.
+- `forms.reset` ("Xóa dữ liệu"): mọi trường về `/DV` (không có thì rỗng/Off), một bước hoàn tác.
+
+**Thiết kế biểu mẫu (`forms.design` — thao tác nội dung, mỗi thay đổi một revision)**
+- Thứ tự: `Remove` (gỡ field + widget khỏi `/Annots`, cha rỗng và `/CO` theo) → `Widgets` (dời/đổi cỡ/gỡ từng widget; chỉ dời thì giữ nguyên `/AP`, đổi cỡ thì vẽ lại; gỡ widget cuối = gỡ field) → `Update` (sửa thuộc tính **tại chỗ**: tên (cả đổi cha), cờ, `/TU`, cỡ trong `/DA` (giữ tên phông), `/Q`, `/MaxLen`, `/Opt`, chỉ thay `/K` `/F` của `/AA` (action khác như tính toán giữ nguyên), giá trị `/V` + `/DV`, chữ nút, họ phông; đổi loại bị từ chối) → `Add`. Tên trùng (cả trùng với cha/con) bị từ chối; field không còn trong tệp thì báo lỗi.
+- Viewer "Thiết kế biểu mẫu": khung + tên cho mọi widget; công cụ Ô văn bản / Ô đánh dấu / Nút chọn / Danh sách thả / Danh sách / Nút / Chữ ký — kéo khung để đặt, bấm = cỡ thường dùng (theo màn hình, đúng cả trang xoay), tên tự đặt; nút chọn khi đang chọn một nhóm thì vào nhóm đó. Chọn, kéo dời, kéo góc đổi cỡ, Delete (field, hoặc một nút của nhóm), Esc. Panel Thuộc tính (bên phải): tên, chú thích, bắt buộc, chỉ đọc, nhiều dòng, mật khẩu, số ký tự, định dạng, giá trị mặc định, lựa chọn, chữ nút, phông, cỡ, căn — lỗi giải thích bằng tiếng Việt trước khi ghi. Sau revision, field vừa đổi được chọn lại theo tên.
+- **Nhận diện trường** (`forms.autodetect`, Core `FormAutodetect`): chuỗi ≥ 4 dấu chấm/gạch dưới/"…" → ô văn bản (nhãn = chữ trước nó); đường kẻ ngang không gạch dưới chữ → ô văn bản đứng trên đường kẻ; ô vuông vẽ 6–24 pt hoặc ký tự ☐ □ ❑ ❒ ▢ → ô đánh dấu (nhãn = chữ sau nó). Bỏ chỗ đã có field. Đề xuất hiện màu cam, bấm để chọn/bỏ, "Thêm các trường đã chọn" = một revision (tên = nhãn, chú thích = nhãn).
+
+**Dữ liệu biểu mẫu**
+- Xuất/Nhập: JSON (một object; object lồng nhau = tên phân cấp; mảng = lựa chọn của danh sách; số/true/false đọc thành chữ; null xóa) và XFDF (ISO 19444-1; đọc không DTD/thực thể ngoài). Nhập = một bước hoàn tác; tên không có và giá trị không hợp được liệt kê. Khớp dữ liệu (`FormData`): tên đúng, không thì không phân biệt hoa/thường (NFC); ô đánh dấu nhận on-state hoặc chữ có/không ("x", "1", "true", "có", "không"…); nhóm chọn một on-state; danh sách theo giá trị xuất hoặc chữ hiển thị; số/ngày theo định dạng.
+- **Trộn dữ liệu** (`forms.merge`): bảng CSV (dấu phân cách theo dòng tiêu đề; UTF-8 có/không BOM, UTF-16, còn lại Windows-1258 của Excel cũ) hoặc **.xlsx tự đọc** bằng `System.IO.Compression` + XML (không thêm DocumentFormat.OpenXml: sheet đầu, chuỗi dùng chung/inline/rich, số, ngày theo định dạng số, true/false); tối đa 10.000 dòng, 500 cột. Mỗi dòng một tệp, tên theo cột chỉ định (làm sạch, trùng thì "(2)"; trống thì "tên mẫu (dòng)"), danh sách tách bằng ";", tùy chọn làm phẳng; ghi tệp tạm rồi mới đổi tên (lỗi giữa chừng không để lại gì). Mẫu = tệp của tài liệu nếu không có gì chưa lưu, ngược lại bản sao của tài liệu như đang hiển thị. Chạy nền, hủy được; báo cột lạ và giá trị không hợp.
+
+**Làm phẳng biểu mẫu (`forms.flatten`)**
+- Vẽ `/AP /N` (trạng thái `/AS` với nút) của mọi widget vào nội dung trang theo thứ tự `/Annots` (`AppearancePlacement`, dùng chung với làm phẳng chú thích), widget thiếu `/AP` — hoặc tất cả khi `/NeedAppearances` — được vẽ trước như trình đọc hiển thị; widget ẩn chỉ gỡ; **chữ ký số đã ký giữ nguyên** (vẽ vào sẽ phá chữ ký). Hết field thì gỡ `/AcroForm`. Hỏi xác nhận, một bước hoàn tác.
+
+**Quyết định / giới hạn**
+- Sửa chữ chỉ chính xác trong một text object; chữ thay phông không tự canh lại các object khác trên dòng.
+- Field của tài liệu chèn từ nguồn khác không được gộp vào biểu mẫu của tài liệu.
+- Sửa thuộc tính không đổi được giá trị xuất (on-state) của nút chọn có sẵn — xóa nút rồi thêm lại.
+- Tên field theo nhãn có thể có dấu cách và chữ có dấu (hợp lệ trong PDF); dấu chấm trong nhãn bị thay bằng dấu cách.
+- Thumbnail và in ấn chưa vẽ giá trị điền trong phiên cho tới khi lưu (ảnh trang do PDFium vẽ từ tệp nguồn).
+- Định dạng số/ngày chỉ kiểm khi điền trong PDF_Pro và khi nhập/trộn dữ liệu; trình đọc khác dùng các action AF* đã ghi.
+
+**Nghiệm thu**
+- Unit/golden: sửa chữ trên tệp tiếng Việt → PdfPig đọc ra chữ mới, chữ cũ không còn; phông thiếu chữ → thay phông, vẫn đọc đúng; vùng không sửa render y nguyên; ảnh thay/xoay/trích đúng cỡ; mọi loại field ghi ra được PDF_Pro, PdfPig và PDFium đọc lại (giá trị, cờ, lựa chọn, on-state), render đúng chỗ; định dạng, phông, `/DV`, action tính toán được giữ khi sửa tại chỗ; JSON/XFDF khứ hồi; CSV/XLSX đọc đúng (cả Windows-1258); trộn 100 dòng → 100 tệp đúng dữ liệu; làm phẳng → giá trị thành chữ của trang, không còn `/AcroForm`; tham số `forms.*` khứ hồi qua manifest phiên.
+- Kịch bản FlaUI `Phase7AcceptanceTests` (chạy tay, `PDFPRO_UI_TESTS=1`): tờ khai in sẵn (chấm, gạch dưới, ô vuông) → "Nhận diện trường" ra 3 đề xuất → thêm → điền "Nguyễn Văn An" + tích ô → Lưu (giá trị trong tệp) → Làm phẳng (hỏi, một bước hoàn tác) → Lưu: không còn field, tên là chữ của trang; trộn bảng CSV 100 dòng → 100 tệp, mỗi tệp đúng dòng của nó.
+- Kiểm tay: sửa một dòng trong tệp Word xuất PDF tiếng Việt — hiển thị đúng, tìm được chuỗi mới; biểu mẫu tạo bằng PDF_Pro mở và điền được trong Acrobat Reader và Chrome, nhóm nút chọn chỉ chọn được một; làm phẳng rồi mở bằng Acrobat Reader — không sửa được nữa.
+- Số đo trên máy phát triển: chưa đo (ghi khi chạy `Phase7AcceptanceTests` trên Windows).
+
 ### Hệ tọa độ — nguồn bug số một
 
 PDF dùng đơn vị point (1/72 inch), gốc ở góc **dưới-trái**, trang có thể có `/Rotate` 90/180/270 và CropBox không bắt đầu từ (0,0). WPF dùng DIP (1/96 inch), gốc ở góc **trên-trái**. Mọi chuyển đổi bắt buộc đi qua một lớp duy nhất, có unit test cho cả 4 góc xoay × CropBox lệch gốc × nhiều mức zoom.

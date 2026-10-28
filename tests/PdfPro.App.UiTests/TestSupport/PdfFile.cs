@@ -99,6 +99,59 @@ internal static class PdfFile
             : [];
     }
 
+    /// <summary>The fields of the file's form by name (top level, as PDF_Pro writes them) with their value (/V), or empty.</summary>
+    public static Dictionary<string, string> FieldValues(string path)
+    {
+        using var document = PdfReader.Open(path, PdfDocumentOpenMode.Import);
+        var values = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (Resolve(document.Internals.Catalog.Elements["/AcroForm"]) is PdfDictionary form && Resolve(form.Elements["/Fields"]) is PdfArray fields)
+        {
+            foreach (var field in fields.Elements.Select(Resolve).OfType<PdfDictionary>())
+            {
+                values[field.Elements.GetString("/T")] = Resolve(field.Elements["/V"]) switch
+                {
+                    PdfString text => text.Value,
+                    PdfName name => name.Value.TrimStart('/'),
+                    _ => string.Empty,
+                };
+            }
+        }
+
+        return values;
+    }
+
+    /// <summary>
+    /// A one-page printed form without fields, in Helvetica (no font to embed): "Ho va ten: ......", "Que quan: ____" and a
+    /// drawn square before "Dong y" — the blanks "Nhận diện trường" finds.
+    /// </summary>
+    public static void WritePrintedForm(string path)
+    {
+        using var document = new PdfDocument();
+        var page = document.AddPage();
+        page.Width = PdfSharp.Drawing.XUnit.FromPoint(612);
+        page.Height = PdfSharp.Drawing.XUnit.FromPoint(792);
+        var font = new PdfDictionary(document);
+        font.Elements.SetName("/Type", "/Font");
+        font.Elements.SetName("/Subtype", "/Type1");
+        font.Elements.SetName("/BaseFont", "/Helvetica");
+        font.Elements.SetName("/Encoding", "/WinAnsiEncoding");
+        document.Internals.AddObject(font);
+        var fonts = new PdfDictionary(document);
+        fonts.Elements["/F1"] = font.Reference;
+        var resources = new PdfDictionary(document);
+        resources.Elements["/Font"] = fonts;
+        page.Elements["/Resources"] = resources;
+        var content = "BT /F1 12 Tf 72 700 Td (Ho va ten: ........................................) Tj ET\n"
+            + "BT /F1 12 Tf 72 660 Td (Que quan: ______________________________) Tj ET\n"
+            + "0.75 w 72 600 12 12 re S\n"
+            + "BT /F1 12 Tf 90 601 Td (Dong y) Tj ET\n";
+        var stream = new PdfDictionary(document);
+        stream.CreateStream(System.Text.Encoding.ASCII.GetBytes(content));
+        document.Internals.AddObject(stream);
+        page.Elements["/Contents"] = stream.Reference;
+        document.Save(path);
+    }
+
     /// <summary>The text of every page as PdfPig reads it, NFC, without white space (so layout does not matter).</summary>
     public static string[] PageTexts(string path)
     {

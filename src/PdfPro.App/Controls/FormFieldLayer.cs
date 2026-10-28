@@ -174,6 +174,7 @@ public sealed class FormFieldLayer : Panel
                 input.TabIndex = widget.TabIndex;
                 input.ToolTip = widget.ToolTip;
                 System.Windows.Automation.AutomationProperties.SetName(input, widget.ToolTip);
+                System.Windows.Automation.AutomationProperties.SetAutomationId(input, "FormField_" + widget.Field.Name);
                 InternalChildren.Add(input);
             }
         }
