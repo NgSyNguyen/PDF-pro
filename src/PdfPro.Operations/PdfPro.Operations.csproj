@@ -10,6 +10,8 @@
     <PackageReference Include="PDFsharp" />
     <!-- Apache-2.0: an extractor independent of PDFium, for the mandatory check after a redaction (SPEC P8 B). -->
     <PackageReference Include="PdfPig" />
+    <!-- Digital signatures (CMS, RFC 3161 timestamps): used directly since Phase 8. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
 
   <ItemGroup>

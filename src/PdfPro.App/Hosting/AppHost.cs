@@ -21,6 +21,7 @@ using PdfPro.Operations.Layout;
 using PdfPro.Operations.Merging;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Security;
+using PdfPro.Operations.Signing;
 using PdfPro.Operations.Splitting;
 using PdfPro.Operations.Stamping;
 using PdfPro.Pdfium;
@@ -128,6 +129,8 @@ internal static class AppHost
         services.AddOperation<SetProtectionOperation>();
         services.AddOperation<RedactOperation>();
         services.AddOperation<SanitizeOperation>();
+        services.AddSingleton<ITimestampClient>(_ => new HttpTimestampClient(new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
+        services.AddOperation<SignOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();

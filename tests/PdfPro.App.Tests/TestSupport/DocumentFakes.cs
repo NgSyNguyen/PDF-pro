@@ -86,6 +86,7 @@ internal static class TestOperations
             new Operations.Security.SetProtectionOperation(materializer, loader),
             new Operations.Security.RedactOperation(Gate.Value),
             new Operations.Security.SanitizeOperation(Gate.Value),
+            new Operations.Signing.SignOperation(),
         ]);
     }
 }
