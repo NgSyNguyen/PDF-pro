@@ -14,6 +14,7 @@ using PdfPro.App.ViewModels.Annotating;
 using PdfPro.App.ViewModels.Editing;
 using PdfPro.App.ViewModels.Forms;
 using PdfPro.App.ViewModels.Organizer;
+using PdfPro.App.ViewModels.Security;
 using PdfPro.App.ViewModels.Splitting;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Operations;
@@ -156,6 +157,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             Editor.GeometryOf);
         FormDesigner = new FormDesignerViewModel(viewer, Forms, Editor.GeometryOf, RequestContentChange, _operations);
         FormDesigner.PropertyChanged += OnFormDesignerPropertyChanged;
+        Redaction = new RedactionViewModel(viewer, TextSelection, Editor.GeometryOf);
+        Redaction.PropertyChanged += OnRedactionPropertyChanged;
         Forms.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(FormFillingViewModel.IsXfaOnly))
@@ -175,6 +178,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
                 if (Annotations.Tool != AnnotationTool.None)
                 {
                     FormDesigner.IsActive = false;
+                    Redaction.IsActive = false;
                 }
 
                 UpdateFormsActive();
@@ -653,6 +657,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             Annotations.StopTool();
             ContentEditor.IsActive = false;
             FormDesigner.IsActive = false;
+            Redaction.IsActive = false;
             if (Organizer is null)
             {
                 var organizer = _services.CreateOrganizer(Workspace, this);
@@ -1101,6 +1106,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         Annotations.Refresh();
         ContentEditor.Refresh();
         FormDesigner.Refresh();
+        Redaction.OnPagesChanged();
         if (samePages)
         {
             Forms.RefreshValues(); // a field was filled (or the filling undone): the inputs stay, keeping the focus
@@ -1204,6 +1210,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             Annotations.StopTool(); // the page editor takes the mouse
             ContentEditor.IsActive = false;
             FormDesigner.IsActive = false;
+            Redaction.IsActive = false;
         }
 
         if (e.PropertyName == nameof(PageEditorViewModel.IsActive))

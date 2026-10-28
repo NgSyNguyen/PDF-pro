@@ -196,4 +196,10 @@ public interface IPageDialogService
 
     /// <summary>"Mật khẩu &amp; quyền"; true when the user confirmed (or unlocked the document).</summary>
     bool ShowSecurity(ViewModels.Security.SecurityViewModel viewModel);
+
+    /// <summary>"Tìm &amp; đánh dấu" (redaction by pattern); true when the user marked matches.</summary>
+    bool ShowRedactionSearch(ViewModels.Security.RedactionSearchViewModel viewModel);
+
+    /// <summary>"Áp dụng xóa vĩnh viễn"; true when the user confirmed.</summary>
+    bool ShowRedactionApply(ViewModels.Security.RedactionApplyViewModel viewModel);
 }

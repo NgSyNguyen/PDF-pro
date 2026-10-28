@@ -46,6 +46,14 @@ public sealed partial class MainWindowViewModel : IExitGuard
             }
         }
 
+        foreach (var document in Documents.Where(d => d.HasRedactionMarks).ToList())
+        {
+            if (!await ConfirmDropRedactionMarksAsync(document))
+            {
+                return false;
+            }
+        }
+
         var discarded = new List<DocumentTabViewModel>();
         foreach (var document in Documents.Where(d => d.IsDirty && !d.DiscardChanges).ToList())
         {
@@ -159,6 +167,12 @@ public sealed partial class MainWindowViewModel : IExitGuard
 
         // Objects waiting in the page editor are applied first, so the file holds what the user sees.
         if (!await ApplyPendingEditsAsync(document))
+        {
+            return false;
+        }
+
+        // Marks to redact that are not applied would leave their content in the file: the user decides first.
+        if (!await ConfirmRedactionMarksBeforeSaveAsync(document))
         {
             return false;
         }

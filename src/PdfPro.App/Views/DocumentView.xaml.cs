@@ -5,6 +5,7 @@ using PdfPro.App.ViewModels;
 using PdfPro.App.ViewModels.Annotating;
 using PdfPro.App.ViewModels.Editing;
 using PdfPro.App.ViewModels.Forms;
+using PdfPro.App.ViewModels.Security;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Geometry;
 
@@ -49,6 +50,12 @@ public partial class DocumentView : UserControl
         }
 
         if (Document is { ContentEditor.IsActive: true } editing && HandleContentKey(editing.ContentEditor, e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (Document is { Redaction.IsActive: true } redacting && HandleRedactionKey(redacting.Redaction, e.Key))
         {
             e.Handled = true;
             return;
@@ -300,6 +307,25 @@ public partial class DocumentView : UserControl
             return;
         }
 
+        if (Document is { Redaction.IsActive: true } redacting)
+        {
+            var at = e.GetPosition(Surface);
+            var point = new ViewPoint(at.X, at.Y);
+            if (redacting.Redaction.Press(point))
+            {
+                if (redacting.Redaction.IsDragging)
+                {
+                    Surface.CaptureMouse();
+                }
+
+                return;
+            }
+
+            // The Text tool marks what the mouse selects.
+            _ = PressAsync(redacting.TextSelection, point, e.ClickCount);
+            return;
+        }
+
         if (Document is { Editor.IsActive: false } document)
         {
             var position = e.GetPosition(Surface);
@@ -384,6 +410,34 @@ public partial class DocumentView : UserControl
             return;
         }
 
+        if (Document is { Redaction.IsActive: true } redacting)
+        {
+            var at = new ViewPoint(e.GetPosition(Surface).X, e.GetPosition(Surface).Y);
+            if (redacting.Redaction.IsDragging && e.LeftButton == MouseButtonState.Pressed)
+            {
+                redacting.Redaction.DragTo(at);
+            }
+            else if (redacting.TextSelection.IsDragging && e.LeftButton == MouseButtonState.Pressed)
+            {
+                redacting.TextSelection.DragTo(at);
+            }
+
+            if (redacting.Redaction.Tool == RedactionTool.Area)
+            {
+                Surface.Cursor = Cursors.Cross;
+            }
+            else if (redacting.TextSelection.IsOverText(at))
+            {
+                Surface.Cursor = Cursors.IBeam;
+            }
+            else
+            {
+                Surface.ClearValue(CursorProperty);
+            }
+
+            return;
+        }
+
         if (Document is not { Editor.IsActive: false } document)
         {
             Surface.ClearValue(CursorProperty);
@@ -430,6 +484,15 @@ public partial class DocumentView : UserControl
         {
             editing.ContentEditor.Release();
         }
+        else if (Document is { Redaction.IsActive: true } redacting)
+        {
+            redacting.Redaction.Release();
+            if (redacting.TextSelection.IsDragging)
+            {
+                redacting.TextSelection.Release();
+                redacting.Redaction.ReleaseText();
+            }
+        }
         else if (Document is { } document)
         {
             if (document.TextSelection.IsDragging)
@@ -444,6 +507,20 @@ public partial class DocumentView : UserControl
         if (Surface.IsMouseCaptured)
         {
             Surface.ReleaseMouseCapture();
+        }
+    }
+
+    private static bool HandleRedactionKey(RedactionViewModel redaction, Key key)
+    {
+        switch (key)
+        {
+            case Key.Delete when redaction.DeleteCommand.CanExecute(null):
+                redaction.DeleteCommand.Execute(null);
+                return true;
+            case Key.Escape:
+                return redaction.Escape();
+            default:
+                return false;
         }
     }
 

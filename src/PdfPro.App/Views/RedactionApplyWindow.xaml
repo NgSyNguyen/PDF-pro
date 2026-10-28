@@ -1,0 +1,96 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.RedactionApplyWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:security="clr-namespace:PdfPro.App.ViewModels.Security"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=security:RedactionApplyViewModel}"
+  Title="{loc:Tr RedactionApply_Title}"
+  Width="500"
+  MinHeight="0"
+  AutomationProperties.AutomationId="RedactionApplyWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr RedactionApply_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <ui:InfoBar
+        x:Name="Warning"
+        Margin="0,0,0,12"
+        IsClosable="False"
+        IsOpen="True"
+        Severity="Warning" />
+
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="12" />
+          <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <TextBlock VerticalAlignment="Center" Text="{loc:Tr RedactionApply_Color}" />
+        <ComboBox
+          Grid.Column="2"
+          AutomationProperties.AutomationId="RedactionColor"
+          AutomationProperties.Name="{loc:Tr RedactionApply_Color}"
+          DisplayMemberPath="Text"
+          ItemsSource="{Binding Colors}"
+          SelectedValue="{Binding Fill}"
+          SelectedValuePath="Value" />
+      </Grid>
+
+      <CheckBox
+        Margin="0,12,0,0"
+        AutomationProperties.AutomationId="RedactionUseLabel"
+        Content="{loc:Tr RedactionApply_UseLabel}"
+        IsChecked="{Binding UseLabel}" />
+      <ui:TextBox
+        Margin="28,6,0,0"
+        AutomationProperties.AutomationId="RedactionLabel"
+        AutomationProperties.Name="{loc:Tr RedactionApply_UseLabel}"
+        IsEnabled="{Binding UseLabel}"
+        Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" />
+
+      <TextBlock
+        Margin="0,8,0,0"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding Error}"
+        TextWrapping="Wrap"
+        Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Danger"
+          AutomationProperties.AutomationId="RedactionApplyOk"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr RedactionApply_Apply}" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="RedactionApplyCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}"
+          IsDefault="True" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

@@ -102,6 +102,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         TileCommand = new ActiveDocumentCommand(d => d.TileCommand);
         AddTextCommand = new ActiveDocumentCommand(d => d.AddTextCommand);
         ToggleContentEditingCommand = new ActiveDocumentCommand(d => d.ToggleContentEditingCommand);
+        ToggleRedactionCommand = new ActiveDocumentCommand(d => d.ToggleRedactionCommand);
         ToggleFormDesignCommand = new ActiveDocumentCommand(d => d.ToggleFormDesignCommand);
         ExportFormDataCommand = new ActiveDocumentCommand(d => d.ExportFormDataCommand);
         ImportFormDataCommand = new ActiveDocumentCommand(d => d.ImportFormDataCommand);
@@ -205,6 +206,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand AddTextCommand { get; }
 
     public ActiveDocumentCommand ToggleContentEditingCommand { get; }
+
+    /// <summary>"Xóa thông tin": the redaction mode of the active document.</summary>
+    public ActiveDocumentCommand ToggleRedactionCommand { get; }
 
     public ActiveDocumentCommand ToggleFormDesignCommand { get; }
 
@@ -364,6 +368,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
             return;
         }
 
+        if (!await ConfirmDropRedactionMarksAsync(document) || !Tabs.Contains(document))
+        {
+            return;
+        }
+
         // Unsaved changes: Lưu / Không lưu / Hủy. A save that fails keeps the tab open.
         if (document.IsDirty && !document.DiscardChanges)
         {
@@ -491,7 +500,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand,
             ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand, FlattenFormCommand, ResetFormCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
@@ -777,7 +786,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Protect,
                 [
                     new("security.encrypt", Strings.Cmd_Password, SymbolRegular.LockClosed24, ProtectCommand, Strings.Cmd_Password_ToolTip),
-                    new("security.redact", Strings.Cmd_Redact, SymbolRegular.EraserSegment24),
+                    new("security.redact", Strings.Cmd_Redact, SymbolRegular.EraserSegment24, ToggleRedactionCommand, Strings.Cmd_Redact_ToolTip),
                     new("security.sanitize", Strings.Cmd_Sanitize, SymbolRegular.Broom24),
                 ]),
                 new(Strings.Ribbon_Group_Signature,

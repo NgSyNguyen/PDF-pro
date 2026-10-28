@@ -37,6 +37,7 @@ public sealed partial class DocumentTabViewModel
         IsOrganizing = false;
         Annotations.StopTool();
         ContentEditor.IsActive = false;
+        Redaction.IsActive = false;
         TextSelection.Clear();
         FormDesigner.IsActive = true;
     }

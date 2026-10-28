@@ -317,6 +317,18 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new SecurityWindow(viewModel));
     }
 
+    public bool ShowRedactionSearch(ViewModels.Security.RedactionSearchViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new RedactionSearchWindow(viewModel));
+    }
+
+    public bool ShowRedactionApply(ViewModels.Security.RedactionApplyViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new RedactionApplyWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

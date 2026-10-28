@@ -1179,4 +1179,59 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="DocProps_Aes256" xml:space="preserve"><value>AES 256-bit</value></data>
   <data name="DocProps_Aes128" xml:space="preserve"><value>AES 128-bit</value></data>
   <data name="History_Redact" xml:space="preserve"><value>Xóa vĩnh viễn {0} vùng</value></data>
+  <data name="Cmd_Redact_ToolTip" xml:space="preserve"><value>Đánh dấu rồi xóa vĩnh viễn thông tin (vùng, chữ, số CCCD, điện thoại, email…): không còn chọn, sao chép, tìm hay trích ra được</value></data>
+  <data name="Redaction_Hint_Area" xml:space="preserve"><value>Kéo khung trên trang để đánh dấu vùng cần xóa.</value></data>
+  <data name="Redaction_Hint_Text" xml:space="preserve"><value>Kéo qua chữ để đánh dấu chữ cần xóa.</value></data>
+  <data name="Redaction_Status" xml:space="preserve"><value>{0} vùng đánh dấu trên {1} trang — chưa xóa cho tới khi Áp dụng</value></data>
+  <data name="Redaction_Kind_NationalId" xml:space="preserve"><value>Số CCCD</value></data>
+  <data name="Redaction_Kind_Phone" xml:space="preserve"><value>Số điện thoại</value></data>
+  <data name="Redaction_Kind_Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Redaction_Kind_BankAccount" xml:space="preserve"><value>Số tài khoản</value></data>
+  <data name="Redaction_Kind_Date" xml:space="preserve"><value>Ngày tháng (ngày sinh)</value></data>
+  <data name="Redaction_Kind_Custom" xml:space="preserve"><value>Biểu thức riêng</value></data>
+  <data name="Redaction_Find" xml:space="preserve"><value>Tìm &amp; đánh dấu…</value></data>
+  <data name="Redaction_Find_ToolTip" xml:space="preserve"><value>Tìm số CCCD, điện thoại, email, số tài khoản, ngày tháng hoặc biểu thức riêng trên mọi trang để đánh dấu</value></data>
+  <data name="Redaction_MarkSelection" xml:space="preserve"><value>Đánh dấu vùng chọn</value></data>
+  <data name="Redaction_Delete" xml:space="preserve"><value>Bỏ đánh dấu</value></data>
+  <data name="Redaction_ClearAll" xml:space="preserve"><value>Bỏ tất cả</value></data>
+  <data name="Redaction_Apply" xml:space="preserve"><value>Áp dụng…</value></data>
+  <data name="Redaction_Done" xml:space="preserve"><value>Đã xóa vĩnh viễn {0} vùng trên {1} trang và kiểm tra lại: không còn chữ nào dưới các vùng đó. Các trang này giờ là ảnh. Lưu tài liệu để ghi ra tệp.</value></data>
+  <data name="Redaction_Tool_Area" xml:space="preserve"><value>Đánh dấu vùng (kéo khung)</value></data>
+  <data name="Redaction_Tool_Text" xml:space="preserve"><value>Đánh dấu chữ (kéo qua chữ)</value></data>
+  <data name="RedactionSearch_Title" xml:space="preserve"><value>Tìm &amp; đánh dấu thông tin cần xóa</value></data>
+  <data name="RedactionSearch_Message" xml:space="preserve"><value>Chọn loại thông tin cần tìm trên mọi trang. Kết quả được liệt kê để bạn xem lại trước khi đánh dấu.</value></data>
+  <data name="RedactionSearch_Custom" xml:space="preserve"><value>Biểu thức riêng</value></data>
+  <data name="RedactionSearch_CustomHint" xml:space="preserve"><value>Ví dụ: HS-\d{4}</value></data>
+  <data name="RedactionSearch_Search" xml:space="preserve"><value>Tìm</value></data>
+  <data name="RedactionSearch_Mark" xml:space="preserve"><value>Đánh dấu mục đã chọn</value></data>
+  <data name="RedactionSearch_CheckAll" xml:space="preserve"><value>Chọn tất cả</value></data>
+  <data name="RedactionSearch_CheckNone" xml:space="preserve"><value>Bỏ chọn tất cả</value></data>
+  <data name="RedactionSearch_Page" xml:space="preserve"><value>Trang {0}</value></data>
+  <data name="RedactionSearch_Progress" xml:space="preserve"><value>Đang tìm trang {0}/{1}…</value></data>
+  <data name="RedactionSearch_None" xml:space="preserve"><value>Không tìm thấy thông tin nào khớp.</value></data>
+  <data name="RedactionSearch_Found" xml:space="preserve"><value>Tìm thấy {0} mục trên {1} trang.</value></data>
+  <data name="RedactionSearch_Error_Expression" xml:space="preserve"><value>Biểu thức riêng không hợp lệ.</value></data>
+  <data name="RedactionSearch_Error_NoPattern" xml:space="preserve"><value>Hãy chọn ít nhất một loại thông tin hoặc nhập biểu thức riêng.</value></data>
+  <data name="RedactionSearch_Error_Timeout" xml:space="preserve"><value>Biểu thức riêng chạy quá lâu nên đã bị bỏ qua; các mẫu khác vẫn được tìm.</value></data>
+  <data name="RedactionApply_Title" xml:space="preserve"><value>Áp dụng xóa vĩnh viễn</value></data>
+  <data name="RedactionApply_Message" xml:space="preserve"><value>{0} vùng trên {1} trang sẽ bị xóa vĩnh viễn: nội dung bên dưới không chọn, sao chép, tìm hay trích ra được nữa. Các trang có vùng đánh dấu được chuyển thành ảnh (chữ còn lại trên các trang đó cũng không tìm được). Chú thích, liên kết, trường biểu mẫu, bookmark và thông tin tài liệu nhắc tới nội dung bị xóa cũng bị gỡ. Có thể hoàn tác trước khi lưu.</value></data>
+  <data name="RedactionApply_Color" xml:space="preserve"><value>Màu ô</value></data>
+  <data name="RedactionApply_UseLabel" xml:space="preserve"><value>Ghi nhãn trên ô</value></data>
+  <data name="RedactionApply_Apply" xml:space="preserve"><value>Xóa vĩnh viễn</value></data>
+  <data name="Redaction_Color_Black" xml:space="preserve"><value>Đen</value></data>
+  <data name="Redaction_Color_White" xml:space="preserve"><value>Trắng</value></data>
+  <data name="Redaction_Color_Gray" xml:space="preserve"><value>Xám</value></data>
+  <data name="Redaction_DefaultLabel" xml:space="preserve"><value>Đã xóa theo quy định</value></data>
+  <data name="Redaction_Error_Label" xml:space="preserve"><value>Nhãn tối đa {0} ký tự, trên một dòng.</value></data>
+  <data name="Redaction_Done_Title" xml:space="preserve"><value>Đã xóa vĩnh viễn</value></data>
+  <data name="Redaction_Done_Annotations" xml:space="preserve"><value>Đã gỡ {0} chú thích/liên kết nhắc tới nội dung bị xóa</value></data>
+  <data name="Redaction_Done_Fields" xml:space="preserve"><value>Đã gỡ {0} trường biểu mẫu</value></data>
+  <data name="Redaction_Done_Bookmarks" xml:space="preserve"><value>Đã gỡ {0} bookmark</value></data>
+  <data name="Redaction_Done_Metadata" xml:space="preserve"><value>Đã gỡ thông tin tài liệu (tác giả, từ khóa…) nhắc tới nội dung bị xóa</value></data>
+  <data name="Redaction_Pending_Title" xml:space="preserve"><value>Còn vùng đánh dấu chưa áp dụng</value></data>
+  <data name="Redaction_Pending_Save" xml:space="preserve"><value>Có {0} vùng đánh dấu xóa chưa áp dụng: nếu lưu bây giờ, nội dung của chúng vẫn còn trong tệp.</value></data>
+  <data name="Redaction_Pending_Apply" xml:space="preserve"><value>Áp dụng rồi lưu</value></data>
+  <data name="Redaction_Pending_SaveAnyway" xml:space="preserve"><value>Lưu, giữ đánh dấu</value></data>
+  <data name="Redaction_Pending_Close" xml:space="preserve"><value>Có {0} vùng đánh dấu xóa chưa áp dụng trong "{1}". Đóng tài liệu sẽ bỏ các đánh dấu này.</value></data>
+  <data name="Redaction_Pending_Drop" xml:space="preserve"><value>Bỏ đánh dấu</value></data>
 </root>

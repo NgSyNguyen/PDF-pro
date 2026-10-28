@@ -1179,4 +1179,59 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="DocProps_Aes256" xml:space="preserve"><value>AES 256-bit</value></data>
   <data name="DocProps_Aes128" xml:space="preserve"><value>AES 128-bit</value></data>
   <data name="History_Redact" xml:space="preserve"><value>Redact {0} area(s)</value></data>
+  <data name="Cmd_Redact_ToolTip" xml:space="preserve"><value>Mark, then permanently remove information (areas, text, ID numbers, phones, e-mails…): it can no longer be selected, copied, searched or extracted</value></data>
+  <data name="Redaction_Hint_Area" xml:space="preserve"><value>Drag a box on the page to mark an area to remove.</value></data>
+  <data name="Redaction_Hint_Text" xml:space="preserve"><value>Drag over text to mark it for removal.</value></data>
+  <data name="Redaction_Status" xml:space="preserve"><value>{0} area(s) marked on {1} page(s) — nothing is removed until you apply</value></data>
+  <data name="Redaction_Kind_NationalId" xml:space="preserve"><value>ID number (CCCD)</value></data>
+  <data name="Redaction_Kind_Phone" xml:space="preserve"><value>Phone number</value></data>
+  <data name="Redaction_Kind_Email" xml:space="preserve"><value>E-mail</value></data>
+  <data name="Redaction_Kind_BankAccount" xml:space="preserve"><value>Account number</value></data>
+  <data name="Redaction_Kind_Date" xml:space="preserve"><value>Date (birth date)</value></data>
+  <data name="Redaction_Kind_Custom" xml:space="preserve"><value>Own expression</value></data>
+  <data name="Redaction_Find" xml:space="preserve"><value>Find &amp; mark…</value></data>
+  <data name="Redaction_Find_ToolTip" xml:space="preserve"><value>Find ID numbers, phones, e-mails, account numbers, dates or your own expression on every page to mark them</value></data>
+  <data name="Redaction_MarkSelection" xml:space="preserve"><value>Mark selection</value></data>
+  <data name="Redaction_Delete" xml:space="preserve"><value>Unmark</value></data>
+  <data name="Redaction_ClearAll" xml:space="preserve"><value>Unmark all</value></data>
+  <data name="Redaction_Apply" xml:space="preserve"><value>Apply…</value></data>
+  <data name="Redaction_Done" xml:space="preserve"><value>{0} area(s) on {1} page(s) were removed for good and checked: no text is left under them. These pages are now pictures. Save the document to write it to the file.</value></data>
+  <data name="Redaction_Tool_Area" xml:space="preserve"><value>Mark areas (drag a box)</value></data>
+  <data name="Redaction_Tool_Text" xml:space="preserve"><value>Mark text (drag over text)</value></data>
+  <data name="RedactionSearch_Title" xml:space="preserve"><value>Find &amp; mark information to remove</value></data>
+  <data name="RedactionSearch_Message" xml:space="preserve"><value>Choose what to look for on every page. The matches are listed for review before they are marked.</value></data>
+  <data name="RedactionSearch_Custom" xml:space="preserve"><value>Own expression</value></data>
+  <data name="RedactionSearch_CustomHint" xml:space="preserve"><value>For example: HS-\d{4}</value></data>
+  <data name="RedactionSearch_Search" xml:space="preserve"><value>Find</value></data>
+  <data name="RedactionSearch_Mark" xml:space="preserve"><value>Mark the chosen matches</value></data>
+  <data name="RedactionSearch_CheckAll" xml:space="preserve"><value>Choose all</value></data>
+  <data name="RedactionSearch_CheckNone" xml:space="preserve"><value>Choose none</value></data>
+  <data name="RedactionSearch_Page" xml:space="preserve"><value>Page {0}</value></data>
+  <data name="RedactionSearch_Progress" xml:space="preserve"><value>Searching page {0}/{1}…</value></data>
+  <data name="RedactionSearch_None" xml:space="preserve"><value>Nothing matches.</value></data>
+  <data name="RedactionSearch_Found" xml:space="preserve"><value>Found {0} match(es) on {1} page(s).</value></data>
+  <data name="RedactionSearch_Error_Expression" xml:space="preserve"><value>The expression is not valid.</value></data>
+  <data name="RedactionSearch_Error_NoPattern" xml:space="preserve"><value>Choose at least one kind of information or enter an expression.</value></data>
+  <data name="RedactionSearch_Error_Timeout" xml:space="preserve"><value>The expression took too long and was skipped; the other patterns were still searched.</value></data>
+  <data name="RedactionApply_Title" xml:space="preserve"><value>Apply redaction</value></data>
+  <data name="RedactionApply_Message" xml:space="preserve"><value>{0} area(s) on {1} page(s) will be removed for good: what is under them can no longer be selected, copied, searched or extracted. Pages with marks become pictures (their other text can no longer be searched either). Comments, links, form fields, bookmarks and document information naming the removed content go too. This can be undone until the document is saved.</value></data>
+  <data name="RedactionApply_Color" xml:space="preserve"><value>Box colour</value></data>
+  <data name="RedactionApply_UseLabel" xml:space="preserve"><value>Write a label in the boxes</value></data>
+  <data name="RedactionApply_Apply" xml:space="preserve"><value>Remove for good</value></data>
+  <data name="Redaction_Color_Black" xml:space="preserve"><value>Black</value></data>
+  <data name="Redaction_Color_White" xml:space="preserve"><value>White</value></data>
+  <data name="Redaction_Color_Gray" xml:space="preserve"><value>Grey</value></data>
+  <data name="Redaction_DefaultLabel" xml:space="preserve"><value>Removed as required</value></data>
+  <data name="Redaction_Error_Label" xml:space="preserve"><value>A label has at most {0} characters, on one line.</value></data>
+  <data name="Redaction_Done_Title" xml:space="preserve"><value>Redacted</value></data>
+  <data name="Redaction_Done_Annotations" xml:space="preserve"><value>{0} comment(s)/link(s) naming the removed content were removed</value></data>
+  <data name="Redaction_Done_Fields" xml:space="preserve"><value>{0} form field(s) were removed</value></data>
+  <data name="Redaction_Done_Bookmarks" xml:space="preserve"><value>{0} bookmark(s) were removed</value></data>
+  <data name="Redaction_Done_Metadata" xml:space="preserve"><value>Document information (author, keywords…) naming the removed content was removed</value></data>
+  <data name="Redaction_Pending_Title" xml:space="preserve"><value>Marks not applied</value></data>
+  <data name="Redaction_Pending_Save" xml:space="preserve"><value>{0} area(s) are marked for redaction but not applied: saving now keeps their content in the file.</value></data>
+  <data name="Redaction_Pending_Apply" xml:space="preserve"><value>Apply, then save</value></data>
+  <data name="Redaction_Pending_SaveAnyway" xml:space="preserve"><value>Save, keep the marks</value></data>
+  <data name="Redaction_Pending_Close" xml:space="preserve"><value>{0} area(s) are marked for redaction in "{1}" but not applied. Closing the document drops the marks.</value></data>
+  <data name="Redaction_Pending_Drop" xml:space="preserve"><value>Drop the marks</value></data>
 </root>

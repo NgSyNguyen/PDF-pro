@@ -71,6 +71,8 @@
         <controls:AnnotationLayer Annotations="{Binding DataContext.Annotations, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- "Thiết kế biểu mẫu": the fields' frames, names and handles; only draws. -->
         <controls:FormDesignLayer Designer="{Binding DataContext.FormDesigner, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
+        <!-- "Xóa thông tin": the marks waiting to be applied and the box being dragged; only draws. -->
+        <controls:RedactionLayer PageKey="{Binding Key}" Redaction="{Binding DataContext.Redaction, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         <!-- "Sửa nội dung": frames around the drawing under the mouse and the selected one; only draws. -->
         <controls:ContentObjectLayer Editor="{Binding DataContext.ContentEditor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- The page editor's objects, selection and guides; inactive (and transparent to the mouse) outside the editor. -->
@@ -518,6 +520,83 @@
             VerticalAlignment="Center"
             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
             Text="{loc:Tr ContentEditor_Hint}"
+            TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- "Xóa thông tin": the marking tools, the search by pattern, the count, "Áp dụng" and "Xong". -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="RedactionBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding Redaction}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="RedactionFind"
+            Command="{Binding DataContext.FindRedactionsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr Redaction_Find}"
+            Icon="{ui:SymbolIcon DocumentSearch24}"
+            ToolTip="{loc:Tr Redaction_Find_ToolTip}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="RedactionMarkSelection"
+            Command="{Binding MarkSelectionCommand}"
+            Content="{loc:Tr Redaction_MarkSelection}"
+            Icon="{ui:SymbolIcon Highlight24}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="RedactionDelete"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Tr Redaction_Delete}"
+            Icon="{ui:SymbolIcon DismissSquare24}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="RedactionClearAll"
+            Command="{Binding ClearAllCommand}"
+            Content="{loc:Tr Redaction_ClearAll}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            Appearance="Danger"
+            AutomationProperties.AutomationId="RedactionApply"
+            Command="{Binding DataContext.ApplyRedactionsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr Redaction_Apply}"
+            Icon="{ui:SymbolIcon EraserSegment24}" />
+          <ui:Button
+            AutomationProperties.AutomationId="RedactionDone"
+            Command="{Binding DataContext.ToggleRedactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr Redaction_Done}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <RadioButton
+            AutomationProperties.AutomationId="RedactionTool_Area"
+            AutomationProperties.Name="{loc:Tr Redaction_Tool_Area}"
+            GroupName="RedactionTools"
+            IsChecked="{Binding IsAreaTool}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Redaction_Tool_Area}">
+            <ui:SymbolIcon Symbol="RectangleLandscape24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="RedactionTool_Text"
+            AutomationProperties.Name="{loc:Tr Redaction_Tool_Text}"
+            GroupName="RedactionTools"
+            IsChecked="{Binding IsTextTool}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Redaction_Tool_Text}">
+            <ui:SymbolIcon Symbol="TextT24" />
+          </RadioButton>
+          <TextBlock
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="RedactionStatus"
+            Text="{Binding Status}"
             TextTrimming="CharacterEllipsis" />
         </StackPanel>
       </DockPanel>
