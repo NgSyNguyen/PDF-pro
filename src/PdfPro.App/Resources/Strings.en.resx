@@ -1180,6 +1180,43 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="DocProps_Aes128" xml:space="preserve"><value>AES 128-bit</value></data>
   <data name="History_Redact" xml:space="preserve"><value>Redact {0} area(s)</value></data>
   <data name="Cmd_Redact_ToolTip" xml:space="preserve"><value>Mark, then permanently remove information (areas, text, ID numbers, phones, e-mails…): it can no longer be selected, copied, searched or extracted</value></data>
+  <data name="Cmd_Sanitize_ToolTip" xml:space="preserve"><value>Remove what the document carries beyond what it shows: author and dates, JavaScript, attachments, hidden layers, earlier revisions, private data of programs…</value></data>
+  <data name="History_Sanitize" xml:space="preserve"><value>Sanitize document</value></data>
+  <data name="Sanitize_Title" xml:space="preserve"><value>Sanitize document</value></data>
+  <data name="Sanitize_Intro" xml:space="preserve"><value>Choose what to remove. The document is always written anew: earlier revisions kept in the file and data after its end go too. This can be undone until the document is saved.</value></data>
+  <data name="Sanitize_Signed" xml:space="preserve"><value>The document is digitally signed: after sanitizing, the signatures are no longer valid.</value></data>
+  <data name="Sanitize_Metadata" xml:space="preserve"><value>Document information (author, title, dates, programs) and XMP metadata</value></data>
+  <data name="Sanitize_Scripts" xml:space="preserve"><value>JavaScript (on opening, on pages, in form fields and links; XFA forms)</value></data>
+  <data name="Sanitize_Attachments" xml:space="preserve"><value>Attachments</value></data>
+  <data name="Sanitize_RiskyActions" xml:space="preserve"><value>Actions that submit forms, import data or start programs</value></data>
+  <data name="Sanitize_ExternalLinks" xml:space="preserve"><value>Links to web pages and other files</value></data>
+  <data name="Sanitize_HiddenLayers" xml:space="preserve"><value>Hidden layers and what they draw</value></data>
+  <data name="Sanitize_OutsideVisibleArea" xml:space="preserve"><value>Content outside the visible area of pages</value></data>
+  <data name="Sanitize_Thumbnails" xml:space="preserve"><value>Page thumbnails embedded in the file</value></data>
+  <data name="Sanitize_PrivateData" xml:space="preserve"><value>Private data of the program that made the file</value></data>
+  <data name="Sanitize_Apply" xml:space="preserve"><value>Sanitize</value></data>
+  <data name="Sanitize_Done_Title" xml:space="preserve"><value>Document sanitized</value></data>
+  <data name="Sanitize_Done_Nothing" xml:space="preserve"><value>Nothing was found to remove; the document was written anew. Save the document to write it to the file.</value></data>
+  <data name="Sanitize_Done_Intro" xml:space="preserve"><value>Removed from the document (save it to write it to the file):</value></data>
+  <data name="Sanitize_Report_Metadata" xml:space="preserve"><value>Document information: {0}</value></data>
+  <data name="Sanitize_Report_MetadataStreams" xml:space="preserve"><value>{0} XMP metadata packet(s)</value></data>
+  <data name="Sanitize_Report_Scripts" xml:space="preserve"><value>{0} JavaScript(s)</value></data>
+  <data name="Sanitize_Report_Attachments" xml:space="preserve"><value>{0} attachment(s)</value></data>
+  <data name="Sanitize_Report_RiskyActions" xml:space="preserve"><value>{0} action(s) submitting forms, importing data or starting programs</value></data>
+  <data name="Sanitize_Report_ExternalLinks" xml:space="preserve"><value>{0} external link(s)</value></data>
+  <data name="Sanitize_Report_HiddenLayers" xml:space="preserve"><value>{0} hidden layer(s)</value></data>
+  <data name="Sanitize_Report_HiddenContent" xml:space="preserve"><value>{0} piece(s) of content in hidden layers</value></data>
+  <data name="Sanitize_Report_Outside" xml:space="preserve"><value>{0} object(s) outside the visible area</value></data>
+  <data name="Sanitize_Report_Thumbnails" xml:space="preserve"><value>{0} page thumbnail(s)</value></data>
+  <data name="Sanitize_Report_PrivateData" xml:space="preserve"><value>{0} item(s) of private program data</value></data>
+  <data name="Sanitize_Report_Revisions" xml:space="preserve"><value>{0} earlier revision(s) kept in the file</value></data>
+  <data name="Sanitize_Report_Trailing" xml:space="preserve"><value>{0} byte(s) after the end of the file</value></data>
+  <data name="Sanitize_Report_PagesKept" xml:space="preserve"><value>Hidden or outside content kept on page(s) {0}: removing it would change how they look</value></data>
+  <data name="Sanitize_SaveReport" xml:space="preserve"><value>Save report…</value></data>
+  <data name="Sanitize_ReportName" xml:space="preserve"><value>sanitize report</value></data>
+  <data name="Sanitize_ReportDialog_Title" xml:space="preserve"><value>Save the sanitize report</value></data>
+  <data name="Sanitize_ReportDialog_Filter" xml:space="preserve"><value>Text (*.txt)|*.txt</value></data>
+  <data name="Sanitize_ReportError" xml:space="preserve"><value>The report could not be saved to the chosen file. Check that it can be written or choose another folder.</value></data>
   <data name="Redaction_Hint_Area" xml:space="preserve"><value>Drag a box on the page to mark an area to remove.</value></data>
   <data name="Redaction_Hint_Text" xml:space="preserve"><value>Drag over text to mark it for removal.</value></data>
   <data name="Redaction_Status" xml:space="preserve"><value>{0} area(s) marked on {1} page(s) — nothing is removed until you apply</value></data>

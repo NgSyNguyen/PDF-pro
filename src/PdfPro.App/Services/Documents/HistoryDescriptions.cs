@@ -55,6 +55,7 @@ internal static class HistoryDescriptions
             SetProtectionParams { Protection: null } => Strings.History_RemoveProtection,
             SetProtectionParams => Strings.History_SetProtection,
             RedactParams p => Format(Strings.History_Redact, p.Areas.Sum(a => a.Rects.Count)),
+            SanitizeParams => Strings.History_Sanitize,
             FlattenAnnotationsParams p when string.IsNullOrWhiteSpace(p.Pages) => Strings.History_FlattenAnnotations,
             FlattenAnnotationsParams p => Format(Strings.History_FlattenAnnotationsOn, Count(p.Pages!, before)),
             _ => Strings.History_Other,

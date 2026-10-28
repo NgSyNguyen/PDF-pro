@@ -158,7 +158,7 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
         progress.Report(new OperationProgress(0, 0, MaterializeStages.Write));
         try
         {
-            baseDocument.Save(output, closeStream: false);
+            PdfWriting.Save(baseDocument, output);
         }
         catch (Exception ex) when (ex is not (IOException or OperationCanceledException or OutOfMemoryException))
         {

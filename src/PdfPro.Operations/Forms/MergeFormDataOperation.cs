@@ -184,7 +184,7 @@ public sealed class MergeFormDataOperation : PdfOperation<MergeFormParams>
                     }
 
                     using var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                    document.Save(stream, closeStream: false);
+                    Materializing.PdfWriting.Save(document, stream);
                     stream.Flush(flushToDisk: true);
                 }
             }

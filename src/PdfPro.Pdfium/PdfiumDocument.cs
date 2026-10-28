@@ -55,8 +55,21 @@ public sealed partial class PdfiumDocument : IDisposable
     {
         ArgumentNullException.ThrowIfNull(gate);
         gate.VerifyAccess();
+        return Open(gate, PdfFileSource.Open(path), password);
+    }
 
-        PdfFileSource? source = PdfFileSource.Open(path);
+    /// <summary>Opens a document held in memory (the bytes must not change while it is open). Must run on the PDFium thread.</summary>
+    /// <exception cref="PdfDocumentException">The document is damaged or needs a (different) password.</exception>
+    public static PdfiumDocument Open(PdfiumGate gate, byte[] bytes, string? password = null)
+    {
+        ArgumentNullException.ThrowIfNull(gate);
+        gate.VerifyAccess();
+        return Open(gate, PdfFileSource.FromBytes(bytes), password);
+    }
+
+    private static PdfiumDocument Open(PdfiumGate gate, PdfFileSource opened, string? password)
+    {
+        PdfFileSource? source = opened;
         try
         {
             var passwordSupplied = !string.IsNullOrEmpty(password);

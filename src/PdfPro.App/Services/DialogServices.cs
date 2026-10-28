@@ -145,6 +145,20 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickReportSavePath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Sanitize_ReportDialog_Title,
+            Filter = Strings.Sanitize_ReportDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".txt",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickFormDataSavePath(string suggestedFileName)
     {
         var dialog = new SaveFileDialog
@@ -327,6 +341,12 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new RedactionApplyWindow(viewModel));
+    }
+
+    public bool ShowSanitize(ViewModels.Security.SanitizeViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SanitizeWindow(viewModel));
     }
 
     private static bool Show(Window window)

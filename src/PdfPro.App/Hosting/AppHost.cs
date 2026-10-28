@@ -127,6 +127,7 @@ internal static class AppHost
         services.AddOperation<UnprotectDocumentOperation>();
         services.AddOperation<SetProtectionOperation>();
         services.AddOperation<RedactOperation>();
+        services.AddOperation<SanitizeOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();

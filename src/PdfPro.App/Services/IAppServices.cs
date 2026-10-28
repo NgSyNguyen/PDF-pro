@@ -135,6 +135,9 @@ public interface IFileDialogService
     /// <returns>The chosen path, or null when cancelled.</returns>
     string? PickCommentExportPath(string suggestedFileName);
 
+    /// <summary>Where to save a report as text (.txt); null when cancelled.</summary>
+    string? PickReportSavePath(string suggestedFileName);
+
     /// <summary>Asks where to save an image taken out of a page (overwriting asks for confirmation).</summary>
     /// <param name="suggestedFileName">File name proposed in the dialog, with its extension.</param>
     /// <param name="extension">".jpg", ".jp2" or ".png": the only type offered.</param>
@@ -202,4 +205,7 @@ public interface IPageDialogService
 
     /// <summary>"Áp dụng xóa vĩnh viễn"; true when the user confirmed.</summary>
     bool ShowRedactionApply(ViewModels.Security.RedactionApplyViewModel viewModel);
+
+    /// <summary>"Làm sạch tài liệu"; true when the user confirmed.</summary>
+    bool ShowSanitize(ViewModels.Security.SanitizeViewModel viewModel);
 }

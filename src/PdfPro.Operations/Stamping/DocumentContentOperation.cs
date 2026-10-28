@@ -54,6 +54,6 @@ public abstract class DocumentContentOperation<TParams> : FileContentOperation<T
 
         Apply(document, inputPath, request, progress, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
-        document.Save(output, closeStream: false);
+        Materializing.PdfWriting.Save(document, output);
     }
 }

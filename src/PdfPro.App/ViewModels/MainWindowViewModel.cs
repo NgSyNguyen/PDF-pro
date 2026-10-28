@@ -103,6 +103,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddTextCommand = new ActiveDocumentCommand(d => d.AddTextCommand);
         ToggleContentEditingCommand = new ActiveDocumentCommand(d => d.ToggleContentEditingCommand);
         ToggleRedactionCommand = new ActiveDocumentCommand(d => d.ToggleRedactionCommand);
+        SanitizeCommand = new ActiveDocumentCommand(d => d.SanitizeCommand);
         ToggleFormDesignCommand = new ActiveDocumentCommand(d => d.ToggleFormDesignCommand);
         ExportFormDataCommand = new ActiveDocumentCommand(d => d.ExportFormDataCommand);
         ImportFormDataCommand = new ActiveDocumentCommand(d => d.ImportFormDataCommand);
@@ -209,6 +210,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     /// <summary>"Xóa thông tin": the redaction mode of the active document.</summary>
     public ActiveDocumentCommand ToggleRedactionCommand { get; }
+
+    public ActiveDocumentCommand SanitizeCommand { get; }
 
     public ActiveDocumentCommand ToggleFormDesignCommand { get; }
 
@@ -500,7 +503,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand, SanitizeCommand,
             ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand, FlattenFormCommand, ResetFormCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
@@ -787,7 +790,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("security.encrypt", Strings.Cmd_Password, SymbolRegular.LockClosed24, ProtectCommand, Strings.Cmd_Password_ToolTip),
                     new("security.redact", Strings.Cmd_Redact, SymbolRegular.EraserSegment24, ToggleRedactionCommand, Strings.Cmd_Redact_ToolTip),
-                    new("security.sanitize", Strings.Cmd_Sanitize, SymbolRegular.Broom24),
+                    new("security.sanitize", Strings.Cmd_Sanitize, SymbolRegular.Broom24, SanitizeCommand, Strings.Cmd_Sanitize_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Signature,
                 [

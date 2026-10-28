@@ -290,7 +290,7 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
 
         var cleanup = RedactionCleanup.Apply(document, areas, [.. pages.SelectMany(p => p.RemovedTexts)]);
         using var stream = new MemoryStream();
-        document.Save(stream, closeStream: false);
+        Materializing.PdfWriting.Save(document, stream);
         return (stream.ToArray(), cleanup);
     }
 
@@ -316,7 +316,7 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
         }
 
         using var stream = new MemoryStream();
-        document.Save(stream, closeStream: false);
+        Materializing.PdfWriting.Save(document, stream);
         return stream.ToArray();
     }
 

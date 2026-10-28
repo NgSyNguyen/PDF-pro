@@ -1180,6 +1180,43 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="DocProps_Aes128" xml:space="preserve"><value>AES 128-bit</value></data>
   <data name="History_Redact" xml:space="preserve"><value>Xóa vĩnh viễn {0} vùng</value></data>
   <data name="Cmd_Redact_ToolTip" xml:space="preserve"><value>Đánh dấu rồi xóa vĩnh viễn thông tin (vùng, chữ, số CCCD, điện thoại, email…): không còn chọn, sao chép, tìm hay trích ra được</value></data>
+  <data name="Cmd_Sanitize_ToolTip" xml:space="preserve"><value>Gỡ những gì tài liệu mang theo ngoài nội dung hiển thị: thông tin tác giả và ngày tạo, JavaScript, tệp đính kèm, lớp ẩn, phiên bản cũ, dữ liệu riêng của phần mềm…</value></data>
+  <data name="History_Sanitize" xml:space="preserve"><value>Làm sạch tài liệu</value></data>
+  <data name="Sanitize_Title" xml:space="preserve"><value>Làm sạch tài liệu</value></data>
+  <data name="Sanitize_Intro" xml:space="preserve"><value>Chọn những gì cần gỡ. Tài liệu luôn được ghi lại toàn bộ: các phiên bản cũ lưu kèm trong tệp và dữ liệu sau phần kết thúc tệp cũng bị bỏ. Có thể hoàn tác trước khi lưu.</value></data>
+  <data name="Sanitize_Signed" xml:space="preserve"><value>Tài liệu có chữ ký số: sau khi làm sạch, các chữ ký sẽ không còn hiệu lực.</value></data>
+  <data name="Sanitize_Metadata" xml:space="preserve"><value>Thông tin tài liệu (tác giả, tiêu đề, ngày tạo, phần mềm tạo) và siêu dữ liệu XMP</value></data>
+  <data name="Sanitize_Scripts" xml:space="preserve"><value>JavaScript (khi mở tài liệu, trên trang, trong trường biểu mẫu và liên kết; biểu mẫu XFA)</value></data>
+  <data name="Sanitize_Attachments" xml:space="preserve"><value>Tệp đính kèm</value></data>
+  <data name="Sanitize_RiskyActions" xml:space="preserve"><value>Hành động gửi biểu mẫu, nhập dữ liệu, chạy chương trình</value></data>
+  <data name="Sanitize_ExternalLinks" xml:space="preserve"><value>Liên kết tới trang web và tệp khác</value></data>
+  <data name="Sanitize_HiddenLayers" xml:space="preserve"><value>Lớp đang ẩn và nội dung của chúng</value></data>
+  <data name="Sanitize_OutsideVisibleArea" xml:space="preserve"><value>Nội dung nằm ngoài vùng hiển thị của trang</value></data>
+  <data name="Sanitize_Thumbnails" xml:space="preserve"><value>Ảnh thu nhỏ trang nhúng trong tệp</value></data>
+  <data name="Sanitize_PrivateData" xml:space="preserve"><value>Dữ liệu riêng của phần mềm đã tạo tệp</value></data>
+  <data name="Sanitize_Apply" xml:space="preserve"><value>Làm sạch</value></data>
+  <data name="Sanitize_Done_Title" xml:space="preserve"><value>Đã làm sạch tài liệu</value></data>
+  <data name="Sanitize_Done_Nothing" xml:space="preserve"><value>Không tìm thấy gì cần gỡ; tài liệu đã được ghi lại toàn bộ. Lưu tài liệu để ghi ra tệp.</value></data>
+  <data name="Sanitize_Done_Intro" xml:space="preserve"><value>Đã gỡ khỏi tài liệu (lưu tài liệu để ghi ra tệp):</value></data>
+  <data name="Sanitize_Report_Metadata" xml:space="preserve"><value>Thông tin tài liệu: {0}</value></data>
+  <data name="Sanitize_Report_MetadataStreams" xml:space="preserve"><value>{0} gói siêu dữ liệu XMP</value></data>
+  <data name="Sanitize_Report_Scripts" xml:space="preserve"><value>{0} JavaScript</value></data>
+  <data name="Sanitize_Report_Attachments" xml:space="preserve"><value>{0} tệp đính kèm</value></data>
+  <data name="Sanitize_Report_RiskyActions" xml:space="preserve"><value>{0} hành động gửi biểu mẫu, nhập dữ liệu hoặc chạy chương trình</value></data>
+  <data name="Sanitize_Report_ExternalLinks" xml:space="preserve"><value>{0} liên kết ra ngoài</value></data>
+  <data name="Sanitize_Report_HiddenLayers" xml:space="preserve"><value>{0} lớp ẩn</value></data>
+  <data name="Sanitize_Report_HiddenContent" xml:space="preserve"><value>{0} phần nội dung trong lớp ẩn</value></data>
+  <data name="Sanitize_Report_Outside" xml:space="preserve"><value>{0} đối tượng nằm ngoài vùng hiển thị</value></data>
+  <data name="Sanitize_Report_Thumbnails" xml:space="preserve"><value>{0} ảnh thu nhỏ trang</value></data>
+  <data name="Sanitize_Report_PrivateData" xml:space="preserve"><value>{0} mục dữ liệu riêng của phần mềm</value></data>
+  <data name="Sanitize_Report_Revisions" xml:space="preserve"><value>{0} phiên bản cũ lưu kèm trong tệp</value></data>
+  <data name="Sanitize_Report_Trailing" xml:space="preserve"><value>{0} byte dữ liệu sau phần kết thúc tệp</value></data>
+  <data name="Sanitize_Report_PagesKept" xml:space="preserve"><value>Giữ nguyên nội dung ẩn hoặc ngoài vùng hiển thị trên trang {0}: gỡ đi sẽ làm trang hiển thị khác</value></data>
+  <data name="Sanitize_SaveReport" xml:space="preserve"><value>Lưu báo cáo…</value></data>
+  <data name="Sanitize_ReportName" xml:space="preserve"><value>báo cáo làm sạch</value></data>
+  <data name="Sanitize_ReportDialog_Title" xml:space="preserve"><value>Lưu báo cáo làm sạch</value></data>
+  <data name="Sanitize_ReportDialog_Filter" xml:space="preserve"><value>Văn bản (*.txt)|*.txt</value></data>
+  <data name="Sanitize_ReportError" xml:space="preserve"><value>Không lưu được báo cáo vào tệp đã chọn. Hãy kiểm tra quyền ghi hoặc chọn thư mục khác.</value></data>
   <data name="Redaction_Hint_Area" xml:space="preserve"><value>Kéo khung trên trang để đánh dấu vùng cần xóa.</value></data>
   <data name="Redaction_Hint_Text" xml:space="preserve"><value>Kéo qua chữ để đánh dấu chữ cần xóa.</value></data>
   <data name="Redaction_Status" xml:space="preserve"><value>{0} vùng đánh dấu trên {1} trang — chưa xóa cho tới khi Áp dụng</value></data>
