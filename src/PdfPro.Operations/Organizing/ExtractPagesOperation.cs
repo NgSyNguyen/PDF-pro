@@ -34,7 +34,7 @@ public sealed class ExtractPagesOperation(IPlanMaterializer materializer, IPdfDo
             throw new OperationValidationException(Id, validation.Errors);
         }
 
-        return PagePlan.Create(PageRanges.Parse(parameters.Pages, plan.Count).Select(i => plan[i]));
+        return PagePlan.Create(PageRanges.Parse(parameters.Pages, plan.Count).Select(i => plan[i]), plan.FormValues.Values);
     }
 
     protected override OperationValidationResult ValidateCore(ExtractPagesParams parameters, DocumentInfo document)

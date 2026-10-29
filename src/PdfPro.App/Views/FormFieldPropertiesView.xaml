@@ -1,0 +1,230 @@
+<UserControl
+  x:Class="PdfPro.App.Views.FormFieldPropertiesView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:forms="clr-namespace:PdfPro.App.ViewModels.Forms"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=forms:FormDesignerViewModel}"
+  d:DesignWidth="300">
+  <UserControl.Resources>
+    <Style x:Key="SectionTitle" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,12,0,4" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,6,0,2" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="Option" BasedOn="{StaticResource {x:Type CheckBox}}" TargetType="CheckBox">
+      <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+  </UserControl.Resources>
+
+  <Grid>
+    <TextBlock
+      Margin="16"
+      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+      Text="{loc:Tr FieldProps_Empty}"
+      TextAlignment="Center"
+      TextWrapping="Wrap"
+      Visibility="{Binding HasSelection, Converter={StaticResource InverseBoolToVisibility}}" />
+
+    <ScrollViewer
+      DataContext="{Binding Properties}"
+      HorizontalScrollBarVisibility="Disabled"
+      VerticalScrollBarVisibility="Auto"
+      Visibility="{Binding DataContext.HasSelection, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+      <StackPanel Margin="12,0,12,12">
+        <TextBlock
+          AutomationProperties.AutomationId="FieldPropsKind"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{Binding KindText}" />
+
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_Name}" />
+        <TextBox
+          AutomationProperties.AutomationId="FieldPropsName"
+          AutomationProperties.Name="{loc:Tr FieldProps_Name}"
+          Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_ToolTip}" />
+        <TextBox
+          AutomationProperties.AutomationId="FieldPropsToolTip"
+          AutomationProperties.Name="{loc:Tr FieldProps_ToolTip}"
+          Text="{Binding ToolTip, UpdateSourceTrigger=PropertyChanged}" />
+        <CheckBox
+          AutomationProperties.AutomationId="FieldPropsRequired"
+          Content="{loc:Tr FieldProps_Required}"
+          IsChecked="{Binding IsRequired}"
+          Style="{StaticResource Option}"
+          Visibility="{Binding HasValue, Converter={StaticResource BoolToVisibility}}" />
+        <CheckBox
+          AutomationProperties.AutomationId="FieldPropsReadOnly"
+          Content="{loc:Tr FieldProps_ReadOnly}"
+          IsChecked="{Binding IsReadOnly}"
+          Style="{StaticResource Option}" />
+
+        <!-- Text fields -->
+        <StackPanel Visibility="{Binding IsText, Converter={StaticResource BoolToVisibility}}">
+          <CheckBox
+            AutomationProperties.AutomationId="FieldPropsMultiline"
+            Content="{loc:Tr FieldProps_Multiline}"
+            IsChecked="{Binding IsMultiline}"
+            Style="{StaticResource Option}" />
+          <CheckBox
+            AutomationProperties.AutomationId="FieldPropsPassword"
+            Content="{loc:Tr FieldProps_Password}"
+            IsChecked="{Binding IsPassword}"
+            Style="{StaticResource Option}" />
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_MaxLength}" />
+          <TextBox
+            AutomationProperties.AutomationId="FieldPropsMaxLength"
+            AutomationProperties.Name="{loc:Tr FieldProps_MaxLength}"
+            Text="{Binding MaxLength, UpdateSourceTrigger=LostFocus}" />
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_Format}" />
+          <ComboBox
+            AutomationProperties.AutomationId="FieldPropsFormat"
+            AutomationProperties.Name="{loc:Tr FieldProps_Format}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding FormatKinds}"
+            SelectedValue="{Binding FormatKind}"
+            SelectedValuePath="Value" />
+          <StackPanel Visibility="{Binding IsNumber, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_Decimals}" />
+            <TextBox
+              AutomationProperties.AutomationId="FieldPropsDecimals"
+              AutomationProperties.Name="{loc:Tr FieldProps_Decimals}"
+              Text="{Binding Decimals, UpdateSourceTrigger=LostFocus}" />
+            <CheckBox
+              AutomationProperties.AutomationId="FieldPropsDotComma"
+              Content="{loc:Tr FieldProps_DotComma}"
+              IsChecked="{Binding UsesDotComma}"
+              Style="{StaticResource Option}" />
+          </StackPanel>
+          <StackPanel Visibility="{Binding IsDate, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_DatePattern}" />
+            <ComboBox
+              AutomationProperties.AutomationId="FieldPropsDatePattern"
+              AutomationProperties.Name="{loc:Tr FieldProps_DatePattern}"
+              ItemsSource="{Binding DatePatterns}"
+              SelectedItem="{Binding DatePattern}" />
+          </StackPanel>
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_Default}" />
+          <TextBox
+            AutomationProperties.AutomationId="FieldPropsDefaultText"
+            AutomationProperties.Name="{loc:Tr FieldProps_Default}"
+            Text="{Binding DefaultText, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+
+        <!-- Check boxes -->
+        <CheckBox
+          AutomationProperties.AutomationId="FieldPropsChecked"
+          Content="{loc:Tr FieldProps_CheckedByDefault}"
+          IsChecked="{Binding IsCheckedByDefault}"
+          Style="{StaticResource Option}"
+          Visibility="{Binding IsCheckBox, Converter={StaticResource BoolToVisibility}}" />
+
+        <!-- Combo and list boxes -->
+        <StackPanel Visibility="{Binding HasOptions, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_Options}" />
+          <TextBox
+            MinHeight="72"
+            AcceptsReturn="True"
+            AutomationProperties.AutomationId="FieldPropsOptions"
+            AutomationProperties.Name="{loc:Tr FieldProps_Options}"
+            Text="{Binding OptionsText, UpdateSourceTrigger=LostFocus}"
+            TextWrapping="Wrap"
+            VerticalScrollBarVisibility="Auto" />
+          <CheckBox
+            AutomationProperties.AutomationId="FieldPropsEditable"
+            Content="{loc:Tr FieldProps_Editable}"
+            IsChecked="{Binding IsEditable}"
+            Style="{StaticResource Option}"
+            Visibility="{Binding IsComboBox, Converter={StaticResource BoolToVisibility}}" />
+          <CheckBox
+            AutomationProperties.AutomationId="FieldPropsMultiSelect"
+            Content="{loc:Tr FieldProps_MultiSelect}"
+            IsChecked="{Binding IsMultiSelect}"
+            Style="{StaticResource Option}"
+            Visibility="{Binding IsListBox, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+
+        <!-- Starting choice of radio buttons, combo and list boxes -->
+        <StackPanel Visibility="{Binding HasDefaultChoice, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_Default}" />
+          <ComboBox
+            AutomationProperties.AutomationId="FieldPropsDefaultChoice"
+            AutomationProperties.Name="{loc:Tr FieldProps_Default}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding Choices}"
+            SelectedValue="{Binding DefaultChoice}"
+            SelectedValuePath="Value" />
+          <TextBlock
+            Style="{StaticResource FieldLabel}"
+            Text="{loc:Tr FieldProps_RadioNote}"
+            Visibility="{Binding IsRadio, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Visibility="{Binding IsButton, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_Caption}" />
+          <TextBox
+            AutomationProperties.AutomationId="FieldPropsCaption"
+            AutomationProperties.Name="{loc:Tr FieldProps_Caption}"
+            Text="{Binding Caption, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+
+        <!-- How the value is drawn -->
+        <StackPanel Visibility="{Binding HasTextLook, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock Style="{StaticResource SectionTitle}" Text="{loc:Tr FieldProps_Look}" />
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_Font}" />
+          <ComboBox
+            AutomationProperties.AutomationId="FieldPropsFont"
+            AutomationProperties.Name="{loc:Tr FieldProps_Font}"
+            ItemsSource="{Binding FontFamilies}"
+            SelectedItem="{Binding FontFamily}" />
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_FontSize}" />
+          <TextBox
+            AutomationProperties.AutomationId="FieldPropsFontSize"
+            AutomationProperties.Name="{loc:Tr FieldProps_FontSize}"
+            Text="{Binding FontSize, UpdateSourceTrigger=LostFocus}" />
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr FieldProps_Alignment}" />
+          <ComboBox
+            AutomationProperties.AutomationId="FieldPropsAlignment"
+            AutomationProperties.Name="{loc:Tr FieldProps_Alignment}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding Alignments}"
+            SelectedValue="{Binding Alignment}"
+            SelectedValuePath="Value" />
+        </StackPanel>
+
+        <ui:InfoBar
+          Margin="0,12,0,0"
+          AutomationProperties.AutomationId="FieldPropsError"
+          IsClosable="False"
+          IsOpen="{Binding HasError, Mode=OneWay}"
+          Message="{Binding Error}"
+          Severity="Error"
+          Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+        <StackPanel
+          Margin="0,12,0,0"
+          HorizontalAlignment="Right"
+          Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="FieldPropsReset"
+            Command="{Binding ResetCommand}"
+            Content="{loc:Tr FieldProps_Reset}" />
+          <ui:Button
+            Appearance="Primary"
+            AutomationProperties.AutomationId="FieldPropsApply"
+            Command="{Binding ApplyCommand}"
+            Content="{loc:Tr FieldProps_Apply}" />
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

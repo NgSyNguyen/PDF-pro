@@ -38,6 +38,9 @@ internal static class Samples
 
     public static string ScanVi => Path("scan-vi.pdf");
 
+    /// <summary>Fake personal data (CCCD, phones, e-mails, accounts, dates), also in metadata, a bookmark, a note and a link.</summary>
+    public static string Pii => Path("pii.pdf");
+
     private static string Path(string fileName)
     {
         var path = System.IO.Path.Combine(RepositoryRoot, "samples", fileName);

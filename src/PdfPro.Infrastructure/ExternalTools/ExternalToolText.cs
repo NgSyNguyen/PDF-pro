@@ -2,15 +2,6 @@ using System.Text;
 
 namespace PdfPro.Infrastructure.ExternalTools;
 
-internal static class ExternalToolText
-{
-    public const int DefaultTailLength = 2000;
-
-    /// <summary>Last characters of a tool's output, for logs and error messages.</summary>
-    public static string Tail(string text, int maxLength = DefaultTailLength)
-        => text.Length <= maxLength ? text : text[^maxLength..];
-}
-
 /// <summary>Thread-safe text buffer that keeps at most <c>maxChars</c> characters.</summary>
 internal sealed class CappedTextCollector(int maxChars)
 {

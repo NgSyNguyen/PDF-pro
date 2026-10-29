@@ -101,5 +101,5 @@ internal static class SessionReplay
     }
 
     private static bool SameState(SessionState a, SessionState b)
-        => a.BaseSourceId == b.BaseSourceId && a.Revision == b.Revision && a.Plan.SequenceEqual(b.Plan);
+        => a.BaseSourceId == b.BaseSourceId && a.Revision == b.Revision && a.Plan.SequenceEqual(b.Plan) && Equals(a.Plan.Protection, b.Plan.Protection);
 }

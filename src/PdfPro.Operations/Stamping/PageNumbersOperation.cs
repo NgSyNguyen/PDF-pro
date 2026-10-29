@@ -18,6 +18,18 @@ public sealed class PageNumbersOperation : DocumentContentOperation<PageNumbersP
 
     public override string Stage => "Stage_PageNumbers";
 
+    /// <summary>
+    /// The text page <paramref name="pageIndex"/> gets in a document of <paramref name="pageCount"/> pages, or null when
+    /// it gets no number: what the operation writes, for previews.
+    /// </summary>
+    public static string? TextOn(PageNumbersParams parameters, int pageIndex, int pageCount, string fileName, string? title)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        return Numbering(parameters, pageCount) is { } plan && plan.Pages.Contains(pageIndex) && StampTemplate.TryParse(parameters.Pattern, out var template, out _, out _)
+            ? template.Render(plan.Values(pageIndex, DateTime.Now, fileName, title))
+            : null;
+    }
+
     protected override OperationValidationResult ValidateCore(PageNumbersParams parameters, DocumentInfo document)
         => ParameterChecks.Combine(
             !string.IsNullOrWhiteSpace(parameters.Pattern) && StampTemplate.TryParse(parameters.Pattern, out _, out _, out _)
@@ -31,20 +43,24 @@ public sealed class PageNumbersOperation : DocumentContentOperation<PageNumbersP
 
     protected override void Apply(PdfDocument document, string inputPath, PageNumbersParams parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
     {
-        var first = parameters.FirstPage - 1;
-        var pages = StampContent.Pages(parameters.Pages, document.PageCount).Where(p => p >= first).ToArray();
-        if (pages.Length == 0)
+        if (Numbering(parameters, document.PageCount) is not { } plan)
         {
             return;
         }
 
         var template = StampTemplate.Parse(parameters.Pattern);
-        var last = PageNumbering.Format(PageNumbering.NumberOf(pages[^1], first, parameters.StartNumber)!.Value, parameters.Style);
         var title = string.IsNullOrWhiteSpace(document.Info.Title) ? null : document.Info.Title;
-        var fileName = Path.GetFileNameWithoutExtension(inputPath);
-        var zone = new TextZone(
-            parameters.Anchor,
-            page => template.Render(new StampValues(PageNumbering.Format(PageNumbering.NumberOf(page, first, parameters.StartNumber)!.Value, parameters.Style), last, DateTime.Now, fileName, title)));
-        TextZones.Stamp(document, pages, [zone], parameters.TextStyle ?? PageNumbersParams.DefaultStyle, parameters.MarginX, parameters.MarginY, StampContent.PageNumbersLayer, progress, Stage, cancellationToken);
+        var fileName = parameters.FileName ?? Path.GetFileNameWithoutExtension(inputPath);
+        var date = DateTime.Now;
+        var zone = new TextZone(parameters.Anchor, page => template.Render(plan.Values(page, date, fileName, title)));
+        TextZones.Stamp(document, plan.Pages, [zone], parameters.TextStyle ?? PageNumbersParams.DefaultStyle, parameters.MarginX, parameters.MarginY, StampContent.PageNumbersLayer, progress, Stage, cancellationToken);
+    }
+
+    /// <summary>The numbered pages (from <see cref="PageNumbersParams.FirstPage"/>) and their numbers; null when none.</summary>
+    private static PageNumberPlan? Numbering(PageNumbersParams parameters, int pageCount)
+    {
+        var first = parameters.FirstPage - 1;
+        var pages = StampContent.Pages(parameters.Pages, pageCount).Where(p => p >= first).ToArray();
+        return pages.Length == 0 ? null : new PageNumberPlan(pages, first, parameters.StartNumber, parameters.Style);
     }
 }

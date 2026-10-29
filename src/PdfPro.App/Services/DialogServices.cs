@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Windows;
 using Microsoft.Win32;
 using PdfPro.App.Resources;
@@ -96,6 +97,21 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickImageSavePath(string suggestedFileName, string extension)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.ContentEditor_SaveImage_Title,
+            Filter = string.Format(CultureInfo.CurrentCulture, Strings.ContentEditor_SaveImage_Filter, extension),
+            FileName = suggestedFileName,
+            DefaultExt = extension,
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickSavePath(string suggestedFileName, string? initialDirectory)
     {
         var dialog = new SaveFileDialog
@@ -112,6 +128,84 @@ internal sealed class FileDialogService : IFileDialogService
             dialog.InitialDirectory = initialDirectory;
         }
 
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickCommentExportPath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Comments_ExportDialog_Title,
+            Filter = Strings.Comments_ExportDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".md",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickReportSavePath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Sanitize_ReportDialog_Title,
+            Filter = Strings.Sanitize_ReportDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".txt",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickFormDataSavePath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.FormData_ExportDialog_Title,
+            Filter = Strings.FormData_ExportDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".json",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickFormDataFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.FormData_ImportDialog_Title,
+            Filter = Strings.FormData_ImportDialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickTableFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.FormMerge_DataDialog_Title,
+            Filter = Strings.FormMerge_DataDialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickCertificateFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.Sign_CertificateDialog_Title,
+            Filter = Strings.Sign_CertificateDialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
@@ -217,6 +311,60 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new SignatureWindow(viewModel));
+    }
+
+    public bool ShowStamp(ViewModels.Editing.StampDialogViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new StampWindow(viewModel));
+    }
+
+    public bool ShowBates(ViewModels.Editing.BatesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new BatesWindow(viewModel));
+    }
+
+    public bool ShowFlatten(ViewModels.Annotating.FlattenViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new FlattenWindow(viewModel));
+    }
+
+    public bool ShowFormMerge(ViewModels.Forms.FormMergeViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new FormMergeWindow(viewModel));
+    }
+
+    public bool ShowSecurity(ViewModels.Security.SecurityViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SecurityWindow(viewModel));
+    }
+
+    public bool ShowRedactionSearch(ViewModels.Security.RedactionSearchViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new RedactionSearchWindow(viewModel));
+    }
+
+    public bool ShowRedactionApply(ViewModels.Security.RedactionApplyViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new RedactionApplyWindow(viewModel));
+    }
+
+    public bool ShowSanitize(ViewModels.Security.SanitizeViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SanitizeWindow(viewModel));
+    }
+
+    public bool ShowSign(ViewModels.Security.SignDialogViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SignWindow(viewModel));
     }
 
     private static bool Show(Window window)

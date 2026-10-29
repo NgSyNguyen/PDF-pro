@@ -2,7 +2,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Rendering;
+using PdfPro.Core.Annotations;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.TestSupport;
@@ -88,6 +91,37 @@ internal sealed class FakePdfDocument(IReadOnlyList<PdfSize> pageSizes) : IPdfDo
 
         return Texts?.Invoke(pageIndex) ?? string.Empty;
     }
+
+    /// <summary>The characters of each page with their boxes (none by default).</summary>
+    public Func<int, PageText>? TextLayers { get; set; }
+
+    public async Task<PageText> GetPageTextLayerAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+    {
+        if (TextGate is { } gate)
+        {
+            await gate.Task.WaitAsync(cancellationToken);
+        }
+
+        return TextLayers?.Invoke(pageIndex) ?? PageText.Empty;
+    }
+
+    /// <summary>The annotations already in each page (none by default).</summary>
+    public Func<int, IReadOnlyList<FileAnnotation>>? FileAnnotations { get; set; }
+
+    public Task<IReadOnlyList<FileAnnotation>> GetPageAnnotationsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+        => Task.FromResult(FileAnnotations?.Invoke(pageIndex) ?? []);
+
+    /// <summary>The drawings of each page (none by default).</summary>
+    public Func<int, IReadOnlyList<PageObjectInfo>>? PageObjects { get; set; }
+
+    public Task<IReadOnlyList<PageObjectInfo>> GetPageObjectsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+        => Task.FromResult(PageObjects?.Invoke(pageIndex) ?? []);
+
+    /// <summary>What extracting an image gives (a 1×1 PNG by default).</summary>
+    public Func<int, PageObjectInfo, ExtractedImage>? ExtractedImages { get; set; }
+
+    public Task<ExtractedImage> ExtractImageAsync(int pageIndex, PageObjectInfo image, CancellationToken cancellationToken = default)
+        => Task.FromResult(ExtractedImages?.Invoke(pageIndex, image) ?? new ExtractedImage(".png", Core.Imaging.PngCodec.Encode(new Core.Imaging.BgraImage(1, 1, [0, 0, 0, 255])), 1, 1));
 }
 
 /// <summary>Records render requests; each one completes when the test says so (or immediately with AutoComplete).</summary>

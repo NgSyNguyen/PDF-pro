@@ -64,8 +64,15 @@ public interface IDocumentOpener
     /// </summary>
     /// <param name="path">The file to open (a copy in a session folder).</param>
     /// <param name="displayName">The name shown in prompts and messages (the original file name).</param>
+    /// <param name="password">A password to try first (asked for when it is wrong); null to try without one.</param>
     /// <param name="cancellationToken">Cancels the open.</param>
-    Task<Pdfium.IPdfDocument?> OpenAsync(string path, string displayName, CancellationToken cancellationToken = default);
+    Task<OpenedDocument?> OpenAsync(string path, string displayName, string? password = null, CancellationToken cancellationToken = default);
+}
+
+/// <summary>An opened document and the password it took (null when it opened without one); never shows the password.</summary>
+public sealed record OpenedDocument(Pdfium.IPdfDocument Document, string? Password)
+{
+    public override string ToString() => $"OpenedDocument {{ {Document.PageCount} pages, password: {(Password is null ? "no" : "yes")} }}";
 }
 
 /// <summary>Asks the user for a document password. Never stores it.</summary>
@@ -123,6 +130,37 @@ public interface IFileDialogService
     /// <returns>The chosen file, or null when cancelled.</returns>
     string? PickImageFile(string title);
 
+    /// <summary>Asks where to write the comments list: Markdown (.md) or CSV (.csv); overwriting asks for confirmation.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickCommentExportPath(string suggestedFileName);
+
+    /// <summary>Where to save a report as text (.txt); null when cancelled.</summary>
+    string? PickReportSavePath(string suggestedFileName);
+
+    /// <summary>Asks where to save an image taken out of a page (overwriting asks for confirmation).</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog, with its extension.</param>
+    /// <param name="extension">".jpg", ".jp2" or ".png": the only type offered.</param>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickImageSavePath(string suggestedFileName, string extension);
+
+    /// <summary>Asks where to write the form's data: JSON (.json) or XFDF (.xfdf); overwriting asks for confirmation.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickFormDataSavePath(string suggestedFileName);
+
+    /// <summary>Asks for a form data file to fill the form with (JSON, XFDF).</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickFormDataFile();
+
+    /// <summary>Asks for a table to merge into the form (CSV, Excel workbook).</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickTableFile();
+
+    /// <summary>Asks for a certificate file with its private key (.pfx, .p12) to sign with.</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickCertificateFile();
+
     /// <summary>Asks for a folder (where split files go).</summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="initialDirectory">Folder shown first (or its nearest existing parent), or null.</param>
@@ -150,4 +188,31 @@ public interface IPageDialogService
     bool ShowSheetLayout(ViewModels.Organizer.SheetLayoutViewModel viewModel);
 
     bool ShowSignature(ViewModels.Editing.SignatureViewModel viewModel);
+
+    /// <summary>A stamp dialog (watermark, background, header and footer, page numbers, removing stamps).</summary>
+    bool ShowStamp(ViewModels.Editing.StampDialogViewModel viewModel);
+
+    /// <summary>"Số Bates": numbering the pages of several files.</summary>
+    bool ShowBates(ViewModels.Editing.BatesViewModel viewModel);
+
+    /// <summary>"Làm phẳng chú thích": which comments, on which pages.</summary>
+    bool ShowFlatten(ViewModels.Annotating.FlattenViewModel viewModel);
+
+    /// <summary>"Trộn dữ liệu": the table, the file names and the output folder of a form merge.</summary>
+    bool ShowFormMerge(ViewModels.Forms.FormMergeViewModel viewModel);
+
+    /// <summary>"Mật khẩu &amp; quyền"; true when the user confirmed (or unlocked the document).</summary>
+    bool ShowSecurity(ViewModels.Security.SecurityViewModel viewModel);
+
+    /// <summary>"Tìm &amp; đánh dấu" (redaction by pattern); true when the user marked matches.</summary>
+    bool ShowRedactionSearch(ViewModels.Security.RedactionSearchViewModel viewModel);
+
+    /// <summary>"Áp dụng xóa vĩnh viễn"; true when the user confirmed.</summary>
+    bool ShowRedactionApply(ViewModels.Security.RedactionApplyViewModel viewModel);
+
+    /// <summary>"Làm sạch tài liệu"; true when the user confirmed.</summary>
+    bool ShowSanitize(ViewModels.Security.SanitizeViewModel viewModel);
+
+    /// <summary>"Ký số": the certificate and how the signature shows; true when the user confirmed.</summary>
+    bool ShowSign(ViewModels.Security.SignDialogViewModel viewModel);
 }

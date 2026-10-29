@@ -162,7 +162,7 @@
   <data name="Open_Error_FileInUse" xml:space="preserve"><value>“{0}” is being written by another application. Close it and try again.</value></data>
   <data name="Open_Error_FileTooLarge" xml:space="preserve"><value>“{0}” is larger than 4 GB, which PDF_Pro does not support yet.</value></data>
   <data name="Open_Error_ReadFailed" xml:space="preserve"><value>Reading “{0}” failed. Check the drive or network connection and try again.</value></data>
-  <data name="Open_Error_Corrupted" xml:space="preserve"><value>“{0}” is damaged or is not a PDF document.</value></data>
+  <data name="Open_Error_Corrupted" xml:space="preserve"><value>“{0}” is damaged or is not a PDF document. You may try Convert → Repair file.</value></data>
   <data name="Open_Error_UnsupportedSecurity" xml:space="preserve"><value>“{0}” uses a security handler that PDF_Pro does not support yet.</value></data>
   <data name="Open_Error_Unknown" xml:space="preserve"><value>An error occurred while opening “{0}”. Details were written to the log.</value></data>
   <data name="Open_NotPdf" xml:space="preserve"><value>Only PDF files can be opened; other files were skipped.</value></data>
@@ -277,7 +277,7 @@ Details were written to the log at:
   <data name="Cmd_RedoWith" xml:space="preserve"><value>Redo: {0}</value></data>
   <data name="Edit_Error_Title" xml:space="preserve"><value>Cannot do that</value></data>
   <data name="Edit_Error_Invalid" xml:space="preserve"><value>This action does not apply to the selected pages.</value></data>
-  <data name="Document_ReadOnlyEncrypted" xml:space="preserve"><value>This document is password protected: it can be viewed and printed but not reorganized or saved yet. This comes with the Security features.</value></data>
+  <data name="Document_ReadOnlyEncrypted" xml:space="preserve"><value>This document is password protected, so it can only be viewed and printed. To edit or save it, open Security → Password and enter the owner password.</value></data>
 
   <!-- Saving -->
   <data name="Save_Progress" xml:space="preserve"><value>Saving “{0}”…</value></data>
@@ -634,6 +634,151 @@ The original file was not changed and your changes are still here.</value></data
   <data name="History_HeaderFooter" xml:space="preserve"><value>Add header and footer</value></data>
   <data name="History_PageNumbers" xml:space="preserve"><value>Add page numbers</value></data>
   <data name="History_RemoveStamps" xml:space="preserve"><value>Remove stamps</value></data>
+  <data name="History_AddAnnotations" xml:space="preserve"><value>Add {0} annotations</value></data>
+  <data name="History_UpdateAnnotations" xml:space="preserve"><value>Edit {0} annotations</value></data>
+  <data name="History_DeleteAnnotations" xml:space="preserve"><value>Delete {0} annotations</value></data>
+  <data name="History_EditFileComments" xml:space="preserve"><value>Edit {0} comments of the file</value></data>
+  <data name="History_ReplyFileComment" xml:space="preserve"><value>Reply to a comment</value></data>
+  <data name="History_ReviewFileComment" xml:space="preserve"><value>Set a comment's state</value></data>
+  <data name="History_EditFileComment" xml:space="preserve"><value>Edit a comment</value></data>
+  <data name="History_DeleteFileComment" xml:space="preserve"><value>Delete a comment</value></data>
+  <data name="History_MoveFileComment" xml:space="preserve"><value>Move an annotation</value></data>
+  <data name="Ribbon_Group_Review" xml:space="preserve"><value>Review</value></data>
+  <data name="Cmd_Comments" xml:space="preserve"><value>Comments</value></data>
+  <data name="Cmd_Comments_ToolTip" xml:space="preserve"><value>Open the list of the document's comments: filter, reply, set states, export</value></data>
+  <data name="Cmd_FlattenAnnotations" xml:space="preserve"><value>Flatten</value></data>
+  <data name="Cmd_FlattenAnnotations_ToolTip" xml:space="preserve"><value>Draw the annotations into the page content so they can no longer be changed or removed</value></data>
+  <data name="Flatten_Title" xml:space="preserve"><value>Flatten annotations</value></data>
+  <data name="Flatten_Message" xml:space="preserve"><value>The annotations chosen below will be drawn into the page content: the pages look the same, but they can no longer be edited, answered or deleted, and their conversations are dropped. Links and form fields stay. This can be undone.</value></data>
+  <data name="Flatten_Kinds" xml:space="preserve"><value>Annotations to flatten</value></data>
+  <data name="Flatten_Apply" xml:space="preserve"><value>Flatten</value></data>
+  <data name="History_FlattenAnnotations" xml:space="preserve"><value>Flatten annotations</value></data>
+  <data name="History_FlattenAnnotationsOn" xml:space="preserve"><value>Flatten the annotations of {0} pages</value></data>
+  <data name="History_ReplaceText" xml:space="preserve"><value>Edit text</value></data>
+  <data name="History_DeleteObject" xml:space="preserve"><value>Delete an object</value></data>
+  <data name="History_MoveObject" xml:space="preserve"><value>Move an object</value></data>
+  <data name="History_RotateObject" xml:space="preserve"><value>Rotate an object</value></data>
+  <data name="History_ReplaceImage" xml:space="preserve"><value>Replace an image</value></data>
+  <data name="History_FillForm" xml:space="preserve"><value>Fill {0} form fields</value></data>
+  <data name="Forms_RequiredToolTip" xml:space="preserve"><value>{0} (required)</value></data>
+  <data name="Forms_XfaFull" xml:space="preserve"><value>This is an XFA form: PDF_Pro cannot fill it yet. Use Adobe Acrobat Reader to fill it.</value></data>
+  <data name="Forms_XfaForeground" xml:space="preserve"><value>This form has an XFA part: PDF_Pro fills its AcroForm fields; the XFA layout is not shown.</value></data>
+  <data name="Forms_Required_Title" xml:space="preserve"><value>Required fields are empty</value></data>
+  <data name="Forms_Required_Message" xml:space="preserve"><value>The form still has {0} required fields to fill:
+{1}
+
+Save the document anyway?</value></data>
+  <data name="Forms_Required_Save" xml:space="preserve"><value>Save anyway</value></data>
+  <data name="Forms_Required_Back" xml:space="preserve"><value>Go back and fill</value></data>
+  <data name="Cmd_EditContent_ToolTip" xml:space="preserve"><value>Edit the text, images and drawings already on the page: hover to see their frames, click to select, drag to move, double-click text to edit it</value></data>
+  <data name="ContentEditor_Hint" xml:space="preserve"><value>Edit content — text is only edited exactly within one text block</value></data>
+  <data name="ContentEditor_TextBlock" xml:space="preserve"><value>Text block · {0} {1} pt</value></data>
+  <data name="ContentEditor_Image" xml:space="preserve"><value>Image {0} × {1}</value></data>
+  <data name="ContentEditor_Form" xml:space="preserve"><value>Group of drawings</value></data>
+  <data name="ContentEditor_Drawing" xml:space="preserve"><value>Drawing</value></data>
+  <data name="ContentEditor_UnknownFont" xml:space="preserve"><value>(unknown font)</value></data>
+  <data name="ContentEditor_EditText" xml:space="preserve"><value>Edit text</value></data>
+  <data name="ContentEditor_RotateLeft" xml:space="preserve"><value>Rotate left</value></data>
+  <data name="ContentEditor_RotateRight" xml:space="preserve"><value>Rotate right</value></data>
+  <data name="ContentEditor_ReplaceImage" xml:space="preserve"><value>Replace image…</value></data>
+  <data name="ContentEditor_SaveImage" xml:space="preserve"><value>Save image…</value></data>
+  <data name="ContentEditor_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="ContentEditor_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="ContentEditor_Wrap" xml:space="preserve"><value>Wrap to the old width</value></data>
+  <data name="ContentEditor_TextLimit" xml:space="preserve"><value>Text is only edited exactly within one text block. Enter to finish, Shift+Enter for a new line, Esc to cancel.</value></data>
+  <data name="ContentEditor_TextBox_Name" xml:space="preserve"><value>Text of the text block</value></data>
+  <data name="ContentEditor_FontReplaced_Title" xml:space="preserve"><value>Font replaced</value></data>
+  <data name="ContentEditor_FontReplaced" xml:space="preserve"><value>The font "{0}" embedded in the file lacks these characters: {1}
+The text block was rewritten with a bundled Unicode font (Noto) of the same size, colour and place.</value></data>
+  <data name="ContentEditor_SaveImage_Title" xml:space="preserve"><value>Save image</value></data>
+  <data name="ContentEditor_SaveImage_Filter" xml:space="preserve"><value>Image (*{0})|*{0}</value></data>
+  <data name="ContentEditor_ImageFileName" xml:space="preserve"><value>Page {0} - image {1}</value></data>
+  <data name="ContentEditor_Error_Title" xml:space="preserve"><value>The image could not be saved</value></data>
+  <data name="ContentEditor_Error_SaveImage" xml:space="preserve"><value>This image could not be read from the file or the image file could not be written. Try again or choose another folder.</value></data>
+  <data name="History_EditContent" xml:space="preserve"><value>Edit content ({0} changes)</value></data>
+  <data name="Cmd_Squiggly" xml:space="preserve"><value>Squiggly</value></data>
+  <data name="Cmd_Highlight_ToolTip" xml:space="preserve"><value>Highlight the selected text; with nothing selected, turn the tool on and drag over text (Esc turns it off)</value></data>
+  <data name="Cmd_Underline_ToolTip" xml:space="preserve"><value>Underline the selected text; with nothing selected, turn the tool on and drag over text</value></data>
+  <data name="Cmd_Strikeout_ToolTip" xml:space="preserve"><value>Strike out the selected text; with nothing selected, turn the tool on and drag over text</value></data>
+  <data name="Cmd_Squiggly_ToolTip" xml:space="preserve"><value>Squiggly underline for the selected text; with nothing selected, turn the tool on and drag over text</value></data>
+  <data name="Cmd_StickyNote_ToolTip" xml:space="preserve"><value>Click on the page to place a note and write a comment</value></data>
+  <data name="Cmd_DeleteAnnotation" xml:space="preserve"><value>Delete annotation</value></data>
+  <data name="Annotation_Header" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Annotation_NoAuthor" xml:space="preserve"><value>Unknown author</value></data>
+  <data name="Annotation_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Annotation_Contents_Name" xml:space="preserve"><value>Comment</value></data>
+  <data name="Annotation_ToolActive" xml:space="preserve"><value>Tool: {0} — Esc turns it off</value></data>
+  <data name="Annotation_PolygonHint" xml:space="preserve"><value>click to add points, double-click to finish</value></data>
+  <data name="Annotation_Tool_Polygon" xml:space="preserve"><value>Polygon</value></data>
+  <data name="Annotation_Tool_Polyline" xml:space="preserve"><value>Polyline</value></data>
+  <data name="Annotation_Tool_None" xml:space="preserve"><value>Select text or annotations</value></data>
+  <data name="Annotation_TextBoxHeader" xml:space="preserve"><value>Text box — type its text</value></data>
+  <data name="Annotation_Comment" xml:space="preserve"><value>Comment…</value></data>
+  <data name="Annotation_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Annotation_FileSelected" xml:space="preserve"><value>Annotation already in the file — drag to move it, Delete to remove it (written as a new revision)</value></data>
+  <data name="Annotation_FileSelectedFixed" xml:space="preserve"><value>Annotation already in the file — Delete to remove it (written as a new revision)</value></data>
+  <data name="Annotation_Width" xml:space="preserve"><value>Width (pt)</value></data>
+  <data name="Annotation_StampWithDate" xml:space="preserve"><value>With the date</value></data>
+  <data name="Annotation_StampText" xml:space="preserve"><value>Stamp text</value></data>
+  <data name="AnnotationStamp_Approved" xml:space="preserve"><value>APPROVED</value></data>
+  <data name="AnnotationStamp_Seen" xml:space="preserve"><value>REVIEWED</value></data>
+  <data name="AnnotationStamp_NotApproved" xml:space="preserve"><value>NOT APPROVED</value></data>
+  <data name="AnnotationStamp_Urgent" xml:space="preserve"><value>URGENT</value></data>
+  <data name="AnnotationStamp_Confidential" xml:space="preserve"><value>CONFIDENTIAL</value></data>
+  <data name="AnnotationStamp_Draft" xml:space="preserve"><value>DRAFT</value></data>
+  <data name="AnnotationStamp_Copy" xml:space="preserve"><value>CERTIFIED COPY</value></data>
+  <data name="Cmd_TextBox_ToolTip" xml:space="preserve"><value>Click or drag on the page to make a text box, then type its text</value></data>
+  <data name="Cmd_Ink_ToolTip" xml:space="preserve"><value>Draw free-hand on the page (the tool stays on until Esc)</value></data>
+  <data name="Cmd_Shapes_ToolTip" xml:space="preserve"><value>Rectangles, ellipses, lines, arrows, polygons — chosen on the tool bar</value></data>
+  <data name="Cmd_StampAnnotation_ToolTip" xml:space="preserve"><value>Click on the page to stamp it (APPROVED, REVIEWED…) with the date</value></data>
+  <data name="Comments_Title" xml:space="preserve"><value>Comments</value></data>
+  <data name="Sidebar_Comments" xml:space="preserve"><value>Comments</value></data>
+  <data name="Sidebar_CommentsEmpty" xml:space="preserve"><value>Open a document to see its comments.</value></data>
+  <data name="Comments_Loading" xml:space="preserve"><value>Reading comments…</value></data>
+  <data name="Comments_None" xml:space="preserve"><value>No comments.</value></data>
+  <data name="Comments_Count" xml:space="preserve"><value>{0} comments</value></data>
+  <data name="Comments_CountFiltered" xml:space="preserve"><value>{0}/{1} comments</value></data>
+  <data name="Comments_Search" xml:space="preserve"><value>Search the comments</value></data>
+  <data name="Comments_Filter_Kind" xml:space="preserve"><value>Kind</value></data>
+  <data name="Comments_Filter_Author" xml:space="preserve"><value>Author</value></data>
+  <data name="Comments_Filter_State" xml:space="preserve"><value>Status</value></data>
+  <data name="Comments_Filter_AllKinds" xml:space="preserve"><value>All kinds</value></data>
+  <data name="Comments_Filter_Notes" xml:space="preserve"><value>Notes and text boxes</value></data>
+  <data name="Comments_Filter_Markup" xml:space="preserve"><value>Text markup</value></data>
+  <data name="Comments_Filter_Drawings" xml:space="preserve"><value>Drawings</value></data>
+  <data name="Comments_Filter_Stamps" xml:space="preserve"><value>Stamps</value></data>
+  <data name="Comments_Filter_AllAuthors" xml:space="preserve"><value>All authors</value></data>
+  <data name="Comments_Filter_AllStates" xml:space="preserve"><value>Any status</value></data>
+  <data name="Comments_State_None" xml:space="preserve"><value>No status</value></data>
+  <data name="Comments_State_Accepted" xml:space="preserve"><value>Accepted</value></data>
+  <data name="Comments_State_Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="Comments_State_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="Comments_State_Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="Comments_Kind_Other" xml:space="preserve"><value>Annotation</value></data>
+  <data name="Comments_Kind_Attachment" xml:space="preserve"><value>File attachment</value></data>
+  <data name="Comments_Kind_Caret" xml:space="preserve"><value>Insert text</value></data>
+  <data name="Comments_FromFile" xml:space="preserve"><value>Already in the file — each change makes a new revision of the document</value></data>
+  <data name="Comments_Reply" xml:space="preserve"><value>Reply</value></data>
+  <data name="Comments_Edit" xml:space="preserve"><value>Edit the comment</value></data>
+  <data name="Comments_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Comments_ReplyPlaceholder" xml:space="preserve"><value>Write a reply…</value></data>
+  <data name="Comments_Delete" xml:space="preserve"><value>Delete comment</value></data>
+  <data name="Comments_Export" xml:space="preserve"><value>Export…</value></data>
+  <data name="Comments_Export_ToolTip" xml:space="preserve"><value>Export the comments shown to a Markdown or CSV file</value></data>
+  <data name="Comments_Export_Page" xml:space="preserve"><value>Page</value></data>
+  <data name="Comments_Export_Kind" xml:space="preserve"><value>Kind</value></data>
+  <data name="Comments_Export_Author" xml:space="preserve"><value>Author</value></data>
+  <data name="Comments_Export_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Comments_Export_Contents" xml:space="preserve"><value>Comment</value></data>
+  <data name="Comments_Export_MarkedText" xml:space="preserve"><value>Marked text</value></data>
+  <data name="Comments_Export_State" xml:space="preserve"><value>Status</value></data>
+  <data name="Comments_Export_Reply" xml:space="preserve"><value>Reply</value></data>
+  <data name="Comments_Export_ErrorTitle" xml:space="preserve"><value>The comments could not be exported</value></data>
+  <data name="Comments_Export_Error" xml:space="preserve"><value>The file could not be written. Check that the folder has free space and that you may write there.</value></data>
+  <data name="Comments_ExportDialog_Title" xml:space="preserve"><value>Export comments</value></data>
+  <data name="Comments_ExportDialog_Filter" xml:space="preserve"><value>Markdown (*.md)|*.md|CSV — opens in Excel (*.csv)|*.csv</value></data>
+  <data name="Settings_AnnotationAuthor" xml:space="preserve"><value>Annotation author</value></data>
+  <data name="Settings_AnnotationAuthor_Hint" xml:space="preserve"><value>Shown to the readers of the document next to your annotations. Blank: your Windows user name.</value></data>
   <data name="Editor_Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Editor_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Editor_Apply" xml:space="preserve"><value>Apply</value></data>
@@ -702,4 +847,568 @@ The original file was not changed and your changes are still here.</value></data
   <data name="Signature_Use" xml:space="preserve"><value>Use signature</value></data>
   <data name="Signature_Error_Picture" xml:space="preserve"><value>This picture cannot be read. Choose a PNG, JPEG, BMP, GIF or TIFF file.</value></data>
   <data name="Editor_Tool_Signature" xml:space="preserve"><value>Hand signature</value></data>
+  <data name="Stamp_PreviewOf" xml:space="preserve"><value>Preview of page {0}</value></data>
+  <data name="Stamp_Error_Pages" xml:space="preserve"><value>Enter a valid page range, e.g. 1-3, 8.</value></data>
+  <data name="Stamp_Error_Invalid" xml:space="preserve"><value>Some values are not valid. Check the font, the font size and the numbers.</value></data>
+  <data name="Stamp_Error_Color" xml:space="preserve"><value>The colour must look like #RRGGBB, e.g. #FFF7E0.</value></data>
+  <data name="Stamp_Error_Title" xml:space="preserve"><value>The stamp could not be added</value></data>
+  <data name="Stamp_Error_Scan" xml:space="preserve"><value>The stamps in the document could not be read.</value></data>
+  <data name="Stamp_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Stamp_Font" xml:space="preserve"><value>Font</value></data>
+  <data name="Stamp_FontSize" xml:space="preserve"><value>Font size (pt)</value></data>
+  <data name="Stamp_Bold" xml:space="preserve"><value>Bold</value></data>
+  <data name="Stamp_Color" xml:space="preserve"><value>Colour</value></data>
+  <data name="Stamp_HexColor" xml:space="preserve"><value>Colour code (#RRGGBB)</value></data>
+  <data name="Stamp_Position" xml:space="preserve"><value>Position</value></data>
+  <data name="Stamp_Fields" xml:space="preserve"><value>You can insert: {page} page number · {pages} last page number · {date} date · {filename} file name · {title} title.</value></data>
+  <data name="Watermark_Title" xml:space="preserve"><value>Watermark</value></data>
+  <data name="Watermark_DefaultText" xml:space="preserve"><value>DRAFT</value></data>
+  <data name="Watermark_Kind_Text" xml:space="preserve"><value>Text</value></data>
+  <data name="Watermark_Kind_Picture" xml:space="preserve"><value>Picture</value></data>
+  <data name="Watermark_Text" xml:space="preserve"><value>Text</value></data>
+  <data name="Watermark_PickPicture" xml:space="preserve"><value>Choose a picture…</value></data>
+  <data name="Watermark_NoPicture" xml:space="preserve"><value>No picture chosen.</value></data>
+  <data name="Watermark_PictureScale" xml:space="preserve"><value>Picture width (% of the page width)</value></data>
+  <data name="Watermark_Opacity" xml:space="preserve"><value>Opacity (%)</value></data>
+  <data name="Watermark_Rotation" xml:space="preserve"><value>Rotation (degrees, counter-clockwise)</value></data>
+  <data name="Watermark_Tile" xml:space="preserve"><value>Tile over the page</value></data>
+  <data name="Watermark_Behind" xml:space="preserve"><value>Behind the page content</value></data>
+  <data name="Watermark_Behind_Note" xml:space="preserve"><value>Opaque scanned pages hide a watermark placed behind the content.</value></data>
+  <data name="Watermark_Error_Text" xml:space="preserve"><value>Enter the watermark text.</value></data>
+  <data name="Watermark_Error_Picture" xml:space="preserve"><value>Choose a picture.</value></data>
+  <data name="Background_Title" xml:space="preserve"><value>Page background</value></data>
+  <data name="Background_Color" xml:space="preserve"><value>Colour</value></data>
+  <data name="Background_Picture" xml:space="preserve"><value>Picture</value></data>
+  <data name="Background_KeepProportions" xml:space="preserve"><value>Keep the picture's proportions (no stretching)</value></data>
+  <data name="HeaderFooter_Title" xml:space="preserve"><value>Header &amp; footer</value></data>
+  <data name="HeaderFooter_DefaultFooter" xml:space="preserve"><value>Page {page} of {pages}</value></data>
+  <data name="HeaderFooter_Header" xml:space="preserve"><value>Header</value></data>
+  <data name="HeaderFooter_Footer" xml:space="preserve"><value>Footer</value></data>
+  <data name="HeaderFooter_Left" xml:space="preserve"><value>Left</value></data>
+  <data name="HeaderFooter_Center" xml:space="preserve"><value>Centre</value></data>
+  <data name="HeaderFooter_Right" xml:space="preserve"><value>Right</value></data>
+  <data name="HeaderFooter_MarginSides" xml:space="preserve"><value>Left and right margin (mm)</value></data>
+  <data name="HeaderFooter_MarginEnds" xml:space="preserve"><value>Top and bottom margin (mm)</value></data>
+  <data name="HeaderFooter_SkipFirst" xml:space="preserve"><value>Not on the first page (a cover)</value></data>
+  <data name="HeaderFooter_Numbering" xml:space="preserve"><value>Page numbers</value></data>
+  <data name="HeaderFooter_StartNumber" xml:space="preserve"><value>Start at</value></data>
+  <data name="HeaderFooter_NumberStyle" xml:space="preserve"><value>Number style</value></data>
+  <data name="HeaderFooter_Error_Text" xml:space="preserve"><value>Enter text in at least one place; fields must be written correctly, e.g. {page}.</value></data>
+  <data name="PageNumbers_Title" xml:space="preserve"><value>Page numbers</value></data>
+  <data name="PageNumbers_Pattern" xml:space="preserve"><value>Pattern</value></data>
+  <data name="PageNumbers_Pattern_Page" xml:space="preserve"><value>Page {page}</value></data>
+  <data name="PageNumbers_Pattern_PageOf" xml:space="preserve"><value>Page {page} of {pages}</value></data>
+  <data name="PageNumbers_FirstPage" xml:space="preserve"><value>Start numbering on page</value></data>
+  <data name="PageNumbers_StartNumber" xml:space="preserve"><value>First number</value></data>
+  <data name="PageNumbers_Error_FirstPage" xml:space="preserve"><value>The start page must be between 1 and {0}.</value></data>
+  <data name="RemoveStamps_Title" xml:space="preserve"><value>Remove stamps</value></data>
+  <data name="RemoveStamps_Intro" xml:space="preserve"><value>PDF_Pro added these stamps to the document. Choose the ones to remove:</value></data>
+  <data name="RemoveStamps_Watermark" xml:space="preserve"><value>Watermark ({0} pages)</value></data>
+  <data name="RemoveStamps_Background" xml:space="preserve"><value>Background ({0} pages)</value></data>
+  <data name="RemoveStamps_HeaderFooter" xml:space="preserve"><value>Header &amp; footer ({0} pages)</value></data>
+  <data name="RemoveStamps_PageNumbers" xml:space="preserve"><value>Page numbers ({0} pages)</value></data>
+  <data name="RemoveStamps_Bates" xml:space="preserve"><value>Bates numbers ({0} pages)</value></data>
+  <data name="RemoveStamps_None" xml:space="preserve"><value>The document has no stamps added by PDF_Pro.</value></data>
+  <data name="RemoveStamps_Error_NoKind" xml:space="preserve"><value>Choose at least one kind of stamp.</value></data>
+  <data name="RemoveStamps_Note" xml:space="preserve"><value>Only stamps added by PDF_Pro can be removed; text and pictures that were already in the file stay.</value></data>
+  <data name="NumberStyle_Arabic" xml:space="preserve"><value>1, 2, 3</value></data>
+  <data name="NumberStyle_LowerRoman" xml:space="preserve"><value>i, ii, iii</value></data>
+  <data name="NumberStyle_UpperRoman" xml:space="preserve"><value>I, II, III</value></data>
+  <data name="Anchor_TopLeft" xml:space="preserve"><value>Top left</value></data>
+  <data name="Anchor_TopCenter" xml:space="preserve"><value>Top centre</value></data>
+  <data name="Anchor_TopRight" xml:space="preserve"><value>Top right</value></data>
+  <data name="Anchor_MiddleLeft" xml:space="preserve"><value>Middle left</value></data>
+  <data name="Anchor_Center" xml:space="preserve"><value>Centre</value></data>
+  <data name="Anchor_MiddleRight" xml:space="preserve"><value>Middle right</value></data>
+  <data name="Anchor_BottomLeft" xml:space="preserve"><value>Bottom left</value></data>
+  <data name="Anchor_BottomCenter" xml:space="preserve"><value>Bottom centre</value></data>
+  <data name="Anchor_BottomRight" xml:space="preserve"><value>Bottom right</value></data>
+  <data name="Cmd_Background" xml:space="preserve"><value>Background</value></data>
+  <data name="Cmd_RemoveStamps" xml:space="preserve"><value>Remove stamps</value></data>
+  <data name="Cmd_RemoveStamps_ToolTip" xml:space="preserve"><value>Removes watermarks, backgrounds, headers, footers and page numbers added by PDF_Pro</value></data>
+  <data name="Cmd_Bates" xml:space="preserve"><value>Bates numbers</value></data>
+  <data name="Cmd_Bates_ToolTip" xml:space="preserve"><value>Number the pages of several files with one running Bates number</value></data>
+  <data name="Bates_Title" xml:space="preserve"><value>Bates numbering</value></data>
+  <data name="Bates_Files_Header" xml:space="preserve"><value>Files in numbering order (drag to reorder, drop files from Explorer here)</value></data>
+  <data name="Bates_Column_Numbers" xml:space="preserve"><value>Bates numbers</value></data>
+  <data name="Bates_Label_Header" xml:space="preserve"><value>Label</value></data>
+  <data name="Bates_Prefix" xml:space="preserve"><value>Prefix</value></data>
+  <data name="Bates_Suffix" xml:space="preserve"><value>Suffix</value></data>
+  <data name="Bates_Digits" xml:space="preserve"><value>Digits</value></data>
+  <data name="Bates_StartNumber" xml:space="preserve"><value>First number</value></data>
+  <data name="Bates_Sample" xml:space="preserve"><value>Label of the first page</value></data>
+  <data name="Bates_Output_Label" xml:space="preserve"><value>Save the numbered copies in</value></data>
+  <data name="Bates_PickFolder_Title" xml:space="preserve"><value>Choose the folder for the Bates numbered copies</value></data>
+  <data name="Bates_Overwrite" xml:space="preserve"><value>Replace files with the same name</value></data>
+  <data name="Bates_Run" xml:space="preserve"><value>Number</value></data>
+  <data name="Bates_Note" xml:space="preserve"><value>The files themselves are not changed: numbered copies keep their names and go to the chosen folder.</value></data>
+  <data name="Bates_DefaultFolder" xml:space="preserve"><value>Bates numbered</value></data>
+  <data name="Bates_Range" xml:space="preserve"><value>{0} – {1}</value></data>
+  <data name="Bates_Summary" xml:space="preserve"><value>{0} files · {1} pages · {2} → {3}</value></data>
+  <data name="Bates_Warning_Digits" xml:space="preserve"><value>The last number {0} is longer than the {1} digits chosen; larger numbers get more digits.</value></data>
+  <data name="Bates_Error_NoFiles" xml:space="preserve"><value>Add at least one file.</value></data>
+  <data name="Bates_Error_Affix" xml:space="preserve"><value>The prefix and suffix can have at most {0} characters and no control characters.</value></data>
+  <data name="Bates_Error_Output" xml:space="preserve"><value>Choose the folder for the numbered copies.</value></data>
+  <data name="Bates_Error_OutputIsInput" xml:space="preserve"><value>With replacing on, the folder cannot be one that holds the files (the copies would replace them).</value></data>
+  <data name="Bates_Error_AddTitle" xml:space="preserve"><value>The file could not be added</value></data>
+  <data name="Bates_Error_Encrypted" xml:space="preserve"><value>"{0}" is password protected. Bates numbering of protected files comes with encryption support.</value></data>
+  <data name="Bates_Progress" xml:space="preserve"><value>Bates numbering {0} files…</value></data>
+  <data name="Bates_Done" xml:space="preserve"><value>Bates numbered {0} files: {1} → {2}</value></data>
+  <data name="Bates_Cancelled" xml:space="preserve"><value>Bates numbering cancelled</value></data>
+  <data name="Bates_FailedStatus" xml:space="preserve"><value>Bates numbering failed</value></data>
+  <data name="Bates_Error_Title" xml:space="preserve"><value>Bates numbering failed</value></data>
+  <data name="Bates_Error_File" xml:space="preserve"><value>"{0}" could not be read or written. No file was created.</value></data>
+  <data name="Cmd_Find_ToolTip" xml:space="preserve"><value>Find text in the document (Ctrl+F; F3 / Shift+F3: next / previous match)</value></data>
+  <data name="Sidebar_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Sidebar_SearchEmpty" xml:space="preserve"><value>Open a document to search its text.</value></data>
+  <data name="Search_Query" xml:space="preserve"><value>Search the document</value></data>
+  <data name="Search_Run" xml:space="preserve"><value>Search (Enter)</value></data>
+  <data name="Search_MatchCase" xml:space="preserve"><value>Match case</value></data>
+  <data name="Search_WholeWord" xml:space="preserve"><value>Whole words</value></data>
+  <data name="Search_Regex" xml:space="preserve"><value>Regular expression</value></data>
+  <data name="Search_Diacritics" xml:space="preserve"><value>Vietnamese tone marks</value></data>
+  <data name="Search_Diacritics_Auto" xml:space="preserve"><value>Automatic</value></data>
+  <data name="Search_Diacritics_Ignore" xml:space="preserve"><value>Ignore marks</value></data>
+  <data name="Search_Diacritics_Match" xml:space="preserve"><value>Match marks</value></data>
+  <data name="Search_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Search_Results" xml:space="preserve"><value>Search results</value></data>
+  <data name="Search_ResultPage" xml:space="preserve"><value>Page {0}</value></data>
+  <data name="Search_Progress" xml:space="preserve"><value>Searching page {0}/{1}…</value></data>
+  <data name="Search_Done" xml:space="preserve"><value>{0} matches on {1} pages</value></data>
+  <data name="Search_NoMatches" xml:space="preserve"><value>Not found.</value></data>
+  <data name="Search_Stopped" xml:space="preserve"><value>Search stopped.</value></data>
+  <data name="Search_Error_Invalid" xml:space="preserve"><value>The regular expression is not valid.</value></data>
+  <data name="Search_Error_Timeout" xml:space="preserve"><value>The expression took too long on a page and was stopped. Try a simpler expression.</value></data>
+  <data name="Search_ScannedPages" xml:space="preserve"><value>{0} pages are pictures without a text layer — they need text recognition (OCR) to be searched.</value></data>
+  <data name="Cmd_DesignForm" xml:space="preserve"><value>Design form</value></data>
+  <data name="Cmd_DesignForm_ToolTip" xml:space="preserve"><value>Place new fields by dragging a box on the page; select, move, resize, change or delete existing fields</value></data>
+  <data name="Ribbon_Group_Forms" xml:space="preserve"><value>Forms</value></data>
+  <data name="History_AddFormFields" xml:space="preserve"><value>Add {0} form fields</value></data>
+  <data name="History_RemoveFormFields" xml:space="preserve"><value>Delete {0} form fields</value></data>
+  <data name="History_MoveFormField" xml:space="preserve"><value>Move form field</value></data>
+  <data name="History_UpdateFormField" xml:space="preserve"><value>Change field {0}</value></data>
+  <data name="History_DesignForm" xml:space="preserve"><value>Design form</value></data>
+  <data name="FormDesigner_Name_Text" xml:space="preserve"><value>Text</value></data>
+  <data name="FormDesigner_Name_CheckBox" xml:space="preserve"><value>Check box</value></data>
+  <data name="FormDesigner_Name_RadioGroup" xml:space="preserve"><value>Radio group</value></data>
+  <data name="FormDesigner_Name_ComboBox" xml:space="preserve"><value>Drop-down</value></data>
+  <data name="FormDesigner_Name_ListBox" xml:space="preserve"><value>List</value></data>
+  <data name="FormDesigner_Name_Button" xml:space="preserve"><value>Button</value></data>
+  <data name="FormDesigner_Name_Signature" xml:space="preserve"><value>Signature</value></data>
+  <data name="FormDesigner_DefaultChoice" xml:space="preserve"><value>Choice {0}</value></data>
+  <data name="FormDesigner_DefaultCaption" xml:space="preserve"><value>Submit</value></data>
+  <data name="FormDesigner_Hint" xml:space="preserve"><value>Pick a tool, then drag a box on the page to place a field (a click uses the usual size); click to select, drag to move, drag a corner to resize</value></data>
+  <data name="FormDesigner_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="FormDesigner_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="FormDesigner_Tool_Select" xml:space="preserve"><value>Select, move, resize</value></data>
+  <data name="FormDesigner_Tool_Text" xml:space="preserve"><value>Text field</value></data>
+  <data name="FormDesigner_Tool_CheckBox" xml:space="preserve"><value>Check box</value></data>
+  <data name="FormDesigner_Tool_RadioButton" xml:space="preserve"><value>Radio button (with a group selected, the new button joins it)</value></data>
+  <data name="FormDesigner_Tool_ComboBox" xml:space="preserve"><value>Drop-down list</value></data>
+  <data name="FormDesigner_Tool_ListBox" xml:space="preserve"><value>List box</value></data>
+  <data name="FormDesigner_Tool_Button" xml:space="preserve"><value>Button</value></data>
+  <data name="FormDesigner_Tool_Signature" xml:space="preserve"><value>Signature field</value></data>
+  <data name="FieldProps_Empty" xml:space="preserve"><value>Select a field on the page to see and change its properties.</value></data>
+  <data name="FieldProps_Kind_Text" xml:space="preserve"><value>Text field</value></data>
+  <data name="FieldProps_Kind_CheckBox" xml:space="preserve"><value>Check box</value></data>
+  <data name="FieldProps_Kind_RadioGroup" xml:space="preserve"><value>Radio group</value></data>
+  <data name="FieldProps_Kind_ComboBox" xml:space="preserve"><value>Drop-down list</value></data>
+  <data name="FieldProps_Kind_ListBox" xml:space="preserve"><value>List box</value></data>
+  <data name="FieldProps_Kind_PushButton" xml:space="preserve"><value>Button</value></data>
+  <data name="FieldProps_Kind_Signature" xml:space="preserve"><value>Signature field</value></data>
+  <data name="FieldProps_Name" xml:space="preserve"><value>Field name</value></data>
+  <data name="FieldProps_ToolTip" xml:space="preserve"><value>Tool tip</value></data>
+  <data name="FieldProps_Required" xml:space="preserve"><value>Required</value></data>
+  <data name="FieldProps_ReadOnly" xml:space="preserve"><value>Read-only</value></data>
+  <data name="FieldProps_Multiline" xml:space="preserve"><value>Multi-line</value></data>
+  <data name="FieldProps_Password" xml:space="preserve"><value>Password (hide characters)</value></data>
+  <data name="FieldProps_MaxLength" xml:space="preserve"><value>Maximum characters (0 = no limit)</value></data>
+  <data name="FieldProps_Look" xml:space="preserve"><value>Appearance</value></data>
+  <data name="FieldProps_Font" xml:space="preserve"><value>Font</value></data>
+  <data name="FieldProps_FontSize" xml:space="preserve"><value>Font size (0 = fit the box)</value></data>
+  <data name="FieldProps_Alignment" xml:space="preserve"><value>Alignment</value></data>
+  <data name="FieldProps_Align_Left" xml:space="preserve"><value>Left</value></data>
+  <data name="FieldProps_Align_Center" xml:space="preserve"><value>Center</value></data>
+  <data name="FieldProps_Align_Right" xml:space="preserve"><value>Right</value></data>
+  <data name="FieldProps_Value" xml:space="preserve"><value>Value</value></data>
+  <data name="FieldProps_Default" xml:space="preserve"><value>Default value</value></data>
+  <data name="FieldProps_CheckedByDefault" xml:space="preserve"><value>Checked by default</value></data>
+  <data name="FieldProps_Options" xml:space="preserve"><value>Choices (one per line)</value></data>
+  <data name="FieldProps_Editable" xml:space="preserve"><value>Allow typing other values</value></data>
+  <data name="FieldProps_MultiSelect" xml:space="preserve"><value>Allow several choices</value></data>
+  <data name="FieldProps_Format" xml:space="preserve"><value>Format</value></data>
+  <data name="FieldProps_Format_None" xml:space="preserve"><value>None</value></data>
+  <data name="FieldProps_Format_Number" xml:space="preserve"><value>Number</value></data>
+  <data name="FieldProps_Format_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="FieldProps_Decimals" xml:space="preserve"><value>Decimal places</value></data>
+  <data name="FieldProps_DotComma" xml:space="preserve"><value>Vietnamese style (1.234,56)</value></data>
+  <data name="FieldProps_DatePattern" xml:space="preserve"><value>Date pattern (d = day, m = month, y = year)</value></data>
+  <data name="FieldProps_Caption" xml:space="preserve"><value>Button caption</value></data>
+  <data name="FieldProps_NoChoice" xml:space="preserve"><value>(none)</value></data>
+  <data name="FieldProps_RadioNote" xml:space="preserve"><value>To add a button to this group, keep it selected and use the Radio button tool.</value></data>
+  <data name="FieldProps_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="FieldProps_Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="FieldProps_Error_Name" xml:space="preserve"><value>A field name cannot be empty, start or end with a dot, or have two dots in a row.</value></data>
+  <data name="FieldProps_Error_NameTaken" xml:space="preserve"><value>Another field already uses this name.</value></data>
+  <data name="FieldProps_Error_Options" xml:space="preserve"><value>A list needs at least one choice, without repeats.</value></data>
+  <data name="FieldProps_Error_Default" xml:space="preserve"><value>The default value does not fit the chosen format.</value></data>
+  <data name="FieldProps_Error_Size" xml:space="preserve"><value>The font size must be from 0 to 200; characters and decimal places cannot be negative (at most 10 decimal places).</value></data>
+  <data name="Cmd_ExportFormData" xml:space="preserve"><value>Export data</value></data>
+  <data name="Cmd_ExportFormData_ToolTip" xml:space="preserve"><value>Save the values of the form's fields as JSON or XFDF</value></data>
+  <data name="Cmd_ImportFormData" xml:space="preserve"><value>Import data</value></data>
+  <data name="Cmd_ImportFormData_ToolTip" xml:space="preserve"><value>Fill the form from a JSON or XFDF file (one undo step)</value></data>
+  <data name="Cmd_MergeFormData" xml:space="preserve"><value>Merge data</value></data>
+  <data name="Cmd_MergeFormData_ToolTip" xml:space="preserve"><value>Fill the form once per row of a CSV or Excel table, one PDF per row</value></data>
+  <data name="FormData_ExportDialog_Title" xml:space="preserve"><value>Export form data</value></data>
+  <data name="FormData_ExportDialog_Filter" xml:space="preserve"><value>JSON data (*.json)|*.json|XFDF — opens in Acrobat (*.xfdf)|*.xfdf</value></data>
+  <data name="FormData_ImportDialog_Title" xml:space="preserve"><value>Import form data</value></data>
+  <data name="FormData_ImportDialog_Filter" xml:space="preserve"><value>Form data (*.json;*.xfdf;*.xml)|*.json;*.xfdf;*.xml|All files (*.*)|*.*</value></data>
+  <data name="FormData_Error_Title" xml:space="preserve"><value>Form data</value></data>
+  <data name="FormData_Error_Export" xml:space="preserve"><value>The data file could not be written. Check the folder and try again.</value></data>
+  <data name="FormData_Error_Import" xml:space="preserve"><value>"{0}" could not be read: it is not JSON or XFDF form data.</value></data>
+  <data name="FormData_Import_Title" xml:space="preserve"><value>Import form data</value></data>
+  <data name="FormData_Imported" xml:space="preserve"><value>{0} fields filled.</value></data>
+  <data name="FormData_Unknown" xml:space="preserve"><value>The form has no fields named:
+{0}</value></data>
+  <data name="FormData_Rejected" xml:space="preserve"><value>Values that do not fit their field (left out):
+{0}</value></data>
+  <data name="FormMerge_DataDialog_Title" xml:space="preserve"><value>Choose the data table</value></data>
+  <data name="FormMerge_DataDialog_Filter" xml:space="preserve"><value>Data tables (*.csv;*.xlsx;*.txt)|*.csv;*.xlsx;*.txt|CSV (*.csv)|*.csv|Excel (*.xlsx)|*.xlsx</value></data>
+  <data name="FormMerge_Title" xml:space="preserve"><value>Merge data into the form</value></data>
+  <data name="FormMerge_Message" xml:space="preserve"><value>Every row of the table (CSV or Excel) gives one filled PDF. The first row names the fields: a column named like a field fills it.</value></data>
+  <data name="FormMerge_Data" xml:space="preserve"><value>Data table</value></data>
+  <data name="FormMerge_Browse" xml:space="preserve"><value>Browse…</value></data>
+  <data name="FormMerge_Summary" xml:space="preserve"><value>{0} rows — {1} of {2} columns match fields of the form</value></data>
+  <data name="FormMerge_Column_Matched" xml:space="preserve"><value>{0} → {1}</value></data>
+  <data name="FormMerge_Column_Unmatched" xml:space="preserve"><value>{0} (not in the form)</value></data>
+  <data name="FormMerge_NameColumn" xml:space="preserve"><value>Name files by column</value></data>
+  <data name="FormMerge_NameByRow" xml:space="preserve"><value>(by row number)</value></data>
+  <data name="FormMerge_Folder" xml:space="preserve"><value>Output folder</value></data>
+  <data name="FormMerge_FolderDialog_Title" xml:space="preserve"><value>Choose where the filled files go</value></data>
+  <data name="FormMerge_FolderSuffix" xml:space="preserve"><value>merged</value></data>
+  <data name="FormMerge_Overwrite" xml:space="preserve"><value>Replace files of the same name</value></data>
+  <data name="FormMerge_OpenFolder" xml:space="preserve"><value>Open the folder when done</value></data>
+  <data name="FormMerge_Run" xml:space="preserve"><value>Merge</value></data>
+  <data name="FormMerge_Error_NoRows" xml:space="preserve"><value>The table has no data rows.</value></data>
+  <data name="FormMerge_Error_NoMatch" xml:space="preserve"><value>No column is named like a field of the form. The first row of the table must name the fields.</value></data>
+  <data name="FormMerge_Error_Data" xml:space="preserve"><value>"{0}" could not be read: use a CSV or Excel (.xlsx) file whose first row names the fields.</value></data>
+  <data name="FormMerge_Progress" xml:space="preserve"><value>Merging data ({0} rows)…</value></data>
+  <data name="FormMerge_Done" xml:space="preserve"><value>{0} files written to "{1}"</value></data>
+  <data name="FormMerge_Cancelled" xml:space="preserve"><value>Merge stopped; no file was written.</value></data>
+  <data name="FormMerge_FailedStatus" xml:space="preserve"><value>The merge failed</value></data>
+  <data name="FormMerge_Error_Title" xml:space="preserve"><value>The data could not be merged</value></data>
+  <data name="FormMerge_Error_NoForm" xml:space="preserve"><value>The document has no form fields to fill.</value></data>
+  <data name="FormMerge_Error_OutputIsInput" xml:space="preserve"><value>A filled file would replace the document; choose another folder.</value></data>
+  <data name="FormMerge_Error_Prepare" xml:space="preserve"><value>The open document could not be prepared for the merge.</value></data>
+  <data name="FormMerge_Written" xml:space="preserve"><value>{0} files written.</value></data>
+  <data name="FormMerge_UnknownColumns" xml:space="preserve"><value>Columns that are not fields (left out): {0}</value></data>
+  <data name="FormMerge_Problems" xml:space="preserve"><value>{0} values do not fit their field (left empty):</value></data>
+  <data name="FormMerge_Problem" xml:space="preserve"><value>row {0}, column {1}</value></data>
+  <data name="Cmd_FlattenForm" xml:space="preserve"><value>Flatten form</value></data>
+  <data name="Cmd_FlattenForm_ToolTip" xml:space="preserve"><value>Draw the fields' values into the pages and remove the form: nobody can change them any more (can be undone)</value></data>
+  <data name="Cmd_ResetForm" xml:space="preserve"><value>Clear data</value></data>
+  <data name="Cmd_ResetForm_ToolTip" xml:space="preserve"><value>Put every field back to its default value (one undo step)</value></data>
+  <data name="FormFlatten_Title" xml:space="preserve"><value>Flatten form</value></data>
+  <data name="FormFlatten_Message" xml:space="preserve"><value>The form's {0} fields will be drawn into the pages with their current values and cannot be changed or filled again. This can be undone before saving.</value></data>
+  <data name="FormFlatten_Confirm" xml:space="preserve"><value>Flatten</value></data>
+  <data name="FormMerge_Flatten" xml:space="preserve"><value>Flatten the files (values cannot be changed)</value></data>
+  <data name="History_FlattenForm" xml:space="preserve"><value>Flatten form</value></data>
+  <data name="History_ResetForm" xml:space="preserve"><value>Clear {0} form fields</value></data>
+  <data name="FormDesigner_Detect" xml:space="preserve"><value>Detect fields</value></data>
+  <data name="FormDesigner_Detect_ToolTip" xml:space="preserve"><value>Find blanks on the pages (dots, underscores, lines, boxes) and propose fields; click a proposal to take or drop it</value></data>
+  <data name="FormDesigner_Suggestions" xml:space="preserve"><value>{0} proposals — {1} taken (click a proposal to take or drop it)</value></data>
+  <data name="FormDesigner_NoSuggestions" xml:space="preserve"><value>No blank was found to place a field.</value></data>
+  <data name="FormDesigner_AcceptSuggestions" xml:space="preserve"><value>Add the chosen fields</value></data>
+  <data name="FormDesigner_ClearSuggestions" xml:space="preserve"><value>Drop proposals</value></data>
+  <data name="Security_Title" xml:space="preserve"><value>Password &amp; permissions</value></data>
+  <data name="Security_ViewOnly_Message" xml:space="preserve"><value>This document is protected: you are viewing it with the permissions its author allows below. Enter the owner (permissions) password to edit, save or change the protection.</value></data>
+  <data name="Security_OwnerPassword" xml:space="preserve"><value>Owner password</value></data>
+  <data name="Security_Unlock" xml:space="preserve"><value>Unlock to edit</value></data>
+  <data name="Security_Unlock_Wrong" xml:space="preserve"><value>The password is not correct.</value></data>
+  <data name="Security_Unlock_NotOwner" xml:space="preserve"><value>This is the password that opens the document, not the owner password. Editing the document takes the owner password.</value></data>
+  <data name="Security_Unlock_Unreadable" xml:space="preserve"><value>The file could not be read again (it may have been moved, be open in another program or be damaged).</value></data>
+  <data name="Security_NeedsPasswords" xml:space="preserve"><value>To save the document and keep its protection, enter the passwords (PDF_Pro never writes passwords to disk, so they are needed again after a recovery or when the file was opened with its owner password).</value></data>
+  <data name="Security_None" xml:space="preserve"><value>No protection</value></data>
+  <data name="Security_Protect" xml:space="preserve"><value>Protect with a password</value></data>
+  <data name="Security_RequireOpen" xml:space="preserve"><value>Require a password to open the document</value></data>
+  <data name="Security_OpenPassword" xml:space="preserve"><value>Open password</value></data>
+  <data name="Security_Confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="Security_OwnerSection" xml:space="preserve"><value>Restrict permissions</value></data>
+  <data name="Security_OwnerHint" xml:space="preserve"><value>The owner password lifts every restriction below and allows changing or removing the protection. It must differ from the open password.</value></data>
+  <data name="Security_KeepPasswords" xml:space="preserve"><value>Leave the password boxes empty to keep the current passwords.</value></data>
+  <data name="Security_Encryption" xml:space="preserve"><value>Encryption</value></data>
+  <data name="Security_Printing" xml:space="preserve"><value>Printing</value></data>
+  <data name="Security_Permissions" xml:space="preserve"><value>Without the owner password, people may</value></data>
+  <data name="Security_AllowCopy" xml:space="preserve"><value>Copy text and images</value></data>
+  <data name="Security_AllowModify" xml:space="preserve"><value>Change the content</value></data>
+  <data name="Security_AllowAnnotate" xml:space="preserve"><value>Add and change comments</value></data>
+  <data name="Security_AllowFillForms" xml:space="preserve"><value>Fill in forms</value></data>
+  <data name="Security_AllowAssemble" xml:space="preserve"><value>Insert, delete and rotate pages</value></data>
+  <data name="Security_AppliedOnSave" xml:space="preserve"><value>Changes apply when the document is saved and can be undone. Passwords stay in memory only and are never written to disk or logs.</value></data>
+  <data name="Security_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Security_Aes256" xml:space="preserve"><value>AES 256-bit (recommended)</value></data>
+  <data name="Security_Aes128" xml:space="preserve"><value>AES 128-bit (older readers)</value></data>
+  <data name="Security_Print_None" xml:space="preserve"><value>Not allowed</value></data>
+  <data name="Security_Print_Low" xml:space="preserve"><value>Low quality</value></data>
+  <data name="Security_Print_High" xml:space="preserve"><value>High quality</value></data>
+  <data name="Security_Error_OpenMissing" xml:space="preserve"><value>Enter an open password (or clear “Require a password to open the document”).</value></data>
+  <data name="Security_Error_OpenMismatch" xml:space="preserve"><value>The two open passwords do not match.</value></data>
+  <data name="Security_Error_OwnerMissing" xml:space="preserve"><value>Enter an owner password.</value></data>
+  <data name="Security_Error_OwnerMismatch" xml:space="preserve"><value>The two owner passwords do not match.</value></data>
+  <data name="Security_Error_Same" xml:space="preserve"><value>The open password and the owner password must differ.</value></data>
+  <data name="Security_Error_Aes128" xml:space="preserve"><value>AES 128-bit encryption only takes plain ASCII passwords of up to 32 characters. Use AES 256-bit for passwords with accents.</value></data>
+  <data name="Security_Error_TooLong" xml:space="preserve"><value>The password is too long (127 bytes at most).</value></data>
+  <data name="Security_Warning_Weak" xml:space="preserve"><value>This password is weak and easy to guess. Click “Apply” again to use it anyway.</value></data>
+  <data name="Security_Strength_VeryWeak" xml:space="preserve"><value>Very weak</value></data>
+  <data name="Security_Strength_Weak" xml:space="preserve"><value>Weak</value></data>
+  <data name="Security_Strength_Fair" xml:space="preserve"><value>Fair</value></data>
+  <data name="Security_Strength_Strong" xml:space="preserve"><value>Strong</value></data>
+  <data name="Security_Strength_VeryStrong" xml:space="preserve"><value>Very strong</value></data>
+  <data name="Security_Advice_Common" xml:space="preserve"><value>This password is very common.</value></data>
+  <data name="Security_Advice_Short" xml:space="preserve"><value>Use at least {0} characters.</value></data>
+  <data name="Security_Advice_Date" xml:space="preserve"><value>It looks like a date.</value></data>
+  <data name="Security_Advice_Sequence" xml:space="preserve"><value>It has a run of keys (1234, abcd, qwerty).</value></data>
+  <data name="Security_Advice_Repeated" xml:space="preserve"><value>Too many repeated characters.</value></data>
+  <data name="Security_Advice_Mix" xml:space="preserve"><value>Mix letters, digits and symbols.</value></data>
+  <data name="History_SetProtection" xml:space="preserve"><value>Set password &amp; permissions</value></data>
+  <data name="History_RemoveProtection" xml:space="preserve"><value>Remove protection</value></data>
+  <data name="Cmd_Password_ToolTip" xml:space="preserve"><value>Set, change or remove the document's password and permissions; unlock a protected document to edit it</value></data>
+  <data name="Copy_Refused_Title" xml:space="preserve"><value>Cannot copy</value></data>
+  <data name="Copy_NotAllowed" xml:space="preserve"><value>The author of this document does not allow copying its content. If you have the owner password, open Security → Password to unlock it.</value></data>
+  <data name="DocProps_EncryptedOnSave" xml:space="preserve"><value>Yes, when saved ({0}) — printing: {1}, copying content: {2}</value></data>
+  <data name="DocProps_Aes256" xml:space="preserve"><value>AES 256-bit</value></data>
+  <data name="DocProps_Aes128" xml:space="preserve"><value>AES 128-bit</value></data>
+  <data name="History_Redact" xml:space="preserve"><value>Redact {0} area(s)</value></data>
+  <data name="Cmd_Redact_ToolTip" xml:space="preserve"><value>Mark, then permanently remove information (areas, text, ID numbers, phones, e-mails…): it can no longer be selected, copied, searched or extracted</value></data>
+  <data name="Cmd_Sign_ToolTip" xml:space="preserve"><value>Digitally sign the document with a certificate (.pfx or the Windows certificate store, USB tokens included): a visible or invisible signature, with a timestamp</value></data>
+  <data name="Sign_Title" xml:space="preserve"><value>Digital signature</value></data>
+  <data name="Sign_Certificate" xml:space="preserve"><value>Certificate</value></data>
+  <data name="Sign_FromStore" xml:space="preserve"><value>From the Windows certificate store (installed USB tokens included)</value></data>
+  <data name="Sign_FromFile" xml:space="preserve"><value>From a .pfx / .p12 file</value></data>
+  <data name="Sign_NoCertificates" xml:space="preserve"><value>Your certificate store has no certificate that can sign.</value></data>
+  <data name="Sign_Browse" xml:space="preserve"><value>Browse…</value></data>
+  <data name="Sign_PfxPassword" xml:space="preserve"><value>Password of the certificate file</value></data>
+  <data name="Sign_Placement" xml:space="preserve"><value>Where the signature goes</value></data>
+  <data name="Sign_Placement_Draw" xml:space="preserve"><value>Drag a box on the page (after clicking Sign)</value></data>
+  <data name="Sign_Placement_Field" xml:space="preserve"><value>In the signature field «{0}»</value></data>
+  <data name="Sign_Placement_Invisible" xml:space="preserve"><value>Invisible signature (not shown on the page)</value></data>
+  <data name="Sign_Appearance" xml:space="preserve"><value>Shown</value></data>
+  <data name="Sign_ShowImage" xml:space="preserve"><value>Handwritten signature</value></data>
+  <data name="Sign_Image_Item" xml:space="preserve"><value>Saved signature {0:dd/MM/yyyy HH:mm}</value></data>
+  <data name="Sign_ShowName" xml:space="preserve"><value>Signer name</value></data>
+  <data name="Sign_ShowDate" xml:space="preserve"><value>Date and time</value></data>
+  <data name="Sign_Reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="Sign_Location" xml:space="preserve"><value>Location</value></data>
+  <data name="Sign_Contact" xml:space="preserve"><value>Contact</value></data>
+  <data name="Sign_Timestamp" xml:space="preserve"><value>Add a timestamp from a server (needs the network)</value></data>
+  <data name="Sign_TimestampServer" xml:space="preserve"><value>Time-stamping server (RFC 3161)</value></data>
+  <data name="Sign_Apply" xml:space="preserve"><value>Sign</value></data>
+  <data name="Sign_Error_NoCertificate" xml:space="preserve"><value>Choose a certificate.</value></data>
+  <data name="Sign_Error_PfxFile" xml:space="preserve"><value>Choose a .pfx or .p12 certificate file.</value></data>
+  <data name="Sign_Error_PfxPassword" xml:space="preserve"><value>The password of the certificate file is wrong.</value></data>
+  <data name="Sign_Error_PfxUnreadable" xml:space="preserve"><value>The certificate file cannot be read.</value></data>
+  <data name="Sign_Error_NoPrivateKey" xml:space="preserve"><value>This certificate has no private key, so it cannot sign.</value></data>
+  <data name="Sign_Error_TimestampServer" xml:space="preserve"><value>The time-stamping server must start with http:// or https://.</value></data>
+  <data name="Sign_Line_SignedBy" xml:space="preserve"><value>Signed by: {0}</value></data>
+  <data name="Sign_Line_Date" xml:space="preserve"><value>Date: {0}</value></data>
+  <data name="Sign_Line_Reason" xml:space="preserve"><value>Reason: {0}</value></data>
+  <data name="Sign_Line_Location" xml:space="preserve"><value>Location: {0}</value></data>
+  <data name="Sign_Place_Hint" xml:space="preserve"><value>Drag a box to place the signature — Esc to cancel</value></data>
+  <data name="Sign_SaveFirst_Title" xml:space="preserve"><value>Save before signing</value></data>
+  <data name="Sign_SaveFirst_Message" xml:space="preserve"><value>A digital signature applies to the saved file. Save the changes to "{0}" and sign?</value></data>
+  <data name="Sign_SaveFirst_Save" xml:space="preserve"><value>Save and sign</value></data>
+  <data name="Sign_SignedName" xml:space="preserve"><value>{0} (signed)</value></data>
+  <data name="Sign_Progress" xml:space="preserve"><value>Signing "{0}"…</value></data>
+  <data name="Sign_Done" xml:space="preserve"><value>Signed "{0}"</value></data>
+  <data name="Sign_Failed" xml:space="preserve"><value>Could not sign "{0}"</value></data>
+  <data name="Sign_Error_Title" xml:space="preserve"><value>The document could not be signed</value></data>
+  <data name="Sign_Error_Encrypted" xml:space="preserve"><value>The document has a password. Remove it (Password &amp; permissions) and save before signing.</value></data>
+  <data name="Sign_Error_NoSuchPage" xml:space="preserve"><value>The page of the signature is no longer in the document.</value></data>
+  <data name="Sign_Error_FieldSigned" xml:space="preserve"><value>This signature field is already signed.</value></data>
+  <data name="Sign_Error_NotSignatureField" xml:space="preserve"><value>A field of the same name exists but is not a signature field.</value></data>
+  <data name="Sign_Error_Unreadable" xml:space="preserve"><value>The file cannot be read or written to sign it.</value></data>
+  <data name="Sign_Error_Key" xml:space="preserve"><value>The certificates private key cannot be used (card or USB token not inserted, wrong PIN, or signing not allowed).</value></data>
+  <data name="Sign_NoTimestamp_Title" xml:space="preserve"><value>No timestamp</value></data>
+  <data name="Sign_NoTimestamp_Message" xml:space="preserve"><value>No timestamp came from the server (network or server trouble). Sign without a timestamp? The signing time then comes from this computers clock.</value></data>
+  <data name="Sign_NoTimestamp_Sign" xml:space="preserve"><value>Sign without a timestamp</value></data>
+  <data name="Sign_Intro" xml:space="preserve"><value>A digital signature binds your certificate to the saved file: anyone who opens it can check who signed it and whether it was changed after signing. It is not a picture of a signature.</value></data>
+  <data name="Sign_Certificate_Item" xml:space="preserve"><value>{0} — issued by {1}, expires {2:dd/MM/yyyy}</value></data>
+  <data name="Sign_CertificateDialog_Title" xml:space="preserve"><value>Choose a certificate file</value></data>
+  <data name="Sign_CertificateDialog_Filter" xml:space="preserve"><value>Certificates with their private key (*.pfx;*.p12)|*.pfx;*.p12</value></data>
+  <data name="Sign_FieldName" xml:space="preserve"><value>Signature {0}</value></data>
+  <data name="Sign_Cancelled" xml:space="preserve"><value>Signing cancelled</value></data>
+  <data name="Sign_Error_Changed" xml:space="preserve"><value>The document changed while the signature was placed. Save it, then sign again.</value></data>
+  <data name="Cmd_Linearize" xml:space="preserve"><value>Optimize for web</value></data>
+  <data name="Cmd_Linearize_ToolTip" xml:space="preserve"><value>Write a copy laid out for the web (Fast Web View): browsers show the first page before the whole file has arrived</value></data>
+  <data name="Cmd_Repair" xml:space="preserve"><value>Repair file</value></data>
+  <data name="Cmd_Repair_ToolTip" xml:space="preserve"><value>Read a damaged PDF file back (lost cross-references, cut-off download…) and write it as a new file that opens</value></data>
+  <data name="Linearize_Error_Title" xml:space="preserve"><value>Could not optimize for the web</value></data>
+  <data name="Linearize_Name" xml:space="preserve"><value>{0} (web)</value></data>
+  <data name="Linearize_Progress" xml:space="preserve"><value>Optimizing "{0}" for the web…</value></data>
+  <data name="Linearize_Done" xml:space="preserve"><value>Optimized for the web: "{0}"</value></data>
+  <data name="Optimize_Error_Protected" xml:space="preserve"><value>The document has a password. Remove it (Password &amp; permissions) and save first.</value></data>
+  <data name="Optimize_Error_Unreadable" xml:space="preserve"><value>The file could not be read or written.</value></data>
+  <data name="Optimize_Error_NoQpdf" xml:space="preserve"><value>The qpdf tool is missing. Run tools\fetch-tools.ps1 to download it (or install qpdf), then try again.</value></data>
+  <data name="Optimize_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="Optimize_FailedStatus" xml:space="preserve"><value>Could not be done</value></data>
+  <data name="Repair_Pick_Title" xml:space="preserve"><value>Choose the PDF file to repair</value></data>
+  <data name="Repair_Name" xml:space="preserve"><value>{0} (repaired)</value></data>
+  <data name="Repair_Progress" xml:space="preserve"><value>Repairing "{0}"…</value></data>
+  <data name="Repair_Done" xml:space="preserve"><value>Repaired: "{0}"</value></data>
+  <data name="Repair_Done_Title" xml:space="preserve"><value>File repaired</value></data>
+  <data name="Repair_Done_Message" xml:space="preserve"><value>The file was read back by {0}. The new file has {1} pages and will open. Check its content: badly damaged parts may be lost.</value></data>
+  <data name="Repair_Error_Title" xml:space="preserve"><value>Could not repair the file</value></data>
+  <data name="Repair_Error_Message" xml:space="preserve"><value>No way could read this file. Tried:</value></data>
+  <data name="Repair_Error_Line" xml:space="preserve"><value>• {0}: {1}</value></data>
+  <data name="Repair_Failure_Missing" xml:space="preserve"><value>not installed on this computer</value></data>
+  <data name="Repair_Failure_BadResult" xml:space="preserve"><value>the result does not open</value></data>
+  <data name="Repair_Failure_Unreadable" xml:space="preserve"><value>could not read it</value></data>
+  <data name="Repair_Method_Pdfium" xml:space="preserve"><value>PDFium (opened and written again)</value></data>
+  <data name="Repair_Method_Qpdf" xml:space="preserve"><value>qpdf (cross-reference recovery)</value></data>
+  <data name="Repair_Method_CrossReference" xml:space="preserve"><value>a cross-reference table rebuilt from the intact objects</value></data>
+  <data name="Repair_Method_PdfPig" xml:space="preserve"><value>PdfPig (lenient reading, pages copied)</value></data>
+  <data name="Cmd_SignBatch" xml:space="preserve"><value>Sign many</value></data>
+  <data name="Cmd_SignBatch_ToolTip" xml:space="preserve"><value>Digitally sign several PDF files at once with the same certificate and look; each signed copy is written to the folder you choose</value></data>
+  <data name="Sign_Batch_Intro" xml:space="preserve"><value>{0} files will be signed with the same certificate and look; the signed copies go to the folder you choose next.</value></data>
+  <data name="Sign_Placement_CornerLast" xml:space="preserve"><value>Bottom right corner of the last page</value></data>
+  <data name="Sign_Placement_CornerFirst" xml:space="preserve"><value>Bottom right corner of the first page</value></data>
+  <data name="SignBatch_Folder_Title" xml:space="preserve"><value>Choose the folder for the signed copies</value></data>
+  <data name="SignBatch_Progress" xml:space="preserve"><value>Signing file {0}/{1}…</value></data>
+  <data name="SignBatch_Done" xml:space="preserve"><value>{0}/{1} files signed</value></data>
+  <data name="SignBatch_Cancelled" xml:space="preserve"><value>Batch signing stopped ({0} files signed)</value></data>
+  <data name="SignBatch_Error_Title" xml:space="preserve"><value>Some files could not be signed</value></data>
+  <data name="SignBatch_Error_Message" xml:space="preserve"><value>{0} files could not be signed:</value></data>
+  <data name="SignBatch_Error_Line" xml:space="preserve"><value>• {0}: {1}</value></data>
+  <data name="Cmd_VerifySignatures_ToolTip" xml:space="preserve"><value>View and check the document's digital signatures: who signed, when, whether the certificate is trusted and whether the document changed after signing</value></data>
+  <data name="Sidebar_Signatures" xml:space="preserve"><value>Signatures</value></data>
+  <data name="Sidebar_SignaturesEmpty" xml:space="preserve"><value>Open a document to see its digital signatures.</value></data>
+  <data name="Signatures_Refresh" xml:space="preserve"><value>Check again</value></data>
+  <data name="Signatures_Checking" xml:space="preserve"><value>Checking signatures…</value></data>
+  <data name="Signatures_None" xml:space="preserve"><value>The document has no digital signatures.</value></data>
+  <data name="Signatures_Summary" xml:space="preserve"><value>{0} signatures: {1} valid, {2} need attention, {3} invalid</value></data>
+  <data name="Signatures_Unreadable" xml:space="preserve"><value>The file could not be read to check its signatures.</value></data>
+  <data name="Signatures_UnsavedNote" xml:space="preserve"><value>This is the saved file's result: unsaved changes are in no signature.</value></data>
+  <data name="Signatures_Valid" xml:space="preserve"><value>Valid</value></data>
+  <data name="Signatures_Warning" xml:space="preserve"><value>Needs attention</value></data>
+  <data name="Signatures_Invalid" xml:space="preserve"><value>Invalid</value></data>
+  <data name="Signatures_UnknownSigner" xml:space="preserve"><value>Unknown signer</value></data>
+  <data name="Signatures_Page" xml:space="preserve"><value>Page {0}</value></data>
+  <data name="Signatures_Invisible" xml:space="preserve"><value>Invisible signature</value></data>
+  <data name="Signatures_Intact" xml:space="preserve"><value>The signed content has not changed.</value></data>
+  <data name="Signatures_Broken" xml:space="preserve"><value>The signed content was changed or the signature is broken — do not trust this document.</value></data>
+  <data name="Signatures_Unchanged" xml:space="preserve"><value>The document was not changed after signing.</value></data>
+  <data name="Signatures_LaterSignatures" xml:space="preserve"><value>After this signature, only other signatures were added.</value></data>
+  <data name="Signatures_LaterFormFields" xml:space="preserve"><value>After signing, form fields were filled in or changed.</value></data>
+  <data name="Signatures_LaterAnnotations" xml:space="preserve"><value>After signing, comments were added, changed or removed.</value></data>
+  <data name="Signatures_LaterPages" xml:space="preserve"><value>After signing, the content of pages changed: what you see may differ from what was signed.</value></data>
+  <data name="Signatures_LaterUnknown" xml:space="preserve"><value>The document was updated {0} times after signing, but what changed cannot be told.</value></data>
+  <data name="Signatures_Trusted" xml:space="preserve"><value>The certificate is trusted (root: {0}).</value></data>
+  <data name="Signatures_UntrustedRoot" xml:space="preserve"><value>The certificate is not trusted on this computer (self-issued, or its authority is not installed). Trust it only if you are sure of the signer.</value></data>
+  <data name="Signatures_NotTimeValid" xml:space="preserve"><value>The certificate was expired or not yet valid on {0:dd/MM/yyyy HH:mm}.</value></data>
+  <data name="Signatures_Revoked" xml:space="preserve"><value>The certificate was revoked by its authority.</value></data>
+  <data name="Signatures_ChainInvalid" xml:space="preserve"><value>The certificate chain is not valid.</value></data>
+  <data name="Signatures_NoCertificate" xml:space="preserve"><value>The signature does not carry the signer's certificate.</value></data>
+  <data name="Signatures_RevocationUnknown" xml:space="preserve"><value>Whether the certificate was revoked could not be checked (no network, or the authority does not say).</value></data>
+  <data name="Signatures_Timestamp" xml:space="preserve"><value>Timestamp: {0:dd/MM/yyyy HH:mm:ss} (attested by a time-stamping server).</value></data>
+  <data name="Signatures_SigningTime" xml:space="preserve"><value>Signed at: {0:dd/MM/yyyy HH:mm:ss} (by the signer's computer clock).</value></data>
+  <data name="Signatures_Algorithm" xml:space="preserve"><value>Algorithms: {0}</value></data>
+  <data name="Signatures_Field" xml:space="preserve"><value>Field: {0}</value></data>
+  <data name="Cmd_Sanitize_ToolTip" xml:space="preserve"><value>Remove what the document carries beyond what it shows: author and dates, JavaScript, attachments, hidden layers, earlier revisions, private data of programs…</value></data>
+  <data name="History_Sanitize" xml:space="preserve"><value>Sanitize document</value></data>
+  <data name="Sanitize_Title" xml:space="preserve"><value>Sanitize document</value></data>
+  <data name="Sanitize_Intro" xml:space="preserve"><value>Choose what to remove. The document is always written anew: earlier revisions kept in the file and data after its end go too. This can be undone until the document is saved.</value></data>
+  <data name="Sanitize_Signed" xml:space="preserve"><value>The document is digitally signed: after sanitizing, the signatures are no longer valid.</value></data>
+  <data name="Sanitize_Metadata" xml:space="preserve"><value>Document information (author, title, dates, programs) and XMP metadata</value></data>
+  <data name="Sanitize_Scripts" xml:space="preserve"><value>JavaScript (on opening, on pages, in form fields and links; XFA forms)</value></data>
+  <data name="Sanitize_Attachments" xml:space="preserve"><value>Attachments</value></data>
+  <data name="Sanitize_RiskyActions" xml:space="preserve"><value>Actions that submit forms, import data or start programs</value></data>
+  <data name="Sanitize_ExternalLinks" xml:space="preserve"><value>Links to web pages and other files</value></data>
+  <data name="Sanitize_HiddenLayers" xml:space="preserve"><value>Hidden layers and what they draw</value></data>
+  <data name="Sanitize_OutsideVisibleArea" xml:space="preserve"><value>Content outside the visible area of pages</value></data>
+  <data name="Sanitize_Thumbnails" xml:space="preserve"><value>Page thumbnails embedded in the file</value></data>
+  <data name="Sanitize_PrivateData" xml:space="preserve"><value>Private data of the program that made the file</value></data>
+  <data name="Sanitize_Apply" xml:space="preserve"><value>Sanitize</value></data>
+  <data name="Sanitize_Done_Title" xml:space="preserve"><value>Document sanitized</value></data>
+  <data name="Sanitize_Done_Nothing" xml:space="preserve"><value>Nothing was found to remove; the document was written anew. Save the document to write it to the file.</value></data>
+  <data name="Sanitize_Done_Intro" xml:space="preserve"><value>Removed from the document (save it to write it to the file):</value></data>
+  <data name="Sanitize_Report_Metadata" xml:space="preserve"><value>Document information: {0}</value></data>
+  <data name="Sanitize_Report_MetadataStreams" xml:space="preserve"><value>{0} XMP metadata packet(s)</value></data>
+  <data name="Sanitize_Report_Scripts" xml:space="preserve"><value>{0} JavaScript(s)</value></data>
+  <data name="Sanitize_Report_Attachments" xml:space="preserve"><value>{0} attachment(s)</value></data>
+  <data name="Sanitize_Report_RiskyActions" xml:space="preserve"><value>{0} action(s) submitting forms, importing data or starting programs</value></data>
+  <data name="Sanitize_Report_ExternalLinks" xml:space="preserve"><value>{0} external link(s)</value></data>
+  <data name="Sanitize_Report_HiddenLayers" xml:space="preserve"><value>{0} hidden layer(s)</value></data>
+  <data name="Sanitize_Report_HiddenContent" xml:space="preserve"><value>{0} piece(s) of content in hidden layers</value></data>
+  <data name="Sanitize_Report_Outside" xml:space="preserve"><value>{0} object(s) outside the visible area</value></data>
+  <data name="Sanitize_Report_Thumbnails" xml:space="preserve"><value>{0} page thumbnail(s)</value></data>
+  <data name="Sanitize_Report_PrivateData" xml:space="preserve"><value>{0} item(s) of private program data</value></data>
+  <data name="Sanitize_Report_Revisions" xml:space="preserve"><value>{0} earlier revision(s) kept in the file</value></data>
+  <data name="Sanitize_Report_Trailing" xml:space="preserve"><value>{0} byte(s) after the end of the file</value></data>
+  <data name="Sanitize_Report_PagesKept" xml:space="preserve"><value>Hidden or outside content kept on page(s) {0}: removing it would change how they look</value></data>
+  <data name="Sanitize_SaveReport" xml:space="preserve"><value>Save report…</value></data>
+  <data name="Sanitize_ReportName" xml:space="preserve"><value>sanitize report</value></data>
+  <data name="Sanitize_ReportDialog_Title" xml:space="preserve"><value>Save the sanitize report</value></data>
+  <data name="Sanitize_ReportDialog_Filter" xml:space="preserve"><value>Text (*.txt)|*.txt</value></data>
+  <data name="Sanitize_ReportError" xml:space="preserve"><value>The report could not be saved to the chosen file. Check that it can be written or choose another folder.</value></data>
+  <data name="Redaction_Hint_Area" xml:space="preserve"><value>Drag a box on the page to mark an area to remove.</value></data>
+  <data name="Redaction_Hint_Text" xml:space="preserve"><value>Drag over text to mark it for removal.</value></data>
+  <data name="Redaction_Status" xml:space="preserve"><value>{0} area(s) marked on {1} page(s) — nothing is removed until you apply</value></data>
+  <data name="Redaction_Kind_NationalId" xml:space="preserve"><value>ID number (CCCD)</value></data>
+  <data name="Redaction_Kind_Phone" xml:space="preserve"><value>Phone number</value></data>
+  <data name="Redaction_Kind_Email" xml:space="preserve"><value>E-mail</value></data>
+  <data name="Redaction_Kind_BankAccount" xml:space="preserve"><value>Account number</value></data>
+  <data name="Redaction_Kind_Date" xml:space="preserve"><value>Date (birth date)</value></data>
+  <data name="Redaction_Kind_Custom" xml:space="preserve"><value>Own expression</value></data>
+  <data name="Redaction_Find" xml:space="preserve"><value>Find &amp; mark…</value></data>
+  <data name="Redaction_Find_ToolTip" xml:space="preserve"><value>Find ID numbers, phones, e-mails, account numbers, dates or your own expression on every page to mark them</value></data>
+  <data name="Redaction_MarkSelection" xml:space="preserve"><value>Mark selection</value></data>
+  <data name="Redaction_Delete" xml:space="preserve"><value>Unmark</value></data>
+  <data name="Redaction_ClearAll" xml:space="preserve"><value>Unmark all</value></data>
+  <data name="Redaction_Apply" xml:space="preserve"><value>Apply…</value></data>
+  <data name="Redaction_Done" xml:space="preserve"><value>{0} area(s) on {1} page(s) were removed for good and checked: no text is left under them. Save the document to write it to the file.</value></data>
+  <data name="Redaction_Tool_Area" xml:space="preserve"><value>Mark areas (drag a box)</value></data>
+  <data name="Redaction_Tool_Text" xml:space="preserve"><value>Mark text (drag over text)</value></data>
+  <data name="RedactionSearch_Title" xml:space="preserve"><value>Find &amp; mark information to remove</value></data>
+  <data name="RedactionSearch_Message" xml:space="preserve"><value>Choose what to look for on every page. The matches are listed for review before they are marked.</value></data>
+  <data name="RedactionSearch_Custom" xml:space="preserve"><value>Own expression</value></data>
+  <data name="RedactionSearch_CustomHint" xml:space="preserve"><value>For example: HS-\d{4}</value></data>
+  <data name="RedactionSearch_Search" xml:space="preserve"><value>Find</value></data>
+  <data name="RedactionSearch_Mark" xml:space="preserve"><value>Mark the chosen matches</value></data>
+  <data name="RedactionSearch_CheckAll" xml:space="preserve"><value>Choose all</value></data>
+  <data name="RedactionSearch_CheckNone" xml:space="preserve"><value>Choose none</value></data>
+  <data name="RedactionSearch_Page" xml:space="preserve"><value>Page {0}</value></data>
+  <data name="RedactionSearch_Progress" xml:space="preserve"><value>Searching page {0}/{1}…</value></data>
+  <data name="RedactionSearch_None" xml:space="preserve"><value>Nothing matches.</value></data>
+  <data name="RedactionSearch_Found" xml:space="preserve"><value>Found {0} match(es) on {1} page(s).</value></data>
+  <data name="RedactionSearch_Error_Expression" xml:space="preserve"><value>The expression is not valid.</value></data>
+  <data name="RedactionSearch_Error_NoPattern" xml:space="preserve"><value>Choose at least one kind of information or enter an expression.</value></data>
+  <data name="RedactionSearch_Error_Timeout" xml:space="preserve"><value>The expression took too long and was skipped; the other patterns were still searched.</value></data>
+  <data name="RedactionApply_Title" xml:space="preserve"><value>Apply redaction</value></data>
+  <data name="RedactionApply_Message" xml:space="preserve"><value>{0} area(s) on {1} page(s) will be removed for good: what is under them can no longer be selected, copied, searched or extracted. Comments, links, form fields, bookmarks and document information naming the removed content go too. This can be undone until the document is saved.</value></data>
+  <data name="RedactionApply_Color" xml:space="preserve"><value>Box colour</value></data>
+  <data name="RedactionApply_UseLabel" xml:space="preserve"><value>Write a label in the boxes</value></data>
+  <data name="RedactionApply_Mode" xml:space="preserve"><value>How to remove</value></data>
+  <data name="RedactionApply_KeepText" xml:space="preserve"><value>Keep the text and drawings outside the areas (advanced)</value></data>
+  <data name="RedactionApply_KeepText_Hint" xml:space="preserve"><value>The rest of the text can still be selected, searched and copied. A page that cannot be redacted exactly becomes a picture.</value></data>
+  <data name="RedactionApply_AsPictures" xml:space="preserve"><value>Completely safe: turn the pages with areas into pictures (default)</value></data>
+  <data name="RedactionApply_AsPictures_Hint" xml:space="preserve"><value>No text at all is left on those pages: the text outside the areas can no longer be selected or searched either.</value></data>
+  <data name="RedactionApply_Apply" xml:space="preserve"><value>Remove for good</value></data>
+  <data name="Redaction_Color_Black" xml:space="preserve"><value>Black</value></data>
+  <data name="Redaction_Color_White" xml:space="preserve"><value>White</value></data>
+  <data name="Redaction_Color_Gray" xml:space="preserve"><value>Grey</value></data>
+  <data name="Redaction_DefaultLabel" xml:space="preserve"><value>Removed as required</value></data>
+  <data name="Redaction_Error_Label" xml:space="preserve"><value>A label has at most {0} characters, on one line.</value></data>
+  <data name="Redaction_Done_Title" xml:space="preserve"><value>Redacted</value></data>
+  <data name="Redaction_Done_Annotations" xml:space="preserve"><value>{0} comment(s)/link(s) naming the removed content were removed</value></data>
+  <data name="Redaction_Done_Fields" xml:space="preserve"><value>{0} form field(s) were removed</value></data>
+  <data name="Redaction_Done_Bookmarks" xml:space="preserve"><value>{0} bookmark(s) were removed</value></data>
+  <data name="Redaction_Done_Metadata" xml:space="preserve"><value>Document information (author, keywords…) naming the removed content was removed</value></data>
+  <data name="Redaction_Done_PicturesAll" xml:space="preserve"><value>The pages with areas are now pictures</value></data>
+  <data name="Redaction_Done_PicturesSome" xml:space="preserve"><value>Page(s) {0} could not be redacted exactly on their text and became pictures</value></data>
+  <data name="Redaction_Pending_Title" xml:space="preserve"><value>Marks not applied</value></data>
+  <data name="Redaction_Pending_Save" xml:space="preserve"><value>{0} area(s) are marked for redaction but not applied: saving now keeps their content in the file.</value></data>
+  <data name="Redaction_Pending_Apply" xml:space="preserve"><value>Apply, then save</value></data>
+  <data name="Redaction_Pending_SaveAnyway" xml:space="preserve"><value>Save, keep the marks</value></data>
+  <data name="Redaction_Pending_Close" xml:space="preserve"><value>{0} area(s) are marked for redaction in "{1}" but not applied. Closing the document drops the marks.</value></data>
+  <data name="Redaction_Pending_Drop" xml:space="preserve"><value>Drop the marks</value></data>
 </root>

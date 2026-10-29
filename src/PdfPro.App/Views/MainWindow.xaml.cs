@@ -25,6 +25,7 @@ public partial class MainWindow : FluentWindow
         InitializeComponent();
         _sidebarWidth = SidebarColumn.Width;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        viewModel.SearchRequested += (_, _) => Sidebar.FocusSearch();
     }
 
     private MainWindowViewModel ViewModel => (MainWindowViewModel)DataContext;

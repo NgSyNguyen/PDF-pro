@@ -16,12 +16,11 @@ internal sealed class DocumentOpener(
     IMessageService messages,
     ILogger<DocumentOpener> logger) : IDocumentOpener
 {
-    public async Task<IPdfDocument?> OpenAsync(string path, string displayName, CancellationToken cancellationToken = default)
+    public async Task<OpenedDocument?> OpenAsync(string path, string displayName, string? password = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
         var fileName = displayName;
-        string? password = null;
 
         while (true)
         {
@@ -33,7 +32,7 @@ internal sealed class DocumentOpener(
                     document.PageCount,
                     document.Features.FileVersion,
                     document.Features.IsEncrypted);
-                return document;
+                return new OpenedDocument(document, password);
             }
             catch (PdfDocumentException ex) when (ex.Failure is PdfOpenFailure.PasswordRequired or PdfOpenFailure.WrongPassword)
             {

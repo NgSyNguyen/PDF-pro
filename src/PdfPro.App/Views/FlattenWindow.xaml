@@ -1,0 +1,92 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.FlattenWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:annotating="clr-namespace:PdfPro.App.ViewModels.Annotating"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:views="clr-namespace:PdfPro.App.Views"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=annotating:FlattenViewModel}"
+  Title="{loc:Tr Flatten_Title}"
+  Width="500"
+  MinHeight="0"
+  AutomationProperties.AutomationId="FlattenWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr Flatten_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock Text="{loc:Tr Flatten_Message}" TextWrapping="Wrap" />
+
+      <TextBlock
+        Margin="0,16,0,0"
+        FontWeight="SemiBold"
+        Text="{loc:Tr Flatten_Kinds}" />
+      <CheckBox
+        x:Name="FirstKind"
+        Margin="0,6,0,0"
+        AutomationProperties.AutomationId="FlattenNotes"
+        Content="{loc:Tr Comments_Filter_Notes}"
+        IsChecked="{Binding Notes}" />
+      <CheckBox
+        Margin="0,4,0,0"
+        AutomationProperties.AutomationId="FlattenMarkup"
+        Content="{loc:Tr Comments_Filter_Markup}"
+        IsChecked="{Binding Markup}" />
+      <CheckBox
+        Margin="0,4,0,0"
+        AutomationProperties.AutomationId="FlattenDrawings"
+        Content="{loc:Tr Comments_Filter_Drawings}"
+        IsChecked="{Binding Drawings}" />
+      <CheckBox
+        Margin="0,4,0,0"
+        AutomationProperties.AutomationId="FlattenStamps"
+        Content="{loc:Tr Comments_Filter_Stamps}"
+        IsChecked="{Binding Stamps}" />
+
+      <views:PageTargetPanel Margin="0,16,0,0" DataContext="{Binding Target}" />
+
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="FlattenError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding Error}"
+        TextWrapping="Wrap"
+        Visibility="{Binding Error, Converter={StaticResource NullToCollapsed}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="FlattenOk"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr Flatten_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="FlattenCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

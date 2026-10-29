@@ -1,4 +1,7 @@
+using PdfPro.Core.Annotations;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 
 namespace PdfPro.Pdfium;
 
@@ -74,6 +77,22 @@ public sealed class PdfDocumentHandle : IPdfDocument
     /// <summary>Raw page text (not normalized).</summary>
     public Task<string> GetPageTextAsync(int pageIndex, CancellationToken cancellationToken = default)
         => Run(document => document.GetPageText(pageIndex), PdfiumPriority.Normal, cancellationToken);
+
+    /// <summary>The characters of a page with their boxes in its PDF user space (not normalized).</summary>
+    public Task<PageText> GetPageTextLayerAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+        => Run(document => document.GetPageTextLayer(pageIndex), priority, cancellationToken);
+
+    public Task<IReadOnlyList<FileAnnotation>> GetPageAnnotationsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+        => Run(document => document.GetPageAnnotations(pageIndex), priority, cancellationToken);
+
+    public Task<IReadOnlyList<PageObjectInfo>> GetPageObjectsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)
+        => Run(document => document.GetPageObjects(pageIndex), priority, cancellationToken);
+
+    public Task<ExtractedImage> ExtractImageAsync(int pageIndex, PageObjectInfo image, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        return Run(document => document.ExtractImage(pageIndex, PageObjectRef.Of(pageIndex + 1, image)), PdfiumPriority.High, cancellationToken);
+    }
 
     /// <summary>Runs custom gate-affine work against the document (advanced use and tests).</summary>
     public Task<T> RunAsync<T>(Func<PdfiumDocument, T> work, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default)

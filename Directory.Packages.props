@@ -36,6 +36,14 @@
     <PackageVersion Include="PdfPig" Version="0.1.16" />
   </ItemGroup>
 
+  <!-- Images -->
+  <ItemGroup>
+    <!-- JPEG decoding and encoding when compressing images (mono/SkiaSharp, MIT; Skia itself BSD-3-Clause). -->
+    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
+    <!-- Skia for Linux, for the tests run in Linux containers only (the app gets the Windows build with SkiaSharp). MIT. -->
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.1" />
+  </ItemGroup>
+
   <!-- Transitive pins (security fixes for dependencies of the packages above) -->
   <ItemGroup>
     <!-- PDFsharp 6.2.4 brings 8.0.1, which has known vulnerabilities (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7). -->

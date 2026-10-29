@@ -5,13 +5,16 @@ using PdfPro.App.Hosting;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Optimizing;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.Services.Security;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels;
 using PdfPro.Core.Geometry;
 using PdfPro.Infrastructure;
 using PdfPro.Infrastructure.Settings;
+using PdfPro.Operations.Optimizing;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.ViewModels;
@@ -28,11 +31,13 @@ public sealed partial class MainWindowViewModelTests : IDisposable
     private readonly IPrintDialogService _printDialogs = Substitute.For<IPrintDialogService>();
     private readonly IDocumentPrinter _printer = Substitute.For<IDocumentPrinter>();
     private readonly IDocumentSaver _saver = Substitute.For<IDocumentSaver>();
+    private readonly IBatesService _bates = Substitute.For<IBatesService>();
     private readonly IRecoveryService _recovery = Substitute.For<IRecoveryService>();
     private readonly IContentChanger _contentChanger = Substitute.For<IContentChanger>();
     private readonly IPageDialogService _pageDialogs = Substitute.For<IPageDialogService>();
     private readonly IMergeService _merge = Substitute.For<IMergeService>();
     private readonly FakeSettingsService _settings = new(AppSettings.Default);
+    private readonly FakeFormSource _forms = new();
     private readonly AppPaths _paths = new(@"C:\data\PdfPro", @"C:\app\tools");
     private readonly RenderCache _cache;
     private readonly IDocumentTabFactory _tabFactory;
@@ -51,7 +56,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _pageDialogs,
             _fileDialogs,
             Substitute.For<IPdfDocumentLoader>(),
-            NullLoggerFactory.Instance);
+            NullLoggerFactory.Instance,
+            forms: _forms);
     }
 
     public void Dispose()
@@ -96,7 +102,11 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
-                "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature"],
+                "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature", "edit.content", "forms.design", "forms.exportData", "forms.importData", "forms.merge", "forms.reset", "forms.flatten",
+                "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
+                "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
+                "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten",
+                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify", "optimize.linearize", "optimize.repair"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -517,7 +527,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         return viewModel;
     }
 
-    private MainWindowViewModel Create(bool isDebugBuild)
+    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true)
         => new(
             _dialogs,
             _lifetime,
@@ -536,5 +546,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _contentChanger,
             _pageDialogs,
             _merge,
-            NullLogger<MainWindowViewModel>.Instance);
+            NullLogger<MainWindowViewModel>.Instance,
+            withBates ? _bates : null,
+            new SigningServices(_certificates, _timestamps, _forms),
+            new OptimizingServices(new LinearizeOperation(new Qpdf(_tools, new QpdfOptions("qpdf"))), new RepairOperation(TestOperations.PdfiumGate)));
 }

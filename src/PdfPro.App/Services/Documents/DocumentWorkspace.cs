@@ -1,8 +1,10 @@
 using System.Globalization;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using PdfPro.App.Services.Security;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Security;
 using PdfPro.Core.Sessions;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
@@ -43,7 +45,9 @@ public sealed class DocumentWorkspace : IAsyncDisposable
         FileStamp? originalStamp,
         DateTimeOffset createdUtc,
         ILogger logger,
-        ISplitMarkMemory? splitMarks = null)
+        ISplitMarkMemory? splitMarks = null,
+        ProtectionPasswordVault? passwords = null,
+        string? openPassword = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(sources);
@@ -53,6 +57,8 @@ public sealed class DocumentWorkspace : IAsyncDisposable
         _logger = logger;
         _createdUtc = createdUtc;
         _splitMarks = splitMarks;
+        Passwords = passwords ?? new ProtectionPasswordVault();
+        OpenPassword = openPassword;
         OriginalStamp = originalStamp;
         foreach (var source in sources)
         {
@@ -93,10 +99,29 @@ public sealed class DocumentWorkspace : IAsyncDisposable
     public FileStamp? OriginalStamp { get; private set; }
 
     /// <summary>
-    /// Password protected documents are view-only for now: saving them would need the owner password to encrypt the
-    /// result again (Phase 8, security).
+    /// A protected file opened with its open password only is view-only: changing it takes the owner password
+    /// (<see cref="IDocumentWorkspaceService.OpenUnlockedAsync"/>). Opened with the owner password, its session copy is
+    /// not encrypted and the plan names the protection it is saved with.
     /// </summary>
     public bool IsReadOnly => OriginalDocument.Features.IsEncrypted;
+
+    /// <summary>The passwords of the protections the document may be saved with (in memory only).</summary>
+    public ProtectionPasswordVault Passwords { get; }
+
+    /// <summary>The open password a view-only protected document was opened with (to keep it when unlocking), or null.</summary>
+    public string? OpenPassword { get; }
+
+    /// <summary>The protection the document is saved with, or null for none.</summary>
+    public ProtectionSetting? Protection => Session.Plan.Protection;
+
+    /// <summary>The document is (or will be saved) protected, or is a view-only protected file.</summary>
+    public bool IsProtected => IsReadOnly || Protection is not null;
+
+    /// <summary>
+    /// The protection is set but its passwords are not all known (a recovered session, or opened with the owner
+    /// password without the open password): saving needs them first.
+    /// </summary>
+    public bool NeedsPasswordsToSave => Protection is { } protection && Passwords.SecurityOf(protection) is null;
 
     /// <summary>A save is running: edits are refused so the saved state matches the save point.</summary>
     public bool IsBusy

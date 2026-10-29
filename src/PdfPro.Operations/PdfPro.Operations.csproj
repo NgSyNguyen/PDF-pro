@@ -8,6 +8,12 @@
   <ItemGroup>
     <!-- Pinned at 6.2.4 in Directory.Packages.props: 6.5+ is AGPL (LicenseGuardTests). -->
     <PackageReference Include="PDFsharp" />
+    <!-- Apache-2.0: an extractor independent of PDFium, for the mandatory check after a redaction (SPEC P8 B). -->
+    <PackageReference Include="PdfPig" />
+    <!-- Digital signatures (CMS, RFC 3161 timestamps): used directly since Phase 8. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <!-- MIT: JPEG decoding and encoding when compressing images (Phase 9). -->
+    <PackageReference Include="SkiaSharp" />
   </ItemGroup>
 
   <ItemGroup>

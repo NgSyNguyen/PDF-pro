@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace PdfPro.Core.Geometry;
 
 /// <summary>A point in PDF user space: points (1/72 inch), origin bottom-left, y up.</summary>
@@ -6,6 +8,7 @@ public readonly record struct PdfPoint(double X, double Y);
 /// <summary>A size in points.</summary>
 public readonly record struct PdfSize(double Width, double Height)
 {
+    [JsonIgnore]
     public bool IsLandscape => Width > Height;
 }
 
@@ -15,6 +18,7 @@ public readonly record struct PdfSize(double Width, double Height)
 /// </summary>
 public readonly record struct PdfRect
 {
+    [JsonConstructor]
     public PdfRect(double left, double bottom, double right, double top)
     {
         Left = Math.Min(left, right);
@@ -31,12 +35,16 @@ public readonly record struct PdfRect
 
     public double Top { get; }
 
+    [JsonIgnore]
     public double Width => Right - Left;
 
+    [JsonIgnore]
     public double Height => Top - Bottom;
 
+    [JsonIgnore]
     public bool IsEmpty => Width <= 0 || Height <= 0;
 
+    [JsonIgnore]
     public PdfSize Size => new(Width, Height);
 
     public bool Contains(PdfPoint point)

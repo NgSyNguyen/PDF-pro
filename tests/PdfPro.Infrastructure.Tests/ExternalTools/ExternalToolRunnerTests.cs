@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using PdfPro.Core.ExternalTools;
 using PdfPro.Infrastructure.ExternalTools;
 using PdfPro.Infrastructure.Tests.TestSupport;
 

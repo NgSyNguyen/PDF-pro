@@ -4,11 +4,14 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PdfPro.Operations\PdfPro.Operations.csproj" />
     <ProjectReference Include="..\..\src\PdfPro.Ocr\PdfPro.Ocr.csproj" />
+    <ProjectReference Include="..\..\src\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- A second, independent text extractor: text PDF_Pro writes must read back exactly (SPEC P5). -->
     <PackageReference Include="PdfPig" />
+    <!-- Skia's native library for Linux (containers); Windows gets its own with SkiaSharp. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
   </ItemGroup>
 
 </Project>

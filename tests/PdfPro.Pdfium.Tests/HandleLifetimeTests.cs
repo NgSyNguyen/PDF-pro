@@ -36,6 +36,28 @@ public sealed class HandleLifetimeTests(PdfiumGateFixture fixture)
     }
 
     [Fact]
+    public async Task ReadingAnnotations_ClosesEveryAnnotationHandle()
+    {
+        await fixture.FlushAsync();
+        var baseline = PdfiumHandleTracker.TotalOpen;
+
+        var document = await PdfDocumentHandle.OpenAsync(fixture.Gate, Samples.LinksAnnots, cancellationToken: TestToken);
+        var found = 0;
+        for (var page = 0; page < document.PageCount; page++)
+        {
+            found += (await document.GetPageAnnotationsAsync(page, cancellationToken: TestToken)).Count;
+        }
+
+        await fixture.FlushAsync();
+        found.ShouldBeGreaterThan(0, "the sample has links");
+        PdfiumHandleTracker.OpenCount(PdfiumHandleKind.Annotation).ShouldBe(0, "annotations (and the ones they link to) are closed after reading");
+        await document.DisposeAsync();
+        await fixture.FlushAsync();
+
+        PdfiumHandleTracker.TotalOpen.ShouldBe(baseline);
+    }
+
+    [Fact]
     public async Task BitmapDisposedOnAnotherThread_IsReleasedOnTheGate()
     {
         await using var document = await PdfDocumentHandle.OpenAsync(fixture.Gate, Samples.BasicVi, cancellationToken: TestToken);

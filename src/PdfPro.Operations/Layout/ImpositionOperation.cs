@@ -65,7 +65,7 @@ public abstract class ImpositionOperation<TParams>(ISourceRepairer repairer) : P
                     Impose(output, source, parameters, progress, cancellationToken);
                     cancellationToken.ThrowIfCancellationRequested();
                     using var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                    output.Save(stream, closeStream: false);
+                    Materializing.PdfWriting.Save(output, stream);
                     stream.Flush(flushToDisk: true);
                 },
                 cancellationToken).ConfigureAwait(false);

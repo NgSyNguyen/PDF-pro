@@ -64,6 +64,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         SelectedLanguage = settings.Current.Language;
         IsRestartRequired = SelectedLanguage != localization.ActiveLanguage;
         RenderCacheMegabytes = settings.Current.RenderCacheMegabytes;
+        AnnotationAuthor = settings.Current.AnnotationAuthor;
         DiskCacheSize = Strings.Settings_Measuring;
         _isInitialized = true;
     }
@@ -92,6 +93,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>Memory for rendered pages; applied at once (the cache shrinks or grows) and saved.</summary>
     [ObservableProperty]
     public partial double? RenderCacheMegabytes { get; set; }
+
+    /// <summary>The name new annotations are signed with; blank: the Windows user name. Saved when it changes.</summary>
+    [ObservableProperty]
+    public partial string AnnotationAuthor { get; set; } = string.Empty;
 
     /// <summary>Size of the thumbnail cache on disk ("12 MB"); null until measured.</summary>
     [ObservableProperty]
@@ -155,6 +160,17 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             PendingSave = SaveAsync(s => s with { RenderCacheMegabytes = clamped });
         }
+    }
+
+    partial void OnAnnotationAuthorChanged(string value)
+    {
+        var name = TextNormalizer.ToNfc(value ?? string.Empty).Trim();
+        if (!_isInitialized || string.Equals(name, _settings.Current.AnnotationAuthor, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        PendingSave = SaveAsync(s => s with { AnnotationAuthor = name });
     }
 
     /// <summary>Drops rendered pages from memory and every thumbnail stored on disk.</summary>

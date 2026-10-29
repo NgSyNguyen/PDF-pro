@@ -98,6 +98,19 @@ public sealed class SettingsViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task TheAnnotationAuthor_IsSavedTrimmed()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.AnnotationAuthor.ShouldBeEmpty();
+
+        viewModel.AnnotationAuthor = "  Nguyễn Lan ";
+        await viewModel.PendingSave;
+
+        _settings.Current.AnnotationAuthor.ShouldBe("Nguyễn Lan", "composed (NFC) and trimmed");
+        CreateViewModel().AnnotationAuthor.ShouldBe("Nguyễn Lan");
+    }
+
+    [Fact]
     public async Task FailedSave_ShowsErrorAndKeepsSelection()
     {
         var viewModel = CreateViewModel();

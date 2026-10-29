@@ -46,6 +46,14 @@ public sealed partial class MainWindowViewModel : IExitGuard
             }
         }
 
+        foreach (var document in Documents.Where(d => d.HasRedactionMarks).ToList())
+        {
+            if (!await ConfirmDropRedactionMarksAsync(document))
+            {
+                return false;
+            }
+        }
+
         var discarded = new List<DocumentTabViewModel>();
         foreach (var document in Documents.Where(d => d.IsDirty && !d.DiscardChanges).ToList())
         {
@@ -163,6 +171,23 @@ public sealed partial class MainWindowViewModel : IExitGuard
             return false;
         }
 
+        // Marks to redact that are not applied would leave their content in the file: the user decides first.
+        if (!await ConfirmRedactionMarksBeforeSaveAsync(document))
+        {
+            return false;
+        }
+
+        if (!await ConfirmMissingRequiredFieldsAsync(document))
+        {
+            return false;
+        }
+
+        // Never saved unprotected: a protection whose passwords are unknown asks for them first.
+        if (!EnsureProtectionPasswords(document))
+        {
+            return false;
+        }
+
         // Its folder may be gone (renamed or removed since the document was opened): ask where to save instead.
         var target = saveAs || string.IsNullOrEmpty(document.FilePath) || !Directory.Exists(Path.GetDirectoryName(document.FilePath))
             ? null
@@ -238,10 +263,37 @@ public sealed partial class MainWindowViewModel : IExitGuard
         return true;
     }
 
+    /// <summary>Required form fields still empty are listed; the user may go back and fill them. True = save.</summary>
+    private async Task<bool> ConfirmMissingRequiredFieldsAsync(DocumentTabViewModel document)
+    {
+        const int Listed = 10;
+        var missing = document.Forms.MissingRequired;
+        if (missing.Count == 0)
+        {
+            return true;
+        }
+
+        var names = string.Join(Environment.NewLine, missing.Take(Listed).Select(name => "• " + name));
+        if (missing.Count > Listed)
+        {
+            names += Environment.NewLine + "…";
+        }
+
+        var choice = await _messages.AskAsync(
+            Strings.Forms_Required_Title,
+            Format(Strings.Forms_Required_Message, missing.Count, names),
+            Strings.Forms_Required_Save,
+            null,
+            Strings.Forms_Required_Back);
+        return choice == DialogChoice.Primary;
+    }
+
     /// <summary>Signed or externally changed files get a warning first. Primary = save as, Secondary = overwrite.</summary>
     private async Task<DialogChoice> ConfirmOverwriteAsync(DocumentTabViewModel document)
     {
-        if (document.Document.Features.HasDigitalSignatures || document.Workspace.OriginalDocument.Features.HasDigitalSignatures)
+        // Comments alone are appended to a signed file, which keeps its signatures: nothing to warn about.
+        if ((document.Document.Features.HasDigitalSignatures || document.Workspace.OriginalDocument.Features.HasDigitalSignatures)
+            && !_saver.KeepsSignatures(document.Workspace))
         {
             var choice = await _messages.AskAsync(
                 Strings.Save_Signed_Title,
@@ -335,6 +387,12 @@ public sealed partial class MainWindowViewModel : IExitGuard
         SaveCommand.NotifyCanExecuteChanged();
         SaveAsCommand.NotifyCanExecuteChanged();
         MergeCommand.NotifyCanExecuteChanged();
+        BatesCommand.NotifyCanExecuteChanged();
+        ProtectCommand.NotifyCanExecuteChanged();
+        SignCommand.NotifyCanExecuteChanged();
+        SignBatchCommand.NotifyCanExecuteChanged();
+        LinearizeCommand.NotifyCanExecuteChanged();
+        RepairCommand.NotifyCanExecuteChanged();
     }
 
     private static string Format(string template, params object?[] arguments) => string.Format(CultureInfo.CurrentCulture, template, arguments);

@@ -35,6 +35,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IContentChanger _contentChanger;
     private readonly IPageDialogService _pageDialogs;
     private readonly IMergeService _merge;
+    private readonly IBatesService? _bates;
+    private readonly Services.Security.SigningServices? _signing;
+    private readonly Services.Optimizing.OptimizingServices? _optimizing;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -57,7 +60,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IContentChanger contentChanger,
         IPageDialogService pageDialogs,
         IMergeService merge,
-        ILogger<MainWindowViewModel> logger)
+        ILogger<MainWindowViewModel> logger,
+        IBatesService? bates = null,
+        Services.Security.SigningServices? signing = null,
+        Services.Optimizing.OptimizingServices? optimizing = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _dialogs = dialogs;
@@ -76,6 +82,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _contentChanger = contentChanger;
         _pageDialogs = pageDialogs;
         _merge = merge;
+        _bates = bates;
+        _signing = signing;
+        _optimizing = optimizing;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -98,15 +107,42 @@ public sealed partial class MainWindowViewModel : ObservableObject
         BookletCommand = new ActiveDocumentCommand(d => d.BookletCommand);
         TileCommand = new ActiveDocumentCommand(d => d.TileCommand);
         AddTextCommand = new ActiveDocumentCommand(d => d.AddTextCommand);
+        ToggleContentEditingCommand = new ActiveDocumentCommand(d => d.ToggleContentEditingCommand);
+        ToggleRedactionCommand = new ActiveDocumentCommand(d => d.ToggleRedactionCommand);
+        SanitizeCommand = new ActiveDocumentCommand(d => d.SanitizeCommand);
+        ToggleFormDesignCommand = new ActiveDocumentCommand(d => d.ToggleFormDesignCommand);
+        ExportFormDataCommand = new ActiveDocumentCommand(d => d.ExportFormDataCommand);
+        ImportFormDataCommand = new ActiveDocumentCommand(d => d.ImportFormDataCommand);
+        MergeFormDataCommand = new ActiveDocumentCommand(d => d.MergeFormDataCommand);
+        FlattenFormCommand = new ActiveDocumentCommand(d => d.FlattenFormCommand);
+        ResetFormCommand = new ActiveDocumentCommand(d => d.ResetFormCommand);
         AddShapeCommand = new ActiveDocumentCommand(d => d.AddShapeCommand);
         AddImageCommand = new ActiveDocumentCommand(d => d.AddImageCommand);
         AddSignatureCommand = new ActiveDocumentCommand(d => d.AddSignatureCommand);
+        StampWatermarkCommand = new ActiveDocumentCommand(d => d.StampWatermarkCommand);
+        StampBackgroundCommand = new ActiveDocumentCommand(d => d.StampBackgroundCommand);
+        StampHeaderFooterCommand = new ActiveDocumentCommand(d => d.StampHeaderFooterCommand);
+        StampPageNumbersCommand = new ActiveDocumentCommand(d => d.StampPageNumbersCommand);
+        RemoveStampsCommand = new ActiveDocumentCommand(d => d.RemoveStampsCommand);
+        HighlightCommand = new ActiveDocumentCommand(d => d.HighlightCommand);
+        UnderlineCommand = new ActiveDocumentCommand(d => d.UnderlineCommand);
+        StrikeOutCommand = new ActiveDocumentCommand(d => d.StrikeOutCommand);
+        SquigglyCommand = new ActiveDocumentCommand(d => d.SquigglyCommand);
+        StickyNoteCommand = new ActiveDocumentCommand(d => d.StickyNoteCommand);
+        TextBoxCommand = new ActiveDocumentCommand(d => d.TextBoxCommand);
+        InkCommand = new ActiveDocumentCommand(d => d.InkCommand);
+        ShapesCommand = new ActiveDocumentCommand(d => d.ShapesCommand);
+        StampAnnotationCommand = new ActiveDocumentCommand(d => d.StampAnnotationCommand);
+        FlattenAnnotationsCommand = new ActiveDocumentCommand(d => d.FlattenAnnotationsCommand);
+        FindNextCommand = new ActiveDocumentCommand(d => d.Search.NextCommand);
+        FindPreviousCommand = new ActiveDocumentCommand(d => d.Search.PreviousCommand);
         Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
         Tabs = [Home];
         SelectedTab = Home;
         StatusBar.PropertyChanged += OnStatusBarPropertyChanged;
+        Sidebar.PropertyChanged += OnSidebarPropertyChanged;
     }
 
     public IReadOnlyList<RibbonTabViewModel> RibbonTabs { get; }
@@ -117,7 +153,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -176,11 +212,69 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public ActiveDocumentCommand AddTextCommand { get; }
 
+    public ActiveDocumentCommand ToggleContentEditingCommand { get; }
+
+    /// <summary>"Xóa thông tin": the redaction mode of the active document.</summary>
+    public ActiveDocumentCommand ToggleRedactionCommand { get; }
+
+    public ActiveDocumentCommand SanitizeCommand { get; }
+
+    public ActiveDocumentCommand ToggleFormDesignCommand { get; }
+
+    public ActiveDocumentCommand ExportFormDataCommand { get; }
+
+    public ActiveDocumentCommand ImportFormDataCommand { get; }
+
+    public ActiveDocumentCommand MergeFormDataCommand { get; }
+
+    public ActiveDocumentCommand FlattenFormCommand { get; }
+
+    public ActiveDocumentCommand ResetFormCommand { get; }
+
     public ActiveDocumentCommand AddShapeCommand { get; }
 
     public ActiveDocumentCommand AddImageCommand { get; }
 
     public ActiveDocumentCommand AddSignatureCommand { get; }
+
+    public ActiveDocumentCommand StampWatermarkCommand { get; }
+
+    public ActiveDocumentCommand StampBackgroundCommand { get; }
+
+    public ActiveDocumentCommand StampHeaderFooterCommand { get; }
+
+    public ActiveDocumentCommand StampPageNumbersCommand { get; }
+
+    public ActiveDocumentCommand RemoveStampsCommand { get; }
+
+    public ActiveDocumentCommand HighlightCommand { get; }
+
+    public ActiveDocumentCommand UnderlineCommand { get; }
+
+    public ActiveDocumentCommand StrikeOutCommand { get; }
+
+    public ActiveDocumentCommand SquigglyCommand { get; }
+
+    public ActiveDocumentCommand StickyNoteCommand { get; }
+
+    public ActiveDocumentCommand TextBoxCommand { get; }
+
+    public ActiveDocumentCommand InkCommand { get; }
+
+    public ActiveDocumentCommand ShapesCommand { get; }
+
+    public ActiveDocumentCommand StampAnnotationCommand { get; }
+
+    public ActiveDocumentCommand FlattenAnnotationsCommand { get; }
+
+    /// <summary>F3: the next match of the search.</summary>
+    public ActiveDocumentCommand FindNextCommand { get; }
+
+    /// <summary>Shift+F3: the previous match of the search.</summary>
+    public ActiveDocumentCommand FindPreviousCommand { get; }
+
+    /// <summary>The search panel was asked for (Ctrl+F, "Tìm"): the window puts the keyboard in its query box.</summary>
+    public event EventHandler? SearchRequested;
 
     public StatusBarViewModel StatusBar { get; } = new();
 
@@ -279,6 +373,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         // Objects placed in the page editor and not applied yet are applied first (then asked about like any change).
         if (!await ApplyPendingEditsAsync(document) || !Tabs.Contains(document))
+        {
+            return;
+        }
+
+        if (!await ConfirmDropRedactionMarksAsync(document) || !Tabs.Contains(document))
         {
             return;
         }
@@ -385,11 +484,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         if (_trackedDocument is not null)
         {
+            _trackedDocument.Comments.IsActive = false;
+            _trackedDocument.Signatures.IsActive = false;
             _trackedDocument.PropertyChanged -= OnActiveDocumentPropertyChanged;
             _trackedDocument.ExtractRequested -= OnExtractRequested;
             _trackedDocument.ContentChangeRequested -= OnContentChangeRequested;
             _trackedDocument.SplitRequested -= OnSplitRequested;
             _trackedDocument.LayoutRequested -= OnLayoutRequested;
+            _trackedDocument.FormMergeRequested -= OnFormMergeRequested;
         }
 
         _trackedDocument = value as DocumentTabViewModel;
@@ -400,6 +502,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.ContentChangeRequested += OnContentChangeRequested;
             _trackedDocument.SplitRequested += OnSplitRequested;
             _trackedDocument.LayoutRequested += OnLayoutRequested;
+            _trackedDocument.FormMergeRequested += OnFormMergeRequested;
         }
 
         foreach (var command in new[]
@@ -407,13 +510,40 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand, SanitizeCommand,
+            ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand, FlattenFormCommand, ResetFormCommand,
+            StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
+            FindNextCommand, FindPreviousCommand,
+            HighlightCommand, UnderlineCommand, StrikeOutCommand, SquigglyCommand, StickyNoteCommand,
+            TextBoxCommand, InkCommand, ShapesCommand, StampAnnotationCommand, FlattenAnnotationsCommand,
         })
         {
             command.Attach(_trackedDocument);
         }
 
         UpdateHistoryToolTips();
+        UpdateCommentsPanel();
+    }
+
+    /// <summary>
+    /// The comments of the active document are read while the "Bình luận" panel shows them, its signatures checked
+    /// while the "Chữ ký" panel does.
+    /// </summary>
+    private void UpdateCommentsPanel()
+    {
+        if (_trackedDocument is { } document)
+        {
+            document.Comments.IsActive = Sidebar.SelectedPanel == SidebarPanel.Comments;
+            document.Signatures.IsActive = Sidebar.SelectedPanel == SidebarPanel.Signatures;
+        }
+    }
+
+    private void OnSidebarPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SidebarViewModel.SelectedPanel))
+        {
+            UpdateCommentsPanel();
+        }
     }
 
     private void OnActiveDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -453,6 +583,58 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
     private Task CloseActiveDocumentAsync() => CloseTabAsync(ActiveDocument);
+
+    /// <summary>"Tìm" (Ctrl+F): shows the search panel of the sidebar (the organizer gives way to the viewer).</summary>
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowSearch()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsOrganizing)
+        {
+            document.IsOrganizing = false;
+        }
+
+        Sidebar.SelectedPanel = SidebarPanel.Search;
+        SearchRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>"Bình luận": shows the comments panel of the sidebar (the organizer gives way to the viewer).</summary>
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowComments()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsOrganizing)
+        {
+            document.IsOrganizing = false;
+        }
+
+        Sidebar.SelectedPanel = SidebarPanel.Comments;
+    }
+
+    /// <summary>"Kiểm chữ ký": shows the signatures panel of the sidebar (the organizer gives way to the viewer).</summary>
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowSignatures()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsOrganizing)
+        {
+            document.IsOrganizing = false;
+        }
+
+        Sidebar.SelectedPanel = SidebarPanel.Signatures;
+    }
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
     private void ShowProperties()
@@ -579,51 +761,70 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Stamp,
                 [
-                    new("stamp.watermark", Strings.Cmd_Watermark, SymbolRegular.Water24),
-                    new("stamp.headerFooter", Strings.Cmd_HeaderFooter, SymbolRegular.DocumentHeader24),
-                    new("stamp.pageNumbers", Strings.Cmd_PageNumbers, SymbolRegular.NumberSymbol24),
+                    new("stamp.watermark", Strings.Cmd_Watermark, SymbolRegular.Water24, StampWatermarkCommand),
+                    new("stamp.background", Strings.Cmd_Background, SymbolRegular.PaintBucket24, StampBackgroundCommand),
+                    new("stamp.headerFooter", Strings.Cmd_HeaderFooter, SymbolRegular.DocumentHeader24, StampHeaderFooterCommand),
+                    new("stamp.pageNumbers", Strings.Cmd_PageNumbers, SymbolRegular.NumberSymbol24, StampPageNumbersCommand),
+                    new("stamp.remove", Strings.Cmd_RemoveStamps, SymbolRegular.EraserTool24, RemoveStampsCommand, Strings.Cmd_RemoveStamps_ToolTip),
+                    new("stamp.bates", Strings.Cmd_Bates, SymbolRegular.NumberRow24, BatesCommand, Strings.Cmd_Bates_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Content,
                 [
-                    new("edit.content", Strings.Cmd_EditContent, SymbolRegular.DocumentEdit24),
+                    new("edit.content", Strings.Cmd_EditContent, SymbolRegular.DocumentEdit24, ToggleContentEditingCommand, Strings.Cmd_EditContent_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Forms,
+                [
+                    new("forms.design", Strings.Cmd_DesignForm, SymbolRegular.Form24, ToggleFormDesignCommand, Strings.Cmd_DesignForm_ToolTip),
+                    new("forms.exportData", Strings.Cmd_ExportFormData, SymbolRegular.ArrowExport24, ExportFormDataCommand, Strings.Cmd_ExportFormData_ToolTip),
+                    new("forms.importData", Strings.Cmd_ImportFormData, SymbolRegular.ArrowImport24, ImportFormDataCommand, Strings.Cmd_ImportFormData_ToolTip),
+                    new("forms.merge", Strings.Cmd_MergeFormData, SymbolRegular.DocumentTableArrowRight24, MergeFormDataCommand, Strings.Cmd_MergeFormData_ToolTip),
+                    new("forms.reset", Strings.Cmd_ResetForm, SymbolRegular.Eraser24, ResetFormCommand, Strings.Cmd_ResetForm_ToolTip),
+                    new("forms.flatten", Strings.Cmd_FlattenForm, SymbolRegular.Layer24, FlattenFormCommand, Strings.Cmd_FlattenForm_ToolTip),
                 ]),
             ]),
             new("annotate", Strings.Ribbon_Tab_Annotate,
             [
                 new(Strings.Ribbon_Group_Markup,
                 [
-                    new("annotate.highlight", Strings.Cmd_Highlight, SymbolRegular.Highlight24),
-                    new("annotate.underline", Strings.Cmd_Underline, SymbolRegular.TextUnderline24),
-                    new("annotate.strikeout", Strings.Cmd_Strikeout, SymbolRegular.TextStrikethrough24),
+                    new("annotate.highlight", Strings.Cmd_Highlight, SymbolRegular.Highlight24, HighlightCommand, Strings.Cmd_Highlight_ToolTip),
+                    new("annotate.underline", Strings.Cmd_Underline, SymbolRegular.TextUnderline24, UnderlineCommand, Strings.Cmd_Underline_ToolTip),
+                    new("annotate.strikeout", Strings.Cmd_Strikeout, SymbolRegular.TextStrikethrough24, StrikeOutCommand, Strings.Cmd_Strikeout_ToolTip),
+                    new("annotate.squiggly", Strings.Cmd_Squiggly, SymbolRegular.TextWordCount24, SquigglyCommand, Strings.Cmd_Squiggly_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Notes,
                 [
-                    new("annotate.note", Strings.Cmd_StickyNote, SymbolRegular.Note24),
-                    new("annotate.textBox", Strings.Cmd_TextBox, SymbolRegular.Textbox24),
+                    new("annotate.note", Strings.Cmd_StickyNote, SymbolRegular.Note24, StickyNoteCommand, Strings.Cmd_StickyNote_ToolTip),
+                    new("annotate.textBox", Strings.Cmd_TextBox, SymbolRegular.Textbox24, TextBoxCommand, Strings.Cmd_TextBox_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Draw,
                 [
-                    new("annotate.ink", Strings.Cmd_Ink, SymbolRegular.InkStroke24),
-                    new("annotate.shapes", Strings.Cmd_Shapes, SymbolRegular.DrawShape24),
-                    new("annotate.stamp", Strings.Cmd_StampAnnotation, SymbolRegular.DocumentCheckmark24),
+                    new("annotate.ink", Strings.Cmd_Ink, SymbolRegular.InkStroke24, InkCommand, Strings.Cmd_Ink_ToolTip),
+                    new("annotate.shapes", Strings.Cmd_Shapes, SymbolRegular.DrawShape24, ShapesCommand, Strings.Cmd_Shapes_ToolTip),
+                    new("annotate.stamp", Strings.Cmd_StampAnnotation, SymbolRegular.DocumentCheckmark24, StampAnnotationCommand, Strings.Cmd_StampAnnotation_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Review,
+                [
+                    new("annotate.comments", Strings.Cmd_Comments, SymbolRegular.CommentMultiple24, ShowCommentsCommand, Strings.Cmd_Comments_ToolTip),
+                    new("annotate.flatten", Strings.Cmd_FlattenAnnotations, SymbolRegular.Layer24, FlattenAnnotationsCommand, Strings.Cmd_FlattenAnnotations_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Search,
                 [
-                    new("search.find", Strings.Cmd_Find, SymbolRegular.DocumentSearch24),
+                    new("search.find", Strings.Cmd_Find, SymbolRegular.DocumentSearch24, ShowSearchCommand, Strings.Cmd_Find_ToolTip),
                 ]),
             ]),
             new("security", Strings.Ribbon_Tab_Security,
             [
                 new(Strings.Ribbon_Group_Protect,
                 [
-                    new("security.encrypt", Strings.Cmd_Password, SymbolRegular.LockClosed24),
-                    new("security.redact", Strings.Cmd_Redact, SymbolRegular.EraserSegment24),
-                    new("security.sanitize", Strings.Cmd_Sanitize, SymbolRegular.Broom24),
+                    new("security.encrypt", Strings.Cmd_Password, SymbolRegular.LockClosed24, ProtectCommand, Strings.Cmd_Password_ToolTip),
+                    new("security.redact", Strings.Cmd_Redact, SymbolRegular.EraserSegment24, ToggleRedactionCommand, Strings.Cmd_Redact_ToolTip),
+                    new("security.sanitize", Strings.Cmd_Sanitize, SymbolRegular.Broom24, SanitizeCommand, Strings.Cmd_Sanitize_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Signature,
                 [
-                    new("security.sign", Strings.Cmd_Sign, SymbolRegular.Certificate24),
-                    new("security.verify", Strings.Cmd_VerifySignatures, SymbolRegular.ShieldCheckmark24),
+                    new("security.sign", Strings.Cmd_Sign, SymbolRegular.Certificate24, SignCommand, Strings.Cmd_Sign_ToolTip),
+                    new("security.signBatch", Strings.Cmd_SignBatch, SymbolRegular.DocumentMultiple24, SignBatchCommand, Strings.Cmd_SignBatch_ToolTip),
+                    new("security.verify", Strings.Cmd_VerifySignatures, SymbolRegular.ShieldCheckmark24, ShowSignaturesCommand, Strings.Cmd_VerifySignatures_ToolTip),
                 ]),
             ]),
             new("convert", Strings.Ribbon_Tab_Convert,
@@ -641,6 +842,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Optimize,
                 [
                     new("optimize.compress", Strings.Cmd_Compress, SymbolRegular.ArrowMinimize24),
+                    new("optimize.linearize", Strings.Cmd_Linearize, SymbolRegular.GlobeArrowForward24, LinearizeCommand, Strings.Cmd_Linearize_ToolTip),
+                    new("optimize.repair", Strings.Cmd_Repair, SymbolRegular.DocumentError24, RepairCommand, Strings.Cmd_Repair_ToolTip),
                     new("convert.toPdfA", Strings.Cmd_PdfA, SymbolRegular.Archive24),
                 ]),
             ]),
