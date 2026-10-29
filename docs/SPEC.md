@@ -513,6 +513,18 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Số đo: chưa đo (ghi khi chạy `Phase8AcceptanceTests` trên Windows).
 - Redaction trên `pii.pdf` (và trang xoay/cắt), cả hai chế độ: chữ bị xóa không còn trích được bằng PdfPig lẫn PDFium (kể cả trong byte của tệp), điểm ảnh trong vùng đúng màu ô, ngoài vùng không đổi; chú thích/bookmark/metadata/cây thẻ chứa nội dung bị gỡ; vùng đánh dấu trên viewer đi theo trang, áp dụng = một bước hoàn tác. Chế độ giữ vector: chữ cạnh vùng còn nguyên ("Số CCCD:"), `vanban-vi.pdf`/`basic-vi.pdf` không trang nào phải chuyển ảnh; đường kẻ, dải màu, ảnh chỉ mất phần dưới vùng (điểm ảnh trong dữ liệu ảnh bị tô); chữ trong form XObject dưới vùng → trang đó chuyển ảnh.
 
+### Tối ưu, sửa lỗi & chuyển đổi (Phase 9)
+
+> Đang làm theo lát (xem `docs/PROGRESS.md`); mục này ghi các quyết định đã chốt và được bổ sung ở mỗi lát.
+
+**Công cụ ngoài**
+- Hợp đồng `IExternalToolRunner` (cùng request/result/ngoại lệ) nằm ở Core (`PdfPro.Core.ExternalTools`), bản cài đặt ở Infrastructure; Operations và Ocr dùng qua DI.
+- qpdf (Apache-2.0) là tiến trình riêng: `tools/qpdf/bin/qpdf.exe` cạnh `PdfPro.exe` (tải + kiểm SHA-256 bằng `tools/fetch-tools.ps1`, App csproj chép vào output/publish nếu có), không có thì `qpdf` trên PATH. Exit 0 = ổn, 3 = có cảnh báo nhưng đã ghi, khác = `QpdfException`. Thiếu qpdf → thông báo cách tải.
+
+**Tối ưu cho web (`optimize.linearize`)** — Export: `qpdf --linearize --object-streams=generate`, ghi tệp tạm cạnh đích rồi thay. App: đầu vào là tệp của tài liệu khi không có gì chưa lưu, ngược lại bản xuất của tài liệu như đang hiển thị; tài liệu có mật khẩu bị từ chối; đích mặc định "{tên} (web).pdf".
+
+**Sửa tệp hỏng (`optimize.repair`)** — Export, thử lần lượt và giữ cách đầu tiên cho kết quả **mở được bằng PDFium, có trang**: (1) PDFium mở (tự dựng lại xref hỏng) rồi ghi lại — kết quả còn phải đọc được bằng PDFsharp; (2) qpdf (khôi phục xref của nó); (3) **dựng lại bảng tham chiếu** (`CrossReferenceRebuilder`): quét mọi "n g obj" (cái sau cùng của mỗi số thắng), giải nén object stream (Flate) để lấy đối tượng bên trong, catalog có `/Pages` làm `/Root`, từ điển có `/Producer`/`/CreationDate`/`/Creator` làm `/Info`, nối bảng xref (hoặc xref stream có mục loại 2 khi có object stream) + trailer — mọi byte cũ giữ nguyên; (4) PdfPig đọc nới lỏng, chép từng trang sang tệp mới. Báo cáo cách đã dùng và các cách đã hỏng (chưa cài / không đọc được / kết quả không mở được). `samples/broken.pdf` (mất cả xref lẫn trailer) không mở được bằng PDFium 157, qpdf 11.9 hay PdfPig → sửa được ở cách (3). App: chọn tệp (tệp hỏng không mở được trong app), đích mặc định "{tên} (đã sửa).pdf", xong báo cách đã dùng + số trang rồi mở tệp; thông báo "tệp bị hỏng" khi mở gợi ý lệnh này.
+
 ### Hệ tọa độ — nguồn bug số một
 
 PDF dùng đơn vị point (1/72 inch), gốc ở góc **dưới-trái**, trang có thể có `/Rotate` 90/180/270 và CropBox không bắt đầu từ (0,0). WPF dùng DIP (1/96 inch), gốc ở góc **trên-trái**. Mọi chuyển đổi bắt buộc đi qua một lớp duy nhất, có unit test cho cả 4 góc xoay × CropBox lệch gốc × nhiều mức zoom.

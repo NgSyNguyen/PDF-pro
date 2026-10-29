@@ -37,6 +37,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IMergeService _merge;
     private readonly IBatesService? _bates;
     private readonly Services.Security.SigningServices? _signing;
+    private readonly Services.Optimizing.OptimizingServices? _optimizing;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -61,7 +62,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IMergeService merge,
         ILogger<MainWindowViewModel> logger,
         IBatesService? bates = null,
-        Services.Security.SigningServices? signing = null)
+        Services.Security.SigningServices? signing = null,
+        Services.Optimizing.OptimizingServices? optimizing = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _dialogs = dialogs;
@@ -82,6 +84,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _merge = merge;
         _bates = bates;
         _signing = signing;
+        _optimizing = optimizing;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -150,7 +153,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -839,6 +842,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Optimize,
                 [
                     new("optimize.compress", Strings.Cmd_Compress, SymbolRegular.ArrowMinimize24),
+                    new("optimize.linearize", Strings.Cmd_Linearize, SymbolRegular.GlobeArrowForward24, LinearizeCommand, Strings.Cmd_Linearize_ToolTip),
+                    new("optimize.repair", Strings.Cmd_Repair, SymbolRegular.DocumentError24, RepairCommand, Strings.Cmd_Repair_ToolTip),
                     new("convert.toPdfA", Strings.Cmd_PdfA, SymbolRegular.Archive24),
                 ]),
             ]),

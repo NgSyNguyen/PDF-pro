@@ -162,7 +162,7 @@
   <data name="Open_Error_FileInUse" xml:space="preserve"><value>“{0}” is being written by another application. Close it and try again.</value></data>
   <data name="Open_Error_FileTooLarge" xml:space="preserve"><value>“{0}” is larger than 4 GB, which PDF_Pro does not support yet.</value></data>
   <data name="Open_Error_ReadFailed" xml:space="preserve"><value>Reading “{0}” failed. Check the drive or network connection and try again.</value></data>
-  <data name="Open_Error_Corrupted" xml:space="preserve"><value>“{0}” is damaged or is not a PDF document.</value></data>
+  <data name="Open_Error_Corrupted" xml:space="preserve"><value>“{0}” is damaged or is not a PDF document. You may try Convert → Repair file.</value></data>
   <data name="Open_Error_UnsupportedSecurity" xml:space="preserve"><value>“{0}” uses a security handler that PDF_Pro does not support yet.</value></data>
   <data name="Open_Error_Unknown" xml:space="preserve"><value>An error occurred while opening “{0}”. Details were written to the log.</value></data>
   <data name="Open_NotPdf" xml:space="preserve"><value>Only PDF files can be opened; other files were skipped.</value></data>
@@ -1238,6 +1238,35 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Sign_FieldName" xml:space="preserve"><value>Signature {0}</value></data>
   <data name="Sign_Cancelled" xml:space="preserve"><value>Signing cancelled</value></data>
   <data name="Sign_Error_Changed" xml:space="preserve"><value>The document changed while the signature was placed. Save it, then sign again.</value></data>
+  <data name="Cmd_Linearize" xml:space="preserve"><value>Optimize for web</value></data>
+  <data name="Cmd_Linearize_ToolTip" xml:space="preserve"><value>Write a copy laid out for the web (Fast Web View): browsers show the first page before the whole file has arrived</value></data>
+  <data name="Cmd_Repair" xml:space="preserve"><value>Repair file</value></data>
+  <data name="Cmd_Repair_ToolTip" xml:space="preserve"><value>Read a damaged PDF file back (lost cross-references, cut-off download…) and write it as a new file that opens</value></data>
+  <data name="Linearize_Error_Title" xml:space="preserve"><value>Could not optimize for the web</value></data>
+  <data name="Linearize_Name" xml:space="preserve"><value>{0} (web)</value></data>
+  <data name="Linearize_Progress" xml:space="preserve"><value>Optimizing "{0}" for the web…</value></data>
+  <data name="Linearize_Done" xml:space="preserve"><value>Optimized for the web: "{0}"</value></data>
+  <data name="Optimize_Error_Protected" xml:space="preserve"><value>The document has a password. Remove it (Password &amp; permissions) and save first.</value></data>
+  <data name="Optimize_Error_Unreadable" xml:space="preserve"><value>The file could not be read or written.</value></data>
+  <data name="Optimize_Error_NoQpdf" xml:space="preserve"><value>The qpdf tool is missing. Run tools\fetch-tools.ps1 to download it (or install qpdf), then try again.</value></data>
+  <data name="Optimize_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="Optimize_FailedStatus" xml:space="preserve"><value>Could not be done</value></data>
+  <data name="Repair_Pick_Title" xml:space="preserve"><value>Choose the PDF file to repair</value></data>
+  <data name="Repair_Name" xml:space="preserve"><value>{0} (repaired)</value></data>
+  <data name="Repair_Progress" xml:space="preserve"><value>Repairing "{0}"…</value></data>
+  <data name="Repair_Done" xml:space="preserve"><value>Repaired: "{0}"</value></data>
+  <data name="Repair_Done_Title" xml:space="preserve"><value>File repaired</value></data>
+  <data name="Repair_Done_Message" xml:space="preserve"><value>The file was read back by {0}. The new file has {1} pages and will open. Check its content: badly damaged parts may be lost.</value></data>
+  <data name="Repair_Error_Title" xml:space="preserve"><value>Could not repair the file</value></data>
+  <data name="Repair_Error_Message" xml:space="preserve"><value>No way could read this file. Tried:</value></data>
+  <data name="Repair_Error_Line" xml:space="preserve"><value>• {0}: {1}</value></data>
+  <data name="Repair_Failure_Missing" xml:space="preserve"><value>not installed on this computer</value></data>
+  <data name="Repair_Failure_BadResult" xml:space="preserve"><value>the result does not open</value></data>
+  <data name="Repair_Failure_Unreadable" xml:space="preserve"><value>could not read it</value></data>
+  <data name="Repair_Method_Pdfium" xml:space="preserve"><value>PDFium (opened and written again)</value></data>
+  <data name="Repair_Method_Qpdf" xml:space="preserve"><value>qpdf (cross-reference recovery)</value></data>
+  <data name="Repair_Method_CrossReference" xml:space="preserve"><value>a cross-reference table rebuilt from the intact objects</value></data>
+  <data name="Repair_Method_PdfPig" xml:space="preserve"><value>PdfPig (lenient reading, pages copied)</value></data>
   <data name="Cmd_SignBatch" xml:space="preserve"><value>Sign many</value></data>
   <data name="Cmd_SignBatch_ToolTip" xml:space="preserve"><value>Digitally sign several PDF files at once with the same certificate and look; each signed copy is written to the folder you choose</value></data>
   <data name="Sign_Batch_Intro" xml:space="preserve"><value>{0} files will be signed with the same certificate and look; the signed copies go to the folder you choose next.</value></data>

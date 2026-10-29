@@ -4,6 +4,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PdfPro.Operations\PdfPro.Operations.csproj" />
     <ProjectReference Include="..\..\src\PdfPro.Ocr\PdfPro.Ocr.csproj" />
+    <ProjectReference Include="..\..\src\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

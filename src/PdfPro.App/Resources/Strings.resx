@@ -162,7 +162,7 @@
   <data name="Open_Error_FileInUse" xml:space="preserve"><value>Tệp “{0}” đang được một ứng dụng khác ghi. Hãy đóng ứng dụng đó rồi thử lại.</value></data>
   <data name="Open_Error_FileTooLarge" xml:space="preserve"><value>Tệp “{0}” lớn hơn 4 GB, PDF_Pro chưa hỗ trợ kích thước này.</value></data>
   <data name="Open_Error_ReadFailed" xml:space="preserve"><value>Đọc tệp “{0}” thất bại. Hãy kiểm tra ổ đĩa hoặc kết nối mạng rồi thử lại.</value></data>
-  <data name="Open_Error_Corrupted" xml:space="preserve"><value>Tệp “{0}” bị hỏng hoặc không phải tài liệu PDF.</value></data>
+  <data name="Open_Error_Corrupted" xml:space="preserve"><value>Tệp “{0}” bị hỏng hoặc không phải tài liệu PDF. Có thể thử Chuyển đổi → Sửa tệp hỏng.</value></data>
   <data name="Open_Error_UnsupportedSecurity" xml:space="preserve"><value>Tệp “{0}” dùng kiểu bảo mật mà PDF_Pro chưa hỗ trợ.</value></data>
   <data name="Open_Error_Unknown" xml:space="preserve"><value>Đã xảy ra lỗi khi mở tệp “{0}”. Chi tiết đã được ghi vào nhật ký.</value></data>
   <data name="Open_NotPdf" xml:space="preserve"><value>Chỉ mở được tệp PDF; các tệp khác đã được bỏ qua.</value></data>
@@ -1238,6 +1238,35 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Sign_FieldName" xml:space="preserve"><value>Chữ ký {0}</value></data>
   <data name="Sign_Cancelled" xml:space="preserve"><value>Đã hủy ký</value></data>
   <data name="Sign_Error_Changed" xml:space="preserve"><value>Tài liệu đã thay đổi trong lúc đặt chữ ký. Hãy lưu rồi ký lại.</value></data>
+  <data name="Cmd_Linearize" xml:space="preserve"><value>Tối ưu cho web</value></data>
+  <data name="Cmd_Linearize_ToolTip" xml:space="preserve"><value>Ghi một bản sao sắp xếp lại cho web (Fast Web View): trình duyệt hiện trang đầu trước khi tải xong cả tệp</value></data>
+  <data name="Cmd_Repair" xml:space="preserve"><value>Sửa tệp hỏng</value></data>
+  <data name="Cmd_Repair_ToolTip" xml:space="preserve"><value>Đọc lại một tệp PDF bị hỏng (mất bảng tham chiếu, tải dở…) và ghi thành tệp mới mở được</value></data>
+  <data name="Linearize_Error_Title" xml:space="preserve"><value>Không tối ưu được cho web</value></data>
+  <data name="Linearize_Name" xml:space="preserve"><value>{0} (web)</value></data>
+  <data name="Linearize_Progress" xml:space="preserve"><value>Đang tối ưu "{0}" cho web…</value></data>
+  <data name="Linearize_Done" xml:space="preserve"><value>Đã tối ưu cho web: "{0}"</value></data>
+  <data name="Optimize_Error_Protected" xml:space="preserve"><value>Tài liệu đang có mật khẩu. Hãy gỡ mật khẩu (Mật khẩu &amp; quyền) và lưu trước.</value></data>
+  <data name="Optimize_Error_Unreadable" xml:space="preserve"><value>Không đọc hoặc không ghi được tệp.</value></data>
+  <data name="Optimize_Error_NoQpdf" xml:space="preserve"><value>Chưa có công cụ qpdf. Chạy tools\fetch-tools.ps1 để tải về (hoặc cài qpdf), rồi thử lại.</value></data>
+  <data name="Optimize_Cancelled" xml:space="preserve"><value>Đã hủy</value></data>
+  <data name="Optimize_FailedStatus" xml:space="preserve"><value>Không thực hiện được</value></data>
+  <data name="Repair_Pick_Title" xml:space="preserve"><value>Chọn tệp PDF cần sửa</value></data>
+  <data name="Repair_Name" xml:space="preserve"><value>{0} (đã sửa)</value></data>
+  <data name="Repair_Progress" xml:space="preserve"><value>Đang sửa "{0}"…</value></data>
+  <data name="Repair_Done" xml:space="preserve"><value>Đã sửa: "{0}"</value></data>
+  <data name="Repair_Done_Title" xml:space="preserve"><value>Đã sửa tệp</value></data>
+  <data name="Repair_Done_Message" xml:space="preserve"><value>Đã đọc lại tệp bằng {0}. Tệp mới có {1} trang và sẽ được mở. Hãy xem lại nội dung: phần hỏng nặng có thể đã mất.</value></data>
+  <data name="Repair_Error_Title" xml:space="preserve"><value>Không sửa được tệp</value></data>
+  <data name="Repair_Error_Message" xml:space="preserve"><value>Không cách nào đọc được tệp này. Đã thử:</value></data>
+  <data name="Repair_Error_Line" xml:space="preserve"><value>• {0}: {1}</value></data>
+  <data name="Repair_Failure_Missing" xml:space="preserve"><value>chưa cài trên máy</value></data>
+  <data name="Repair_Failure_BadResult" xml:space="preserve"><value>kết quả không mở được</value></data>
+  <data name="Repair_Failure_Unreadable" xml:space="preserve"><value>không đọc được</value></data>
+  <data name="Repair_Method_Pdfium" xml:space="preserve"><value>PDFium (mở rồi ghi lại)</value></data>
+  <data name="Repair_Method_Qpdf" xml:space="preserve"><value>qpdf (khôi phục bảng tham chiếu)</value></data>
+  <data name="Repair_Method_CrossReference" xml:space="preserve"><value>dựng lại bảng tham chiếu từ các đối tượng còn nguyên</value></data>
+  <data name="Repair_Method_PdfPig" xml:space="preserve"><value>PdfPig (đọc nới lỏng, chép từng trang)</value></data>
   <data name="Cmd_SignBatch" xml:space="preserve"><value>Ký hàng loạt</value></data>
   <data name="Cmd_SignBatch_ToolTip" xml:space="preserve"><value>Ký số nhiều tệp PDF một lần với cùng chứng thư và cách hiển thị; bản đã ký của mỗi tệp được ghi vào thư mục bạn chọn</value></data>
   <data name="Sign_Batch_Intro" xml:space="preserve"><value>Sẽ ký {0} tệp với cùng chứng thư và cách hiển thị; bản đã ký ghi vào thư mục bạn chọn sau đó.</value></data>

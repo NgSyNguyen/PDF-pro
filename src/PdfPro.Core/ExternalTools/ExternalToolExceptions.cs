@@ -1,4 +1,4 @@
-namespace PdfPro.Infrastructure.ExternalTools;
+namespace PdfPro.Core.ExternalTools;
 
 /// <summary>Base type for failures of external programs.</summary>
 public class ExternalToolException : Exception

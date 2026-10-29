@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace PdfPro.Infrastructure.ExternalTools;
+namespace PdfPro.Core.ExternalTools;
 
 /// <summary>
 /// How to run an external program (qpdf, tesseract, soffice…). Arguments are passed one by one through

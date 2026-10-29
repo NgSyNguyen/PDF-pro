@@ -1,4 +1,4 @@
-namespace PdfPro.Infrastructure.ExternalTools;
+namespace PdfPro.Core.ExternalTools;
 
 /// <summary>Runs external programs without a shell, with timeout, cancellation and captured output.</summary>
 public interface IExternalToolRunner

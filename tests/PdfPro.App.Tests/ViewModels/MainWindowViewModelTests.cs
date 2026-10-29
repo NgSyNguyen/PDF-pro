@@ -5,6 +5,7 @@ using PdfPro.App.Hosting;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Optimizing;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Services.Security;
@@ -13,6 +14,7 @@ using PdfPro.App.ViewModels;
 using PdfPro.Core.Geometry;
 using PdfPro.Infrastructure;
 using PdfPro.Infrastructure.Settings;
+using PdfPro.Operations.Optimizing;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.ViewModels;
@@ -104,7 +106,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
                 "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
                 "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten",
-                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify"],
+                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify", "optimize.linearize", "optimize.repair"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -546,5 +548,6 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _merge,
             NullLogger<MainWindowViewModel>.Instance,
             withBates ? _bates : null,
-            new SigningServices(_certificates, _timestamps, _forms));
+            new SigningServices(_certificates, _timestamps, _forms),
+            new OptimizingServices(new LinearizeOperation(new Qpdf(_tools, new QpdfOptions("qpdf"))), new RepairOperation(TestOperations.PdfiumGate)));
 }

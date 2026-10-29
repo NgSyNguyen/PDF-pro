@@ -6,6 +6,7 @@ using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Editing;
 using PdfPro.App.Services.Forms;
+using PdfPro.App.Services.Optimizing;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Services.Security;
@@ -21,6 +22,7 @@ using PdfPro.Operations.Forms;
 using PdfPro.Operations.Materializing;
 using PdfPro.Operations.Layout;
 using PdfPro.Operations.Merging;
+using PdfPro.Operations.Optimizing;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Security;
 using PdfPro.Operations.Signing;
@@ -141,6 +143,11 @@ internal static class AppHost
         services.AddSingleton<IBatesService, BatesService>();
         services.AddSingleton<ICertificateStore, CertificateStore>();
         services.AddSingleton<ISignatureVerification, SignatureVerification>();
+        services.AddSingleton(sp => QpdfOptions.In(sp.GetRequiredService<AppPaths>().ToolsDirectory));
+        services.AddSingleton<Qpdf>();
+        services.AddOperation<LinearizeOperation>();
+        services.AddOperation<RepairOperation>();
+        services.AddSingleton(sp => new OptimizingServices(sp.GetRequiredService<LinearizeOperation>(), sp.GetRequiredService<RepairOperation>()));
         services.AddSingleton(sp => new SigningServices(
             sp.GetRequiredService<ICertificateStore>(),
             sp.GetRequiredService<ITimestampClient>(),

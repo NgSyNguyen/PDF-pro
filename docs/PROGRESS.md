@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 29/10/2026 — Phase 8 xong về code (lát 9: SPEC + `Phase8AcceptanceTests`). Tiếp theo: **P9 — Tối ưu, sửa lỗi & chuyển đổi** (PROMPTS P9; lập bảng lát P9 ở mục 4 trước khi code).
+Cập nhật lần cuối: 29/10/2026 — P9 lát 1 (qpdf, tối ưu cho web, sửa tệp hỏng). Tiếp theo: P9 lát 2 (nén ảnh theo DPI thực — lõi).
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -53,7 +53,8 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | P6 Chú thích & tìm kiếm | Xong về code (`66c9fc5` … lát 9e), có mục SPEC và `Phase6AcceptanceTests` (chưa chạy tay) |
 | P7 Sửa nội dung gốc & biểu mẫu | Xong về code (`d5d3523` … lát 9), có mục SPEC và `Phase7AcceptanceTests` (chưa chạy tay) |
 | P8 Bảo mật, xóa vĩnh viễn & chữ ký số | Xong về code (lát 1–9), có mục SPEC và `Phase8AcceptanceTests` (chưa chạy tay) |
-| P9–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
+| **P9 Tối ưu, sửa lỗi & chuyển đổi** | **Đang làm** — xem bảng lát Phase 9 |
+| P10–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
 
 ### Phase 5 — các lát
 
@@ -165,6 +166,26 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | 8b | Ký hàng loạt: Operations `Signing/SignatureCorner.cs` (`SignaturePage` First/Last; `Place(file, page)` → trang + khung góc dưới phải 180×60 cách mép 36 pt theo trang hiển thị, `PageBoxes.VisibleBox`/`Rotation`); App ribbon `security.signBatch` (`MainWindowViewModel.SignBatch.cs`: chọn tệp → `SignDialogViewModel(fileCount)` chế độ nhiều tệp (`SignaturePlacementKind.Corner`, `SignDialogResult.CornerPage`, `BatchText`) → chọn thư mục → ký lần lượt ở nền, tên "{tên} (đã ký).pdf" duy nhất, tên trường trống riêng từng tệp, lỗi từng tệp gom lại báo cuối, TSA lỗi hỏi một lần, mở thư mục); `SigningMessage(failure)` dùng chung. Test: `SignatureCornerTests` (6), `SignDialogViewModelTests.ForManyFiles…`, `MainWindowViewModelTests.SignBatch_*` (3) | commit `feat: sign many files alike` | Xong (App test chỉ chạy trên CI) |
 | 9 | Mục SPEC Phase 8 hoàn chỉnh (quyết định/giới hạn, nghiệm thu, kiểm tay); `Phase8AcceptanceTests` (FlaUI: xóa vĩnh viễn số CCCD của `pii.pdf` rồi PdfPig + byte tệp không còn số; hai người ký lần lượt bằng .pfx thử → panel "Chữ ký" 2 chữ ký toàn vẹn → sửa 1 byte → "Kiểm lại" 2 không hợp lệ); `TestSupport/TestCertificates.WritePfx` (.pfx không mật khẩu) | commit `docs: Phase 8 in the SPEC, and its acceptance tests` | Xong — **chưa chạy tay trên Windows** |
 
+### Phase 9 — các lát (kế hoạch do agent tự quyết, 29/10/2026)
+
+**Quyết định (sẽ vào SPEC mục Phase 9):**
+- Hợp đồng chạy công cụ ngoài (`IExternalToolRunner`, `ExternalToolRequest/Result`, ngoại lệ) chuyển xuống **Core** (`PdfPro.Core.ExternalTools`) để Operations và Ocr dùng được mà không tham chiếu ngang Infrastructure; bản cài đặt `ExternalToolRunner` vẫn ở Infrastructure.
+- qpdf chạy như tiến trình riêng (Apache-2.0), tìm ở `tools/qpdf/bin/qpdf.exe` cạnh exe (tải bằng `tools/fetch-tools.ps1`, đóng gói khi build/publish nếu có), không có thì `qpdf` trên PATH; exit 3 (cảnh báo) vẫn là thành công. Test cần qpdf tự bỏ qua khi máy không có (`Assert.SkipUnless`) — CI Windows chưa cài qpdf.
+- Tối ưu/chuyển đổi tệp là thao tác **Export** (ghi tệp mới, không vào lịch sử phiên): đầu vào là tệp của tài liệu khi không có gì chưa lưu, ngược lại bản xuất của tài liệu như đang hiển thị (`DocumentFileAsync`).
+
+| Lát | Nội dung | Commit | Trạng thái |
+|---|---|---|---|
+| 1 | qpdf + tối ưu cho web + sửa tệp hỏng: Core `ExternalTools/*` (chuyển từ Infrastructure); Operations `Optimizing/Qpdf.cs` (`QpdfOptions.In(tools)`, `LinearizeAsync`/`CompactAsync`/`RewriteAsync`, `QpdfException`), `OptimizedFiles` (tạm → thay), `LinearizeOperation` (`optimize.linearize`), `RepairOperation` (`optimize.repair`: PDFium mở + ghi lại → qpdf → **dựng lại xref** (`CrossReferenceRebuilder`: quét "n g obj" + object stream, tìm catalog/Info, nối bảng xref hoặc xref stream) → PdfPig lenient chép trang; kết quả phải mở được bằng PDFium có trang; `RepairReport`/`RepairFailedException` liệt kê cách đã thử); `tools/fetch-tools.ps1` tải qpdf 12.2.0 msvc64 + kiểm SHA-256 theo tệp checksum của bản phát hành (`-QpdfSha256` để ghim); App csproj chép `tools/qpdf` khi có; App ribbon Chuyển đổi → Tối ưu: `optimize.linearize` ("{tên} (web).pdf"), `optimize.repair` (chọn tệp → "{tên} (đã sửa).pdf" → báo cách đã dùng → mở), `OptimizingServices`; thông báo mở tệp hỏng gợi ý "Sửa tệp hỏng"; THIRD_PARTY_NOTICES: qpdf, PdfPig sang "đóng gói". Test: `RepairAndLinearizeTests` (6), `MainWindowViewModelTests.Optimize.cs` (4) | commit `feat: repair damaged files and lay them out for the web` | Xong (App test chỉ chạy trên CI; script tải qpdf **chưa chạy thử trên Windows**) |
+| 2 | Nén — lõi (`optimize.compress`): DPI thực của từng ảnh theo kích thước hiển thị (PDFium page object), giảm mẫu + JPEG lại (SkiaSharp), ảnh 1-bit giữ 1-bit (Flate), SMask, ảnh trùng dùng chung, phông nhúng trùng, cấu trúc qua qpdf; preset Màn hình/eBook/In ấn/Lưu trữ/Tùy chỉnh; lớn hơn → giữ bản gốc | | |
+| 3 | Nén — App: hộp thoại preset, trước/sau, xem thử 1 trang, chạy nền | | |
+| 4 | Thang xám (`optimize.grayscale`): đổi màu đối tượng + ảnh qua PDFium, trang không đổi được thì raster | | |
+| 5 | `convert.toImages`: PNG/JPEG/TIFF (TIFF nhiều trang: LZW màu, G4 đen trắng), DPI, khoảng trang, PNG nền trong suốt | | |
+| 6 | `convert.fromImages`: JPG giữ nguyên byte, PNG, BMP, TIFF nhiều trang; sắp xếp tự nhiên; khổ theo ảnh / A4 vừa / A4 có lề; EXIF | | |
+| 7 | `convert.toText`: TXT/Markdown theo thứ tự đọc của PdfPig, tách theo trang | | |
+| 8 | `convert.officeToPdf`: dò LibreOffice, `soffice --headless` với hồ sơ riêng mỗi lần, timeout | | |
+| 9 | `convert.toPdfA`: PDF/A-2b/1b (phông nhúng, OutputIntent sRGB, XMP, bỏ JS/mã hóa/đa phương tiện); veraPDF nếu đã cài | | |
+| 10 | Mục SPEC Phase 9 + `Phase9AcceptanceTests` | | |
+
 ## 5. Bản đồ mã Phase 5
 
 - **Core:** `Overlay/OverlayItems.cs` (đối tượng, `OverlayLimits`), `Overlay/OverlaySnapping.cs`, `Geometry/RotatedBox.cs`, `Geometry/PdfMatrix.cs`, `Text/TextLayout.cs`, `Text/FontFamilies.cs`, `Stamping/StampTemplate.cs` (`Parse`, `Render`, `Escape`), `Stamping/PageNumbering.cs`, `Stamping/BatesNumbering.cs`, `Stamping/StampPlacement.cs`, `Imaging/SignatureImages.cs`, `Imaging/ExifOrientation.cs`, `Organizing/MaterializedGeometry.cs`.
@@ -244,4 +265,5 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - Gỡ dấu trên tài liệu lớn: không có tiến độ khi quét.
 - Tài liệu có mật khẩu đã mở khóa: Bates/Trộn biểu mẫu dùng tệp gốc khi không có gì chưa lưu → tệp gốc mã hóa bị từ chối (cần dùng bản sao như khi có thay đổi). Xuất trang của tài liệu có bảo vệ ra tệp **không** bảo vệ.
 - `PdfPro.Benchmarks`, `PdfPro.Worker` chưa tạo (để P13).
+- `tools/fetch-tools.ps1` (tải qpdf) chưa chạy thử trên Windows: tên tệp zip/checksum của bản phát hành qpdf 12.2.0 là phỏng đoán theo quy ước của qpdf — chạy một lần, nếu khác thì sửa biến và ghim `-QpdfSha256`.
 - Tệp đã ký: chỉ "thêm chú thích" được lưu gia tăng; điền biểu mẫu, sửa/xóa chú thích có sẵn, thao tác trang sau khi ký vẫn ghi toàn bộ (cảnh báo trước). Chữ ký chứng nhận DocMDP P=1 chưa được kiểm trước khi lưu gia tăng.

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using PdfPro.Core.ExternalTools;
 
 namespace PdfPro.Infrastructure.ExternalTools;
 
@@ -74,7 +75,7 @@ public sealed class ExternalToolRunner(ILogger<ExternalToolRunner> logger) : IEx
                 throw new OperationCanceledException($"External tool '{toolName}' was cancelled.", cancellationToken);
             }
 
-            var stderrTail = ExternalToolText.Tail(stderr.ToString());
+            var stderrTail = ExternalToolResult.Tail(stderr.ToString());
             logger.LogWarning("{Tool} timed out after {Timeout}; stderr: {StdErr}", toolName, request.Timeout, stderrTail);
             throw new ExternalToolTimeoutException(toolName, request.Timeout, stderrTail);
         }
@@ -99,7 +100,7 @@ public sealed class ExternalToolRunner(ILogger<ExternalToolRunner> logger) : IEx
                 toolName,
                 result.ExitCode,
                 stopwatch.ElapsedMilliseconds,
-                ExternalToolText.Tail(result.StandardError));
+                ExternalToolResult.Tail(result.StandardError));
         }
 
         return result;

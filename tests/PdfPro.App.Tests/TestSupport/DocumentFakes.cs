@@ -39,6 +39,9 @@ internal static class TestOperations
     /// <summary>One PDFium thread for the operations that run through it (edit.content), shared by the tests.</summary>
     private static readonly Lazy<PdfiumGate> Gate = new(() => new PdfiumGate(NullLogger<PdfiumGate>.Instance));
 
+    /// <summary>The shared PDFium thread, for operations a test runs for real.</summary>
+    public static PdfiumGate PdfiumGate => Gate.Value;
+
     /// <summary>The page operations as the app registers them (their file-based execution is not used by view models).</summary>
     public static OperationCatalog Catalog()
     {
