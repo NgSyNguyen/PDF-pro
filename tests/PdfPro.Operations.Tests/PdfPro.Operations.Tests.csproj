@@ -10,6 +10,8 @@
   <ItemGroup>
     <!-- A second, independent text extractor: text PDF_Pro writes must read back exactly (SPEC P5). -->
     <PackageReference Include="PdfPig" />
+    <!-- Skia's native library for Linux (containers); Windows gets its own with SkiaSharp. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
   </ItemGroup>
 
 </Project>

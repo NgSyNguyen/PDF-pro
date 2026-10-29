@@ -147,6 +147,7 @@ internal static class AppHost
         services.AddSingleton<Qpdf>();
         services.AddOperation<LinearizeOperation>();
         services.AddOperation<RepairOperation>();
+        services.AddOperation<CompressOperation>();
         services.AddSingleton(sp => new OptimizingServices(sp.GetRequiredService<LinearizeOperation>(), sp.GetRequiredService<RepairOperation>()));
         services.AddSingleton(sp => new SigningServices(
             sp.GetRequiredService<ICertificateStore>(),

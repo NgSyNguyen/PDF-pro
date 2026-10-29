@@ -37,9 +37,13 @@ public sealed class Qpdf(IExternalToolRunner runner, QpdfOptions options)
     public Task<bool> LinearizeAsync(string input, string output, CancellationToken cancellationToken)
         => RunAsync(["--linearize", "--object-streams=generate", input, output], cancellationToken);
 
-    /// <summary>The file written anew: compact (object streams, a cross-reference stream, streams compressed).</summary>
+    /// <summary>
+    /// The file written anew with its objects packed into (deflated) object streams and a cross-reference stream; no
+    /// stream is decoded, so compressed data is kept byte for byte (the caller has compressed it already — qpdf
+    /// recompressing would drop the PNG predictors of images and make them larger).
+    /// </summary>
     public Task<bool> CompactAsync(string input, string output, CancellationToken cancellationToken)
-        => RunAsync(["--object-streams=generate", "--compress-streams=y", "--recompress-flate", "--compression-level=9", input, output], cancellationToken);
+        => RunAsync(["--object-streams=generate", "--compress-streams=y", "--decode-level=none", "--compression-level=9", input, output], cancellationToken);
 
     /// <summary>The file read as well as qpdf can (it rebuilds a damaged cross-reference table) and written anew.</summary>
     public Task<bool> RewriteAsync(string input, string output, CancellationToken cancellationToken)

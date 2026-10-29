@@ -12,6 +12,8 @@
     <PackageReference Include="PdfPig" />
     <!-- Digital signatures (CMS, RFC 3161 timestamps): used directly since Phase 8. -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <!-- MIT: JPEG decoding and encoding when compressing images (Phase 9). -->
+    <PackageReference Include="SkiaSharp" />
   </ItemGroup>
 
   <ItemGroup>
