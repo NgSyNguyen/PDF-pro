@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 29/10/2026 — Phase 8 lát 8b (ký hàng loạt). Tiếp theo: lát 9 (mục SPEC Phase 8 tổng hợp + `Phase8AcceptanceTests`), rồi P9.
+Cập nhật lần cuối: 29/10/2026 — Phase 8 xong về code (lát 9: SPEC + `Phase8AcceptanceTests`). Tiếp theo: **P9 — Tối ưu, sửa lỗi & chuyển đổi** (PROMPTS P9; lập bảng lát P9 ở mục 4 trước khi code).
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -52,7 +52,7 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | **P5 Chèn & đóng dấu** | **Đang làm** — xem bảng lát dưới |
 | P6 Chú thích & tìm kiếm | Xong về code (`66c9fc5` … lát 9e), có mục SPEC và `Phase6AcceptanceTests` (chưa chạy tay) |
 | P7 Sửa nội dung gốc & biểu mẫu | Xong về code (`d5d3523` … lát 9), có mục SPEC và `Phase7AcceptanceTests` (chưa chạy tay) |
-| **P8 Bảo mật, xóa vĩnh viễn & chữ ký số** | **Đang làm** — xem bảng lát Phase 8 |
+| P8 Bảo mật, xóa vĩnh viễn & chữ ký số | Xong về code (lát 1–9), có mục SPEC và `Phase8AcceptanceTests` (chưa chạy tay) |
 | P9–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
 
 ### Phase 5 — các lát
@@ -71,6 +71,8 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | 10 | Mục Phase 5 trong SPEC + `Phase5AcceptanceTests` (FlaUI: hình mờ một bước hoàn tác + gỡ lại; Bates 3 tệp) | `493f280` | Xong — **chưa chạy tay trên Windows** |
 
 Phase 5 xong về code. Còn việc của chủ dự án: chạy `Phase5AcceptanceTests` trên Windows (`PDFPRO_UI_TESTS=1`), ghi số đo vào SPEC mục Phase 5, kiểm tay chữ tiếng Việt trong Acrobat Reader/Chrome.
+
+Phase 8 xong về code. Còn việc của chủ dự án: chạy `Phase8AcceptanceTests` trên Windows (`PDFPRO_UI_TESTS=1`); kiểm tay theo SPEC mục Phase 8 "Kiểm tay" (Acrobat Reader: ô đen không sao chép ra chữ, Thuộc tính sau Làm sạch, panel chữ ký, tô sáng vào tệp đã ký giữ chữ ký; ký bằng USB token thật).
 
 Phase 7 xong về code. Còn việc của chủ dự án: chạy `Phase7AcceptanceTests` trên Windows (`PDFPRO_UI_TESTS=1`), kiểm tay: sửa một dòng trong tệp Word xuất PDF tiếng Việt; biểu mẫu tạo bằng PDF_Pro điền được trong Acrobat Reader và Chrome (nhóm nút chọn chỉ chọn được một); làm phẳng rồi thử sửa trong Acrobat Reader.
 
@@ -161,7 +163,7 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | 7b | Panel "Chữ ký" (sidebar mục 5, ribbon `security.verify` → `ShowSignaturesCommand`): `Services/Security/SignatureVerification.cs` (`ISignatureVerification`, đọc tệp ≤ 1 GB → `SignatureVerifier`), `ViewModels/Security/SignaturesViewModel.cs` (mỗi tab; chỉ kiểm khi panel hiện, kiểm lại khi tệp trên đĩa đổi — `Update()` gọi từ `OnStatusChanged`; "Kiểm lại"; ghi chú thay đổi chưa lưu; chọn → `NavigateTo` trang) + `SignatureItemViewModel` (kết luận, CN, O, trang, các dòng giải thích); `SidebarView.xaml` (tab + panel, `DataTrigger` theo `SignatureVerdict` đổi biểu tượng/màu); `DocumentTabFactory(signatureChecks:)`, `DocumentTabServices.SignatureChecks`; `SidebarPanel.Signatures`. Test: `SignaturesViewModelTests` (7), `MainWindowViewModelTests.Verify_ShowsTheSignaturesPanel…` | commit `feat(app): the signatures panel` | Xong (App test chỉ chạy trên CI) |
 | 8a | Lưu tệp đã ký giữ chữ ký (nợ P6 B9): Core `PagePlan.AddsOnlyAnnotations`; Operations `Signing/IncrementalAnnotations.cs` (`Append(file, [(trang, chú thích)])`: tài liệu nháp → `AnnotationWriter` → lưu/đọc lại → xuất đồ thị số mới, `/P` về trang thật → trang được ghi lại với `/Annots` cũ + mới → `IncrementalUpdate.Append`; mã hóa/trang không có → `InvalidDataException`); App `IDocumentSaver.KeepsSignatures` + `DocumentSaver` (nhánh gia tăng, lỗi thì ghi toàn bộ), `ConfirmOverwriteAsync` bỏ cảnh báo "tệp đã ký" khi giữ được chữ ký. Test: `IncrementalAnnotationsTests` (3: chữ ký vẫn toàn vẹn, `Changes = Annotations`, PdfPig/PDFium đọc chú thích), `PagePlanTests.AddsOnlyAnnotations…`, `DocumentSaverTests` (2). Kiểm chéo poppler `pdfsig`: "Signature is Valid" sau khi thêm tô sáng + ghi chú + con dấu | commit `feat: comments saved into a signed file keep its signature` | Xong (App test chỉ chạy trên CI) |
 | 8b | Ký hàng loạt: Operations `Signing/SignatureCorner.cs` (`SignaturePage` First/Last; `Place(file, page)` → trang + khung góc dưới phải 180×60 cách mép 36 pt theo trang hiển thị, `PageBoxes.VisibleBox`/`Rotation`); App ribbon `security.signBatch` (`MainWindowViewModel.SignBatch.cs`: chọn tệp → `SignDialogViewModel(fileCount)` chế độ nhiều tệp (`SignaturePlacementKind.Corner`, `SignDialogResult.CornerPage`, `BatchText`) → chọn thư mục → ký lần lượt ở nền, tên "{tên} (đã ký).pdf" duy nhất, tên trường trống riêng từng tệp, lỗi từng tệp gom lại báo cuối, TSA lỗi hỏi một lần, mở thư mục); `SigningMessage(failure)` dùng chung. Test: `SignatureCornerTests` (6), `SignDialogViewModelTests.ForManyFiles…`, `MainWindowViewModelTests.SignBatch_*` (3) | commit `feat: sign many files alike` | Xong (App test chỉ chạy trên CI) |
-| 9 | Mục SPEC Phase 8 + `Phase8AcceptanceTests` | | |
+| 9 | Mục SPEC Phase 8 hoàn chỉnh (quyết định/giới hạn, nghiệm thu, kiểm tay); `Phase8AcceptanceTests` (FlaUI: xóa vĩnh viễn số CCCD của `pii.pdf` rồi PdfPig + byte tệp không còn số; hai người ký lần lượt bằng .pfx thử → panel "Chữ ký" 2 chữ ký toàn vẹn → sửa 1 byte → "Kiểm lại" 2 không hợp lệ); `TestSupport/TestCertificates.WritePfx` (.pfx không mật khẩu) | commit `docs: Phase 8 in the SPEC, and its acceptance tests` | Xong — **chưa chạy tay trên Windows** |
 
 ## 5. Bản đồ mã Phase 5
 
