@@ -22,6 +22,36 @@ internal static class TestCertificates
 
     /// <summary>A certificate without its private key (it cannot sign).</summary>
     public static X509Certificate2 PublicOnly() => X509CertificateLoader.LoadCertificate(Signer().Export(X509ContentType.Cert));
+
+    /// <summary>A self-signed certificate authority with its private key (it issues signing certificates).</summary>
+    public static X509Certificate2 Authority(string name = "PDF_Pro Test CA")
+    {
+        using var key = RSA.Create(2048);
+        var request = new CertificateRequest(new X500DistinguishedName($"CN={name}, O=PDF_Pro Test, C=VN"), key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(certificateAuthority: true, hasPathLengthConstraint: false, pathLengthConstraint: 0, critical: true));
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, critical: true));
+        request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, critical: false));
+        using var certificate = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-2), DateTimeOffset.UtcNow.AddYears(2));
+        return X509CertificateLoader.LoadPkcs12(certificate.Export(X509ContentType.Pkcs12, "ca"), "ca", X509KeyStorageFlags.Exportable);
+    }
+
+    /// <summary>A signing certificate issued by <paramref name="authority"/>, with its private key.</summary>
+    public static X509Certificate2 IssuedBy(X509Certificate2 authority, string name = "Nguyễn Văn A")
+    {
+        using var key = RSA.Create(2048);
+        var request = new CertificateRequest(new X500DistinguishedName($"CN={name}, O=PDF_Pro Test, C=VN"), key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(certificateAuthority: false, hasPathLengthConstraint: false, pathLengthConstraint: 0, critical: true));
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.NonRepudiation, critical: true));
+        request.CertificateExtensions.Add(X509AuthorityKeyIdentifierExtension.CreateFromCertificate(authority, includeKeyIdentifier: true, includeIssuerAndSerial: false));
+        var serial = RandomNumberGenerator.GetBytes(8);
+        serial[0] &= 0x7F;
+        using var issued = request.Create(authority, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1), serial);
+        using var withKey = issued.CopyWithPrivateKey(key);
+        return X509CertificateLoader.LoadPkcs12(withKey.Export(X509ContentType.Pkcs12, "test"), "test", X509KeyStorageFlags.Exportable);
+    }
+
+    /// <summary>The public part of a certificate (what a reader has).</summary>
+    public static X509Certificate2 Public(X509Certificate2 certificate) => X509CertificateLoader.LoadCertificate(certificate.RawData);
 }
 
 /// <summary>

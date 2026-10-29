@@ -218,6 +218,27 @@ public static class PdfSigner
         return (Encoding.Latin1.GetBytes(text.ToString()), contents, byteRange);
     }
 
+    /// <summary>
+    /// The certificates above the signer's, as far as this computer can build its chain (the whole chain when it can).
+    /// CmsSigner's WholeChain refuses to sign when an issuer is missing; a reader may still have it.
+    /// </summary>
+    private static X509Certificate2[] Issuers(X509Certificate2 certificate)
+    {
+        using var chain = new X509Chain();
+        chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+        chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllFlags;
+        try
+        {
+            chain.Build(certificate);
+        }
+        catch (CryptographicException)
+        {
+            return [];
+        }
+
+        return [.. chain.ChainElements.Skip(1).Select(e => X509CertificateLoader.LoadCertificate(e.Certificate.RawData))];
+    }
+
     /// <summary>The detached CMS over the signed bytes, timestamped when asked.</summary>
     private static async Task<byte[]> SignatureAsync(byte[] signed, SignRequest request, X509Certificate2 certificate, ITimestampClient? timestamps, DateTimeOffset signingTime, CancellationToken cancellationToken)
     {
@@ -225,8 +246,9 @@ public static class PdfSigner
         var signer = new CmsSigner(SubjectIdentifierType.IssuerAndSerialNumber, certificate)
         {
             DigestAlgorithm = new Oid("2.16.840.1.101.3.4.2.1"), // SHA-256
-            IncludeOption = X509IncludeOption.WholeChain,
+            IncludeOption = X509IncludeOption.EndCertOnly,
         };
+        signer.Certificates.AddRange(Issuers(certificate));
         signer.SignedAttributes.Add(new Pkcs9SigningTime(signingTime.UtcDateTime));
         try
         {

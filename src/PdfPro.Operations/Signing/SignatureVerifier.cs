@@ -2,9 +2,23 @@ using System.Formats.Asn1;
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
+using PdfPro.Core.Geometry;
 using PdfPro.Pdfium;
 
 namespace PdfPro.Operations.Signing;
+
+/// <summary>The overall verdict on a signature, as the panel colours it.</summary>
+public enum SignatureVerdict
+{
+    /// <summary>Intact, by a trusted certificate, and the document shows what was signed (or only more signatures).</summary>
+    Valid,
+
+    /// <summary>Intact, but the certificate is not trusted here or the document changed after signing.</summary>
+    Warning,
+
+    /// <summary>The signed bytes changed, the signature is broken, or the certificate was revoked.</summary>
+    Invalid,
+}
 
 /// <summary>What checking one signature found.</summary>
 /// <param name="Index">Its place among the document's signatures (0-based).</param>
@@ -27,7 +41,45 @@ public sealed record SignatureCheck(
     DateTimeOffset? SigningTime,
     DateTimeOffset? Timestamp,
     string? Reason,
-    string? Problem);
+    string? Problem)
+{
+    /// <summary>The signature field (fully qualified name), when it could be found.</summary>
+    public string? FieldName { get; init; }
+
+    /// <summary>The 0-based page its widget is on, or -1 (invisible, or not found).</summary>
+    public int Page { get; init; } = -1;
+
+    /// <summary>Its widget's box in the page's PDF space; empty for an invisible signature.</summary>
+    public PdfRect Box { get; init; }
+
+    /// <summary>/Location, as the signer wrote it, or null.</summary>
+    public string? Location { get; init; }
+
+    /// <summary>/ContactInfo, as the signer wrote it, or null.</summary>
+    public string? ContactInfo { get; init; }
+
+    /// <summary>The digest of the signed bytes ("SHA-256"…), or null.</summary>
+    public string? DigestAlgorithm { get; init; }
+
+    /// <summary>The signer's key ("RSA 2048", "ECDSA 256"…), or null.</summary>
+    public string? KeyAlgorithm { get; init; }
+
+    /// <summary>Whether the signer's certificate is trusted here, when the signature is intact.</summary>
+    public CertificateTrust? Trust { get; init; }
+
+    /// <summary>Revisions added to the file after the one this signature covers.</summary>
+    public int LaterRevisions { get; init; }
+
+    /// <summary>What a reader sees that was not signed (only when <see cref="LaterRevisions"/> is not 0).</summary>
+    public ChangesAfterSigning Changes { get; init; }
+
+    public SignatureVerdict Verdict
+        => !IsIntact || Trust is { Status: CertificateTrustStatus.Revoked or CertificateTrustStatus.Invalid }
+            ? SignatureVerdict.Invalid
+            : Trust is not { Status: CertificateTrustStatus.Trusted } || (Changes & ~ChangesAfterSigning.Signatures) != 0
+                ? SignatureVerdict.Warning
+                : SignatureVerdict.Valid;
+}
 
 /// <summary>
 /// Checks the digital signatures of a file (SPEC P8 E): each /ByteRange must cover the file but the signature's own
@@ -38,12 +90,21 @@ public static class SignatureVerifier
 {
     private const string TimestampTokenOid = "1.2.840.113549.1.9.16.2.14";
 
-    /// <summary>The signatures of <paramref name="file"/>, read by PDFium, each checked.</summary>
+    /// <summary>The signatures of <paramref name="file"/>, read by PDFium, each checked (certificates as this computer trusts them).</summary>
     /// <exception cref="InvalidDataException">The file cannot be read.</exception>
-    public static async Task<IReadOnlyList<SignatureCheck>> VerifyAsync(PdfiumGate gate, byte[] file, CancellationToken cancellationToken = default)
+    public static Task<IReadOnlyList<SignatureCheck>> VerifyAsync(PdfiumGate gate, byte[] file, CancellationToken cancellationToken = default)
+        => VerifyAsync(gate, file, TrustOptions.Default, cancellationToken);
+
+    /// <summary>
+    /// The signatures of <paramref name="file"/>, read by PDFium, each checked: its bytes and CMS, its certificate chain
+    /// (<paramref name="trust"/>), its field and page, and what the file changed after the revision it signed.
+    /// </summary>
+    /// <exception cref="InvalidDataException">The file cannot be read.</exception>
+    public static async Task<IReadOnlyList<SignatureCheck>> VerifyAsync(PdfiumGate gate, byte[] file, TrustOptions trust, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(gate);
         ArgumentNullException.ThrowIfNull(file);
+        ArgumentNullException.ThrowIfNull(trust);
         var signatures = await gate.RunAsync(
             () =>
             {
@@ -59,7 +120,47 @@ public static class SignatureVerifier
             },
             PdfiumPriority.Normal,
             cancellationToken).ConfigureAwait(false);
-        return [.. signatures.Select((s, i) => Check(file, s, i))];
+        if (signatures.Count == 0)
+        {
+            return [];
+        }
+
+        return await Task.Run(
+            () =>
+            {
+                var fields = SignatureFields.Read(file);
+                var checks = new List<SignatureCheck>(signatures.Count);
+                foreach (var (signature, index) in signatures.Select((s, i) => (s, i)))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    checks.Add(Complete(file, Check(file, signature, index), signature, fields, trust));
+                }
+
+                return (IReadOnlyList<SignatureCheck>)checks;
+            },
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>The field, the chain and the later changes of a checked signature.</summary>
+    private static SignatureCheck Complete(byte[] file, SignatureCheck check, PdfSignatureData signature, IReadOnlyList<SignatureFieldInfo> fields, TrustOptions trust)
+    {
+        if (fields.FirstOrDefault(f => f.ByteRange.SequenceEqual(signature.ByteRange)) is { } field)
+        {
+            check = check with { FieldName = field.Name, Page = field.Page, Box = field.Box, Location = field.Location, ContactInfo = field.ContactInfo };
+        }
+
+        if (check.IsIntact && check.Signer is { } signer)
+        {
+            check = check with { Trust = CertificateTrustCheck.Check(signer, check.Certificates, check.Timestamp ?? DateTimeOffset.Now, trust) };
+        }
+
+        var range = signature.ByteRange;
+        if (range.Count == 4 && range[2] + range[3] is var end && end > 0 && end < file.Length)
+        {
+            check = check with { LaterRevisions = Revisions.CountAfter(file, end), Changes = SignedRevisionChanges.Compare(file, end) };
+        }
+
+        return check;
     }
 
     private static SignatureCheck Check(byte[] file, PdfSignatureData signature, int index)
@@ -117,7 +218,41 @@ public static class SignatureVerifier
             return result with { Problem = "The signed bytes were changed, or the signature is wrong." };
         }
 
-        return result with { IsIntact = true, Timestamp = Timestamp(signerInfo) };
+        return result with
+        {
+            IsIntact = true,
+            Timestamp = Timestamp(signerInfo),
+            DigestAlgorithm = DigestName(signerInfo.DigestAlgorithm.Value),
+            KeyAlgorithm = KeyName(signerInfo.Certificate),
+        };
+    }
+
+    private static string? DigestName(string? oid) => oid switch
+    {
+        "2.16.840.1.101.3.4.2.1" => "SHA-256",
+        "2.16.840.1.101.3.4.2.2" => "SHA-384",
+        "2.16.840.1.101.3.4.2.3" => "SHA-512",
+        "1.3.14.3.2.26" => "SHA-1",
+        "1.2.840.113549.2.5" => "MD5",
+        null => null,
+        _ => oid,
+    };
+
+    private static string? KeyName(X509Certificate2? certificate)
+    {
+        if (certificate is null)
+        {
+            return null;
+        }
+
+        using var rsa = certificate.GetRSAPublicKey();
+        if (rsa is not null)
+        {
+            return $"RSA {rsa.KeySize}";
+        }
+
+        using var ecdsa = certificate.GetECDsaPublicKey();
+        return ecdsa is not null ? $"ECDSA {ecdsa.KeySize}" : certificate.PublicKey.Oid.FriendlyName;
     }
 
     /// <summary>The time of a valid timestamp token for this signature, or null.</summary>
