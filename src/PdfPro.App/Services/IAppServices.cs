@@ -157,6 +157,10 @@ public interface IFileDialogService
     /// <returns>The chosen file, or null when cancelled.</returns>
     string? PickTableFile();
 
+    /// <summary>Asks for a certificate file with its private key (.pfx, .p12) to sign with.</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickCertificateFile();
+
     /// <summary>Asks for a folder (where split files go).</summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="initialDirectory">Folder shown first (or its nearest existing parent), or null.</param>
@@ -208,4 +212,7 @@ public interface IPageDialogService
 
     /// <summary>"Làm sạch tài liệu"; true when the user confirmed.</summary>
     bool ShowSanitize(ViewModels.Security.SanitizeViewModel viewModel);
+
+    /// <summary>"Ký số": the certificate and how the signature shows; true when the user confirmed.</summary>
+    bool ShowSign(ViewModels.Security.SignDialogViewModel viewModel);
 }

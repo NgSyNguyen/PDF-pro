@@ -1180,6 +1180,64 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="DocProps_Aes128" xml:space="preserve"><value>AES 128-bit</value></data>
   <data name="History_Redact" xml:space="preserve"><value>Redact {0} area(s)</value></data>
   <data name="Cmd_Redact_ToolTip" xml:space="preserve"><value>Mark, then permanently remove information (areas, text, ID numbers, phones, e-mails…): it can no longer be selected, copied, searched or extracted</value></data>
+  <data name="Cmd_Sign_ToolTip" xml:space="preserve"><value>Digitally sign the document with a certificate (.pfx or the Windows certificate store, USB tokens included): a visible or invisible signature, with a timestamp</value></data>
+  <data name="Sign_Title" xml:space="preserve"><value>Digital signature</value></data>
+  <data name="Sign_Certificate" xml:space="preserve"><value>Certificate</value></data>
+  <data name="Sign_FromStore" xml:space="preserve"><value>From the Windows certificate store (installed USB tokens included)</value></data>
+  <data name="Sign_FromFile" xml:space="preserve"><value>From a .pfx / .p12 file</value></data>
+  <data name="Sign_NoCertificates" xml:space="preserve"><value>Your certificate store has no certificate that can sign.</value></data>
+  <data name="Sign_Browse" xml:space="preserve"><value>Browse…</value></data>
+  <data name="Sign_PfxPassword" xml:space="preserve"><value>Password of the certificate file</value></data>
+  <data name="Sign_Placement" xml:space="preserve"><value>Where the signature goes</value></data>
+  <data name="Sign_Placement_Draw" xml:space="preserve"><value>Drag a box on the page (after clicking Sign)</value></data>
+  <data name="Sign_Placement_Field" xml:space="preserve"><value>In the signature field «{0}»</value></data>
+  <data name="Sign_Placement_Invisible" xml:space="preserve"><value>Invisible signature (not shown on the page)</value></data>
+  <data name="Sign_Appearance" xml:space="preserve"><value>Shown</value></data>
+  <data name="Sign_ShowImage" xml:space="preserve"><value>Handwritten signature</value></data>
+  <data name="Sign_Image_Item" xml:space="preserve"><value>Saved signature {0:dd/MM/yyyy HH:mm}</value></data>
+  <data name="Sign_ShowName" xml:space="preserve"><value>Signer name</value></data>
+  <data name="Sign_ShowDate" xml:space="preserve"><value>Date and time</value></data>
+  <data name="Sign_Reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="Sign_Location" xml:space="preserve"><value>Location</value></data>
+  <data name="Sign_Contact" xml:space="preserve"><value>Contact</value></data>
+  <data name="Sign_Timestamp" xml:space="preserve"><value>Add a timestamp from a server (needs the network)</value></data>
+  <data name="Sign_TimestampServer" xml:space="preserve"><value>Time-stamping server (RFC 3161)</value></data>
+  <data name="Sign_Apply" xml:space="preserve"><value>Sign</value></data>
+  <data name="Sign_Error_NoCertificate" xml:space="preserve"><value>Choose a certificate.</value></data>
+  <data name="Sign_Error_PfxFile" xml:space="preserve"><value>Choose a .pfx or .p12 certificate file.</value></data>
+  <data name="Sign_Error_PfxPassword" xml:space="preserve"><value>The password of the certificate file is wrong.</value></data>
+  <data name="Sign_Error_PfxUnreadable" xml:space="preserve"><value>The certificate file cannot be read.</value></data>
+  <data name="Sign_Error_NoPrivateKey" xml:space="preserve"><value>This certificate has no private key, so it cannot sign.</value></data>
+  <data name="Sign_Error_TimestampServer" xml:space="preserve"><value>The time-stamping server must start with http:// or https://.</value></data>
+  <data name="Sign_Line_SignedBy" xml:space="preserve"><value>Signed by: {0}</value></data>
+  <data name="Sign_Line_Date" xml:space="preserve"><value>Date: {0}</value></data>
+  <data name="Sign_Line_Reason" xml:space="preserve"><value>Reason: {0}</value></data>
+  <data name="Sign_Line_Location" xml:space="preserve"><value>Location: {0}</value></data>
+  <data name="Sign_Place_Hint" xml:space="preserve"><value>Drag a box to place the signature — Esc to cancel</value></data>
+  <data name="Sign_SaveFirst_Title" xml:space="preserve"><value>Save before signing</value></data>
+  <data name="Sign_SaveFirst_Message" xml:space="preserve"><value>A digital signature applies to the saved file. Save the changes to "{0}" and sign?</value></data>
+  <data name="Sign_SaveFirst_Save" xml:space="preserve"><value>Save and sign</value></data>
+  <data name="Sign_SignedName" xml:space="preserve"><value>{0} (signed)</value></data>
+  <data name="Sign_Progress" xml:space="preserve"><value>Signing "{0}"…</value></data>
+  <data name="Sign_Done" xml:space="preserve"><value>Signed "{0}"</value></data>
+  <data name="Sign_Failed" xml:space="preserve"><value>Could not sign "{0}"</value></data>
+  <data name="Sign_Error_Title" xml:space="preserve"><value>The document could not be signed</value></data>
+  <data name="Sign_Error_Encrypted" xml:space="preserve"><value>The document has a password. Remove it (Password &amp; permissions) and save before signing.</value></data>
+  <data name="Sign_Error_NoSuchPage" xml:space="preserve"><value>The page of the signature is no longer in the document.</value></data>
+  <data name="Sign_Error_FieldSigned" xml:space="preserve"><value>This signature field is already signed.</value></data>
+  <data name="Sign_Error_NotSignatureField" xml:space="preserve"><value>A field of the same name exists but is not a signature field.</value></data>
+  <data name="Sign_Error_Unreadable" xml:space="preserve"><value>The file cannot be read or written to sign it.</value></data>
+  <data name="Sign_Error_Key" xml:space="preserve"><value>The certificates private key cannot be used (card or USB token not inserted, wrong PIN, or signing not allowed).</value></data>
+  <data name="Sign_NoTimestamp_Title" xml:space="preserve"><value>No timestamp</value></data>
+  <data name="Sign_NoTimestamp_Message" xml:space="preserve"><value>No timestamp came from the server (network or server trouble). Sign without a timestamp? The signing time then comes from this computers clock.</value></data>
+  <data name="Sign_NoTimestamp_Sign" xml:space="preserve"><value>Sign without a timestamp</value></data>
+  <data name="Sign_Intro" xml:space="preserve"><value>A digital signature binds your certificate to the saved file: anyone who opens it can check who signed it and whether it was changed after signing. It is not a picture of a signature.</value></data>
+  <data name="Sign_Certificate_Item" xml:space="preserve"><value>{0} — issued by {1}, expires {2:dd/MM/yyyy}</value></data>
+  <data name="Sign_CertificateDialog_Title" xml:space="preserve"><value>Choose a certificate file</value></data>
+  <data name="Sign_CertificateDialog_Filter" xml:space="preserve"><value>Certificates with their private key (*.pfx;*.p12)|*.pfx;*.p12</value></data>
+  <data name="Sign_FieldName" xml:space="preserve"><value>Signature {0}</value></data>
+  <data name="Sign_Cancelled" xml:space="preserve"><value>Signing cancelled</value></data>
+  <data name="Sign_Error_Changed" xml:space="preserve"><value>The document changed while the signature was placed. Save it, then sign again.</value></data>
   <data name="Cmd_Sanitize_ToolTip" xml:space="preserve"><value>Remove what the document carries beyond what it shows: author and dates, JavaScript, attachments, hidden layers, earlier revisions, private data of programs…</value></data>
   <data name="History_Sanitize" xml:space="preserve"><value>Sanitize document</value></data>
   <data name="Sanitize_Title" xml:space="preserve"><value>Sanitize document</value></data>

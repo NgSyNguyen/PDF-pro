@@ -1180,6 +1180,64 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="DocProps_Aes128" xml:space="preserve"><value>AES 128-bit</value></data>
   <data name="History_Redact" xml:space="preserve"><value>Xóa vĩnh viễn {0} vùng</value></data>
   <data name="Cmd_Redact_ToolTip" xml:space="preserve"><value>Đánh dấu rồi xóa vĩnh viễn thông tin (vùng, chữ, số CCCD, điện thoại, email…): không còn chọn, sao chép, tìm hay trích ra được</value></data>
+  <data name="Cmd_Sign_ToolTip" xml:space="preserve"><value>Ký số tài liệu bằng chứng thư (.pfx hoặc kho chứng thư Windows, kể cả USB token): chữ ký hiển thị hoặc ẩn, có dấu thời gian</value></data>
+  <data name="Sign_Title" xml:space="preserve"><value>Ký số</value></data>
+  <data name="Sign_Certificate" xml:space="preserve"><value>Chứng thư</value></data>
+  <data name="Sign_FromStore" xml:space="preserve"><value>Từ kho chứng thư Windows (gồm USB token đã cài)</value></data>
+  <data name="Sign_FromFile" xml:space="preserve"><value>Từ tệp .pfx / .p12</value></data>
+  <data name="Sign_NoCertificates" xml:space="preserve"><value>Kho chứng thư của bạn chưa có chứng thư nào dùng để ký được.</value></data>
+  <data name="Sign_Browse" xml:space="preserve"><value>Chọn tệp…</value></data>
+  <data name="Sign_PfxPassword" xml:space="preserve"><value>Mật khẩu của tệp chứng thư</value></data>
+  <data name="Sign_Placement" xml:space="preserve"><value>Vị trí chữ ký</value></data>
+  <data name="Sign_Placement_Draw" xml:space="preserve"><value>Kéo khung trên trang (sau khi bấm Ký)</value></data>
+  <data name="Sign_Placement_Field" xml:space="preserve"><value>Vào trường chữ ký «{0}»</value></data>
+  <data name="Sign_Placement_Invisible" xml:space="preserve"><value>Chữ ký ẩn (không hiện trên trang)</value></data>
+  <data name="Sign_Appearance" xml:space="preserve"><value>Hiển thị</value></data>
+  <data name="Sign_ShowImage" xml:space="preserve"><value>Ảnh chữ ký tay</value></data>
+  <data name="Sign_Image_Item" xml:space="preserve"><value>Chữ ký đã lưu {0:dd/MM/yyyy HH:mm}</value></data>
+  <data name="Sign_ShowName" xml:space="preserve"><value>Tên người ký</value></data>
+  <data name="Sign_ShowDate" xml:space="preserve"><value>Ngày giờ ký</value></data>
+  <data name="Sign_Reason" xml:space="preserve"><value>Lý do</value></data>
+  <data name="Sign_Location" xml:space="preserve"><value>Nơi ký</value></data>
+  <data name="Sign_Contact" xml:space="preserve"><value>Liên hệ</value></data>
+  <data name="Sign_Timestamp" xml:space="preserve"><value>Thêm dấu thời gian từ máy chủ (cần mạng)</value></data>
+  <data name="Sign_TimestampServer" xml:space="preserve"><value>Máy chủ dấu thời gian (RFC 3161)</value></data>
+  <data name="Sign_Apply" xml:space="preserve"><value>Ký</value></data>
+  <data name="Sign_Error_NoCertificate" xml:space="preserve"><value>Hãy chọn một chứng thư.</value></data>
+  <data name="Sign_Error_PfxFile" xml:space="preserve"><value>Hãy chọn tệp chứng thư .pfx hoặc .p12.</value></data>
+  <data name="Sign_Error_PfxPassword" xml:space="preserve"><value>Mật khẩu của tệp chứng thư không đúng.</value></data>
+  <data name="Sign_Error_PfxUnreadable" xml:space="preserve"><value>Không đọc được tệp chứng thư.</value></data>
+  <data name="Sign_Error_NoPrivateKey" xml:space="preserve"><value>Chứng thư này không có khóa riêng nên không ký được.</value></data>
+  <data name="Sign_Error_TimestampServer" xml:space="preserve"><value>Địa chỉ máy chủ dấu thời gian phải bắt đầu bằng http:// hoặc https://.</value></data>
+  <data name="Sign_Line_SignedBy" xml:space="preserve"><value>Ký bởi: {0}</value></data>
+  <data name="Sign_Line_Date" xml:space="preserve"><value>Ngày: {0}</value></data>
+  <data name="Sign_Line_Reason" xml:space="preserve"><value>Lý do: {0}</value></data>
+  <data name="Sign_Line_Location" xml:space="preserve"><value>Nơi ký: {0}</value></data>
+  <data name="Sign_Place_Hint" xml:space="preserve"><value>Kéo khung để đặt chữ ký — Esc để hủy</value></data>
+  <data name="Sign_SaveFirst_Title" xml:space="preserve"><value>Lưu trước khi ký</value></data>
+  <data name="Sign_SaveFirst_Message" xml:space="preserve"><value>Chữ ký số áp dụng cho tệp đã lưu. Lưu các thay đổi của "{0}" rồi ký?</value></data>
+  <data name="Sign_SaveFirst_Save" xml:space="preserve"><value>Lưu rồi ký</value></data>
+  <data name="Sign_SignedName" xml:space="preserve"><value>{0} (đã ký)</value></data>
+  <data name="Sign_Progress" xml:space="preserve"><value>Đang ký "{0}"…</value></data>
+  <data name="Sign_Done" xml:space="preserve"><value>Đã ký "{0}"</value></data>
+  <data name="Sign_Failed" xml:space="preserve"><value>Không ký được "{0}"</value></data>
+  <data name="Sign_Error_Title" xml:space="preserve"><value>Không ký được tài liệu</value></data>
+  <data name="Sign_Error_Encrypted" xml:space="preserve"><value>Tài liệu đang có mật khẩu. Hãy gỡ mật khẩu (Mật khẩu &amp; quyền) và lưu trước khi ký.</value></data>
+  <data name="Sign_Error_NoSuchPage" xml:space="preserve"><value>Trang đặt chữ ký không còn trong tài liệu.</value></data>
+  <data name="Sign_Error_FieldSigned" xml:space="preserve"><value>Trường chữ ký này đã được ký.</value></data>
+  <data name="Sign_Error_NotSignatureField" xml:space="preserve"><value>Đã có một trường cùng tên nhưng không phải trường chữ ký.</value></data>
+  <data name="Sign_Error_Unreadable" xml:space="preserve"><value>Không đọc hoặc không ghi được tệp để ký.</value></data>
+  <data name="Sign_Error_Key" xml:space="preserve"><value>Không dùng được khóa riêng của chứng thư (thẻ/USB token chưa cắm, sai PIN hoặc không cho phép ký).</value></data>
+  <data name="Sign_NoTimestamp_Title" xml:space="preserve"><value>Không lấy được dấu thời gian</value></data>
+  <data name="Sign_NoTimestamp_Message" xml:space="preserve"><value>Không nhận được dấu thời gian từ máy chủ (mạng hoặc máy chủ có vấn đề). Ký không có dấu thời gian? Thời gian ký khi đó lấy theo đồng hồ máy tính này.</value></data>
+  <data name="Sign_NoTimestamp_Sign" xml:space="preserve"><value>Ký không có dấu thời gian</value></data>
+  <data name="Sign_Intro" xml:space="preserve"><value>Chữ ký số gắn chứng thư của bạn vào tệp đã lưu: ai mở tệp cũng kiểm được người ký và biết tệp có bị sửa sau khi ký hay không. Đây không phải chữ ký hình ảnh.</value></data>
+  <data name="Sign_Certificate_Item" xml:space="preserve"><value>{0} — cấp bởi {1}, hết hạn {2:dd/MM/yyyy}</value></data>
+  <data name="Sign_CertificateDialog_Title" xml:space="preserve"><value>Chọn tệp chứng thư</value></data>
+  <data name="Sign_CertificateDialog_Filter" xml:space="preserve"><value>Chứng thư có khóa riêng (*.pfx;*.p12)|*.pfx;*.p12</value></data>
+  <data name="Sign_FieldName" xml:space="preserve"><value>Chữ ký {0}</value></data>
+  <data name="Sign_Cancelled" xml:space="preserve"><value>Đã hủy ký</value></data>
+  <data name="Sign_Error_Changed" xml:space="preserve"><value>Tài liệu đã thay đổi trong lúc đặt chữ ký. Hãy lưu rồi ký lại.</value></data>
   <data name="Cmd_Sanitize_ToolTip" xml:space="preserve"><value>Gỡ những gì tài liệu mang theo ngoài nội dung hiển thị: thông tin tác giả và ngày tạo, JavaScript, tệp đính kèm, lớp ẩn, phiên bản cũ, dữ liệu riêng của phần mềm…</value></data>
   <data name="History_Sanitize" xml:space="preserve"><value>Làm sạch tài liệu</value></data>
   <data name="Sanitize_Title" xml:space="preserve"><value>Làm sạch tài liệu</value></data>

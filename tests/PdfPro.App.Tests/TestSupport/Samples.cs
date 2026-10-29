@@ -8,6 +8,9 @@ internal static class Samples
     /// <summary>AES-256, fake open password "test123", owner password "chu-so-huu-456"; printing and copying forbidden.</summary>
     public static string Encrypted => System.IO.Path.Combine(RepositoryRoot, "samples", "encrypted.pdf");
 
+    /// <summary>Six A4 pages of Vietnamese text, no form, not encrypted.</summary>
+    public static string Basic => System.IO.Path.Combine(RepositoryRoot, "samples", "basic-vi.pdf");
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

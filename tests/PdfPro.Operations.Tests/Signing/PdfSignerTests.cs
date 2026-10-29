@@ -120,11 +120,21 @@ public sealed class PdfSignerTests(PdfiumFixture pdfium) : IDisposable
             pdf.Save(input);
         }
 
+        using (var empty = PdfReader.Open(input, PdfDocumentOpenMode.Import))
+        {
+            var field = FormReader.Read(empty).ShouldHaveSingleItem();
+            field.IsSigned.ShouldBeFalse();
+            field.Value.ShouldBeNull();
+        }
+
         var signed = await PdfSigner.SignAsync(await File.ReadAllBytesAsync(input, Token), new SignRequest("GiamDoc", new SignatureAppearance(1, default, ["Giám đốc"])), _certificate, null, SigningTime, Token);
 
         (await SignatureVerifier.VerifyAsync(pdfium.Gate, signed, Token)).ShouldHaveSingleItem().IsIntact.ShouldBeTrue();
         using var read = PdfReader.Open(new MemoryStream(signed), PdfDocumentOpenMode.Import);
-        FormReader.Read(read).ShouldHaveSingleItem().Name.ShouldBe("GiamDoc", "the field was signed, not a new one made");
+        var signedField = FormReader.Read(read).ShouldHaveSingleItem();
+        signedField.Name.ShouldBe("GiamDoc", "the field was signed, not a new one made");
+        signedField.IsSigned.ShouldBeTrue();
+        signedField.Value.ShouldBe(FormField.Signed);
         var error = await Should.ThrowAsync<SigningException>(() => PdfSigner.SignAsync(signed, new SignRequest("GiamDoc"), _certificate, null, SigningTime, Token));
         error.Failure.ShouldBe(SigningFailure.FieldAlreadySigned);
     }

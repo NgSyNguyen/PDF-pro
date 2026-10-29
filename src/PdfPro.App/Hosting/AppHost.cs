@@ -5,8 +5,10 @@ using PdfPro.App.Localization;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Editing;
+using PdfPro.App.Services.Forms;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.Services.Security;
 using PdfPro.App.ViewModels;
 using PdfPro.App.Views;
 using PdfPro.Core.Operations;
@@ -137,6 +139,12 @@ internal static class AppHost
         services.AddSingleton<IContentChanger, ContentChanger>();
         services.AddSingleton<IMergeService, MergeService>();
         services.AddSingleton<IBatesService, BatesService>();
+        services.AddSingleton<ICertificateStore, CertificateStore>();
+        services.AddSingleton(sp => new SigningServices(
+            sp.GetRequiredService<ICertificateStore>(),
+            sp.GetRequiredService<ITimestampClient>(),
+            new PdfFormSource(),
+            sp.GetRequiredService<SignatureLibrary>()));
         services.AddSingleton<IRecoveryDialog, RecoveryDialog>();
         services.AddSingleton<IRecoveryService, RecoveryService>();
 

@@ -159,6 +159,8 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         FormDesigner.PropertyChanged += OnFormDesignerPropertyChanged;
         Redaction = new RedactionViewModel(viewer, TextSelection, Editor.GeometryOf);
         Redaction.PropertyChanged += OnRedactionPropertyChanged;
+        SignaturePlacement = new SignaturePlacementViewModel(viewer, Editor.GeometryOf);
+        SignaturePlacement.PropertyChanged += OnSignaturePlacementPropertyChanged;
         Forms.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(FormFillingViewModel.IsXfaOnly))
@@ -419,6 +421,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             return;
         }
 
+        SignaturePlacement.Cancel();
         Workspace.PagesChanged -= OnPagesChanged;
         Workspace.StatusChanged -= OnStatusChanged;
         Viewer.PropertyChanged -= OnViewerPropertyChanged;

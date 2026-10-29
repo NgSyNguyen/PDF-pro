@@ -73,6 +73,8 @@
         <controls:FormDesignLayer Designer="{Binding DataContext.FormDesigner, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- "Xóa thông tin": the marks waiting to be applied and the box being dragged; only draws. -->
         <controls:RedactionLayer PageKey="{Binding Key}" Redaction="{Binding DataContext.Redaction, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <!-- "Ký số": the box of the signature being dragged; only draws. -->
+        <controls:SignaturePlacementLayer PageKey="{Binding Key}" Placement="{Binding DataContext.SignaturePlacement, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         <!-- "Sửa nội dung": frames around the drawing under the mouse and the selected one; only draws. -->
         <controls:ContentObjectLayer Editor="{Binding DataContext.ContentEditor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- The page editor's objects, selection and guides; inactive (and transparent to the mouse) outside the editor. -->
@@ -520,6 +522,33 @@
             VerticalAlignment="Center"
             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
             Text="{loc:Tr ContentEditor_Hint}"
+            TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- "Ký số": while the box of a visible signature is placed, what to do and how to give up. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="SignaturePlacementBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding SignaturePlacement}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <ui:Button
+          AutomationProperties.AutomationId="SignaturePlacementCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}"
+          DockPanel.Dock="Right" />
+        <StackPanel Orientation="Horizontal">
+          <ui:SymbolIcon Margin="0,0,8,0" Symbol="Certificate24" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="SignaturePlacementHint"
+            Text="{loc:Tr Sign_Place_Hint}"
             TextTrimming="CharacterEllipsis" />
         </StackPanel>
       </DockPanel>

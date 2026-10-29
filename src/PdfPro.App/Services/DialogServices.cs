@@ -197,6 +197,18 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickCertificateFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.Sign_CertificateDialog_Title,
+            Filter = Strings.Sign_CertificateDialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickFolder(string title, string? initialDirectory)
     {
         var dialog = new OpenFolderDialog { Title = title, Multiselect = false };
@@ -347,6 +359,12 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new SanitizeWindow(viewModel));
+    }
+
+    public bool ShowSign(ViewModels.Security.SignDialogViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SignWindow(viewModel));
     }
 
     private static bool Show(Window window)

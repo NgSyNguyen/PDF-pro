@@ -43,6 +43,13 @@ public partial class DocumentView : UserControl
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (Document is { SignaturePlacement.IsActive: true } signing && e.Key == Key.Escape)
+        {
+            signing.SignaturePlacement.Cancel();
+            e.Handled = true;
+            return;
+        }
+
         if (Document is { FormDesigner.IsActive: true } designing && HandleDesignerKey(designing.FormDesigner, e.Key))
         {
             e.Handled = true;
@@ -285,6 +292,17 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (Document is { SignaturePlacement.IsActive: true } signing)
+        {
+            var at = e.GetPosition(Surface);
+            if (signing.SignaturePlacement.Press(new ViewPoint(at.X, at.Y)))
+            {
+                Surface.CaptureMouse();
+            }
+
+            return;
+        }
+
         if (Document is { FormDesigner.IsActive: true } designing)
         {
             var at = e.GetPosition(Surface);
@@ -355,6 +373,18 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseMove(object sender, MouseEventArgs e)
     {
+        if (Document is { SignaturePlacement.IsActive: true } signing)
+        {
+            if (signing.SignaturePlacement.IsDragging && e.LeftButton == MouseButtonState.Pressed)
+            {
+                var at = e.GetPosition(Surface);
+                signing.SignaturePlacement.DragTo(new ViewPoint(at.X, at.Y));
+            }
+
+            Surface.Cursor = Cursors.Cross;
+            return;
+        }
+
         if (Document is { FormDesigner.IsActive: true } designing)
         {
             var at = new ViewPoint(e.GetPosition(Surface).X, e.GetPosition(Surface).Y);
@@ -476,7 +506,11 @@ public partial class DocumentView : UserControl
 
     private void OnSurfaceMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (Document is { FormDesigner.IsActive: true } designing)
+        if (Document is { SignaturePlacement.IsDragging: true } signing)
+        {
+            signing.SignaturePlacement.Release();
+        }
+        else if (Document is { FormDesigner.IsActive: true } designing)
         {
             designing.FormDesigner.Release();
         }

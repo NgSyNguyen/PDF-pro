@@ -45,9 +45,20 @@ public sealed partial class DocumentTabViewModel
         }
     }
 
-    /// <summary>The form's inputs take the mouse only while no other mode uses the viewer.</summary>
+    /// <summary>
+    /// The form's inputs take the mouse only while no other mode uses the viewer. A mode turned on gives up placing a
+    /// signature.
+    /// </summary>
     private void UpdateFormsActive()
-        => Forms.IsActive = !ContentEditor.IsActive && !FormDesigner.IsActive && !Redaction.IsActive && !Editor.IsActive && !IsOrganizing && Annotations.Tool == Annotating.AnnotationTool.None;
+    {
+        var otherMode = ContentEditor.IsActive || FormDesigner.IsActive || Redaction.IsActive || Editor.IsActive || IsOrganizing || Annotations.Tool != Annotating.AnnotationTool.None;
+        if (otherMode)
+        {
+            SignaturePlacement.Cancel();
+        }
+
+        Forms.IsActive = !otherMode && !SignaturePlacement.IsActive;
+    }
 
     /// <summary>The content editing mode is on (the ribbon button shows it pressed).</summary>
     public bool IsEditingContent => ContentEditor.IsActive;

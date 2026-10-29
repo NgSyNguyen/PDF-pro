@@ -38,7 +38,10 @@ internal sealed class FakeTimestampAuthority : ITimestampClient, IDisposable
         using var key = RSA.Create(2048);
         var request = new CertificateRequest(new X500DistinguishedName("CN=PDF_Pro Test TSA"), key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension([new Oid("1.3.6.1.5.5.7.3.8")], critical: true));
-        using var certificate = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1));
+
+        // Valid both now and at the time it attests (a fixed date in the tests): a token is checked against both.
+        var now = DateTimeOffset.UtcNow;
+        using var certificate = request.CreateSelfSigned((time < now ? time : now).AddDays(-1), (time > now ? time : now).AddYears(1));
         _certificate = X509CertificateLoader.LoadPkcs12(certificate.Export(X509ContentType.Pkcs12, "tsa"), "tsa");
     }
 

@@ -36,6 +36,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IPageDialogService _pageDialogs;
     private readonly IMergeService _merge;
     private readonly IBatesService? _bates;
+    private readonly Services.Security.SigningServices? _signing;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -59,7 +60,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IPageDialogService pageDialogs,
         IMergeService merge,
         ILogger<MainWindowViewModel> logger,
-        IBatesService? bates = null)
+        IBatesService? bates = null,
+        Services.Security.SigningServices? signing = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _dialogs = dialogs;
@@ -79,6 +81,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _pageDialogs = pageDialogs;
         _merge = merge;
         _bates = bates;
+        _signing = signing;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -147,7 +150,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ProtectCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ProtectCommand), nameof(SignCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -794,7 +797,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Signature,
                 [
-                    new("security.sign", Strings.Cmd_Sign, SymbolRegular.Certificate24),
+                    new("security.sign", Strings.Cmd_Sign, SymbolRegular.Certificate24, SignCommand, Strings.Cmd_Sign_ToolTip),
                     new("security.verify", Strings.Cmd_VerifySignatures, SymbolRegular.ShieldCheckmark24),
                 ]),
             ]),

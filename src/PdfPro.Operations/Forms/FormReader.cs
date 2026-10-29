@@ -213,6 +213,8 @@ public static partial class FormReader
             case FormFieldKind.ListBox:
                 var chosen = resolved is PdfArray array ? array.Elements.Select(Text).OfType<string>().ToList() : Text(resolved) is { } one ? [one] : [];
                 return (chosen.FirstOrDefault(), chosen);
+            case FormFieldKind.Signature:
+                return (resolved is PdfDictionary ? FormField.Signed : null, []);
             default:
                 return (Text(resolved), []);
         }

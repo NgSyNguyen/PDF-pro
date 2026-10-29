@@ -77,7 +77,8 @@ public sealed record FormOption(string Export, string Display);
 /// <param name="Kind">What it is.</param>
 /// <param name="Value">
 /// Text of a text field or combo box; the on state of a check box or the chosen button of a radio group, "Off" when
-/// none; the first choice of a list box; the caption of a push button (/MK /CA). Null when it has no value.
+/// none; the first choice of a list box; the caption of a push button (/MK /CA); <see cref="Signed"/> for a signed
+/// signature field. Null when it has no value.
 /// </param>
 /// <param name="Selected">The choices of a list box (several when it allows it); empty otherwise.</param>
 /// <param name="Flags">/Ff.</param>
@@ -109,9 +110,15 @@ public sealed record FormField(
     /// <summary>The value of check boxes and radio groups that are not on.</summary>
     public const string Off = "Off";
 
+    /// <summary>The value of a signature field that holds a signature (its /V is a signature dictionary).</summary>
+    public const string Signed = "Signed";
+
     public bool IsReadOnly => Flags.HasFlag(FormFieldFlags.ReadOnly);
 
     public bool IsRequired => Flags.HasFlag(FormFieldFlags.Required);
+
+    /// <summary>A signature field that is signed already.</summary>
+    public bool IsSigned => Kind == FormFieldKind.Signature && Value == Signed;
 
     /// <summary>The user can type or choose a value (not a button, a signature or read-only).</summary>
     public bool IsFillable => !IsReadOnly && Kind is not (FormFieldKind.PushButton or FormFieldKind.Signature);

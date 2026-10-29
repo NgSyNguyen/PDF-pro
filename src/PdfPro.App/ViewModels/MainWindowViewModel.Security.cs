@@ -73,22 +73,7 @@ public sealed partial class MainWindowViewModel
             };
         }
 
-        var page = document.Viewer.CurrentPageIndex;
-        var index = Tabs.IndexOf(document);
-        var tab = _tabFactory.Create(unlocked);
-        if (index < 0)
-        {
-            Tabs.Add(tab);
-        }
-        else
-        {
-            Tabs.Insert(index, tab);
-            Tabs.Remove(document);
-        }
-
-        SelectedTab = tab;
-        tab.Viewer.NavigateTo(page);
-        await document.DisposeAsync();
+        await ReplaceTabAsync(document, unlocked);
         _logger.LogInformation("A protected document was unlocked for editing");
         return null;
     }

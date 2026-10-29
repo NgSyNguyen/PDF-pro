@@ -7,6 +7,7 @@ using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.Services.Security;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels;
 using PdfPro.Core.Geometry;
@@ -103,7 +104,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
                 "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
                 "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten",
-                "security.encrypt", "security.redact", "security.sanitize"],
+                "security.encrypt", "security.redact", "security.sanitize", "security.sign"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -544,5 +545,6 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _pageDialogs,
             _merge,
             NullLogger<MainWindowViewModel>.Instance,
-            withBates ? _bates : null);
+            withBates ? _bates : null,
+            new SigningServices(_certificates, _timestamps, _forms));
 }
