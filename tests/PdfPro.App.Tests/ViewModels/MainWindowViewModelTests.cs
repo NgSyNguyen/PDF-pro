@@ -104,7 +104,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
                 "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
                 "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten",
-                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.verify"],
+                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>

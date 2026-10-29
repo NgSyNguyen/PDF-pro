@@ -1238,6 +1238,18 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Sign_FieldName" xml:space="preserve"><value>Chữ ký {0}</value></data>
   <data name="Sign_Cancelled" xml:space="preserve"><value>Đã hủy ký</value></data>
   <data name="Sign_Error_Changed" xml:space="preserve"><value>Tài liệu đã thay đổi trong lúc đặt chữ ký. Hãy lưu rồi ký lại.</value></data>
+  <data name="Cmd_SignBatch" xml:space="preserve"><value>Ký hàng loạt</value></data>
+  <data name="Cmd_SignBatch_ToolTip" xml:space="preserve"><value>Ký số nhiều tệp PDF một lần với cùng chứng thư và cách hiển thị; bản đã ký của mỗi tệp được ghi vào thư mục bạn chọn</value></data>
+  <data name="Sign_Batch_Intro" xml:space="preserve"><value>Sẽ ký {0} tệp với cùng chứng thư và cách hiển thị; bản đã ký ghi vào thư mục bạn chọn sau đó.</value></data>
+  <data name="Sign_Placement_CornerLast" xml:space="preserve"><value>Góc dưới bên phải của trang cuối</value></data>
+  <data name="Sign_Placement_CornerFirst" xml:space="preserve"><value>Góc dưới bên phải của trang đầu</value></data>
+  <data name="SignBatch_Folder_Title" xml:space="preserve"><value>Chọn thư mục lưu các bản đã ký</value></data>
+  <data name="SignBatch_Progress" xml:space="preserve"><value>Đang ký tệp {0}/{1}…</value></data>
+  <data name="SignBatch_Done" xml:space="preserve"><value>Đã ký {0}/{1} tệp</value></data>
+  <data name="SignBatch_Cancelled" xml:space="preserve"><value>Đã dừng ký hàng loạt ({0} tệp đã ký)</value></data>
+  <data name="SignBatch_Error_Title" xml:space="preserve"><value>Một số tệp không ký được</value></data>
+  <data name="SignBatch_Error_Message" xml:space="preserve"><value>Không ký được {0} tệp:</value></data>
+  <data name="SignBatch_Error_Line" xml:space="preserve"><value>• {0}: {1}</value></data>
   <data name="Cmd_VerifySignatures_ToolTip" xml:space="preserve"><value>Xem và kiểm các chữ ký số của tài liệu: người ký, thời gian, chứng thư có được tin cậy, tài liệu có bị sửa sau khi ký</value></data>
   <data name="Sidebar_Signatures" xml:space="preserve"><value>Chữ ký</value></data>
   <data name="Sidebar_SignaturesEmpty" xml:space="preserve"><value>Mở một tài liệu để xem chữ ký số của nó.</value></data>

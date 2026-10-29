@@ -6,6 +6,7 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Editing;
 using PdfPro.App.Services.Security;
+using PdfPro.Operations.Signing;
 
 namespace PdfPro.App.ViewModels.Security;
 
@@ -20,10 +21,13 @@ public enum SignaturePlacementKind
 
     /// <summary>Nowhere on the pages: an invisible signature.</summary>
     Invisible,
+
+    /// <summary>The bottom right corner of the first or last page of each file (signing many files).</summary>
+    Corner,
 }
 
-/// <summary>A placement offered in the dialog.</summary>
-public sealed record SignaturePlacementChoice(SignaturePlacementKind Kind, string? FieldName, string Label)
+/// <summary>A placement offered in the dialog; <paramref name="Page"/> is the page of a <see cref="SignaturePlacementKind.Corner"/>.</summary>
+public sealed record SignaturePlacementChoice(SignaturePlacementKind Kind, string? FieldName, string Label, SignaturePage Page = SignaturePage.Last)
 {
     public override string ToString() => Label;
 }
@@ -58,6 +62,9 @@ public sealed record SignDialogResult(
     string? Contact,
     Uri? TimestampServer)
 {
+    /// <summary>The page whose corner gets the signature, for <see cref="SignaturePlacementKind.Corner"/>.</summary>
+    public SignaturePage CornerPage { get; init; } = SignaturePage.Last;
+
     /// <summary>The signer's common name, as the certificate gives it.</summary>
     public string SignerName => Certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false);
 
@@ -116,6 +123,7 @@ public sealed partial class SignDialogViewModel : ObservableObject
     /// <param name="loadImage">The PNG of a saved signature by its id (null when it cannot be read).</param>
     /// <param name="timestampServer">The time-stamping authority last used.</param>
     /// <param name="useTimestamp">Signatures were last timestamped.</param>
+    /// <param name="fileCount">More than one: the same signature goes on that many files (in a corner, or invisible).</param>
     public SignDialogViewModel(
         ICertificateStore store,
         IFileDialogService files,
@@ -123,7 +131,8 @@ public sealed partial class SignDialogViewModel : ObservableObject
         IReadOnlyList<SignatureEntry> images,
         Func<string, byte[]?> loadImage,
         string timestampServer,
-        bool useTimestamp)
+        bool useTimestamp,
+        int fileCount = 1)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(emptyFields);
@@ -134,12 +143,20 @@ public sealed partial class SignDialogViewModel : ObservableObject
         Certificates = [.. store.SigningCertificates().Select(c => new CertificateItem(c))];
         UseStore = Certificates.Count > 0;
         SelectedCertificate = Certificates.FirstOrDefault();
-        Placements =
-        [
-            .. emptyFields.Select(f => new SignaturePlacementChoice(SignaturePlacementKind.Field, f, string.Format(CultureInfo.CurrentCulture, Strings.Sign_Placement_Field, f))),
-            new(SignaturePlacementKind.Draw, null, Strings.Sign_Placement_Draw),
-            new(SignaturePlacementKind.Invisible, null, Strings.Sign_Placement_Invisible),
-        ];
+        FileCount = Math.Max(1, fileCount);
+        Placements = IsBatch
+            ?
+            [
+                new(SignaturePlacementKind.Corner, null, Strings.Sign_Placement_CornerLast, SignaturePage.Last),
+                new(SignaturePlacementKind.Corner, null, Strings.Sign_Placement_CornerFirst, SignaturePage.First),
+                new(SignaturePlacementKind.Invisible, null, Strings.Sign_Placement_Invisible),
+            ]
+            :
+            [
+                .. emptyFields.Select(f => new SignaturePlacementChoice(SignaturePlacementKind.Field, f, string.Format(CultureInfo.CurrentCulture, Strings.Sign_Placement_Field, f))),
+                new(SignaturePlacementKind.Draw, null, Strings.Sign_Placement_Draw),
+                new(SignaturePlacementKind.Invisible, null, Strings.Sign_Placement_Invisible),
+            ];
         SelectedPlacement = Placements[0];
         Images = [.. images.Select(i => new SignatureImageChoice(i.Id, string.Format(CultureInfo.CurrentCulture, Strings.Sign_Image_Item, i.SavedUtc.ToLocalTime())))];
         SelectedImage = Images.FirstOrDefault();
@@ -149,6 +166,15 @@ public sealed partial class SignDialogViewModel : ObservableObject
     }
 
     public event EventHandler<bool>? CloseRequested;
+
+    /// <summary>How many files get this signature.</summary>
+    public int FileCount { get; }
+
+    /// <summary>Several files are signed alike.</summary>
+    public bool IsBatch => FileCount > 1;
+
+    /// <summary>"Sẽ ký n tệp…", for a batch.</summary>
+    public string BatchText => string.Format(CultureInfo.CurrentCulture, Strings.Sign_Batch_Intro, FileCount);
 
     /// <summary>The signing certificates of the Windows store.</summary>
     public IReadOnlyList<CertificateItem> Certificates { get; }
@@ -267,7 +293,10 @@ public sealed partial class SignDialogViewModel : ObservableObject
             Trimmed(Reason),
             Trimmed(Location),
             Trimmed(Contact),
-            server);
+            server)
+        {
+            CornerPage = SelectedPlacement.Page,
+        };
         Error = null;
         Forget();
         CloseRequested?.Invoke(this, true);

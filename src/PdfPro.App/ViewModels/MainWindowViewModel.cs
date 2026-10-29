@@ -820,6 +820,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Signature,
                 [
                     new("security.sign", Strings.Cmd_Sign, SymbolRegular.Certificate24, SignCommand, Strings.Cmd_Sign_ToolTip),
+                    new("security.signBatch", Strings.Cmd_SignBatch, SymbolRegular.DocumentMultiple24, SignBatchCommand, Strings.Cmd_SignBatch_ToolTip),
                     new("security.verify", Strings.Cmd_VerifySignatures, SymbolRegular.ShieldCheckmark24, ShowSignaturesCommand, Strings.Cmd_VerifySignatures_ToolTip),
                 ]),
             ]),

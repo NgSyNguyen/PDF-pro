@@ -34,6 +34,13 @@
         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
         Text="{loc:Tr Sign_Intro}"
         TextWrapping="Wrap" />
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="SignBatchText"
+        FontWeight="SemiBold"
+        Text="{Binding BatchText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding IsBatch, Converter={StaticResource BoolToVisibility}}" />
 
       <!-- The certificate: the Windows store (smart cards and tokens included) or a .pfx file. -->
       <TextBlock

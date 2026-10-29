@@ -1238,6 +1238,18 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Sign_FieldName" xml:space="preserve"><value>Signature {0}</value></data>
   <data name="Sign_Cancelled" xml:space="preserve"><value>Signing cancelled</value></data>
   <data name="Sign_Error_Changed" xml:space="preserve"><value>The document changed while the signature was placed. Save it, then sign again.</value></data>
+  <data name="Cmd_SignBatch" xml:space="preserve"><value>Sign many</value></data>
+  <data name="Cmd_SignBatch_ToolTip" xml:space="preserve"><value>Digitally sign several PDF files at once with the same certificate and look; each signed copy is written to the folder you choose</value></data>
+  <data name="Sign_Batch_Intro" xml:space="preserve"><value>{0} files will be signed with the same certificate and look; the signed copies go to the folder you choose next.</value></data>
+  <data name="Sign_Placement_CornerLast" xml:space="preserve"><value>Bottom right corner of the last page</value></data>
+  <data name="Sign_Placement_CornerFirst" xml:space="preserve"><value>Bottom right corner of the first page</value></data>
+  <data name="SignBatch_Folder_Title" xml:space="preserve"><value>Choose the folder for the signed copies</value></data>
+  <data name="SignBatch_Progress" xml:space="preserve"><value>Signing file {0}/{1}…</value></data>
+  <data name="SignBatch_Done" xml:space="preserve"><value>{0}/{1} files signed</value></data>
+  <data name="SignBatch_Cancelled" xml:space="preserve"><value>Batch signing stopped ({0} files signed)</value></data>
+  <data name="SignBatch_Error_Title" xml:space="preserve"><value>Some files could not be signed</value></data>
+  <data name="SignBatch_Error_Message" xml:space="preserve"><value>{0} files could not be signed:</value></data>
+  <data name="SignBatch_Error_Line" xml:space="preserve"><value>• {0}: {1}</value></data>
   <data name="Cmd_VerifySignatures_ToolTip" xml:space="preserve"><value>View and check the document's digital signatures: who signed, when, whether the certificate is trusted and whether the document changed after signing</value></data>
   <data name="Sidebar_Signatures" xml:space="preserve"><value>Signatures</value></data>
   <data name="Sidebar_SignaturesEmpty" xml:space="preserve"><value>Open a document to see its digital signatures.</value></data>

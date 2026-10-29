@@ -183,12 +183,87 @@ public sealed partial class MainWindowViewModelTests
         tab.Signatures.IsActive.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task SignBatch_SignsEveryFile_InTheCornerOfItsLastPage_IntoTheFolder()
+    {
+        WithCertificate();
+        var a = _fixture.CreateFile("hợp đồng a.pdf", File.ReadAllBytes(Samples.Basic));
+        var b = _fixture.CreateFile("hợp đồng b.pdf", File.ReadAllBytes(Samples.Basic));
+        var folder = Directory.CreateDirectory(_fixture.CreateFolder("đã ký")).FullName;
+        _fileDialogs.PickPdfFiles().Returns([a, b]);
+        _fileDialogs.PickFolder(Arg.Any<string>(), Arg.Any<string?>()).Returns(folder);
+        SignDialogViewModel? shown = null;
+        ChooseInDialog(
+            d =>
+            {
+                shown = d;
+                d.SelectedPlacement = d.Placements[0];
+            },
+            useTimestamp: false);
+        var viewModel = Create(isDebugBuild: false);
+
+        await viewModel.SignBatchCommand.ExecuteAsync(null);
+
+        shown.ShouldNotBeNull().IsBatch.ShouldBeTrue();
+        shown.Placements.Select(p => p.Kind).ShouldBe([SignaturePlacementKind.Corner, SignaturePlacementKind.Corner, SignaturePlacementKind.Invisible]);
+        foreach (var name in new[] { "hợp đồng a", "hợp đồng b" })
+        {
+            var output = Path.Combine(folder, Format(Strings.Sign_SignedName, name) + ".pdf");
+            var field = SignatureFields(output).ShouldHaveSingleItem();
+            field.IsSigned.ShouldBeTrue();
+            field.Widgets.ShouldHaveSingleItem().Page.ShouldBe(5, "the last of six pages");
+        }
+
+        _shell.Received(1).OpenFolder(folder);
+        await _messages.DidNotReceive().ShowErrorAsync(Arg.Any<string>(), Arg.Any<string>());
+        File.ReadAllBytes(a).ShouldBe(File.ReadAllBytes(Samples.Basic), "the files themselves are left as they were");
+    }
+
+    [Fact]
+    public async Task SignBatch_AFileThatCannotBeSigned_IsReported_TheOthersAreSigned()
+    {
+        WithCertificate();
+        var good = _fixture.CreateFile("tốt.pdf", File.ReadAllBytes(Samples.Basic));
+        var locked = _fixture.CreateFile("khóa.pdf", File.ReadAllBytes(Samples.Encrypted));
+        var folder = Directory.CreateDirectory(_fixture.CreateFolder("ra")).FullName;
+        _fileDialogs.PickPdfFiles().Returns([locked, good]);
+        _fileDialogs.PickFolder(Arg.Any<string>(), Arg.Any<string?>()).Returns(folder);
+        ChooseInDialog(d => d.SelectedPlacement = d.Placements.Single(p => p.Kind == SignaturePlacementKind.Invisible), useTimestamp: false);
+        var viewModel = Create(isDebugBuild: false);
+
+        await viewModel.SignBatchCommand.ExecuteAsync(null);
+
+        File.Exists(Path.Combine(folder, Format(Strings.Sign_SignedName, "tốt") + ".pdf")).ShouldBeTrue();
+        File.Exists(Path.Combine(folder, Format(Strings.Sign_SignedName, "khóa") + ".pdf")).ShouldBeFalse();
+        await _messages.Received(1).ShowErrorAsync(
+            Strings.SignBatch_Error_Title,
+            Arg.Is<string>(m => m.StartsWith(Format(Strings.SignBatch_Error_Message, 1), StringComparison.Ordinal) && m.Contains("khóa.pdf", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task SignBatch_NoFilesChosen_DoesNothing()
+    {
+        _fileDialogs.PickPdfFiles().Returns([]);
+        var viewModel = Create(isDebugBuild: false);
+
+        await viewModel.SignBatchCommand.ExecuteAsync(null);
+
+        _pageDialogs.DidNotReceiveWithAnyArgs().ShowSign(default!);
+    }
+
+    /// <summary>A signing certificate in the store.</summary>
+    private void WithCertificate()
+    {
+        using var certificate = SigningCertificates.Signer();
+        var thumbprint = certificate.Thumbprint;
+        _certificates.SigningCertificates().Returns([new CertificateChoice(thumbprint, "Nguyễn Văn A", "PDF_Pro Test", certificate.NotAfter)]);
+        _certificates.Open(thumbprint).Returns(_ => SigningCertificates.Signer());
+    }
+
     /// <summary>An open document whose file is a real PDF (six A4 pages), with a signing certificate in the store.</summary>
     private async Task<(MainWindowViewModel ViewModel, string Path)> CreateSignableAsync()
     {
-        var certificate = SigningCertificates.Signer();
-        _certificates.SigningCertificates().Returns([new CertificateChoice(certificate.Thumbprint, "Nguyễn Văn A", "PDF_Pro Test", certificate.NotAfter)]);
-        _certificates.Open(certificate.Thumbprint).Returns(_ => SigningCertificates.Signer());
+        WithCertificate();
         var path = _fixture.CreateFile("hợp đồng.pdf", File.ReadAllBytes(Samples.Basic));
         _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));

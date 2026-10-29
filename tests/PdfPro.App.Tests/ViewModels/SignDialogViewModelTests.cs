@@ -214,6 +214,29 @@ public sealed class SignDialogViewModelTests : IDisposable
     }
 
     [Fact]
+    public void ForManyFiles_TheSignatureGoesInACorner_OrNowhere()
+    {
+        var dialog = new SignDialogViewModel(_store, _files, ["Ignored"], [], _ => null, Server, useTimestamp: false, fileCount: 3);
+
+        dialog.IsBatch.ShouldBeTrue();
+        dialog.BatchText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Sign_Batch_Intro, 3));
+        dialog.Placements.Select(p => (p.Kind, p.Page)).ShouldBe(
+        [
+            (SignaturePlacementKind.Corner, PdfPro.Operations.Signing.SignaturePage.Last),
+            (SignaturePlacementKind.Corner, PdfPro.Operations.Signing.SignaturePage.First),
+            (SignaturePlacementKind.Invisible, PdfPro.Operations.Signing.SignaturePage.Last),
+        ]);
+        dialog.SelectedPlacement = dialog.Placements[1];
+        dialog.SignCommand.Execute(null);
+
+        var result = dialog.Result.ShouldNotBeNull();
+        result.Placement.ShouldBe(SignaturePlacementKind.Corner);
+        result.CornerPage.ShouldBe(PdfPro.Operations.Signing.SignaturePage.First);
+        result.Certificate.Dispose();
+        Create().IsBatch.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Cancel_ClosesWithoutAResult()
     {
         var dialog = Create();

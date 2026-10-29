@@ -174,15 +174,7 @@ public sealed partial class MainWindowViewModel
         {
             _logger.LogWarning("A document could not be signed: {Failure} ({ErrorType})", ex.Failure, ex.InnerException?.GetType().Name);
             task.Complete(Format(Strings.Sign_Failed, fileName));
-            error = ex.Failure switch
-            {
-                SigningFailure.Encrypted => Strings.Sign_Error_Encrypted,
-                SigningFailure.NoPrivateKey => Strings.Sign_Error_Key,
-                SigningFailure.FieldAlreadySigned => Strings.Sign_Error_FieldSigned,
-                SigningFailure.NotASignatureField => Strings.Sign_Error_NotSignatureField,
-                SigningFailure.NoSuchPage => Strings.Sign_Error_NoSuchPage,
-                _ => Strings.Sign_Error_Unreadable,
-            };
+            error = SigningMessage(ex.Failure);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
