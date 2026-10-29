@@ -368,7 +368,7 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Hộp thoại: 4 loại (`AnnotationGroup`, mặc định tất cả) + trang (mặc định cả tài liệu; trang hiện tại / vùng chọn của Sắp xếp, lẻ, chẵn, khoảng). Một bước hoàn tác.
 
 **Quyết định / giới hạn**
-- **Lưu incremental để không phá chữ ký số dời sang P8** (PDFsharp 6.2.4 không lưu incremental; P8 phải viết bộ ghi incremental cho ký nhiều người, kèm `signed.pdf` và bộ xác minh). Tới lúc đó lưu tệp đã ký vẫn cảnh báo như P3.
+- **Lưu incremental để không phá chữ ký số** — làm ở P8 lát 8a (xem mục Phase 8 "Lưu tệp đã ký"): khi thay đổi chỉ là chú thích của phiên, chúng được nối vào tệp bằng cập nhật gia tăng; mọi thay đổi khác vẫn ghi lại toàn bộ và cảnh báo như P3.
 - Panel không lọc theo màu (màu chú thích của tệp không đọc được qua PDFium khi có `/AP`).
 - Thumbnail chưa vẽ chú thích của phiên; tô sáng trên màn hình vẽ bằng độ trong suốt thay vì nhân màu.
 - Namespace `PdfPro.Operations.Annotating` (không phải `Annotations`: đụng `PdfGraph.Annotations(page)`). `PdfRect` có `[JsonConstructor]` và `[JsonIgnore]` cho thuộc tính tính toán (struct deserialize ra toàn 0 nếu thiếu).
@@ -477,6 +477,11 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - **Kết luận** (`SignatureVerdict`): không toàn vẹn, chứng thư bị thu hồi hoặc chuỗi hỏng → **Không hợp lệ (đỏ)**; chứng thư không được tin cậy/hết hạn, hoặc sau khi ký có thay đổi khác ngoài chữ ký mới → **Cần lưu ý (vàng)**; còn lại → **Hợp lệ (xanh)** — ký nhiều người lần lượt vẫn xanh.
 - `PdfSigner` không còn dùng `WholeChain` của `CmsSigner` (nó **từ chối ký** khi máy thiếu chứng thư cấp trên, và lỗi bị báo nhầm thành "không có khóa riêng"): tự dựng chuỗi, kèm mọi chứng thư cấp trên tìm được.
 
+**Lưu tệp đã ký (lát 8a, nợ P6 B9)**
+- `DocumentSaver.KeepsSignatures`: tài liệu gốc có chữ ký số, phiên vẫn ở bản gốc (chưa có thao tác nội dung), không đặt mật khẩu, và plan **chỉ thêm chú thích** (`PagePlan.AddsOnlyAnnotations`: mọi trang của nguồn đúng thứ tự, không xoay/cắt/giá trị biểu mẫu, có ít nhất một chú thích) → Lưu/Lưu thành **nối chú thích vào tệp bằng cập nhật gia tăng** (`IncrementalAnnotations.Append`) thay cho vật chất hóa, và **không** hỏi cảnh báo "tệp đã ký". Còn lại vẫn ghi toàn bộ + cảnh báo như cũ.
+- Cách nối: `AnnotationWriter` vẽ chú thích lên các trang trống của một tài liệu nháp (lưu để PDFsharp nhúng phông, đọc lại), xuất đồ thị đối tượng của chúng với số mới (không đi theo trang; `/P` trỏ về trang thật), rồi trang của tệp được ghi lại với `/Annots` = chú thích cũ + mới, số đối tượng gốc. Tệp mã hóa hoặc không đọc được → ghi toàn bộ như cũ (có log).
+- Giới hạn: điền biểu mẫu sau khi ký vẫn ghi toàn bộ (giá trị + `/AP` vẽ lại cần phông nhúng — chưa làm gia tăng); chữ ký chứng nhận cấm mọi thay đổi (DocMDP P=1) không được kiểm trước.
+
 **Panel "Chữ ký" (`security.verify`, lát 7b)**
 - Mục thứ 5 của sidebar ("Chữ ký"); nút ribbon "Xác minh" mở nó. Mỗi tab có `SignaturesViewModel`: **chỉ kiểm khi panel đang hiện**, kiểm **tệp đã lưu** của tài liệu (đọc cả tệp, ≤ 1 GB) ở luồng nền qua `ISignatureVerification` (`SignatureVerifier` với cách máy này tin chứng thư, thu hồi Online); kiểm lại khi tệp trên đĩa đổi (đường dẫn, độ dài, giờ ghi) hoặc bấm "Kiểm lại"; tài liệu có thay đổi chưa lưu → ghi chú "thay đổi chưa lưu không nằm trong chữ ký nào".
 - Mỗi chữ ký: biểu tượng + chữ **Hợp lệ (xanh) / Cần lưu ý (vàng) / Không hợp lệ (đỏ)**, người ký (CN) và tổ chức (O), trang (hoặc "Chữ ký ẩn"), rồi các dòng giải thích tiếng Việt: toàn vẹn; thay đổi sau khi ký (không đổi / chỉ thêm chữ ký / biểu mẫu / bình luận / nội dung trang / không xác định); tin cậy chứng thư (gốc nào, không tin cậy trên máy này, hết hạn tại thời điểm kiểm, bị thu hồi, chuỗi hỏng, chưa kiểm được thu hồi); dấu thời gian (máy chủ xác nhận) hoặc thời gian ký (đồng hồ máy người ký); lý do, nơi ký, thuật toán, tên trường. Dòng tóm tắt "n chữ ký: a hợp lệ, b cần lưu ý, c không hợp lệ". Chọn một chữ ký → viewer tới trang của nó (khi không có thay đổi chưa lưu).
@@ -548,7 +553,7 @@ Bộ "đề thi" để agent tự kiểm tra. Có thể nhờ agent viết proje
 2. **Gọi PDFium từ nhiều luồng** → crash ngẫu nhiên, rất khó tái hiện. Luôn đi qua `PdfiumGate`.
 3. **Dùng font chuẩn Standard 14** → mất dấu tiếng Việt hoặc ra ô vuông.
 4. **"Redact" bằng cách vẽ ô đen đè lên** → chữ vẫn nằm nguyên bên dưới, copy ra được — lỗi kinh điển từng làm lộ nhiều tài liệu mật. Phải xóa thật và hậu kiểm.
-5. **Lưu không incremental file đã ký** → chữ ký số mất hiệu lực mà người dùng không biết.
+5. **Lưu không incremental file đã ký** → chữ ký số mất hiệu lực mà người dùng không biết. (Đã xử lý ở P8 lát 8a cho trường hợp chỉ thêm chú thích; các thay đổi khác vẫn cảnh báo trước khi lưu.)
 6. **Nén lại JPEG nhiều lần** → ảnh xấu dần sau mỗi lần lưu. Luôn nén từ dữ liệu gốc, JPEG không cần thì giữ nguyên.
 7. **Cache bitmap không giới hạn** → file lớn ngốn vài GB RAM rồi crash. Với WPF còn phải tính bản texture mà render phần cứng giữ cho mỗi bitmap đã vẽ (xem mục Trình xem).
 8. **So sánh/tìm kiếm không chuẩn hóa Unicode** → hai chuỗi trông giống hệt bị coi là khác nhau (NFC và NFD).

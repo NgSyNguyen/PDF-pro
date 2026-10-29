@@ -124,12 +124,12 @@ internal sealed class WorkspaceFixture : IDisposable
     }
 
     /// <summary>
-    /// A workspace for <paramref name="document"/>. The session copies a scratch file, but records
-    /// <paramref name="originalPath"/> as the file it was opened from (it need not exist).
+    /// A workspace for <paramref name="document"/>. The session copies a scratch file (holding <paramref name="content"/>
+    /// when given), but records <paramref name="originalPath"/> as the file it was opened from (it need not exist).
     /// </summary>
-    public async Task<DocumentWorkspace> CreateAsync(IPdfDocument document, string originalPath = @"C:\docs\a.pdf")
+    public async Task<DocumentWorkspace> CreateAsync(IPdfDocument document, string originalPath = @"C:\docs\a.pdf", byte[]? content = null)
     {
-        var scratch = CreateFile($"{Guid.NewGuid():N}.pdf");
+        var scratch = CreateFile($"{Guid.NewGuid():N}.pdf", content);
         var folder = await Store.CreateAsync(scratch, TestContext.Current.CancellationToken);
         var source = new SessionSource(SourceIds.Original, SessionStore.SourceFileName(SourceIds.Original), SessionSourceKind.Original, document.PageCount, Path.GetFileName(originalPath));
         var session = new DocumentSession(

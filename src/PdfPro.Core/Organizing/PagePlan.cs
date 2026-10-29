@@ -141,6 +141,31 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
         return true;
     }
 
+    /// <summary>
+    /// True when the only change the plan makes to the source is annotations added in the session: every page once, in
+    /// order, without rotation, crop or form values, and at least one annotation. Such a plan can be written as an
+    /// incremental update of the source, which keeps its digital signatures valid.
+    /// </summary>
+    public bool AddsOnlyAnnotations(string sourceId, int pageCount)
+    {
+        if (_pages.Length != pageCount || _formValues.Count > 0 || !HasAnnotations)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < _pages.Length; i++)
+        {
+            var page = _pages[i];
+            if (page.IsBlank || page.SourcePageIndex != i || page.RotationDelta != 0 || page.CropBoxOverride is not null
+                || !string.Equals(page.SourceId, sourceId, StringComparison.Ordinal))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /// <summary>The source files the plan draws pages from (blank pages excluded).</summary>
     public IReadOnlySet<string> GetSourceIds()
         => _pages.Where(p => !p.IsBlank).Select(p => p.SourceId).ToHashSet(StringComparer.Ordinal);

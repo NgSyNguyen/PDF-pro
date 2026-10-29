@@ -6,6 +6,7 @@ using PdfPro.Core.Security;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Signing;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Services.Documents;
@@ -60,6 +61,12 @@ public interface IDocumentSaver
     /// <exception cref="DocumentSaveException">Writing failed; an existing file at the target is unchanged.</exception>
     /// <exception cref="OperationCanceledException">Cancelled.</exception>
     Task ExportAsync(DocumentWorkspace workspace, IReadOnlyList<int> pageIndices, string targetPath, IProgress<OperationProgress> progress, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Saving keeps the document's digital signatures valid: its only changes are comments added in the session, which
+    /// are appended to the file as an incremental update instead of writing it anew.
+    /// </summary>
+    bool KeepsSignatures(DocumentWorkspace workspace);
 }
 
 /// <summary>
@@ -75,6 +82,16 @@ internal sealed class DocumentSaver(
     ExtractPagesOperation extract,
     ILogger<DocumentSaver> logger) : IDocumentSaver
 {
+    public bool KeepsSignatures(DocumentWorkspace workspace)
+    {
+        ArgumentNullException.ThrowIfNull(workspace);
+        var session = workspace.Session;
+        return workspace.Protection is null
+            && session.BaseSourceId == SourceIds.Original
+            && workspace.BaseDocument.Features.HasDigitalSignatures
+            && session.Plan.AddsOnlyAnnotations(session.BaseSourceId, workspace.BaseDocument.PageCount);
+    }
+
     public async Task SaveAsync(DocumentWorkspace workspace, string targetPath, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(workspace);
@@ -102,7 +119,8 @@ internal sealed class DocumentSaver(
         workspace.IsBusy = true;
         try
         {
-            await WriteAsync(workspace, request, path, progress, cancellationToken);
+            var update = KeepsSignatures(workspace) ? await IncrementalAsync(workspace, request, cancellationToken) : null;
+            await WriteAsync(workspace, request, path, progress, cancellationToken, update);
             workspace.CompleteSave(path, FileStamp.Read(path));
             logger.LogInformation("Session {SessionId} saved: {PageCount} pages", workspace.Session.Id, request.Plan.Count);
         }
@@ -148,22 +166,42 @@ internal sealed class DocumentSaver(
     }
 
     /// <summary>
-    /// Materializes <paramref name="request"/> into <paramref name="path"/> safely; the manifest records the files
-    /// while they are written.
+    /// The document's file with the session's comments appended as an incremental update, or null when that cannot be
+    /// done (then it is written anew, as any save).
+    /// </summary>
+    private async Task<byte[]?> IncrementalAsync(DocumentWorkspace workspace, MaterializeRequest request, CancellationToken cancellationToken)
+    {
+        var pages = request.Plan.Select((page, index) => (index, page.Annotations)).Where(p => p.Annotations.Count > 0).ToList();
+        try
+        {
+            var original = await File.ReadAllBytesAsync(request.SourcePaths[request.BaseSourceId], cancellationToken);
+            return await Task.Run(() => IncrementalAnnotations.Append(original, pages), cancellationToken);
+        }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            logger.LogWarning("Session {SessionId}: the comments cannot be appended to the signed file ({ErrorType}); it is written anew", workspace.Session.Id, ex.GetType().Name);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Materializes <paramref name="request"/> into <paramref name="path"/> safely — or writes <paramref name="update"/>,
+    /// the file already updated — the manifest recording the files while they are written.
     /// </summary>
     private async Task WriteAsync(
         DocumentWorkspace workspace,
         MaterializeRequest request,
         string path,
         IProgress<OperationProgress> progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        byte[]? update = null)
     {
         var backup = Path.Combine(Path.GetDirectoryName(path)!, $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.bak");
         try
         {
             await AtomicFile.WriteAsync(
                 path,
-                (stream, token) => materializer.MaterializeAsync(request, stream, progress, token),
+                (stream, token) => update is null ? materializer.MaterializeAsync(request, stream, progress, token) : stream.WriteAsync(update, token).AsTask(),
                 new AtomicWriteOptions
                 {
                     BackupPath = backup,

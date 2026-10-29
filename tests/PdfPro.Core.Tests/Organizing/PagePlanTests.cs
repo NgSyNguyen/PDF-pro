@@ -1,5 +1,8 @@
+using PdfPro.Core.Annotations;
+using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Overlay;
 
 namespace PdfPro.Core.Tests.Organizing;
 
@@ -15,6 +18,22 @@ public sealed class PagePlanTests
         _plan.ShouldAllBe(p => p.SourceId == "s0" && p.RotationDelta == 0 && p.CropBoxOverride == null);
         _plan.Select(p => p.PageKey).Distinct().Count().ShouldBe(5);
         _plan.IsIdentity("s0", 5).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AddsOnlyAnnotations_WhenTheyAreTheOnlyChange()
+    {
+        var note = new NoteAnnotation("n", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, "", new PdfPoint(10, 10));
+        var annotated = _plan.WithAnnotations(2, [note]);
+
+        _plan.AddsOnlyAnnotations("s0", 5).ShouldBeFalse("nothing is added");
+        annotated.AddsOnlyAnnotations("s0", 5).ShouldBeTrue();
+        annotated.IsIdentity("s0", 5).ShouldBeFalse();
+        annotated.AddsOnlyAnnotations("s0", 6).ShouldBeFalse();
+        annotated.AddsOnlyAnnotations("s1", 5).ShouldBeFalse();
+        annotated.Rotate([0], 90).AddsOnlyAnnotations("s0", 5).ShouldBeFalse();
+        annotated.Move([4], 0).AddsOnlyAnnotations("s0", 5).ShouldBeFalse();
+        annotated.WithFormValues([new FormValue("Ten", "An")]).AddsOnlyAnnotations("s0", 5).ShouldBeFalse();
     }
 
     [Fact]

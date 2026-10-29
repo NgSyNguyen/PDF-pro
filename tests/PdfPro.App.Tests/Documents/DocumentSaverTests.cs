@@ -5,14 +5,23 @@ using NSubstitute.ExceptionExtensions;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Security;
 using PdfPro.App.Tests.TestSupport;
+using PdfPro.Core.Annotations;
+using PdfPro.Core.Geometry;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Overlay;
 using PdfPro.Core.Security;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
+using PdfPro.Operations.Annotating;
+using PdfPro.Operations.Forms;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Security;
+using PdfPro.Operations.Signing;
 using PdfPro.Pdfium;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.Advanced;
+using PdfSharp.Pdf.IO;
 
 namespace PdfPro.App.Tests.Documents;
 
@@ -349,6 +358,59 @@ public sealed class DocumentSaverTests : IDisposable
         var document = FakePdfDocument.WithPages(pages);
         document.Features = new PdfDocumentFeatures("2.0", 6, 0xFFFFF0C4, 0, PdfFormType.None, false, 0xFFFFF0C4);
         return document;
+    }
+
+    [Fact]
+    public async Task Save_CommentsOnASignedFile_AreAppended_SoItsSignatureStays()
+    {
+        var (workspace, path, signed) = await SignedWorkspaceAsync();
+        workspace.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeTrue();
+
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        var saved = await File.ReadAllBytesAsync(path, TestToken);
+        saved.Length.ShouldBeGreaterThan(signed.Length);
+        saved.AsSpan(0, signed.Length).SequenceEqual(signed).ShouldBeTrue("the signed file is untouched before the update");
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        using var read = PdfReader.Open(new MemoryStream(saved), PdfDocumentOpenMode.Import);
+        FormReader.Read(read).ShouldHaveSingleItem().IsSigned.ShouldBeTrue();
+        read.Pages[0].Elements.GetArray("/Annots").ShouldNotBeNull().Elements.OfType<PdfReference>()
+            .Select(r => ((PdfDictionary)r.Value).Elements.GetName("/Subtype")).ShouldContain("/Text");
+        workspace.IsDirty.ShouldBeFalse();
+        LeftoversNextTo(path).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task KeepsSignatures_OnlyWhenCommentsAreTheOnlyChange_OfASignedFile()
+    {
+        var (workspace, _, _) = await SignedWorkspaceAsync();
+        _saver.KeepsSignatures(workspace).ShouldBeFalse("nothing changed");
+
+        workspace.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeTrue();
+
+        workspace.Apply(TestOperations.Catalog().Get<RotatePagesOperation>(), new RotatePagesParams("2", 90)).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeFalse("a turned page is written anew");
+
+        var unsigned = await _fixture.CreateAsync(FakePdfDocument.WithPages(6), _fixture.CreateFile("b.pdf"));
+        unsigned.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+        _saver.KeepsSignatures(unsigned).ShouldBeFalse("only signed files are updated this way");
+    }
+
+    private static NoteAnnotation Note()
+        => new("n1", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.Now, DateTimeOffset.Now, "Đã xem", new PdfPoint(100, 700));
+
+    /// <summary>An open document whose file is a real signed PDF (six pages), the session holding the same bytes.</summary>
+    private async Task<(DocumentWorkspace Workspace, string Path, byte[] Signed)> SignedWorkspaceAsync()
+    {
+        using var certificate = SigningCertificates.Signer();
+        var signed = await PdfSigner.SignAsync(await File.ReadAllBytesAsync(Samples.Basic, TestToken), new SignRequest("ChuKy1"), certificate, null, DateTimeOffset.Now, TestToken);
+        var path = _fixture.CreateFile("đã ký.pdf", signed);
+        var document = FakePdfDocument.WithPages(6);
+        document.Features = FakePdfDocument.PlainFeatures with { SignatureCount = 1 };
+        _reopenedPages = 6;
+        return (await _fixture.CreateAsync(document, path, signed), path, signed);
     }
 
     private async Task<DocumentWorkspace> DirtyWorkspaceAsync(string path)

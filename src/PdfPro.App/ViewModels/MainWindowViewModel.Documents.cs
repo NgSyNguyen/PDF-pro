@@ -291,7 +291,9 @@ public sealed partial class MainWindowViewModel : IExitGuard
     /// <summary>Signed or externally changed files get a warning first. Primary = save as, Secondary = overwrite.</summary>
     private async Task<DialogChoice> ConfirmOverwriteAsync(DocumentTabViewModel document)
     {
-        if (document.Document.Features.HasDigitalSignatures || document.Workspace.OriginalDocument.Features.HasDigitalSignatures)
+        // Comments alone are appended to a signed file, which keeps its signatures: nothing to warn about.
+        if ((document.Document.Features.HasDigitalSignatures || document.Workspace.OriginalDocument.Features.HasDigitalSignatures)
+            && !_saver.KeepsSignatures(document.Workspace))
         {
             var choice = await _messages.AskAsync(
                 Strings.Save_Signed_Title,
