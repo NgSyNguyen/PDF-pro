@@ -169,6 +169,20 @@ public sealed partial class MainWindowViewModelTests
         File.Exists(SignedPath(path)).ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task Verify_ShowsTheSignaturesPanel_WhichChecksWhileItShows()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        var tab = viewModel.ActiveDocument!;
+
+        Command(viewModel, "security.verify").Command.Execute(null);
+
+        viewModel.Sidebar.SelectedPanel.ShouldBe(SidebarPanel.Signatures);
+        tab.Signatures.IsActive.ShouldBeTrue();
+        viewModel.Sidebar.SelectedPanel = SidebarPanel.Thumbnails;
+        tab.Signatures.IsActive.ShouldBeFalse();
+    }
+
     /// <summary>An open document whose file is a real PDF (six A4 pages), with a signing certificate in the store.</summary>
     private async Task<(MainWindowViewModel ViewModel, string Path)> CreateSignableAsync()
     {

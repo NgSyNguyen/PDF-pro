@@ -150,7 +150,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ProtectCommand), nameof(SignCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -482,6 +482,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (_trackedDocument is not null)
         {
             _trackedDocument.Comments.IsActive = false;
+            _trackedDocument.Signatures.IsActive = false;
             _trackedDocument.PropertyChanged -= OnActiveDocumentPropertyChanged;
             _trackedDocument.ExtractRequested -= OnExtractRequested;
             _trackedDocument.ContentChangeRequested -= OnContentChangeRequested;
@@ -521,12 +522,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
         UpdateCommentsPanel();
     }
 
-    /// <summary>The comments of the active document are read while the "Bình luận" panel shows them.</summary>
+    /// <summary>
+    /// The comments of the active document are read while the "Bình luận" panel shows them, its signatures checked
+    /// while the "Chữ ký" panel does.
+    /// </summary>
     private void UpdateCommentsPanel()
     {
         if (_trackedDocument is { } document)
         {
             document.Comments.IsActive = Sidebar.SelectedPanel == SidebarPanel.Comments;
+            document.Signatures.IsActive = Sidebar.SelectedPanel == SidebarPanel.Signatures;
         }
     }
 
@@ -609,6 +614,23 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         Sidebar.SelectedPanel = SidebarPanel.Comments;
+    }
+
+    /// <summary>"Kiểm chữ ký": shows the signatures panel of the sidebar (the organizer gives way to the viewer).</summary>
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowSignatures()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsOrganizing)
+        {
+            document.IsOrganizing = false;
+        }
+
+        Sidebar.SelectedPanel = SidebarPanel.Signatures;
     }
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
@@ -798,7 +820,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Signature,
                 [
                     new("security.sign", Strings.Cmd_Sign, SymbolRegular.Certificate24, SignCommand, Strings.Cmd_Sign_ToolTip),
-                    new("security.verify", Strings.Cmd_VerifySignatures, SymbolRegular.ShieldCheckmark24),
+                    new("security.verify", Strings.Cmd_VerifySignatures, SymbolRegular.ShieldCheckmark24, ShowSignaturesCommand, Strings.Cmd_VerifySignatures_ToolTip),
                 ]),
             ]),
             new("convert", Strings.Ribbon_Tab_Convert,

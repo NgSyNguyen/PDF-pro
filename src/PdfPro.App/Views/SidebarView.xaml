@@ -10,6 +10,8 @@
   xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
   xmlns:viewer="clr-namespace:PdfPro.App.ViewModels.Viewer"
   xmlns:annotating="clr-namespace:PdfPro.App.ViewModels.Annotating"
+  xmlns:security="clr-namespace:PdfPro.App.ViewModels.Security"
+  xmlns:signing="clr-namespace:PdfPro.Operations.Signing;assembly=PdfPro.Operations"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
   d:DesignHeight="600"
@@ -131,7 +133,7 @@
       <!-- Segmented switch; icon above label so both fit the narrowest sidebar. -->
       <UniformGrid
         Margin="8"
-        Columns="4"
+        Columns="5"
         DataContext="{Binding Sidebar}"
         DockPanel.Dock="Top">
         <RadioButton
@@ -216,6 +218,27 @@
               Text="{loc:Tr Sidebar_Comments}"
               TextTrimming="CharacterEllipsis"
               ToolTip="{loc:Tr Sidebar_Comments}" />
+          </StackPanel>
+        </RadioButton>
+        <RadioButton
+          Margin="2,0,0,0"
+          Padding="4,6"
+          HorizontalAlignment="Stretch"
+          HorizontalContentAlignment="Center"
+          AutomationProperties.AutomationId="SidebarSignatures"
+          AutomationProperties.Name="{loc:Tr Sidebar_Signatures}"
+          GroupName="SidebarPanel"
+          IsChecked="{Binding IsSignaturesSelected}"
+          Style="{StaticResource {x:Type ToggleButton}}">
+          <StackPanel>
+            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Certificate24" />
+            <TextBlock
+              Margin="0,2,0,0"
+              HorizontalAlignment="Center"
+              FontSize="12"
+              Text="{loc:Tr Sidebar_Signatures}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Signatures}" />
           </StackPanel>
         </RadioButton>
       </UniformGrid>
@@ -698,6 +721,127 @@
                       </StackPanel>
                     </StackPanel>
                   </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+        </Grid>
+
+        <!-- Signatures -->
+        <Grid Visibility="{Binding Sidebar.IsSignaturesSelected, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock
+            Style="{StaticResource SidebarMessage}"
+            Text="{loc:Tr Sidebar_SignaturesEmpty}"
+            Visibility="{Binding HasActiveDocument, Converter={StaticResource InverseBoolToVisibility}}" />
+          <DockPanel
+            Margin="8,0,8,8"
+            DataContext="{Binding ActiveDocument.Signatures}"
+            Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel DockPanel.Dock="Top">
+              <DockPanel>
+                <ui:Button
+                  Margin="4,0,0,0"
+                  Padding="6"
+                  AutomationProperties.AutomationId="SignaturesRefresh"
+                  AutomationProperties.Name="{loc:Tr Signatures_Refresh}"
+                  Command="{Binding RefreshCommand}"
+                  DockPanel.Dock="Right"
+                  Icon="{ui:SymbolIcon ArrowClockwise24}"
+                  ToolTip="{loc:Tr Signatures_Refresh}" />
+                <TextBlock
+                  VerticalAlignment="Center"
+                  AutomationProperties.AutomationId="SignaturesStatus"
+                  Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                  Text="{Binding StatusText}"
+                  TextWrapping="Wrap" />
+              </DockPanel>
+              <ProgressBar
+                Margin="0,4,0,4"
+                IsIndeterminate="True"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+              <TextBlock
+                Margin="0,6,0,0"
+                AutomationProperties.AutomationId="SignaturesUnsavedNote"
+                Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                Text="{loc:Tr Signatures_UnsavedNote}"
+                TextWrapping="Wrap"
+                Visibility="{Binding ShowsUnsavedNote, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+            <ListBox
+              Margin="0,6,0,0"
+              AutomationProperties.AutomationId="SignaturesList"
+              AutomationProperties.Name="{loc:Tr Sidebar_Signatures}"
+              Background="Transparent"
+              BorderThickness="0"
+              ItemsSource="{Binding Items}"
+              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+              SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+              <ListBox.ItemContainerStyle>
+                <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                  <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+                  <Setter Property="Padding" Value="6,6" />
+                  <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+              </ListBox.ItemContainerStyle>
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type security:SignatureItemViewModel}">
+                  <StackPanel>
+                    <DockPanel>
+                      <ui:SymbolIcon
+                        x:Name="VerdictIcon"
+                        Margin="0,0,6,0"
+                        DockPanel.Dock="Left"
+                        Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                        Symbol="ShieldCheckmark24" />
+                      <TextBlock
+                        Margin="6,0,0,0"
+                        VerticalAlignment="Center"
+                        DockPanel.Dock="Right"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding PageLabel}" />
+                      <TextBlock
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Text="{Binding SignerName}"
+                        TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <TextBlock
+                      FontSize="11"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding Organization}"
+                      TextTrimming="CharacterEllipsis"
+                      Visibility="{Binding Organization, Converter={StaticResource NullToCollapsed}}" />
+                    <TextBlock
+                      x:Name="VerdictText"
+                      Margin="0,2,0,0"
+                      FontWeight="SemiBold"
+                      Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                      Text="{Binding VerdictText}" />
+                    <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding Details}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <TextBlock
+                            Margin="0,1,0,0"
+                            FontSize="12"
+                            Text="{Binding}"
+                            TextWrapping="Wrap" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding Verdict}" Value="{x:Static signing:SignatureVerdict.Warning}">
+                      <Setter TargetName="VerdictIcon" Property="Symbol" Value="Warning24" />
+                      <Setter TargetName="VerdictIcon" Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                      <Setter TargetName="VerdictText" Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Verdict}" Value="{x:Static signing:SignatureVerdict.Invalid}">
+                      <Setter TargetName="VerdictIcon" Property="Symbol" Value="ShieldError24" />
+                      <Setter TargetName="VerdictIcon" Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                      <Setter TargetName="VerdictText" Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>

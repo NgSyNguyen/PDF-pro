@@ -62,7 +62,8 @@ public sealed record DocumentTabServices(
     SignatureLibrary? Signatures = null,
     StampServices? Stamps = null,
     Func<string>? AnnotationAuthor = null,
-    IFormSource? Forms = null);
+    IFormSource? Forms = null,
+    Services.Security.ISignatureVerification? SignatureChecks = null);
 
 /// <summary>What the stamp dialogs use besides the operations.</summary>
 /// <param name="CreatePreview">Shows page n (0-based) of the document with a stamp, until disposed.</param>
@@ -161,6 +162,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         Redaction.PropertyChanged += OnRedactionPropertyChanged;
         SignaturePlacement = new SignaturePlacementViewModel(viewer, Editor.GeometryOf);
         SignaturePlacement.PropertyChanged += OnSignaturePlacementPropertyChanged;
+        Signatures = new SignaturesViewModel(viewer, () => Workspace.FilePath, () => IsDirty, services.SignatureChecks, logger);
         Forms.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(FormFillingViewModel.IsXfaOnly))
@@ -422,6 +424,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
 
         SignaturePlacement.Cancel();
+        Signatures.Cancel();
         Workspace.PagesChanged -= OnPagesChanged;
         Workspace.StatusChanged -= OnStatusChanged;
         Viewer.PropertyChanged -= OnViewerPropertyChanged;
@@ -1137,6 +1140,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         OnPropertyChanged(nameof(FilePath));
         OnPropertyChanged(nameof(FileName));
         OnPropertyChanged(nameof(IsDirty));
+        Signatures.Update();
         OnPropertyChanged(nameof(UndoToolTip));
         OnPropertyChanged(nameof(RedoToolTip));
         OnPropertyChanged(nameof(CanEditPages));
@@ -1298,7 +1302,8 @@ internal sealed class DocumentTabFactory(
     SignatureLibrary? signatures = null,
     IDocumentSaver? saver = null,
     ISettingsService? settings = null,
-    IFormSource? forms = null) : IDocumentTabFactory
+    IFormSource? forms = null,
+    Services.Security.ISignatureVerification? signatureChecks = null) : IDocumentTabFactory
 {
     /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
     public DocumentTabViewModel Create(DocumentWorkspace workspace)
@@ -1321,7 +1326,8 @@ internal sealed class DocumentTabFactory(
             signatures,
             Stamps(),
             AnnotationAuthor,
-            forms);
+            forms,
+            signatureChecks);
         return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
     }
 

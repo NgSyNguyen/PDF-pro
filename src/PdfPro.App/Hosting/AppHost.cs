@@ -140,6 +140,7 @@ internal static class AppHost
         services.AddSingleton<IMergeService, MergeService>();
         services.AddSingleton<IBatesService, BatesService>();
         services.AddSingleton<ICertificateStore, CertificateStore>();
+        services.AddSingleton<ISignatureVerification, SignatureVerification>();
         services.AddSingleton(sp => new SigningServices(
             sp.GetRequiredService<ICertificateStore>(),
             sp.GetRequiredService<ITimestampClient>(),

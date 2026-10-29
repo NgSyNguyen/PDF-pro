@@ -5,6 +5,9 @@ namespace PdfPro.App.ViewModels;
 /// <summary>"Ký số" of a document tab: placing a visible signature on a page.</summary>
 public sealed partial class DocumentTabViewModel
 {
+    /// <summary>The "Chữ ký" panel: the file's digital signatures, checked.</summary>
+    public SignaturesViewModel Signatures { get; }
+
     /// <summary>The box of a visible signature, placed with the viewer's mouse.</summary>
     public SignaturePlacementViewModel SignaturePlacement { get; }
 

@@ -1238,6 +1238,40 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Sign_FieldName" xml:space="preserve"><value>Chữ ký {0}</value></data>
   <data name="Sign_Cancelled" xml:space="preserve"><value>Đã hủy ký</value></data>
   <data name="Sign_Error_Changed" xml:space="preserve"><value>Tài liệu đã thay đổi trong lúc đặt chữ ký. Hãy lưu rồi ký lại.</value></data>
+  <data name="Cmd_VerifySignatures_ToolTip" xml:space="preserve"><value>Xem và kiểm các chữ ký số của tài liệu: người ký, thời gian, chứng thư có được tin cậy, tài liệu có bị sửa sau khi ký</value></data>
+  <data name="Sidebar_Signatures" xml:space="preserve"><value>Chữ ký</value></data>
+  <data name="Sidebar_SignaturesEmpty" xml:space="preserve"><value>Mở một tài liệu để xem chữ ký số của nó.</value></data>
+  <data name="Signatures_Refresh" xml:space="preserve"><value>Kiểm lại</value></data>
+  <data name="Signatures_Checking" xml:space="preserve"><value>Đang kiểm chữ ký…</value></data>
+  <data name="Signatures_None" xml:space="preserve"><value>Tài liệu không có chữ ký số.</value></data>
+  <data name="Signatures_Summary" xml:space="preserve"><value>{0} chữ ký: {1} hợp lệ, {2} cần lưu ý, {3} không hợp lệ</value></data>
+  <data name="Signatures_Unreadable" xml:space="preserve"><value>Không đọc được tệp để kiểm chữ ký.</value></data>
+  <data name="Signatures_UnsavedNote" xml:space="preserve"><value>Đây là kết quả của tệp đã lưu: các thay đổi chưa lưu không nằm trong chữ ký nào.</value></data>
+  <data name="Signatures_Valid" xml:space="preserve"><value>Hợp lệ</value></data>
+  <data name="Signatures_Warning" xml:space="preserve"><value>Cần lưu ý</value></data>
+  <data name="Signatures_Invalid" xml:space="preserve"><value>Không hợp lệ</value></data>
+  <data name="Signatures_UnknownSigner" xml:space="preserve"><value>Không rõ người ký</value></data>
+  <data name="Signatures_Page" xml:space="preserve"><value>Trang {0}</value></data>
+  <data name="Signatures_Invisible" xml:space="preserve"><value>Chữ ký ẩn</value></data>
+  <data name="Signatures_Intact" xml:space="preserve"><value>Nội dung đã ký không bị thay đổi.</value></data>
+  <data name="Signatures_Broken" xml:space="preserve"><value>Nội dung đã ký đã bị thay đổi hoặc chữ ký bị hỏng — đừng tin tài liệu này.</value></data>
+  <data name="Signatures_Unchanged" xml:space="preserve"><value>Tài liệu không bị sửa sau khi ký.</value></data>
+  <data name="Signatures_LaterSignatures" xml:space="preserve"><value>Sau chữ ký này chỉ có thêm chữ ký khác.</value></data>
+  <data name="Signatures_LaterFormFields" xml:space="preserve"><value>Sau khi ký, tài liệu có điền hoặc sửa trường biểu mẫu.</value></data>
+  <data name="Signatures_LaterAnnotations" xml:space="preserve"><value>Sau khi ký, tài liệu có thêm, sửa hoặc xóa bình luận.</value></data>
+  <data name="Signatures_LaterPages" xml:space="preserve"><value>Sau khi ký, nội dung trang đã bị thay đổi: những gì bạn thấy có thể khác bản đã ký.</value></data>
+  <data name="Signatures_LaterUnknown" xml:space="preserve"><value>Tài liệu có {0} lần cập nhật sau khi ký nhưng không xác định được đã thay đổi gì.</value></data>
+  <data name="Signatures_Trusted" xml:space="preserve"><value>Chứng thư được tin cậy (gốc: {0}).</value></data>
+  <data name="Signatures_UntrustedRoot" xml:space="preserve"><value>Chứng thư không được tin cậy trên máy này (tự cấp, hoặc nhà cung cấp chưa được cài). Chỉ tin nếu bạn biết chắc người ký.</value></data>
+  <data name="Signatures_NotTimeValid" xml:space="preserve"><value>Chứng thư hết hạn hoặc chưa có hiệu lực vào {0:dd/MM/yyyy HH:mm}.</value></data>
+  <data name="Signatures_Revoked" xml:space="preserve"><value>Chứng thư đã bị nhà cung cấp thu hồi.</value></data>
+  <data name="Signatures_ChainInvalid" xml:space="preserve"><value>Chuỗi chứng thư không hợp lệ.</value></data>
+  <data name="Signatures_NoCertificate" xml:space="preserve"><value>Chữ ký không mang chứng thư của người ký.</value></data>
+  <data name="Signatures_RevocationUnknown" xml:space="preserve"><value>Chưa kiểm được chứng thư có bị thu hồi không (không có mạng hoặc nhà cung cấp không hỗ trợ).</value></data>
+  <data name="Signatures_Timestamp" xml:space="preserve"><value>Dấu thời gian: {0:dd/MM/yyyy HH:mm:ss} (máy chủ dấu thời gian xác nhận).</value></data>
+  <data name="Signatures_SigningTime" xml:space="preserve"><value>Thời gian ký: {0:dd/MM/yyyy HH:mm:ss} (theo đồng hồ máy người ký).</value></data>
+  <data name="Signatures_Algorithm" xml:space="preserve"><value>Thuật toán: {0}</value></data>
+  <data name="Signatures_Field" xml:space="preserve"><value>Trường: {0}</value></data>
   <data name="Cmd_Sanitize_ToolTip" xml:space="preserve"><value>Gỡ những gì tài liệu mang theo ngoài nội dung hiển thị: thông tin tác giả và ngày tạo, JavaScript, tệp đính kèm, lớp ẩn, phiên bản cũ, dữ liệu riêng của phần mềm…</value></data>
   <data name="History_Sanitize" xml:space="preserve"><value>Làm sạch tài liệu</value></data>
   <data name="Sanitize_Title" xml:space="preserve"><value>Làm sạch tài liệu</value></data>
