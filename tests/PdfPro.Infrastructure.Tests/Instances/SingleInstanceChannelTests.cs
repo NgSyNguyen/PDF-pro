@@ -73,20 +73,33 @@ public sealed class SingleInstanceChannelTests : IAsyncDisposable
     [Fact]
     public async Task SimultaneousLaunches_AreAllDelivered()
     {
-        // Explorer starts one process per file when several files are opened at once.
-        StartPrimary();
-        var sends = Enumerable.Range(0, 8)
-            .Select(i => Create().SendAsync([$@"C:\docs\{i}.pdf"], Timeout, TestContext.Current.CancellationToken))
-            .ToArray();
-
-        (await Task.WhenAll(sends)).ShouldAllBe(sent => sent);
-        var files = new List<string>();
-        for (var i = 0; i < sends.Length; i++)
+        // Explorer starts one process per file when several files are opened at once. Here the eight launches share
+        // one process, and one thread pool: NamedPipeClientStream.ConnectAsync waits for the pipe on a pool thread,
+        // so eight waiting connects can starve the pool of a few-core CI runner, and the continuation that writes a
+        // connected launch's message then waited past the primary's 5 s read timeout (CI ea46071: one launch of
+        // eight failed). Real launches each have their own process and pool; enough threads make this one alike.
+        ThreadPool.GetMinThreads(out var workers, out var completions);
+        ThreadPool.SetMinThreads(Math.Max(workers, 32), completions);
+        try
         {
-            files.AddRange(await NextReceivedAsync());
-        }
+            StartPrimary();
+            var sends = Enumerable.Range(0, 8)
+                .Select(i => Create().SendAsync([$@"C:\docs\{i}.pdf"], Timeout, TestContext.Current.CancellationToken))
+                .ToArray();
 
-        files.Order().ShouldBe(Enumerable.Range(0, 8).Select(i => $@"C:\docs\{i}.pdf").Order());
+            (await Task.WhenAll(sends)).ShouldAllBe(sent => sent);
+            var files = new List<string>();
+            for (var i = 0; i < sends.Length; i++)
+            {
+                files.AddRange(await NextReceivedAsync());
+            }
+
+            files.Order().ShouldBe(Enumerable.Range(0, 8).Select(i => $@"C:\docs\{i}.pdf").Order());
+        }
+        finally
+        {
+            ThreadPool.SetMinThreads(workers, completions);
+        }
     }
 
     [Fact]
