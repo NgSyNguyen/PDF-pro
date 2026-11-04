@@ -222,6 +222,122 @@ public sealed partial class MainWindowViewModel
     private bool CanCompress() => _optimizing?.Compress is not null && CanLinearize();
 
     /// <summary>
+    /// "Thang xám": the dialog (convert the colours, or make the pages pictures), then a grey copy of the active
+    /// document as it is shown, written in the background to a file the user names. The user is told which pages became
+    /// pictures, and can open the copy.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanGrayscale))]
+    private async Task GrayscaleAsync()
+    {
+        if (_optimizing is not { Grayscale: { } grayscale } || ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsReadOnly || document.Workspace.Protection is not null)
+        {
+            await _messages.ShowErrorAsync(Strings.Grayscale_Error_Title, Strings.Optimize_Error_Protected);
+            return;
+        }
+
+        if (!await ApplyPendingEditsAsync(document) || !Tabs.Contains(document))
+        {
+            return;
+        }
+
+        var dialog = new GrayscaleViewModel(document.FileName, document.Viewer.PageCount);
+        if (!_pageDialogs.ShowGrayscale(dialog) || dialog.Result is not { } parameters)
+        {
+            return;
+        }
+
+        var name = Format(Strings.Grayscale_Name, Path.GetFileNameWithoutExtension(document.FileName)) + ".pdf";
+        var output = _fileDialogs.PickSavePath(name, Path.GetDirectoryName(document.FilePath));
+        if (output is null)
+        {
+            return;
+        }
+
+        if (Documents.Any(d => d.IsSameFile(output)))
+        {
+            await _messages.ShowErrorAsync(Strings.Grayscale_Error_Title, Format(Strings.Save_AlreadyOpen, Path.GetFileName(output)));
+            return;
+        }
+
+        var (input, workingFolder) = await DocumentFileAsync(document, "grayscale");
+        try
+        {
+            if (input is null)
+            {
+                await _messages.ShowErrorAsync(Strings.Grayscale_Error_Title, Strings.Optimize_Error_Unreadable);
+                return;
+            }
+
+            GrayscaleReport? report = null;
+            var fileName = Path.GetFileName(output);
+            var done = await RunOptimizingAsync(
+                Format(Strings.Grayscale_Progress, document.FileName),
+                async (progress, token) => report = await grayscale.WriteAsync(input, output, parameters, progress, token),
+                Format(Strings.Grayscale_Done, fileName),
+                Strings.Grayscale_Error_Title);
+            if (!done || report is null)
+            {
+                return;
+            }
+
+            _logger.LogInformation(
+                "A grey copy was written ({Mode}): {PageCount} pages, {Pictures} made pictures, {Colored} still coloured",
+                parameters.Mode,
+                report.PageCount,
+                report.PicturePages.Count,
+                report.ColoredPages.Count);
+            if (await _messages.AskAsync(Strings.Grayscale_Done_Title, GrayscaleMessage(fileName, parameters.Mode, report), Strings.Compress_Open, null, Strings.Common_Close) == DialogChoice.Primary)
+            {
+                await OpenFilesAsync([output]);
+            }
+        }
+        finally
+        {
+            if (workingFolder is not null)
+            {
+                TryDeleteFolder(workingFolder);
+            }
+        }
+    }
+
+    private bool CanGrayscale() => _optimizing?.Grayscale is not null && CanLinearize();
+
+    /// <summary>The pages made pictures (and why that matters), any still coloured, and the sizes.</summary>
+    private static string GrayscaleMessage(string fileName, GrayscaleMode mode, GrayscaleReport report)
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        var text = new StringBuilder(Format(
+            Strings.Grayscale_Done_Message,
+            fileName,
+            report.PageCount,
+            ByteSizeFormatter.Format(report.OriginalSize, culture),
+            ByteSizeFormatter.Format(report.OutputSize, culture)));
+        if (mode == GrayscaleMode.Raster)
+        {
+            text.AppendLine().Append(Strings.Grayscale_Done_AllPictures);
+        }
+        else if (report.PicturePages.Count > 0)
+        {
+            text.AppendLine().Append(Format(Strings.Grayscale_Done_Pictures, PageList(report.PicturePages)));
+        }
+
+        if (report.ColoredPages.Count > 0)
+        {
+            text.AppendLine().Append(Format(Strings.Grayscale_Done_Colored, PageList(report.ColoredPages)));
+        }
+
+        return text.ToString();
+
+        static string PageList(IReadOnlyList<int> pages)
+            => Core.Organizing.PageRanges.Format(pages);
+    }
+
+    /// <summary>
     /// Runs <paramref name="work"/> in the background with progress and cancel in the status bar; failures are
     /// explained. True when it finished.
     /// </summary>

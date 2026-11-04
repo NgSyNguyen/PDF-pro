@@ -52,4 +52,26 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         Sha256(path).ShouldBe(original, "the document's own file is not touched");
         output.WriteLine($"{new FileInfo(path).Length:N0} → {new FileInfo(compressed).Length:N0} bytes");
     }
+
+    [Fact]
+    public void AGreyCopy_KeepsTheVietnameseText_OfEveryPage()
+    {
+        RequireEnabled();
+        var path = _folder.Copy("vanban-vi.pdf");
+        var original = Sha256(path);
+        using var app = AppUnderTest.Start(_folder, path);
+        app.WaitForTab("vanban-vi.pdf", Long);
+
+        app.Ribbon("convert", "optimize.grayscale");
+        var dialog = app.WaitForWindow(Text("Grayscale_Title"));
+        app.IsEnabled("GrayscaleApply", dialog).ShouldBeTrue();
+        app.Invoke("GrayscaleApply", dialog);
+        var grey = Path.Combine(_folder.Documents, Format("Grayscale_Name", "vanban-vi") + ".pdf");
+        app.UseFileDialog(Text("Save_Dialog_Title"), grey);
+        var done = app.WaitForWindow(Text("Grayscale_Done_Title"), Long);
+        done.FindFirstDescendant(cf => cf.ByName(Text("Common_Close")))!.AsButton().Invoke();
+
+        PdfFile.PageTexts(grey).ShouldBe(PdfFile.PageTexts(path), "converting the colours keeps the text");
+        Sha256(path).ShouldBe(original, "the document's own file is not touched");
+    }
 }

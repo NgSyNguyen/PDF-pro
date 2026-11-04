@@ -1452,4 +1452,25 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Compress_Done_Details" xml:space="preserve"><value>{0} ảnh giảm độ phân giải, {1} ảnh được mã hóa lại, {2} bản sao trùng được dùng chung, {3} luồng dữ liệu khác được nén tốt hơn.</value></data>
   <data name="Compress_Kept_Message" xml:space="preserve"><value>Nén không làm tệp nhỏ hơn ({1}), nên "{0}" là bản sao nguyên vẹn của tài liệu.</value></data>
   <data name="Compress_Open" xml:space="preserve"><value>Mở tệp</value></data>
+  <data name="Cmd_Grayscale" xml:space="preserve"><value>Thang xám</value></data>
+  <data name="Cmd_Grayscale_ToolTip" xml:space="preserve"><value>Ghi một bản sao đen trắng (thang xám): chuyển màu giữ nguyên chữ và nét vẽ, hoặc biến mỗi trang thành ảnh xám</value></data>
+  <data name="Grayscale_Title" xml:space="preserve"><value>Chuyển sang thang xám</value></data>
+  <data name="Grayscale_Pages" xml:space="preserve"><value>{0} trang</value></data>
+  <data name="Grayscale_Convert" xml:space="preserve"><value>Chuyển màu (khuyên dùng)</value></data>
+  <data name="Grayscale_Convert_Details" xml:space="preserve"><value>Chữ vẫn chọn, tìm và sao chép được; nét vẽ vẫn sắc; dung lượng gần như cũ. Trang có thành phần không chuyển được sẽ tự thành ảnh xám và được báo lại.</value></data>
+  <data name="Grayscale_Raster" xml:space="preserve"><value>Biến mọi trang thành ảnh xám</value></data>
+  <data name="Grayscale_Raster_Details" xml:space="preserve"><value>Chắc chắn không còn màu, nhưng chữ thành ảnh: không chọn, tìm hay sao chép được nữa (cần nhận dạng chữ OCR), tệp thường lớn hơn.</value></data>
+  <data name="Grayscale_Dpi" xml:space="preserve"><value>Độ phân giải của trang thành ảnh (DPI)</value></data>
+  <data name="Grayscale_Note" xml:space="preserve"><value>Mọi trang của bản xám đều được kiểm tra lại bằng cách vẽ ra; tài liệu gốc không thay đổi.</value></data>
+  <data name="Grayscale_Error_Dpi" xml:space="preserve"><value>Độ phân giải phải là số nguyên từ 72 đến 600.</value></data>
+  <data name="Grayscale_Apply" xml:space="preserve"><value>Chuyển…</value></data>
+  <data name="Grayscale_Error_Title" xml:space="preserve"><value>Không chuyển được sang thang xám</value></data>
+  <data name="Grayscale_Name" xml:space="preserve"><value>{0} (xám)</value></data>
+  <data name="Grayscale_Progress" xml:space="preserve"><value>Đang chuyển "{0}" sang thang xám…</value></data>
+  <data name="Grayscale_Done" xml:space="preserve"><value>Đã chuyển sang thang xám: "{0}"</value></data>
+  <data name="Grayscale_Done_Title" xml:space="preserve"><value>Đã chuyển xong</value></data>
+  <data name="Grayscale_Done_Message" xml:space="preserve"><value>"{0}": {1} trang thang xám, {2} → {3}.</value></data>
+  <data name="Grayscale_Done_AllPictures" xml:space="preserve"><value>Mọi trang là ảnh: chữ không còn chọn hay tìm được.</value></data>
+  <data name="Grayscale_Done_Pictures" xml:space="preserve"><value>Trang {0} có thành phần không chuyển được nên đã thành ảnh xám (chữ ở các trang này không còn chọn được).</value></data>
+  <data name="Grayscale_Done_Colored" xml:space="preserve"><value>Trang {0} vẫn còn chút màu sau khi chuyển. Hãy kiểm tra lại bằng mắt.</value></data>
 </root>

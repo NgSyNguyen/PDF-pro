@@ -162,6 +162,64 @@ public sealed partial class MainWindowViewModelTests
         File.ReadAllBytes(path).ShouldBe(original);
     }
 
+    [Fact]
+    public async Task Grayscale_WritesAGreyCopy_SaysWhatItIs_AndOffersToOpenIt()
+    {
+        var (viewModel, path) = await CreateWithPhotoAsync();
+        var original = File.ReadAllBytes(path);
+        var output = Path.Combine(Path.GetDirectoryName(path)!, Format(Strings.Grayscale_Name, "ảnh") + ".pdf");
+        _fileDialogs.PickSavePath(Format(Strings.Grayscale_Name, "ảnh") + ".pdf", Path.GetDirectoryName(path)).Returns(output);
+        _pageDialogs.ShowGrayscale(Arg.Any<GrayscaleViewModel>()).Returns(call =>
+        {
+            call.Arg<GrayscaleViewModel>().ApplyCommand.Execute(null);
+            return true;
+        });
+        _messages.AskAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>()).Returns(DialogChoice.Cancel);
+
+        await viewModel.GrayscaleCommand.ExecuteAsync(null);
+
+        using (var grey = PdfReader.Open(output, PdfDocumentOpenMode.Import))
+        {
+            grey.PageCount.ShouldBe(1);
+        }
+
+        var culture = CultureInfo.CurrentCulture;
+        var message = Format(
+            Strings.Grayscale_Done_Message,
+            Path.GetFileName(output),
+            1,
+            ByteSizeFormatter.Format(original.Length, culture),
+            ByteSizeFormatter.Format(new FileInfo(output).Length, culture));
+        await _messages.Received(1).AskAsync(Strings.Grayscale_Done_Title, message, Strings.Compress_Open, Arg.Is<string?>(p => p == null), Strings.Common_Close);
+        viewModel.StatusBar.TaskText.ShouldBe(Format(Strings.Grayscale_Done, Path.GetFileName(output)));
+        viewModel.Documents.Count().ShouldBe(1, "the user chose not to open the copy");
+        File.ReadAllBytes(path).ShouldBe(original, "the document's own file is not touched");
+    }
+
+    [Fact]
+    public async Task Grayscale_AsPictures_SaysTheTextIsGone()
+    {
+        var (viewModel, path) = await CreateWithPhotoAsync();
+        _fileDialogs.PickSavePath(Arg.Any<string>(), Arg.Any<string?>()).Returns(Path.Combine(Path.GetDirectoryName(path)!, "xám.pdf"));
+        _pageDialogs.ShowGrayscale(Arg.Any<GrayscaleViewModel>()).Returns(call =>
+        {
+            var dialog = call.Arg<GrayscaleViewModel>();
+            dialog.IsRaster = true;
+            dialog.DpiText = "72";
+            dialog.ApplyCommand.Execute(null);
+            return true;
+        });
+
+        await viewModel.GrayscaleCommand.ExecuteAsync(null);
+
+        await _messages.Received(1).AskAsync(
+            Strings.Grayscale_Done_Title,
+            Arg.Is<string>(m => m.EndsWith(Strings.Grayscale_Done_AllPictures, StringComparison.Ordinal)),
+            Strings.Compress_Open,
+            Arg.Is<string?>(p => p == null),
+            Strings.Common_Close);
+    }
+
     /// <summary>"ảnh.pdf" (a page with a 400 DPI photograph) open and saved; qpdf is not installed.</summary>
     private async Task<(MainWindowViewModel ViewModel, string Path)> CreateWithPhotoAsync()
     {

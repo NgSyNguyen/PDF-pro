@@ -1452,4 +1452,25 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Compress_Done_Details" xml:space="preserve"><value>{0} pictures brought down, {1} pictures coded anew, {2} duplicate copies shared, {3} other streams compressed better.</value></data>
   <data name="Compress_Kept_Message" xml:space="preserve"><value>Compressing did not make the file smaller ({1}), so "{0}" is an unchanged copy of the document.</value></data>
   <data name="Compress_Open" xml:space="preserve"><value>Open the file</value></data>
+  <data name="Cmd_Grayscale" xml:space="preserve"><value>Grayscale</value></data>
+  <data name="Cmd_Grayscale_ToolTip" xml:space="preserve"><value>Writes a grey copy: colours converted with text and drawings kept, or every page made a grey picture</value></data>
+  <data name="Grayscale_Title" xml:space="preserve"><value>Grayscale</value></data>
+  <data name="Grayscale_Pages" xml:space="preserve"><value>{0} pages</value></data>
+  <data name="Grayscale_Convert" xml:space="preserve"><value>Convert the colours (recommended)</value></data>
+  <data name="Grayscale_Convert_Details" xml:space="preserve"><value>Text can still be selected, found and copied; drawings stay sharp; the size hardly changes. Pages with something that cannot be converted become grey pictures and are listed.</value></data>
+  <data name="Grayscale_Raster" xml:space="preserve"><value>Make every page a grey picture</value></data>
+  <data name="Grayscale_Raster_Details" xml:space="preserve"><value>Certainly no colour left, but text becomes a picture: it can no longer be selected, found or copied (it needs OCR), and the file is usually larger.</value></data>
+  <data name="Grayscale_Dpi" xml:space="preserve"><value>Resolution of pages made pictures (DPI)</value></data>
+  <data name="Grayscale_Note" xml:space="preserve"><value>Every page of the grey copy is checked by drawing it; the document itself does not change.</value></data>
+  <data name="Grayscale_Error_Dpi" xml:space="preserve"><value>The resolution must be a whole number from 72 to 600.</value></data>
+  <data name="Grayscale_Apply" xml:space="preserve"><value>Convert…</value></data>
+  <data name="Grayscale_Error_Title" xml:space="preserve"><value>The grey copy could not be written</value></data>
+  <data name="Grayscale_Name" xml:space="preserve"><value>{0} (grey)</value></data>
+  <data name="Grayscale_Progress" xml:space="preserve"><value>Making "{0}" grey…</value></data>
+  <data name="Grayscale_Done" xml:space="preserve"><value>Grey copy written: "{0}"</value></data>
+  <data name="Grayscale_Done_Title" xml:space="preserve"><value>Grey copy written</value></data>
+  <data name="Grayscale_Done_Message" xml:space="preserve"><value>"{0}": {1} grey pages, {2} → {3}.</value></data>
+  <data name="Grayscale_Done_AllPictures" xml:space="preserve"><value>Every page is a picture: text can no longer be selected or found.</value></data>
+  <data name="Grayscale_Done_Pictures" xml:space="preserve"><value>Page(s) {0} had something that could not be converted and became grey pictures (their text can no longer be selected).</value></data>
+  <data name="Grayscale_Done_Colored" xml:space="preserve"><value>Page(s) {0} still show some colour. Please check them.</value></data>
 </root>

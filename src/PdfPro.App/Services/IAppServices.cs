@@ -218,4 +218,7 @@ public interface IPageDialogService
 
     /// <summary>"Nén": preset, sizes and a preview of one page before and after.</summary>
     bool ShowCompress(ViewModels.Optimizing.CompressViewModel viewModel);
+
+    /// <summary>"Thang xám": converting colours or making the pages pictures.</summary>
+    bool ShowGrayscale(ViewModels.Optimizing.GrayscaleViewModel viewModel);
 }

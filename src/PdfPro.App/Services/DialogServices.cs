@@ -373,6 +373,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new CompressWindow(viewModel));
     }
 
+    public bool ShowGrayscale(ViewModels.Optimizing.GrayscaleViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new GrayscaleWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)
