@@ -1,8 +1,13 @@
 using System.Globalization;
 using PdfPro.App.Resources;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Sessions;
+using PdfPro.Operations.Annotating;
+using PdfPro.Operations.Editing;
+using PdfPro.Operations.Forms;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Security;
 using PdfPro.Operations.Stamping;
 
 namespace PdfPro.App.Services.Documents;
@@ -38,7 +43,75 @@ internal static class HistoryDescriptions
             HeaderFooterParams => Strings.History_HeaderFooter,
             PageNumbersParams => Strings.History_PageNumbers,
             RemoveStampsParams => Strings.History_RemoveStamps,
+            AddAnnotationsParams p => Format(Strings.History_AddAnnotations, p.Count),
+            UpdateAnnotationsParams p => Format(Strings.History_UpdateAnnotations, p.Items.Count),
+            DeleteAnnotationsParams p => Format(Strings.History_DeleteAnnotations, p.Ids.Count),
+            EditFileAnnotationsParams p => Describe(p),
+            EditContentParams p => Describe(p),
+            FillFormParams p => Format(Strings.History_FillForm, p.Values.Count),
+            DesignFormParams p => Describe(p),
+            ResetFormParams p => Format(Strings.History_ResetForm, p.Values.Count),
+            FlattenFormParams => Strings.History_FlattenForm,
+            SetProtectionParams { Protection: null } => Strings.History_RemoveProtection,
+            SetProtectionParams => Strings.History_SetProtection,
+            RedactParams p => Format(Strings.History_Redact, p.Areas.Sum(a => a.Rects.Count)),
+            SanitizeParams => Strings.History_Sanitize,
+            FlattenAnnotationsParams p when string.IsNullOrWhiteSpace(p.Pages) => Strings.History_FlattenAnnotations,
+            FlattenAnnotationsParams p => Format(Strings.History_FlattenAnnotationsOn, Count(p.Pages!, before)),
             _ => Strings.History_Other,
+        };
+    }
+
+    /// <summary>"Sửa chữ", "Xóa đối tượng", "Di chuyển đối tượng" or "Sửa nội dung (3 thay đổi)".</summary>
+    public static string Describe(EditContentParams parameters)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        return parameters.Edits switch
+        {
+            [ReplaceTextEdit] => Strings.History_ReplaceText,
+            [DeleteObjectEdit] => Strings.History_DeleteObject,
+            [MoveObjectEdit] => Strings.History_MoveObject,
+            [RotateObjectEdit] => Strings.History_RotateObject,
+            [ReplaceImageEdit] => Strings.History_ReplaceImage,
+            _ => Format(Strings.History_EditContent, parameters.Edits.Count),
+        };
+    }
+
+    /// <summary>"Trả lời bình luận", "Xóa bình luận"… or "Sửa 3 bình luận của tệp".</summary>
+    public static string Describe(EditFileAnnotationsParams parameters)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        if (parameters.Edits.Count != 1)
+        {
+            return Format(Strings.History_EditFileComments, parameters.Edits.Count);
+        }
+
+        return parameters.Edits[0].Action switch
+        {
+            FileAnnotationAction.Reply => Strings.History_ReplyFileComment,
+            FileAnnotationAction.SetState => Strings.History_ReviewFileComment,
+            FileAnnotationAction.SetContents => Strings.History_EditFileComment,
+            FileAnnotationAction.Move => Strings.History_MoveFileComment,
+            _ => Strings.History_DeleteFileComment,
+        };
+    }
+
+    /// <summary>"Thêm trường biểu mẫu", "Di chuyển trường biểu mẫu", "Sửa trường hoTen"… or "Thiết kế biểu mẫu".</summary>
+    public static string Describe(DesignFormParams parameters)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        var remove = parameters.Remove ?? [];
+        var add = parameters.Add ?? [];
+        var widgets = parameters.Widgets ?? [];
+        var update = parameters.Update ?? [];
+        return (remove.Count, add.Count, widgets.Count, update.Count) switch
+        {
+            (0, > 0, 0, 0) => Format(Strings.History_AddFormFields, add.Select(a => a.Name).Distinct(StringComparer.Ordinal).Count()),
+            (> 0, 0, 0, 0) => Format(Strings.History_RemoveFormFields, remove.Count),
+            (0, 0, > 0, 0) when widgets.All(w => w.Rect is null) => Format(Strings.History_RemoveFormFields, widgets.Count),
+            (0, 0, > 0, 0) => Strings.History_MoveFormField,
+            (0, 0, 0, 1) => Format(Strings.History_UpdateFormField, update[0].Properties.Name),
+            _ => Strings.History_DesignForm,
         };
     }
 

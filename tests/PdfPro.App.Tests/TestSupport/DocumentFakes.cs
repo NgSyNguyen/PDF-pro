@@ -36,6 +36,12 @@ internal static class VirtualDocuments
 
 internal static class TestOperations
 {
+    /// <summary>One PDFium thread for the operations that run through it (edit.content), shared by the tests.</summary>
+    private static readonly Lazy<PdfiumGate> Gate = new(() => new PdfiumGate(NullLogger<PdfiumGate>.Instance));
+
+    /// <summary>The shared PDFium thread, for operations a test runs for real.</summary>
+    public static PdfiumGate PdfiumGate => Gate.Value;
+
     /// <summary>The page operations as the app registers them (their file-based execution is not used by view models).</summary>
     public static OperationCatalog Catalog()
     {
@@ -67,6 +73,23 @@ internal static class TestOperations
             new Operations.Stamping.PageNumbersOperation(),
             new Operations.Stamping.BatesOperation(),
             new Operations.Stamping.RemoveStampsOperation(),
+            new Operations.Annotating.AddAnnotationsOperation(materializer, loader),
+            new Operations.Annotating.UpdateAnnotationsOperation(materializer, loader),
+            new Operations.Annotating.DeleteAnnotationsOperation(materializer, loader),
+            new Operations.Annotating.EditFileAnnotationsOperation(),
+            new Operations.Annotating.FlattenAnnotationsOperation(),
+            new Operations.Editing.EditContentOperation(Gate.Value),
+            new Operations.Forms.FillFormOperation(materializer, loader),
+            new Operations.Forms.DesignFormOperation(),
+            new Operations.Forms.MergeFormDataOperation(),
+            new Operations.Forms.FlattenFormOperation(),
+            new Operations.Forms.ResetFormOperation(materializer, loader),
+            new Operations.Security.ProtectDocumentOperation(),
+            new Operations.Security.UnprotectDocumentOperation(),
+            new Operations.Security.SetProtectionOperation(materializer, loader),
+            new Operations.Security.RedactOperation(Gate.Value),
+            new Operations.Security.SanitizeOperation(Gate.Value),
+            new Operations.Signing.SignOperation(),
         ]);
     }
 }
@@ -104,12 +127,12 @@ internal sealed class WorkspaceFixture : IDisposable
     }
 
     /// <summary>
-    /// A workspace for <paramref name="document"/>. The session copies a scratch file, but records
-    /// <paramref name="originalPath"/> as the file it was opened from (it need not exist).
+    /// A workspace for <paramref name="document"/>. The session copies a scratch file (holding <paramref name="content"/>
+    /// when given), but records <paramref name="originalPath"/> as the file it was opened from (it need not exist).
     /// </summary>
-    public async Task<DocumentWorkspace> CreateAsync(IPdfDocument document, string originalPath = @"C:\docs\a.pdf")
+    public async Task<DocumentWorkspace> CreateAsync(IPdfDocument document, string originalPath = @"C:\docs\a.pdf", byte[]? content = null)
     {
-        var scratch = CreateFile($"{Guid.NewGuid():N}.pdf");
+        var scratch = CreateFile($"{Guid.NewGuid():N}.pdf", content);
         var folder = await Store.CreateAsync(scratch, TestContext.Current.CancellationToken);
         var source = new SessionSource(SourceIds.Original, SessionStore.SourceFileName(SourceIds.Original), SessionSourceKind.Original, document.PageCount, Path.GetFileName(originalPath));
         var session = new DocumentSession(

@@ -48,6 +48,9 @@
     <KeyBinding Key="R" Command="{Binding RotateRightCommand}" Modifiers="Control" />
     <KeyBinding Key="R" Command="{Binding RotateLeftCommand}" Modifiers="Control+Shift" />
     <KeyBinding Key="M" Command="{Binding MarkSplitCommand}" Modifiers="Control" />
+    <KeyBinding Key="F" Command="{Binding ShowSearchCommand}" Modifiers="Control" />
+    <KeyBinding Key="F3" Command="{Binding FindNextCommand}" />
+    <KeyBinding Key="F3" Command="{Binding FindPreviousCommand}" Modifiers="Shift" />
   </ui:FluentWindow.InputBindings>
 
   <ui:FluentWindow.CommandBindings>
@@ -298,10 +301,13 @@
               Text="{loc:Tr Properties_Empty}"
               TextAlignment="Center"
               TextWrapping="Wrap"
-              Visibility="{Binding ActiveDocument.Editor.IsActive, Converter={StaticResource InverseBoolToVisibility}, FallbackValue=Visible}" />
+              Visibility="{Binding ActiveDocument.ShowsProperties, Converter={StaticResource InverseBoolToVisibility}, FallbackValue=Visible}" />
             <views:OverlayPropertiesView
               DataContext="{Binding ActiveDocument.EditorProperties}"
               Visibility="{Binding DataContext.ActiveDocument.Editor.IsActive, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+            <views:FormFieldPropertiesView
+              DataContext="{Binding ActiveDocument.FormDesigner}"
+              Visibility="{Binding DataContext.ActiveDocument.IsDesigningForm, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
           </Grid>
         </DockPanel>
       </Border>

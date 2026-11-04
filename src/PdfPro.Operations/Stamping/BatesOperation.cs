@@ -119,7 +119,7 @@ public sealed class BatesOperation : PdfOperation<BatesParams>
                     var zone = new TextZone(parameters.Anchor, page => format.Label(range.NumberOf(page)));
                     TextZones.Stamp(document, [.. Enumerable.Range(0, counts[i])], [zone], style, parameters.MarginX, parameters.MarginY, StampContent.BatesLayer, fileProgress, Stage, cancellationToken);
                     using var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                    document.Save(stream, closeStream: false);
+                    Materializing.PdfWriting.Save(document, stream);
                     stream.Flush(flushToDisk: true);
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException and not BatesFileException)

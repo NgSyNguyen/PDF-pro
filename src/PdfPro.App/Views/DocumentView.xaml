@@ -60,6 +60,23 @@
             TextAlignment="Center"
             TextWrapping="Wrap" />
         </StackPanel>
+        <!-- Search matches and selected text; only draws, the mouse goes to the viewer. -->
+        <controls:TextHighlightLayer
+          PageKey="{Binding Key}"
+          Search="{Binding DataContext.Search, RelativeSource={RelativeSource AncestorType=UserControl}}"
+          Selection="{Binding DataContext.TextSelection, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <!-- The form's fields: real inputs over their widgets, showing the session's values. -->
+        <controls:FormFieldLayer Forms="{Binding DataContext.Forms, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
+        <!-- Annotations added in the session (the page image does not have them yet); only draws. -->
+        <controls:AnnotationLayer Annotations="{Binding DataContext.Annotations, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
+        <!-- "Thiết kế biểu mẫu": the fields' frames, names and handles; only draws. -->
+        <controls:FormDesignLayer Designer="{Binding DataContext.FormDesigner, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
+        <!-- "Xóa thông tin": the marks waiting to be applied and the box being dragged; only draws. -->
+        <controls:RedactionLayer PageKey="{Binding Key}" Redaction="{Binding DataContext.Redaction, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <!-- "Ký số": the box of the signature being dragged; only draws. -->
+        <controls:SignaturePlacementLayer PageKey="{Binding Key}" Placement="{Binding DataContext.SignaturePlacement, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <!-- "Sửa nội dung": frames around the drawing under the mouse and the selected one; only draws. -->
+        <controls:ContentObjectLayer Editor="{Binding DataContext.ContentEditor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- The page editor's objects, selection and guides; inactive (and transparent to the mouse) outside the editor. -->
         <controls:OverlayLayer Editor="{Binding DataContext.Editor, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
       </Grid>
@@ -82,6 +99,16 @@
       Message="{loc:Tr Document_ReadOnlyEncrypted}"
       Severity="Informational"
       Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVisibility}}" />
+
+    <ui:InfoBar
+      Margin="0,0,0,6"
+      AutomationProperties.AutomationId="XfaNotice"
+      DockPanel.Dock="Top"
+      IsClosable="False"
+      IsOpen="{Binding Forms.HasXfaNotice, Mode=OneWay}"
+      Message="{Binding Forms.XfaNotice}"
+      Severity="Warning"
+      Visibility="{Binding Forms.HasXfaNotice, Converter={StaticResource BoolToVisibility}}" />
 
     <!-- "Sắp xếp trang": the organizer grid replaces the viewer. -->
     <views:OrganizerView Visibility="{Binding IsOrganizing, Converter={StaticResource BoolToVisibility}}" />
@@ -208,6 +235,656 @@
       </DockPanel>
     </Border>
 
+    <!-- Annotating: the tools, colour and width, stamp words; the selected annotation's comment and delete; "Xong". -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="AnnotationToolBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding Annotations}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsBarVisible, Converter={StaticResource BoolToVisibility}}">
+      <StackPanel>
+        <DockPanel LastChildFill="True">
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <ui:Button
+              Margin="0,0,6,0"
+              AutomationProperties.AutomationId="AnnotationComment"
+              Command="{Binding EditCommentCommand}"
+              Content="{loc:Tr Annotation_Comment}"
+              Icon="{ui:SymbolIcon Comment24}"
+              Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+            <ui:Button
+              Margin="0,0,6,0"
+              AutomationProperties.AutomationId="AnnotationDelete"
+              Command="{Binding DeleteCommand}"
+              Content="{loc:Tr Annotation_Delete}"
+              Icon="{ui:SymbolIcon Delete24}"
+              Visibility="{Binding HasAnySelection, Converter={StaticResource BoolToVisibility}}" />
+            <ui:Button
+              AutomationProperties.AutomationId="AnnotationToolDone"
+              Command="{Binding StopToolCommand}"
+              Content="{loc:Tr Annotation_Done}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_None"
+              AutomationProperties.Name="{loc:Tr Annotation_Tool_None}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=None}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Annotation_Tool_None}">
+              <ui:SymbolIcon Symbol="Cursor24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Highlight"
+              AutomationProperties.Name="{loc:Tr Cmd_Highlight}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Highlight}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Cmd_Highlight}">
+              <ui:SymbolIcon Symbol="Highlight24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Note"
+              AutomationProperties.Name="{loc:Tr Cmd_StickyNote}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Note}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Cmd_StickyNote}">
+              <ui:SymbolIcon Symbol="Note24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_FreeText"
+              AutomationProperties.Name="{loc:Tr Cmd_TextBox}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=FreeText}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Cmd_TextBox}">
+              <ui:SymbolIcon Symbol="Textbox24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Ink"
+              AutomationProperties.Name="{loc:Tr Cmd_Ink}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Ink}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Cmd_Ink}">
+              <ui:SymbolIcon Symbol="InkStroke24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Rectangle"
+              AutomationProperties.Name="{loc:Tr Editor_Tool_Rectangle}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Rectangle}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Editor_Tool_Rectangle}">
+              <ui:SymbolIcon Symbol="RectangleLandscape24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Ellipse"
+              AutomationProperties.Name="{loc:Tr Editor_Tool_Ellipse}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Ellipse}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Editor_Tool_Ellipse}">
+              <ui:SymbolIcon Symbol="Circle24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Line"
+              AutomationProperties.Name="{loc:Tr Editor_Tool_Line}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Line}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Editor_Tool_Line}">
+              <ui:SymbolIcon Symbol="Line24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Arrow"
+              AutomationProperties.Name="{loc:Tr Editor_Tool_Arrow}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Arrow}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Editor_Tool_Arrow}">
+              <ui:SymbolIcon Symbol="ArrowRight24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Polygon"
+              AutomationProperties.Name="{loc:Tr Annotation_Tool_Polygon}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Polygon}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Annotation_Tool_Polygon}">
+              <ui:SymbolIcon Symbol="Triangle24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Polyline"
+              AutomationProperties.Name="{loc:Tr Annotation_Tool_Polyline}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Polyline}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Annotation_Tool_Polyline}">
+              <ui:SymbolIcon Symbol="Pen24" />
+            </RadioButton>
+            <RadioButton
+              AutomationProperties.AutomationId="AnnotationTool_Stamp"
+              AutomationProperties.Name="{loc:Tr Cmd_StampAnnotation}"
+              GroupName="AnnotationTools"
+              IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Stamp}"
+              Style="{StaticResource EditorToolButton}"
+              ToolTip="{loc:Tr Cmd_StampAnnotation}">
+              <ui:SymbolIcon Symbol="DocumentCheckmark24" />
+            </RadioButton>
+            <TextBlock
+              Margin="10,0,0,0"
+              VerticalAlignment="Center"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{Binding ToolText}"
+              TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+        </DockPanel>
+        <WrapPanel Margin="0,6,0,0" Orientation="Horizontal">
+          <ItemsControl
+            VerticalAlignment="Center"
+            ItemsSource="{Binding Swatches}"
+            Tag="{Binding SetColorCommand}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Button
+                  Width="20"
+                  Height="20"
+                  Margin="0,0,4,0"
+                  Padding="0"
+                  AutomationProperties.Name="{Binding Hex}"
+                  Background="{Binding Hex, Converter={StaticResource HexBrush}}"
+                  BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                  BorderThickness="1"
+                  Command="{Binding Tag, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                  CommandParameter="{Binding Hex}"
+                  ToolTip="{Binding Hex}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <StackPanel
+            Margin="12,0,0,0"
+            Orientation="Horizontal"
+            Visibility="{Binding HasWidth, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock
+              Margin="0,0,6,0"
+              VerticalAlignment="Center"
+              Text="{loc:Tr Annotation_Width}" />
+            <ComboBox
+              MinWidth="70"
+              AutomationProperties.AutomationId="AnnotationWidth"
+              AutomationProperties.Name="{loc:Tr Annotation_Width}"
+              ItemsSource="{Binding StrokeWidths}"
+              SelectedItem="{Binding StrokeWidth}" />
+          </StackPanel>
+          <StackPanel
+            Margin="12,0,0,0"
+            Orientation="Horizontal"
+            Visibility="{Binding Tool, Converter={StaticResource EnumMatchVisibility}, ConverterParameter=Stamp}">
+            <ComboBox
+              MinWidth="160"
+              AutomationProperties.AutomationId="AnnotationStampText"
+              AutomationProperties.Name="{loc:Tr Annotation_StampText}"
+              IsEditable="True"
+              ItemsSource="{Binding StampTexts}"
+              Text="{Binding StampText, UpdateSourceTrigger=PropertyChanged}" />
+            <CheckBox
+              Margin="10,0,0,0"
+              AutomationProperties.AutomationId="AnnotationStampDate"
+              Content="{loc:Tr Annotation_StampWithDate}"
+              IsChecked="{Binding StampWithDate}" />
+          </StackPanel>
+        </WrapPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- "Sửa nội dung": what is selected and what can be done to it; "Xong" leaves the mode. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="ContentEditorBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding ContentEditor}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentEditText"
+            Command="{Binding EditTextCommand}"
+            Content="{loc:Tr ContentEditor_EditText}"
+            Icon="{ui:SymbolIcon TextEditStyle24}"
+            Visibility="{Binding IsTextSelected, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentReplaceImage"
+            Command="{Binding ReplaceImageCommand}"
+            Content="{loc:Tr ContentEditor_ReplaceImage}"
+            Icon="{ui:SymbolIcon ImageEdit24}"
+            Visibility="{Binding IsImageSelected, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentSaveImage"
+            Command="{Binding SaveImageCommand}"
+            Content="{loc:Tr ContentEditor_SaveImage}"
+            Icon="{ui:SymbolIcon ArrowDownload24}"
+            Visibility="{Binding IsImageSelected, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentRotateLeft"
+            AutomationProperties.Name="{loc:Tr ContentEditor_RotateLeft}"
+            Command="{Binding RotateLeftCommand}"
+            Icon="{ui:SymbolIcon ArrowRotateCounterclockwise24}"
+            ToolTip="{loc:Tr ContentEditor_RotateLeft}"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentRotateRight"
+            AutomationProperties.Name="{loc:Tr ContentEditor_RotateRight}"
+            Command="{Binding RotateRightCommand}"
+            Icon="{ui:SymbolIcon ArrowRotateClockwise24}"
+            ToolTip="{loc:Tr ContentEditor_RotateRight}"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="ContentDelete"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Tr ContentEditor_Delete}"
+            Icon="{ui:SymbolIcon Delete24}"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            AutomationProperties.AutomationId="ContentDone"
+            Command="{Binding DataContext.ToggleContentEditingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr ContentEditor_Done}" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+          <ui:SymbolIcon Margin="0,0,8,0" Symbol="DocumentEdit24" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="ContentSelection"
+            FontWeight="SemiBold"
+            Text="{Binding SelectionText}"
+            TextTrimming="CharacterEllipsis"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <TextBlock
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr ContentEditor_Hint}"
+            TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- "Ký số": while the box of a visible signature is placed, what to do and how to give up. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="SignaturePlacementBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding SignaturePlacement}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <ui:Button
+          AutomationProperties.AutomationId="SignaturePlacementCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}"
+          DockPanel.Dock="Right" />
+        <StackPanel Orientation="Horizontal">
+          <ui:SymbolIcon Margin="0,0,8,0" Symbol="Certificate24" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="SignaturePlacementHint"
+            Text="{loc:Tr Sign_Place_Hint}"
+            TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- "Xóa thông tin": the marking tools, the search by pattern, the count, "Áp dụng" and "Xong". -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="RedactionBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding Redaction}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="RedactionFind"
+            Command="{Binding DataContext.FindRedactionsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr Redaction_Find}"
+            Icon="{ui:SymbolIcon DocumentSearch24}"
+            ToolTip="{loc:Tr Redaction_Find_ToolTip}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="RedactionMarkSelection"
+            Command="{Binding MarkSelectionCommand}"
+            Content="{loc:Tr Redaction_MarkSelection}"
+            Icon="{ui:SymbolIcon Highlight24}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="RedactionDelete"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Tr Redaction_Delete}"
+            Icon="{ui:SymbolIcon DismissSquare24}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="RedactionClearAll"
+            Command="{Binding ClearAllCommand}"
+            Content="{loc:Tr Redaction_ClearAll}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            Appearance="Danger"
+            AutomationProperties.AutomationId="RedactionApply"
+            Command="{Binding DataContext.ApplyRedactionsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr Redaction_Apply}"
+            Icon="{ui:SymbolIcon EraserSegment24}" />
+          <ui:Button
+            AutomationProperties.AutomationId="RedactionDone"
+            Command="{Binding DataContext.ToggleRedactionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr Redaction_Done}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <RadioButton
+            AutomationProperties.AutomationId="RedactionTool_Area"
+            AutomationProperties.Name="{loc:Tr Redaction_Tool_Area}"
+            GroupName="RedactionTools"
+            IsChecked="{Binding IsAreaTool}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Redaction_Tool_Area}">
+            <ui:SymbolIcon Symbol="RectangleLandscape24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="RedactionTool_Text"
+            AutomationProperties.Name="{loc:Tr Redaction_Tool_Text}"
+            GroupName="RedactionTools"
+            IsChecked="{Binding IsTextTool}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Redaction_Tool_Text}">
+            <ui:SymbolIcon Symbol="TextT24" />
+          </RadioButton>
+          <TextBlock
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="RedactionStatus"
+            Text="{Binding Status}"
+            TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- "Thiết kế biểu mẫu": the tools that place fields, delete, "Xong"; the properties are in the right panel. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="FormDesignerBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding FormDesigner}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="FormDesignerDetect"
+            Command="{Binding DetectCommand}"
+            Content="{loc:Tr FormDesigner_Detect}"
+            Icon="{ui:SymbolIcon Wand24}"
+            ToolTip="{loc:Tr FormDesigner_Detect_ToolTip}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="FormDesignerDelete"
+            Command="{Binding DeleteCommand}"
+            Content="{loc:Tr FormDesigner_Delete}"
+            Icon="{ui:SymbolIcon Delete24}"
+            Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}" />
+          <ui:Button
+            AutomationProperties.AutomationId="FormDesignerDone"
+            Command="{Binding DataContext.ToggleFormDesignCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr FormDesigner_Done}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_Select"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_Select}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Select}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_Select}">
+            <ui:SymbolIcon Symbol="Cursor24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_Text"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_Text}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Text}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_Text}">
+            <ui:SymbolIcon Symbol="TextField24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_CheckBox"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_CheckBox}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=CheckBox}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_CheckBox}">
+            <ui:SymbolIcon Symbol="CheckboxChecked24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_RadioButton"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_RadioButton}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=RadioButton}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_RadioButton}">
+            <ui:SymbolIcon Symbol="RadioButton24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_ComboBox"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_ComboBox}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=ComboBox}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_ComboBox}">
+            <ui:SymbolIcon Symbol="ChevronDown24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_ListBox"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_ListBox}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=ListBox}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_ListBox}">
+            <ui:SymbolIcon Symbol="TextBulletListSquare24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_Button"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_Button}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Button}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_Button}">
+            <ui:SymbolIcon Symbol="ControlButton24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="FormTool_Signature"
+            AutomationProperties.Name="{loc:Tr FormDesigner_Tool_Signature}"
+            IsChecked="{Binding Tool, Converter={StaticResource EnumMatch}, ConverterParameter=Signature}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr FormDesigner_Tool_Signature}">
+            <ui:SymbolIcon Symbol="Signature24" />
+          </RadioButton>
+          <TextBlock
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr FormDesigner_Hint}"
+            TextTrimming="CharacterEllipsis"
+            ToolTip="{loc:Tr FormDesigner_Hint}" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- "Nhận diện trường": what was found, then take the chosen proposals or drop them all. -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="FormSuggestionsBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding FormDesigner}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding SuggestionStatus, Converter={StaticResource NullToCollapsed}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            Appearance="Primary"
+            AutomationProperties.AutomationId="FormSuggestionsAccept"
+            Command="{Binding AcceptSuggestionsCommand}"
+            Content="{loc:Tr FormDesigner_AcceptSuggestions}"
+            Icon="{ui:SymbolIcon CheckmarkCircle24}" />
+          <ui:Button
+            AutomationProperties.AutomationId="FormSuggestionsClear"
+            Command="{Binding ClearSuggestionsCommand}"
+            Content="{loc:Tr FormDesigner_ClearSuggestions}"
+            Icon="{ui:SymbolIcon DismissCircle24}" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+          <ui:SymbolIcon Margin="0,0,8,0" Symbol="Wand24" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="FormSuggestionsStatus"
+            Text="{Binding SuggestionStatus}"
+            TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- The words of a text block, typed over it; clicking elsewhere keeps what was typed. -->
+    <Popup
+      x:Name="ContentTextPopup"
+      AllowsTransparency="True"
+      Closed="OnContentTextPopupClosed"
+      DataContext="{Binding ContentEditor}"
+      HorizontalOffset="{Binding TextBox.X}"
+      IsOpen="{Binding IsEditingText, Mode=OneWay}"
+      Opened="OnContentTextPopupOpened"
+      Placement="Relative"
+      PlacementTarget="{Binding ElementName=Surface}"
+      StaysOpen="False"
+      VerticalOffset="{Binding TextBox.Y}">
+      <Border
+        Padding="8"
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="4">
+        <StackPanel MinWidth="{Binding TextBox.Width}" MaxWidth="640">
+          <TextBox
+            x:Name="ContentTextBox"
+            MinWidth="220"
+            AcceptsReturn="True"
+            AutomationProperties.AutomationId="ContentTextBox"
+            AutomationProperties.Name="{loc:Tr ContentEditor_TextBox_Name}"
+            PreviewKeyDown="OnContentTextKeyDown"
+            Text="{Binding TextDraft, UpdateSourceTrigger=PropertyChanged}"
+            TextWrapping="Wrap" />
+          <CheckBox
+            Margin="0,6,0,0"
+            AutomationProperties.AutomationId="ContentTextWrap"
+            Content="{loc:Tr ContentEditor_Wrap}"
+            IsChecked="{Binding WrapText}" />
+          <TextBlock
+            Margin="0,4,0,0"
+            MaxWidth="420"
+            HorizontalAlignment="Left"
+            FontSize="11"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr ContentEditor_TextLimit}"
+            TextWrapping="Wrap" />
+          <StackPanel
+            Margin="0,6,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <ui:Button
+              Margin="0,0,6,0"
+              Command="{Binding CancelTextCommand}"
+              Content="{loc:Tr Common_Cancel}" />
+            <ui:Button
+              Appearance="Primary"
+              AutomationProperties.AutomationId="ContentTextDone"
+              Command="{Binding CommitTextCommand}"
+              Content="{loc:Tr ContentEditor_Done}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Popup>
+
+    <!-- The comment of a note: opens where it was clicked; clicking elsewhere keeps what was written. -->
+    <Popup
+      x:Name="ContentsPopup"
+      AllowsTransparency="True"
+      Closed="OnContentsPopupClosed"
+      DataContext="{Binding Annotations}"
+      IsOpen="{Binding IsEditingContents, Mode=OneWay}"
+      Opened="OnContentsPopupOpened"
+      Placement="MousePoint"
+      StaysOpen="False">
+      <Border
+        Padding="10"
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="6">
+        <StackPanel Width="280">
+          <TextBlock
+            Margin="0,0,0,6"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{Binding ContentsHeader}"
+            TextTrimming="CharacterEllipsis" />
+          <TextBox
+            x:Name="ContentsBox"
+            MinHeight="80"
+            MaxHeight="240"
+            AcceptsReturn="True"
+            AutomationProperties.AutomationId="AnnotationContents"
+            AutomationProperties.Name="{loc:Tr Annotation_Contents_Name}"
+            PreviewKeyDown="OnContentsKeyDown"
+            Text="{Binding ContentsDraft, UpdateSourceTrigger=PropertyChanged}"
+            TextWrapping="Wrap"
+            VerticalScrollBarVisibility="Auto" />
+          <StackPanel
+            Margin="0,8,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <ui:Button
+              Margin="0,0,6,0"
+              Command="{Binding CancelContentsCommand}"
+              Content="{loc:Tr Common_Cancel}" />
+            <ui:Button
+              Appearance="Primary"
+              AutomationProperties.AutomationId="AnnotationContentsDone"
+              Command="{Binding CommitContentsCommand}"
+              Content="{loc:Tr Annotation_Done}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Popup>
+
     <ScrollViewer
       x:Name="Scroller"
       AutomationProperties.AutomationId="DocumentScroller"
@@ -228,6 +905,9 @@
         AutomationProperties.AutomationId="DocumentSurface"
         Background="Transparent"
         DpiScale="{Binding DpiScale, Mode=TwoWay}"
+        MouseLeftButtonDown="OnSurfaceMouseLeftButtonDown"
+        MouseLeftButtonUp="OnSurfaceMouseLeftButtonUp"
+        MouseMove="OnSurfaceMouseMove"
         Offset="{Binding ScrollOffset, Mode=TwoWay}"
         PageLayout="{Binding Layout}"
         PageTemplate="{StaticResource PageTemplate}"

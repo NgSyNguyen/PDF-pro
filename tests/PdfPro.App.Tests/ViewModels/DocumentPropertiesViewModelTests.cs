@@ -126,6 +126,18 @@ public sealed class DocumentPropertiesViewModelTests : IDisposable
         Value(viewModel, Strings.DocProps_JavaScript).ShouldBe(Strings.DocProps_Yes);
     }
 
+    [Fact]
+    public void AnUnlockedDocument_ShowsTheProtectionItIsSavedWith()
+    {
+        var document = FakePdfDocument.WithPages(1);
+        var protection = new Core.Security.ProtectionSetting(Guid.NewGuid(), Core.Security.EncryptionAlgorithm.Aes128, Core.Security.DocumentPermissions.Copy, HasOpenPassword: true);
+
+        var viewModel = new DocumentPropertiesViewModel(document, document.PageSizes, _file, _logger, protection);
+
+        Value(viewModel, Strings.DocProps_Encryption).ShouldBe(
+            string.Format(CultureInfo.CurrentCulture, Strings.DocProps_EncryptedOnSave, Strings.DocProps_Aes128, Strings.DocProps_NotAllowed, Strings.DocProps_Allowed));
+    }
+
     [Theory]
     [InlineData(PdfFormType.XfaFull)]
     [InlineData(PdfFormType.XfaForeground)]

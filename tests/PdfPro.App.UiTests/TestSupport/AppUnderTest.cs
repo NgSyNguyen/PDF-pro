@@ -124,6 +124,10 @@ internal sealed partial class AppUnderTest : IDisposable
 
     public bool IsEnabled(string automationId, AutomationElement? root = null) => Find(automationId, root).IsEnabled;
 
+    /// <summary>How many items a list shows (those realized, for a virtualized list).</summary>
+    public int ItemCount(string automationId, AutomationElement? root = null)
+        => Find(automationId, root).FindAllChildren(cf => cf.ByControlType(ControlType.ListItem)).Length;
+
     /// <summary>Types into a text box (through its value, not the keyboard).</summary>
     public void SetText(string automationId, string text, AutomationElement? root = null)
     {

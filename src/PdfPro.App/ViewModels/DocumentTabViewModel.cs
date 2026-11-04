@@ -8,13 +8,18 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Editing;
+using PdfPro.App.Services.Forms;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.ViewModels.Annotating;
 using PdfPro.App.ViewModels.Editing;
+using PdfPro.App.ViewModels.Forms;
 using PdfPro.App.ViewModels.Organizer;
+using PdfPro.App.ViewModels.Security;
 using PdfPro.App.ViewModels.Splitting;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Infrastructure.Settings;
 using PdfPro.Operations;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Layout;
@@ -42,6 +47,8 @@ public sealed record HistoryEntryViewModel(string Description, bool IsRedo, int 
 /// <param name="ScreenFonts">Faces the page editor draws text with (null where nothing is drawn).</param>
 /// <param name="ScreenImages">Pictures the page editor draws.</param>
 /// <param name="Signatures">The saved hand signatures (null: none are kept).</param>
+/// <param name="Stamps">Previews and scans for the stamp dialogs (null: the stamp commands are off).</param>
+/// <param name="AnnotationAuthor">The name new annotations are signed with (null: the Windows user name).</param>
 public sealed record DocumentTabServices(
     OperationCatalog Operations,
     IMessageService Messages,
@@ -52,7 +59,20 @@ public sealed record DocumentTabServices(
     Func<VirtualPage, CancellationToken, Task<ImageSource?>> LoadPreview,
     ScreenFonts? ScreenFonts = null,
     ScreenImages? ScreenImages = null,
-    SignatureLibrary? Signatures = null);
+    SignatureLibrary? Signatures = null,
+    StampServices? Stamps = null,
+    Func<string>? AnnotationAuthor = null,
+    IFormSource? Forms = null,
+    Services.Security.ISignatureVerification? SignatureChecks = null);
+
+/// <summary>What the stamp dialogs use besides the operations.</summary>
+/// <param name="CreatePreview">Shows page n (0-based) of the document with a stamp, until disposed.</param>
+/// <param name="Debouncers">Delays previews while the user types.</param>
+/// <param name="ScanAsync">Counts the pages carrying each kind of PDF_Pro stamp in the document as displayed.</param>
+public sealed record StampServices(
+    Func<DocumentWorkspace, int, IStampPreview> CreatePreview,
+    IDebouncerFactory Debouncers,
+    Func<DocumentWorkspace, CancellationToken, Task<IReadOnlyDictionary<StampKind, int>>> ScanAsync);
 
 /// <summary>A content change the user asked for, run by the window in the background.</summary>
 /// <param name="Operation">The content operation.</param>
@@ -90,6 +110,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     private readonly ILogger _logger;
     private bool _inserting;
     private bool _closeEditorWhenApplied;
+    private PagePlan _shownPlan;
     private int _disposed;
 
     public DocumentTabViewModel(
@@ -114,6 +135,61 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         _logger = logger;
         HistoryEntries = BuildHistory();
         Editor = new PageEditorViewModel(() => Workspace.Pages, services.ScreenFonts, services.ScreenImages ?? new ScreenImages(), logger);
+        TextSelection = new TextSelectionViewModel(viewer, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
+        Search = new SearchViewModel(viewer, TextLayers, TextSelection, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
+        Annotations = new AnnotationToolsViewModel(viewer, TextSelection, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), logger)
+        {
+            Fonts = Editor.Fonts,
+            Images = Editor.Images,
+            RequestContentChange = RequestContentChange,
+        };
+        Comments = new CommentsViewModel(viewer, Annotations, Editor.GeometryOf, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), services.FileDialogs, _messages, () => Workspace.FileName, logger,
+            requestContentChange: RequestContentChange);
+        ContentEditor = new ContentEditorViewModel(viewer, Editor.GeometryOf, RequestContentChange, _operations, document => Workspace.SourcePathOf(document), () => ImagesDirectory, services.FileDialogs, _messages, logger);
+        ContentEditor.PropertyChanged += OnContentEditorPropertyChanged;
+        Forms = new FormFillingViewModel(
+            viewer,
+            () => Workspace.Session.BaseSourceId,
+            () => Workspace.SourcePathOf(Workspace.BaseDocument),
+            () => Workspace.Session.Plan,
+            Apply,
+            _operations,
+            services.Forms ?? new PdfFormSource(),
+            Editor.GeometryOf);
+        FormDesigner = new FormDesignerViewModel(viewer, Forms, Editor.GeometryOf, RequestContentChange, _operations);
+        FormDesigner.PropertyChanged += OnFormDesignerPropertyChanged;
+        Redaction = new RedactionViewModel(viewer, TextSelection, Editor.GeometryOf);
+        Redaction.PropertyChanged += OnRedactionPropertyChanged;
+        SignaturePlacement = new SignaturePlacementViewModel(viewer, Editor.GeometryOf);
+        SignaturePlacement.PropertyChanged += OnSignaturePlacementPropertyChanged;
+        Signatures = new SignaturesViewModel(viewer, () => Workspace.FilePath, () => IsDirty, services.SignatureChecks, logger);
+        Forms.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(FormFillingViewModel.IsXfaOnly))
+            {
+                ToggleFormDesignCommand.NotifyCanExecuteChanged();
+            }
+
+            if (e.PropertyName == nameof(FormFillingViewModel.HasFields))
+            {
+                NotifyFormDataCommands();
+            }
+        };
+        Annotations.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AnnotationToolsViewModel.Tool))
+            {
+                if (Annotations.Tool != AnnotationTool.None)
+                {
+                    FormDesigner.IsActive = false;
+                    Redaction.IsActive = false;
+                }
+
+                UpdateFormsActive();
+            }
+        };
+        Forms.Refresh();
+        _shownPlan = workspace.Session.Plan;
         Editor.ApplyRequested += OnEditorApplyRequested;
         Editor.PropertyChanged += OnEditorPropertyChanged;
         workspace.PagesChanged += OnPagesChanged;
@@ -125,6 +201,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>The document whose structure the tab shows (metadata, security, bookmarks): the base source.</summary>
     public IPdfDocument Document => Workspace.BaseDocument;
+
+    /// <summary>The author lets text be copied (a protected file opened without its owner password may forbid it).</summary>
+    public bool CanCopyText => Workspace.BaseDocument.Features.CanCopyContent;
+
+    /// <summary>Tells the user why the selected text was not copied.</summary>
+    public void ExplainCopyRefused() => _ = _messages.ShowInfoAsync(Strings.Copy_Refused_Title, Strings.Copy_NotAllowed);
 
     /// <summary>Where the document is saved.</summary>
     public string FilePath => Workspace.FilePath ?? string.Empty;
@@ -139,6 +221,27 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>The page editor: text, pictures, shapes and lines placed on pages until applied.</summary>
     public PageEditorViewModel Editor { get; }
+
+    /// <summary>The characters of the pages, read once: selecting, copying and searching share them.</summary>
+    public TextLayerCache TextLayers { get; } = new();
+
+    /// <summary>Text selected in the viewer (Ctrl+C copies it).</summary>
+    public TextSelectionViewModel TextSelection { get; }
+
+    /// <summary>"Tìm kiếm" (Ctrl+F, F3, Shift+F3).</summary>
+    public SearchViewModel Search { get; }
+
+    /// <summary>Annotating: marking text, notes, selecting, moving and deleting annotations of the session.</summary>
+    public AnnotationToolsViewModel Annotations { get; }
+
+    /// <summary>"Bình luận": every comment of the document, with their conversations.</summary>
+    public CommentsViewModel Comments { get; }
+
+    /// <summary>"Sửa nội dung": the drawings of the pages, edited in the viewer.</summary>
+    public ContentEditorViewModel ContentEditor { get; }
+
+    /// <summary>Filling the document's form in the viewer.</summary>
+    public FormFillingViewModel Forms { get; }
 
     /// <summary>Objects wait in the page editor: saving, printing and closing apply them first.</summary>
     public bool HasPendingEdits => Editor.HasObjects;
@@ -320,11 +423,14 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             return;
         }
 
+        SignaturePlacement.Cancel();
+        Signatures.Cancel();
         Workspace.PagesChanged -= OnPagesChanged;
         Workspace.StatusChanged -= OnStatusChanged;
         Viewer.PropertyChanged -= OnViewerPropertyChanged;
         Editor.ApplyRequested -= OnEditorApplyRequested;
         Editor.PropertyChanged -= OnEditorPropertyChanged;
+        Search.Clear();
         if (Organizer is { } organizer)
         {
             organizer.SelectionChanged -= OnOrganizerSelectionChanged;
@@ -551,8 +657,13 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             FinishEditing();
         }
 
+        UpdateFormsActive();
         if (value)
         {
+            Annotations.StopTool();
+            ContentEditor.IsActive = false;
+            FormDesigner.IsActive = false;
+            Redaction.IsActive = false;
             if (Organizer is null)
             {
                 var organizer = _services.CreateOrganizer(Workspace, this);
@@ -641,6 +752,111 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             var description = Workspace.Describe(new Core.Sessions.HistoryRecord(ChangePageSizeOperation.OperationId, parameters, []), Workspace.Session.Plan);
             ContentChangeRequested?.Invoke(this, new ContentChangeRequest(_operations.Get<ChangePageSizeOperation>(), parameters, description));
         }
+    }
+
+    /// <summary>A change to the file (its annotations, its drawings): the window writes the next revision; false when not possible now.</summary>
+    private bool RequestContentChange(ContentChangeRequest request)
+    {
+        if (!CanChangeContent())
+        {
+            return false;
+        }
+
+        ContentChangeRequested?.Invoke(this, request);
+        return true;
+    }
+
+    /// <summary>"Hình mờ": the dialog with a live preview of the current page, then the window stamps the pages in the background.</summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private Task StampWatermarkAsync()
+        => StampAsync((context, preview, debouncers) => new WatermarkDialogViewModel(context, _operations.Get<WatermarkOperation>(), _services.FileDialogs, preview, debouncers));
+
+    /// <summary>"Nền trang": a colour or a picture under the content of the pages.</summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private Task StampBackgroundAsync()
+        => StampAsync((context, preview, debouncers) => new BackgroundDialogViewModel(context, _operations.Get<BackgroundOperation>(), _services.FileDialogs, preview, debouncers));
+
+    /// <summary>"Đầu & chân trang".</summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private Task StampHeaderFooterAsync()
+        => StampAsync((context, preview, debouncers) => new HeaderFooterDialogViewModel(context, _operations.Get<HeaderFooterOperation>(), preview, debouncers));
+
+    /// <summary>"Đánh số trang".</summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private Task StampPageNumbersAsync()
+        => StampAsync((context, preview, debouncers) => new PageNumbersDialogViewModel(context, _operations.Get<PageNumbersOperation>(), preview, debouncers));
+
+    /// <summary>
+    /// "Gỡ dấu": looks for the stamps PDF_Pro added to the document as displayed, then lets the user choose the kinds to
+    /// take off. A document without any is told so instead.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanStamp))]
+    private async Task RemoveStampsAsync()
+    {
+        if (_services.Stamps is not { } stamps)
+        {
+            return;
+        }
+
+        IReadOnlyDictionary<StampKind, int> found;
+        try
+        {
+            found = await stamps.ScanAsync(Workspace, CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is DocumentSaveException or IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            _logger.LogWarning("The stamps of a document could not be read: {ErrorType}", ex.GetType().Name);
+            await _messages.ShowErrorAsync(Strings.Stamp_Error_Title, Strings.Stamp_Error_Scan);
+            return;
+        }
+
+        if (found.Count == 0)
+        {
+            await _messages.ShowInfoAsync(Strings.RemoveStamps_Title, Strings.RemoveStamps_None);
+            return;
+        }
+
+        await StampAsync((context, preview, debouncers) => new RemoveStampsDialogViewModel(context, found, _operations.Get<RemoveStampsOperation>(), preview, debouncers));
+    }
+
+    /// <summary>Stamps change the content: objects waiting in the page editor are applied first.</summary>
+    private bool CanStamp() => _services.Stamps is not null && CanChangeContent();
+
+    /// <summary>Shows a stamp dialog; a confirmed choice is run by the window in the background as one undoable step.</summary>
+    private async Task StampAsync(Func<StampContext, IStampPreview, IDebouncerFactory, StampDialogViewModel> create)
+    {
+        if (_services.Stamps is not { } stamps || !CanStamp())
+        {
+            return;
+        }
+
+        var context = await StampContextAsync();
+        var dialog = create(context, stamps.CreatePreview(Workspace, context.CurrentPage), stamps.Debouncers);
+        await using (dialog)
+        {
+            if (_services.PageDialogs.ShowStamp(dialog) && dialog.Result is { } choice && CanStamp())
+            {
+                ContentChangeRequested?.Invoke(this, new ContentChangeRequest(choice.Operation, choice.Parameters, choice.Description));
+            }
+        }
+    }
+
+    /// <summary>The document's name and title, and the pages the dialog starts with (the organizer's selection, if any).</summary>
+    private async Task<StampContext> StampContextAsync()
+    {
+        string? title = null;
+        try
+        {
+            title = (await Document.GetMetadataAsync()).Title;
+        }
+        catch (PdfDocumentException ex)
+        {
+            _logger.LogWarning("The document title could not be read: {Failure}", ex.Failure);
+        }
+
+        IReadOnlyList<int> selected = IsOrganizing && Organizer is { } organizer ? organizer.SelectedIndices : [];
+        var current = selected.Count > 0 ? selected[0] : Math.Clamp(Viewer.CurrentPageIndex, 0, Viewer.PageCount - 1);
+        return new StampContext(Viewer.PageCount, Path.GetFileNameWithoutExtension(FileName), string.IsNullOrWhiteSpace(title) ? null : title, current, selected);
     }
 
     /// <summary>
@@ -878,7 +1094,35 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     private void OnPagesChanged(object? sender, EventArgs e)
     {
+        // Annotations and split marks leave the pages and their text alone: the selection and the search still hold.
+        var plan = Workspace.Session.Plan;
+        var samePages = plan.HasSamePages(_shownPlan);
+        _shownPlan = plan;
+        if (!samePages)
+        {
+            TextSelection.Clear();
+        }
+
         Viewer.SetDocument(Workspace.Pages);
+        if (!samePages)
+        {
+            Search.Invalidate();
+        }
+
+        Annotations.Refresh();
+        ContentEditor.Refresh();
+        FormDesigner.Refresh();
+        Redaction.OnPagesChanged();
+        if (samePages)
+        {
+            Forms.RefreshValues(); // a field was filled (or the filling undone): the inputs stay, keeping the focus
+        }
+        else
+        {
+            Forms.Refresh();
+        }
+
+        Comments.Invalidate();
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
         Editor.Refresh();
@@ -896,6 +1140,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         OnPropertyChanged(nameof(FilePath));
         OnPropertyChanged(nameof(FileName));
         OnPropertyChanged(nameof(IsDirty));
+        Signatures.Update();
         OnPropertyChanged(nameof(UndoToolTip));
         OnPropertyChanged(nameof(RedoToolTip));
         OnPropertyChanged(nameof(CanEditPages));
@@ -961,9 +1206,23 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     private void OnEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(PageEditorViewModel.IsActive))
+        {
+            UpdateFormsActive();
+        }
+
         if (e.PropertyName == nameof(PageEditorViewModel.IsActive) && Editor.IsActive)
         {
             EditorProperties ??= new OverlayPropertiesViewModel(Editor);
+            Annotations.StopTool(); // the page editor takes the mouse
+            ContentEditor.IsActive = false;
+            FormDesigner.IsActive = false;
+            Redaction.IsActive = false;
+        }
+
+        if (e.PropertyName == nameof(PageEditorViewModel.IsActive))
+        {
+            OnPropertyChanged(nameof(ShowsProperties));
         }
 
         if (e.PropertyName == nameof(PageEditorViewModel.HasObjects))
@@ -1008,6 +1267,15 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         AddShapeCommand.NotifyCanExecuteChanged();
         AddImageCommand.NotifyCanExecuteChanged();
         AddSignatureCommand.NotifyCanExecuteChanged();
+        StampWatermarkCommand.NotifyCanExecuteChanged();
+        StampBackgroundCommand.NotifyCanExecuteChanged();
+        StampHeaderFooterCommand.NotifyCanExecuteChanged();
+        StampPageNumbersCommand.NotifyCanExecuteChanged();
+        RemoveStampsCommand.NotifyCanExecuteChanged();
+        NotifyAnnotationCommands();
+        ToggleContentEditingCommand.NotifyCanExecuteChanged();
+        ToggleFormDesignCommand.NotifyCanExecuteChanged();
+        NotifyFormDataCommands();
     }
 }
 
@@ -1031,7 +1299,11 @@ internal sealed class DocumentTabFactory(
     ILoggerFactory loggers,
     ScreenFonts? screenFonts = null,
     ScreenImages? screenImages = null,
-    SignatureLibrary? signatures = null) : IDocumentTabFactory
+    SignatureLibrary? signatures = null,
+    IDocumentSaver? saver = null,
+    ISettingsService? settings = null,
+    IFormSource? forms = null,
+    Services.Security.ISignatureVerification? signatureChecks = null) : IDocumentTabFactory
 {
     /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
     public DocumentTabViewModel Create(DocumentWorkspace workspace)
@@ -1051,9 +1323,26 @@ internal sealed class DocumentTabFactory(
             (page, token) => LoadPreviewAsync(workspace, page, token),
             screenFonts,
             screenImages,
-            signatures);
+            signatures,
+            Stamps(),
+            AnnotationAuthor,
+            forms,
+            signatureChecks);
         return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
     }
+
+    /// <summary>The name in the settings, or the Windows user name when it is blank.</summary>
+    private string AnnotationAuthor()
+        => settings?.Current.AnnotationAuthor is { } name && !string.IsNullOrWhiteSpace(name) ? name.Trim() : Environment.UserName;
+
+    /// <summary>Previews and scans for the stamp dialogs; none (the stamp commands off) without a saver to write pages.</summary>
+    private StampServices? Stamps()
+        => saver is null
+            ? null
+            : new StampServices(
+                (w, page) => new StampPreview(w, page, saver, loader, renderer, loggers.CreateLogger<StampPreview>()),
+                debouncers,
+                (w, token) => DocumentStamps.ScanAsync(w, saver, token));
 
     /// <summary>A page as displayed, sharp enough for the crop preview box.</summary>
     private async Task<ImageSource?> LoadPreviewAsync(DocumentWorkspace workspace, VirtualPage page, CancellationToken cancellationToken)

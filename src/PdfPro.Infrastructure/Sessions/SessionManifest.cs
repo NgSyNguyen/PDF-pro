@@ -1,4 +1,7 @@
 using System.Text.Json;
+using PdfPro.Core.Annotations;
+using PdfPro.Core.Forms;
+using PdfPro.Core.Security;
 using PdfPro.Core.Sessions;
 
 namespace PdfPro.Infrastructure.Sessions;
@@ -53,7 +56,9 @@ public sealed record FileStampDto(long Length, DateTime LastWriteTimeUtc);
 
 public sealed record SourceDto(string Id, string File, SessionSourceKind Kind, int PageCount, string? DisplayName = null);
 
-public sealed record StateDto(string BaseSourceId, int Revision, IReadOnlyList<PageDto> Plan);
+/// <param name="FormValues">Values given in the session to the form's fields (absent when none).</param>
+/// <param name="Protection">The protection the document is saved with, without its passwords (absent when none).</param>
+public sealed record StateDto(string BaseSourceId, int Revision, IReadOnlyList<PageDto> Plan, IReadOnlyList<FormValue>? FormValues = null, ProtectionSetting? Protection = null);
 
 /// <param name="Source">Source id ("blank" for blank pages).</param>
 /// <param name="Page">0-based page index in the source.</param>
@@ -62,6 +67,7 @@ public sealed record StateDto(string BaseSourceId, int Revision, IReadOnlyList<P
 /// <param name="Key">Page key.</param>
 /// <param name="BlankSize">Width and height of a blank page, or null.</param>
 /// <param name="Split">Set when the page starts a file in a split by marks.</param>
+/// <param name="Annotations">Annotations added to the page in the session, or null for none.</param>
 public sealed record PageDto(
     string Source,
     int Page,
@@ -69,7 +75,8 @@ public sealed record PageDto(
     Guid Key,
     IReadOnlyList<double>? Crop = null,
     IReadOnlyList<double>? BlankSize = null,
-    SplitMarkDto? Split = null);
+    SplitMarkDto? Split = null,
+    IReadOnlyList<AnnotationItem>? Annotations = null);
 
 /// <param name="FileName">The file name the user chose for the file the page starts, or null.</param>
 public sealed record SplitMarkDto(string? FileName = null);

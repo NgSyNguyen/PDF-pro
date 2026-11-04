@@ -4,9 +4,12 @@ using NSubstitute.ExceptionExtensions;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Forms;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels;
+using PdfPro.Core.Forms;
+using PdfPro.Core.Geometry;
 using PdfPro.Core.Operations;
 using PdfPro.Infrastructure.Sessions;
 
@@ -171,6 +174,44 @@ public sealed partial class MainWindowViewModelTests
 
         _fileDialogs.Received(1).PickSavePath("a.pdf", Arg.Any<string?>());
         await DidNotSave();
+    }
+
+    [Theory]
+    [InlineData(DialogChoice.Primary, 1)]
+    [InlineData(DialogChoice.Cancel, 0)]
+    public async Task Save_RequiredFieldsStillEmpty_AreListedFirst(DialogChoice choice, int saves)
+    {
+        _forms.Form = new FormSnapshot(
+            FormType.AcroForm,
+            [
+                new FormField("hoTen", FormFieldKind.Text, null, [], FormFieldFlags.Required, [], [new FormWidget(0, new PdfRect(10, 10, 100, 30))], "Họ và tên"),
+                new FormField("ngaySinh", FormFieldKind.Text, "01/01/2000", [], FormFieldFlags.Required, [], [new FormWidget(0, new PdfRect(10, 40, 100, 60))]),
+            ]);
+        var (viewModel, _) = await CreateDirtyAsync();
+        var message = Format(Strings.Forms_Required_Message, 1, "• Họ và tên");
+        _messages.AskAsync(Strings.Forms_Required_Title, message, Strings.Forms_Required_Save, null, Strings.Forms_Required_Back).Returns(choice);
+        SaverMarksSaved();
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        await _messages.Received(1).AskAsync(Strings.Forms_Required_Title, message, Strings.Forms_Required_Save, null, Strings.Forms_Required_Back);
+        await _saver.ReceivedWithAnyArgs(saves).SaveAsync(default!, default!, default!, TestToken);
+    }
+
+    [Fact]
+    public async Task Save_FilledRequiredFields_AreNotAskedAbout()
+    {
+        _forms.Form = new FormSnapshot(
+            FormType.AcroForm,
+            [new FormField("hoTen", FormFieldKind.Text, null, [], FormFieldFlags.Required, [], [new FormWidget(0, new PdfRect(10, 10, 100, 30))])]);
+        var (viewModel, _) = await CreateDirtyAsync();
+        viewModel.ActiveDocument!.Forms.WidgetsOn(viewModel.ActiveDocument.Workspace.Pages.Pages[0].Key)[0].Text = "Lê Văn Bình";
+        SaverMarksSaved();
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        await _messages.DidNotReceive().AskAsync(Strings.Forms_Required_Title, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>());
+        await _saver.ReceivedWithAnyArgs(1).SaveAsync(default!, default!, default!, TestToken);
     }
 
     [Fact]

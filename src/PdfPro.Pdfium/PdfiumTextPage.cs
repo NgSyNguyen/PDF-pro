@@ -1,4 +1,6 @@
 using PDFiumCore;
+using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 using PdfPro.Pdfium.Native;
 
 namespace PdfPro.Pdfium;
@@ -42,9 +44,50 @@ public sealed class PdfiumTextPage : IDisposable
         return new string(chars);
     }
 
+    /// <summary>
+    /// Every character with its box in the page's PDF user space (the loose box: the font's ascent to descent, so a
+    /// line's characters share their top and bottom) and whether the extractor generated it (spaces and line ends
+    /// between words and lines) or it is a hyphen ending a line. Not normalized.
+    /// </summary>
+    public PageText GetLayer()
+    {
+        var native = Native;
+        var count = fpdf_text.FPDFTextCountChars(native);
+        if (count <= 0)
+        {
+            return PageText.Empty;
+        }
+
+        var chars = new TextChar[count];
+        using var box = new FS_RECTF_();
+        for (var i = 0; i < count; i++)
+        {
+            var code = fpdf_text.FPDFTextGetUnicode(native, i);
+            var generated = fpdf_text.FPDFTextIsGenerated(native, i) == 1;
+            var hyphen = fpdf_text.FPDFTextIsHyphen(native, i) == 1;
+            var rect = !generated && fpdf_text.FPDFTextGetLooseCharBox(native, i, box) != 0
+                ? new PdfRect(box.Left, box.Bottom, box.Right, box.Top)
+                : default;
+            chars[i] = new TextChar(CharText(code), rect, generated, hyphen);
+        }
+
+        return new PageText(chars);
+    }
+
     public void Dispose() => _handle.Dispose();
 
-    private FpdfTextpageT Native
+    /// <summary>
+    /// A character code as text. PDFium keeps UTF-16 units on Windows, so a character outside the basic plane arrives as
+    /// two surrogate halves, kept as they are (together they form the character again).
+    /// </summary>
+    private static string CharText(uint code) => code switch
+    {
+        <= 0xFFFF => ((char)code).ToString(),
+        <= 0x10FFFF => char.ConvertFromUtf32((int)code),
+        _ => "\uFFFD",
+    };
+
+    internal FpdfTextpageT Native
     {
         get
         {

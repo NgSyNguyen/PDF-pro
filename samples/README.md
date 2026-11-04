@@ -19,4 +19,6 @@ dotnet run --project tests/PdfPro.SampleGenerator
 | `vanban-vi.pdf` | 14 trang A4: 5 văn bản hành chính GIẢ (quyết định, công văn, tờ trình, biên bản, hợp đồng) liền nhau; trang đầu mỗi văn bản có quốc hiệu và dòng "Số: …" (trang 1, 4, 6, 8, 11), các trang sau không có; mỗi văn bản một bookmark cấp 1 có dấu và ký tự "/" | Tách theo văn bản (regex), theo bookmark tiếng Việt, đặt tên tệp (P4) |
 | `scan-vi.pdf` | 18 trang ảnh JPEG xám 90 DPI giả lập bản scan `vanban-vi.pdf` (không có lớp chữ): nền giấy, bụi, trang hơi nghiêng, trang 12 lộn ngược; tờ trắng phân cách ở trang 4, 7, 10, 14 (trang 7 có chữ thấm mờ từ mặt sau); văn bản bắt đầu ở trang 1, 5, 8, 11, 15 | Tách theo trang đánh dấu, theo trang trắng phân cách (P4); OCR, chỉnh nghiêng, nén (P10) |
 
-Các tệp còn lại trong SPEC (form, chữ ký số, bảng, so sánh, annotation, PII) được bổ sung ở các phase cần đến chúng.
+| `pii.pdf` | 2 trang A4 dữ liệu cá nhân GIẢ: số CCCD, điện thoại di động/cố định, email, số tài khoản, ngày sinh; dữ liệu còn nằm ở tác giả + từ khóa của thông tin tài liệu, tên bookmark (có mục con), một ghi chú dán và một liên kết `mailto:`. Lần đầu sinh trên Linux với Noto Sans/Serif thay Arial/Times (chương trình tạm dùng `PiiSample` của bộ sinh); sinh lại trên Windows ra Arial/Times với cùng nội dung | Xóa vĩnh viễn theo mẫu, dọn metadata/bookmark/chú thích/liên kết (P8) |
+
+Các tệp còn lại trong SPEC (form, chữ ký số, bảng, so sánh, annotation) được bổ sung ở các phase cần đến chúng.

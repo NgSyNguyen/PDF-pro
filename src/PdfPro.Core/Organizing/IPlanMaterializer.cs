@@ -21,9 +21,15 @@ public sealed record MaterializeRequest
 
     /// <summary>
     /// Passwords of protected sources by source id (merging protected files), in memory only. Checking that the
-    /// author allows taking their pages is the caller's job; the output is never encrypted.
+    /// author allows taking their pages is the caller's job; the output is only encrypted with <see cref="Security"/>.
     /// </summary>
     public IReadOnlyDictionary<string, string>? SourcePasswords { get; init; }
+
+    /// <summary>
+    /// The protection of the output (saving a protected document), or null for none — the plan's
+    /// <see cref="PagePlan.Protection"/> only names it: its passwords come from the caller, in memory only.
+    /// </summary>
+    public Security.DocumentSecurity? Security { get; init; }
 }
 
 /// <summary>Turns a page plan into a real PDF file (SPEC "PagePlan — tài liệu ảo": done on save and before content operations).</summary>

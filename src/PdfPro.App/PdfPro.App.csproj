@@ -58,6 +58,11 @@
     <Content Include="..\..\assets\fonts\Charm\OFL.txt" Link="Fonts\Charm-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- External tools fetched by tools/fetch-tools.ps1 (never committed) go next to the executable, in tools\. -->
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)..\..\tools\qpdf\bin\qpdf.exe')">
+    <Content Include="..\..\tools\qpdf\**\*" LinkBase="tools\qpdf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="PdfPro.App.Tests" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />

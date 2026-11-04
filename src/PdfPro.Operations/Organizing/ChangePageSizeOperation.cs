@@ -154,7 +154,7 @@ public sealed class ChangePageSizeOperation : PdfOperation<ChangePageSizeParams>
             MovedDestinations.Apply(document, transforms);
             cancellationToken.ThrowIfCancellationRequested();
             progress.Report(new OperationProgress(indices.Count, indices.Count, ResizeStage));
-            document.Save(output, closeStream: false);
+            Materializing.PdfWriting.Save(document, output);
         }
     }
 }

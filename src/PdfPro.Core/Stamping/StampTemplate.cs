@@ -129,6 +129,13 @@ public sealed class StampTemplate
         return true;
     }
 
+    /// <summary>A pattern that writes <paramref name="literal"/> as it is (braces doubled).</summary>
+    public static string Escape(string literal)
+    {
+        ArgumentNullException.ThrowIfNull(literal);
+        return literal.Replace("{", "{{", StringComparison.Ordinal).Replace("}", "}}", StringComparison.Ordinal);
+    }
+
     /// <exception cref="FormatException">The pattern is not valid.</exception>
     public static StampTemplate Parse(string pattern)
         => TryParse(pattern, out var template, out var error, out var token)

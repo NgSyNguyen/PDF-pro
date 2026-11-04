@@ -25,14 +25,17 @@ Before adding a package: state its name, license and reason, and add it below.
 | [bblanchon.PDFium.Win32](https://github.com/bblanchon/pdfium-binaries) (native `pdfium.dll`) | 157.0.8100 | Apache-2.0 (packaging) | Pre-built PDFium binaries (win-x64, win-arm64) |
 | [PDFium](https://pdfium.googlesource.com/pdfium/) | chromium/8100 | BSD-3-Clause, Apache-2.0 | PDF rendering, text, document structure |
 | [PDFsharp](https://github.com/empira/PDFsharp) | 6.2.4 | MIT | Writes page plans to PDF (page tree, rotation, CropBox, imported pages) in `PdfPro.Operations`; also generates `samples/`. **6.5.0+ is AGPL-3.0 — never upgrade beyond 6.2.x** (guarded by `LicenseGuardTests`). |
-| [System.Security.Cryptography.Pkcs](https://github.com/dotnet/runtime) | 10.0.13 | MIT | Pinned transitive dependency of PDFsharp (security fixes) |
+| [System.Security.Cryptography.Pkcs](https://github.com/dotnet/runtime) | 10.0.13 | MIT | Digital signatures (CMS, RFC 3161 timestamps) in PdfPro.Operations; also a dependency of PDFsharp (pinned for security fixes) |
+| [PdfPig](https://github.com/UglyToad/PdfPig) | 0.1.16 | Apache-2.0 | Second, independent text extractor: in `PdfPro.Operations` for the mandatory check after a redaction (no text may remain under a removed area, Phase 8) and the last way of repairing a damaged file (lenient parsing, pages copied — Phase 9), and in `PdfPro.Operations.Tests` (text PDF_Pro writes must read back exactly). Shipped with the application inside its folder (`UglyToad.PdfPig*.dll`). |
+| [SkiaSharp](https://github.com/mono/SkiaSharp) + SkiaSharp.NativeAssets.Win32 (native `libSkiaSharp.dll`) | 4.153.1 | MIT (bindings); Skia: BSD-3-Clause | JPEG decoding and encoding when compressing images (`optimize.compress`, Phase 9) in `PdfPro.Operations` |
 | [Noto Sans](https://github.com/notofonts/latin-greek-cyrillic) Regular, Bold, Italic, Bold Italic (`assets/fonts/NotoSans`, from [notofonts.github.io](https://github.com/notofonts/notofonts.github.io)) | hinted TTF, 2026-10 | SIL OFL 1.1 (`assets/fonts/NotoSans/OFL.txt`) | Vietnamese text PDF_Pro writes into documents (merge table of contents, labels, added text, stamps), embedded as subsets; shipped inside `PdfPro.Operations.dll` |
 | [Noto Serif](https://github.com/notofonts/latin-greek-cyrillic) Regular, Bold, Italic, Bold Italic (`assets/fonts/NotoSerif`, from [notofonts.github.io](https://github.com/notofonts/notofonts.github.io)) | hinted TTF, 2026-10 | SIL OFL 1.1 (`assets/fonts/NotoSerif/OFL.txt`) | Serif choice for text added to documents, embedded as subsets; inside `PdfPro.Operations.dll` |
 | [Be Vietnam Pro](https://github.com/bettergui/BeVietnamPro) Regular, Bold, Italic, Bold Italic (`assets/fonts/BeVietnamPro`, from [google/fonts](https://github.com/google/fonts/tree/main/ofl/bevietnampro)) | TTF, 2026-10 | SIL OFL 1.1 (`assets/fonts/BeVietnamPro/OFL.txt`) | Vietnamese-designed sans for text added to documents, embedded as subsets; inside `PdfPro.Operations.dll` |
 | [Charm](https://github.com/cadsondemak/charm) Regular, Bold (`assets/fonts/Charm`, from [google/fonts](https://github.com/google/fonts/tree/main/ofl/charm)) | TTF, 2026-10 | SIL OFL 1.1 (`assets/fonts/Charm/OFL.txt`) | Handwriting style for signatures typed by name (drawn into the signature picture); shipped as files in `Fonts` next to `PdfPro.exe`, with their OFL.txt |
+| [qpdf](https://github.com/qpdf/qpdf) (`qpdf.exe` and its DLLs, fetched by `tools/fetch-tools.ps1` into `tools/qpdf`, shipped next to `PdfPro.exe` in `tools\qpdf` with its license files) | 12.2.0 (msvc64) | Apache-2.0 | Fast Web View (linearize), object streams, cross-reference recovery of damaged files; run as a separate process (`IExternalToolRunner`), never linked |
 | [Dancing Script](https://github.com/impallari/DancingScript) Regular (`assets/fonts/DancingScript`) | OTF, 2026-10 | SIL OFL 1.1, Reserved Font Name "Dancing Script" (`assets/fonts/DancingScript/OFL.txt`); shipped unmodified | Handwriting style for signatures typed by name (drawn into the signature picture); shipped as files in `Fonts` next to `PdfPro.exe`, with their OFL.txt |
 
-### Libraries bundled inside PDFium
+### Libraries bundled inside PDFium (and, for JPEG, inside Skia)
 
 | Component | License |
 |---|---|
@@ -55,13 +58,13 @@ The complete license texts will be collected in this file before the first relea
 | [NSubstitute](https://github.com/nsubstitute/NSubstitute) | 6.2.0 | BSD-3-Clause | Test doubles |
 | [FlaUI.UIA3 / FlaUI.Core](https://github.com/FlaUI/FlaUI) | 5.0.0 | MIT | UI acceptance tests that drive the built app through UI Automation (`tests/PdfPro.App.UiTests`, run by hand) |
 | [Interop.UIAutomationClient](https://github.com/Roemer/UIAutomation-Interop) | 10.19041.0 | MIT | UI Automation COM interop (dependency of FlaUI.UIA3) |
+| [SkiaSharp.NativeAssets.Linux.NoDependencies](https://github.com/mono/SkiaSharp) | 4.153.1 | MIT; Skia: BSD-3-Clause | Skia's native library for running `PdfPro.Operations.Tests` in Linux containers |
 | Arial, Times New Roman (Windows fonts) | — | Monotype (embedding allowed) | Subsets embedded in the generated sample PDFs only |
-| [PdfPig](https://github.com/UglyToad/PdfPig) | 0.1.16 | Apache-2.0 | Second, independent text extractor in `PdfPro.Operations.Tests` (text PDF_Pro writes must read back exactly); shipped from Phase 6 (search, redaction) |
 
 Fonts installed on the user's computer are embedded (as subsets) into documents only when the font's own license
 bits (OS/2 `fsType`) allow editable embedding; PDF_Pro never ships them.
 
 ## Planned (added in later phases, listed here once added)
 
-SkiaSharp, OpenCvSharp4, Tesseract + tessdata, qpdf,
+OpenCvSharp4, Tesseract + tessdata,
 DiffPlex, tabula-sharp, ClosedXML, Velopack, BenchmarkDotNet.

@@ -8,6 +8,7 @@
     <File Path="THIRD_PARTY_NOTICES.md" />
   </Folder>
   <Folder Name="/docs/">
+    <File Path="docs/PROGRESS.md" />
     <File Path="docs/PROMPTS.md" />
     <File Path="docs/SPEC.md" />
   </Folder>

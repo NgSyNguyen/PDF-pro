@@ -9,6 +9,9 @@
   xmlns:controls="clr-namespace:PdfPro.App.Controls"
   xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
   xmlns:viewer="clr-namespace:PdfPro.App.ViewModels.Viewer"
+  xmlns:annotating="clr-namespace:PdfPro.App.ViewModels.Annotating"
+  xmlns:security="clr-namespace:PdfPro.App.ViewModels.Security"
+  xmlns:signing="clr-namespace:PdfPro.Operations.Signing;assembly=PdfPro.Operations"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
   d:DesignHeight="600"
@@ -130,7 +133,7 @@
       <!-- Segmented switch; icon above label so both fit the narrowest sidebar. -->
       <UniformGrid
         Margin="8"
-        Columns="2"
+        Columns="5"
         DataContext="{Binding Sidebar}"
         DockPanel.Dock="Top">
         <RadioButton
@@ -149,7 +152,9 @@
               Margin="0,2,0,0"
               HorizontalAlignment="Center"
               FontSize="12"
-              Text="{loc:Tr Sidebar_Thumbnails}" />
+              Text="{loc:Tr Sidebar_Thumbnails}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Thumbnails}" />
           </StackPanel>
         </RadioButton>
         <RadioButton
@@ -168,7 +173,72 @@
               Margin="0,2,0,0"
               HorizontalAlignment="Center"
               FontSize="12"
-              Text="{loc:Tr Sidebar_Bookmarks}" />
+              Text="{loc:Tr Sidebar_Bookmarks}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Bookmarks}" />
+          </StackPanel>
+        </RadioButton>
+        <RadioButton
+          Margin="2,0,0,0"
+          Padding="4,6"
+          HorizontalAlignment="Stretch"
+          HorizontalContentAlignment="Center"
+          AutomationProperties.AutomationId="SidebarSearch"
+          AutomationProperties.Name="{loc:Tr Sidebar_Search}"
+          GroupName="SidebarPanel"
+          IsChecked="{Binding IsSearchSelected}"
+          Style="{StaticResource {x:Type ToggleButton}}">
+          <StackPanel>
+            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Search24" />
+            <TextBlock
+              Margin="0,2,0,0"
+              HorizontalAlignment="Center"
+              FontSize="12"
+              Text="{loc:Tr Sidebar_Search}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Search}" />
+          </StackPanel>
+        </RadioButton>
+        <RadioButton
+          Margin="2,0,0,0"
+          Padding="4,6"
+          HorizontalAlignment="Stretch"
+          HorizontalContentAlignment="Center"
+          AutomationProperties.AutomationId="SidebarComments"
+          AutomationProperties.Name="{loc:Tr Sidebar_Comments}"
+          GroupName="SidebarPanel"
+          IsChecked="{Binding IsCommentsSelected}"
+          Style="{StaticResource {x:Type ToggleButton}}">
+          <StackPanel>
+            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="CommentMultiple24" />
+            <TextBlock
+              Margin="0,2,0,0"
+              HorizontalAlignment="Center"
+              FontSize="12"
+              Text="{loc:Tr Sidebar_Comments}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Comments}" />
+          </StackPanel>
+        </RadioButton>
+        <RadioButton
+          Margin="2,0,0,0"
+          Padding="4,6"
+          HorizontalAlignment="Stretch"
+          HorizontalContentAlignment="Center"
+          AutomationProperties.AutomationId="SidebarSignatures"
+          AutomationProperties.Name="{loc:Tr Sidebar_Signatures}"
+          GroupName="SidebarPanel"
+          IsChecked="{Binding IsSignaturesSelected}"
+          Style="{StaticResource {x:Type ToggleButton}}">
+          <StackPanel>
+            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Certificate24" />
+            <TextBlock
+              Margin="0,2,0,0"
+              HorizontalAlignment="Center"
+              FontSize="12"
+              Text="{loc:Tr Sidebar_Signatures}"
+              TextTrimming="CharacterEllipsis"
+              ToolTip="{loc:Tr Sidebar_Signatures}" />
           </StackPanel>
         </RadioButton>
       </UniformGrid>
@@ -282,6 +352,500 @@
               </TreeView>
             </Grid>
           </Grid>
+        </Grid>
+
+        <!-- Search -->
+        <Grid Visibility="{Binding Sidebar.IsSearchSelected, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock
+            Style="{StaticResource SidebarMessage}"
+            Text="{loc:Tr Sidebar_SearchEmpty}"
+            Visibility="{Binding HasActiveDocument, Converter={StaticResource InverseBoolToVisibility}}" />
+          <DockPanel
+            Margin="8,0,8,8"
+            DataContext="{Binding ActiveDocument.Search}"
+            Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <DockPanel DockPanel.Dock="Top">
+              <ui:Button
+                Margin="4,0,0,0"
+                Padding="6"
+                AutomationProperties.AutomationId="SearchRun"
+                AutomationProperties.Name="{loc:Tr Search_Run}"
+                Command="{Binding SearchCommand}"
+                DockPanel.Dock="Right"
+                Icon="{ui:SymbolIcon Search24}"
+                ToolTip="{loc:Tr Search_Run}" />
+              <ui:TextBox
+                x:Name="SearchBox"
+                AutomationProperties.AutomationId="SearchQuery"
+                AutomationProperties.Name="{loc:Tr Search_Query}"
+                PlaceholderText="{loc:Tr Search_Query}"
+                Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}">
+                <ui:TextBox.InputBindings>
+                  <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                  <KeyBinding Key="Escape" Command="{Binding ClearCommand}" />
+                </ui:TextBox.InputBindings>
+              </ui:TextBox>
+            </DockPanel>
+            <WrapPanel Margin="0,6,0,0" DockPanel.Dock="Top">
+              <CheckBox
+                Margin="0,0,8,4"
+                AutomationProperties.AutomationId="SearchMatchCase"
+                Content="{loc:Tr Search_MatchCase}"
+                IsChecked="{Binding MatchCase}" />
+              <CheckBox
+                Margin="0,0,8,4"
+                AutomationProperties.AutomationId="SearchWholeWord"
+                Content="{loc:Tr Search_WholeWord}"
+                IsChecked="{Binding WholeWord}" />
+              <CheckBox
+                Margin="0,0,8,4"
+                AutomationProperties.AutomationId="SearchRegex"
+                Content="{loc:Tr Search_Regex}"
+                IsChecked="{Binding UseRegex}" />
+            </WrapPanel>
+            <DockPanel Margin="0,2,0,0" DockPanel.Dock="Top">
+              <TextBlock
+                Margin="0,0,6,0"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Text="{loc:Tr Search_Diacritics}" />
+              <ComboBox
+                AutomationProperties.AutomationId="SearchDiacritics"
+                AutomationProperties.Name="{loc:Tr Search_Diacritics}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding DiacriticsOptions}"
+                SelectedValue="{Binding Diacritics}"
+                SelectedValuePath="Value" />
+            </DockPanel>
+            <StackPanel Margin="0,8,0,4" DockPanel.Dock="Top">
+              <DockPanel>
+                <ui:Button
+                  Padding="6,2"
+                  AutomationProperties.AutomationId="SearchStop"
+                  Command="{Binding StopCommand}"
+                  Content="{loc:Tr Search_Stop}"
+                  DockPanel.Dock="Right"
+                  Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock
+                  VerticalAlignment="Center"
+                  AutomationProperties.AutomationId="SearchStatus"
+                  Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                  Text="{Binding StatusText}"
+                  TextWrapping="Wrap" />
+              </DockPanel>
+              <ProgressBar
+                Margin="0,4,0,0"
+                Maximum="1"
+                Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}"
+                Value="{Binding Progress, Mode=OneWay}" />
+              <TextBlock
+                AutomationProperties.AutomationId="SearchError"
+                Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                Text="{Binding ErrorText}"
+                TextWrapping="Wrap"
+                Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+              <TextBlock
+                Margin="0,4,0,0"
+                AutomationProperties.AutomationId="SearchScannedPages"
+                Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                Text="{Binding ScannedPagesText}"
+                TextWrapping="Wrap"
+                Visibility="{Binding ScannedPagesText, Converter={StaticResource NullToCollapsed}}" />
+            </StackPanel>
+            <ListBox
+              AutomationProperties.AutomationId="SearchResults"
+              AutomationProperties.Name="{loc:Tr Search_Results}"
+              Background="Transparent"
+              BorderThickness="0"
+              ItemsSource="{Binding Results}"
+              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+              SelectedItem="{Binding SelectedResult, Mode=TwoWay}"
+              VirtualizingPanel.IsVirtualizing="True"
+              VirtualizingPanel.VirtualizationMode="Recycling">
+              <ListBox.ItemContainerStyle>
+                <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                  <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+                  <Setter Property="Padding" Value="6,4" />
+                </Style>
+              </ListBox.ItemContainerStyle>
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type viewer:SearchResultViewModel}">
+                  <StackPanel>
+                    <TextBlock
+                      FontSize="11"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding PageLabel}" />
+                    <TextBlock TextWrapping="Wrap">
+                      <Run Text="{Binding Snippet.Before, Mode=OneWay}" /><Run
+                        Background="#66FFD700"
+                        FontWeight="SemiBold"
+                        Text="{Binding Snippet.Match, Mode=OneWay}" /><Run Text="{Binding Snippet.After, Mode=OneWay}" />
+                    </TextBlock>
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+        </Grid>
+
+        <!-- Comments -->
+        <Grid Visibility="{Binding Sidebar.IsCommentsSelected, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock
+            Style="{StaticResource SidebarMessage}"
+            Text="{loc:Tr Sidebar_CommentsEmpty}"
+            Visibility="{Binding HasActiveDocument, Converter={StaticResource InverseBoolToVisibility}}" />
+          <DockPanel
+            Margin="8,0,8,8"
+            DataContext="{Binding ActiveDocument.Comments}"
+            Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <DockPanel DockPanel.Dock="Top">
+              <ui:Button
+                Margin="4,0,0,0"
+                Padding="6"
+                AutomationProperties.AutomationId="CommentsExport"
+                AutomationProperties.Name="{loc:Tr Comments_Export}"
+                Command="{Binding ExportCommand}"
+                DockPanel.Dock="Right"
+                Icon="{ui:SymbolIcon ArrowExportUp24}"
+                ToolTip="{loc:Tr Comments_Export_ToolTip}" />
+              <ui:TextBox
+                AutomationProperties.AutomationId="CommentsSearch"
+                AutomationProperties.Name="{loc:Tr Comments_Search}"
+                PlaceholderText="{loc:Tr Comments_Search}"
+                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+            <StackPanel Margin="0,6,0,0" DockPanel.Dock="Top">
+              <ComboBox
+                Margin="0,0,0,4"
+                AutomationProperties.AutomationId="CommentsKind"
+                AutomationProperties.Name="{loc:Tr Comments_Filter_Kind}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding KindOptions}"
+                SelectedValue="{Binding KindFilter}"
+                SelectedValuePath="Value" />
+              <ComboBox
+                Margin="0,0,0,4"
+                AutomationProperties.AutomationId="CommentsAuthor"
+                AutomationProperties.Name="{loc:Tr Comments_Filter_Author}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding AuthorOptions}"
+                SelectedValue="{Binding AuthorFilter}"
+                SelectedValuePath="Value" />
+              <ComboBox
+                AutomationProperties.AutomationId="CommentsState"
+                AutomationProperties.Name="{loc:Tr Comments_Filter_State}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding StateOptions}"
+                SelectedValue="{Binding StateFilter}"
+                SelectedValuePath="Value" />
+              <TextBlock
+                Margin="0,8,0,0"
+                AutomationProperties.AutomationId="CommentsStatus"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="{Binding StatusText}"
+                TextWrapping="Wrap" />
+              <ProgressBar
+                Margin="0,4,0,4"
+                IsIndeterminate="True"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+            <ListBox
+              AutomationProperties.AutomationId="CommentsList"
+              AutomationProperties.Name="{loc:Tr Comments_Title}"
+              Background="Transparent"
+              BorderThickness="0"
+              ItemsSource="{Binding Items}"
+              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+              SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+              VirtualizingPanel.IsVirtualizing="True"
+              VirtualizingPanel.ScrollUnit="Pixel"
+              VirtualizingPanel.VirtualizationMode="Recycling">
+              <ListBox.ItemContainerStyle>
+                <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                  <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+                  <Setter Property="Padding" Value="6,6" />
+                  <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+              </ListBox.ItemContainerStyle>
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type annotating:CommentItemViewModel}">
+                  <StackPanel>
+                    <DockPanel>
+                      <TextBlock
+                        Margin="6,0,0,0"
+                        DockPanel.Dock="Right"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding PageLabel}" />
+                      <TextBlock
+                        FontWeight="SemiBold"
+                        Text="{Binding KindLabel}"
+                        TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <TextBlock
+                      FontSize="11"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding Byline}"
+                      TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                      Margin="0,2,0,0"
+                      FontSize="11"
+                      FontWeight="SemiBold"
+                      Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                      Text="{Binding StateText}"
+                      Visibility="{Binding StateText, Converter={StaticResource NullToCollapsed}}" />
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      FontStyle="Italic"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding MarkedText}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding HasMarkedText, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      Text="{Binding Contents}"
+                      TextWrapping="Wrap"
+                      Visibility="{Binding ShowsContents, Converter={StaticResource BoolToVisibility}}" />
+                    <!-- Rewriting the comment ("Sửa"). -->
+                    <StackPanel Margin="0,4,0,0" Visibility="{Binding IsEditingContents, Converter={StaticResource BoolToVisibility}}">
+                      <TextBox
+                        AcceptsReturn="True"
+                        AutomationProperties.AutomationId="CommentContentsText"
+                        AutomationProperties.Name="{loc:Tr Comments_Edit}"
+                        MaxHeight="160"
+                        Text="{Binding ContentsDraft, UpdateSourceTrigger=PropertyChanged}"
+                        TextWrapping="Wrap"
+                        VerticalScrollBarVisibility="Auto" />
+                      <StackPanel
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <ui:Button
+                          Margin="0,0,4,0"
+                          Padding="8,2"
+                          Appearance="Primary"
+                          AutomationProperties.AutomationId="CommentContentsSave"
+                          Command="{Binding SaveContentsCommand}"
+                          Content="{loc:Tr Comments_Save}" />
+                        <ui:Button
+                          Padding="8,2"
+                          AutomationProperties.AutomationId="CommentContentsCancel"
+                          Command="{Binding CancelEditContentsCommand}"
+                          Content="{loc:Tr Common_Cancel}" />
+                      </StackPanel>
+                    </StackPanel>
+                    <ItemsControl
+                      Margin="12,4,0,0"
+                      ItemsSource="{Binding Replies}"
+                      Visibility="{Binding HasReplies, Converter={StaticResource BoolToVisibility}}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <TextBlock Margin="0,2,0,0" TextWrapping="Wrap">
+                            <Run FontWeight="SemiBold" Text="{Binding Author, Mode=OneWay}" /><Run Text=": " /><Run Text="{Binding Contents, Mode=OneWay}" />
+                          </TextBlock>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock
+                      Margin="0,4,0,0"
+                      FontSize="11"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{loc:Tr Comments_FromFile}"
+                      Visibility="{Binding IsFromFile, Converter={StaticResource BoolToVisibility}}" />
+                    <!-- Answering, reviewing and deleting a comment, once it is chosen. -->
+                    <StackPanel Margin="0,6,0,0" Visibility="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Converter={StaticResource BoolToVisibility}}">
+                      <StackPanel Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibility}}">
+                        <DockPanel>
+                          <ui:Button
+                            Margin="4,0,0,0"
+                            Padding="6"
+                            AutomationProperties.AutomationId="CommentReply"
+                            AutomationProperties.Name="{loc:Tr Comments_Reply}"
+                            Command="{Binding ReplyCommand}"
+                            DockPanel.Dock="Right"
+                            Icon="{ui:SymbolIcon Send24}"
+                            ToolTip="{loc:Tr Comments_Reply}" />
+                          <TextBox
+                            AcceptsReturn="True"
+                            AutomationProperties.AutomationId="CommentReplyText"
+                            AutomationProperties.Name="{loc:Tr Comments_ReplyPlaceholder}"
+                            MaxHeight="120"
+                            Text="{Binding ReplyDraft, UpdateSourceTrigger=PropertyChanged}"
+                            TextWrapping="Wrap"
+                            ToolTip="{loc:Tr Comments_ReplyPlaceholder}"
+                            VerticalScrollBarVisibility="Auto" />
+                        </DockPanel>
+                        <WrapPanel Margin="0,4,0,0">
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentAccept"
+                            Command="{Binding SetStateCommand}"
+                            CommandParameter="Accepted"
+                            Content="{loc:Tr Comments_State_Accepted}"
+                            Icon="{ui:SymbolIcon Checkmark24}" />
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentReject"
+                            Command="{Binding SetStateCommand}"
+                            CommandParameter="Rejected"
+                            Content="{loc:Tr Comments_State_Rejected}"
+                            Icon="{ui:SymbolIcon Dismiss24}" />
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentComplete"
+                            Command="{Binding SetStateCommand}"
+                            CommandParameter="Completed"
+                            Content="{loc:Tr Comments_State_Completed}"
+                            Icon="{ui:SymbolIcon CheckmarkCircle24}" />
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentEdit"
+                            AutomationProperties.Name="{loc:Tr Comments_Edit}"
+                            Command="{Binding EditContentsCommand}"
+                            Icon="{ui:SymbolIcon Edit24}"
+                            ToolTip="{loc:Tr Comments_Edit}"
+                            Visibility="{Binding CanEditContents, Converter={StaticResource BoolToVisibility}}" />
+                          <ui:Button
+                            Margin="0,0,4,4"
+                            Padding="6,2"
+                            AutomationProperties.AutomationId="CommentDelete"
+                            AutomationProperties.Name="{loc:Tr Comments_Delete}"
+                            Command="{Binding DeleteCommand}"
+                            Icon="{ui:SymbolIcon Delete24}"
+                            ToolTip="{loc:Tr Comments_Delete}" />
+                        </WrapPanel>
+                      </StackPanel>
+                    </StackPanel>
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+        </Grid>
+
+        <!-- Signatures -->
+        <Grid Visibility="{Binding Sidebar.IsSignaturesSelected, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock
+            Style="{StaticResource SidebarMessage}"
+            Text="{loc:Tr Sidebar_SignaturesEmpty}"
+            Visibility="{Binding HasActiveDocument, Converter={StaticResource InverseBoolToVisibility}}" />
+          <DockPanel
+            Margin="8,0,8,8"
+            DataContext="{Binding ActiveDocument.Signatures}"
+            Visibility="{Binding DataContext.HasActiveDocument, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel DockPanel.Dock="Top">
+              <DockPanel>
+                <ui:Button
+                  Margin="4,0,0,0"
+                  Padding="6"
+                  AutomationProperties.AutomationId="SignaturesRefresh"
+                  AutomationProperties.Name="{loc:Tr Signatures_Refresh}"
+                  Command="{Binding RefreshCommand}"
+                  DockPanel.Dock="Right"
+                  Icon="{ui:SymbolIcon ArrowClockwise24}"
+                  ToolTip="{loc:Tr Signatures_Refresh}" />
+                <TextBlock
+                  VerticalAlignment="Center"
+                  AutomationProperties.AutomationId="SignaturesStatus"
+                  Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                  Text="{Binding StatusText}"
+                  TextWrapping="Wrap" />
+              </DockPanel>
+              <ProgressBar
+                Margin="0,4,0,4"
+                IsIndeterminate="True"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+              <TextBlock
+                Margin="0,6,0,0"
+                AutomationProperties.AutomationId="SignaturesUnsavedNote"
+                Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                Text="{loc:Tr Signatures_UnsavedNote}"
+                TextWrapping="Wrap"
+                Visibility="{Binding ShowsUnsavedNote, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+            <ListBox
+              Margin="0,6,0,0"
+              AutomationProperties.AutomationId="SignaturesList"
+              AutomationProperties.Name="{loc:Tr Sidebar_Signatures}"
+              Background="Transparent"
+              BorderThickness="0"
+              ItemsSource="{Binding Items}"
+              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+              SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+              <ListBox.ItemContainerStyle>
+                <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                  <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName}" />
+                  <Setter Property="Padding" Value="6,6" />
+                  <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+              </ListBox.ItemContainerStyle>
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type security:SignatureItemViewModel}">
+                  <StackPanel>
+                    <DockPanel>
+                      <ui:SymbolIcon
+                        x:Name="VerdictIcon"
+                        Margin="0,0,6,0"
+                        DockPanel.Dock="Left"
+                        Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                        Symbol="ShieldCheckmark24" />
+                      <TextBlock
+                        Margin="6,0,0,0"
+                        VerticalAlignment="Center"
+                        DockPanel.Dock="Right"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding PageLabel}" />
+                      <TextBlock
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Text="{Binding SignerName}"
+                        TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <TextBlock
+                      FontSize="11"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Text="{Binding Organization}"
+                      TextTrimming="CharacterEllipsis"
+                      Visibility="{Binding Organization, Converter={StaticResource NullToCollapsed}}" />
+                    <TextBlock
+                      x:Name="VerdictText"
+                      Margin="0,2,0,0"
+                      FontWeight="SemiBold"
+                      Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                      Text="{Binding VerdictText}" />
+                    <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding Details}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <TextBlock
+                            Margin="0,1,0,0"
+                            FontSize="12"
+                            Text="{Binding}"
+                            TextWrapping="Wrap" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding Verdict}" Value="{x:Static signing:SignatureVerdict.Warning}">
+                      <Setter TargetName="VerdictIcon" Property="Symbol" Value="Warning24" />
+                      <Setter TargetName="VerdictIcon" Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                      <Setter TargetName="VerdictText" Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Verdict}" Value="{x:Static signing:SignatureVerdict.Invalid}">
+                      <Setter TargetName="VerdictIcon" Property="Symbol" Value="ShieldError24" />
+                      <Setter TargetName="VerdictIcon" Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                      <Setter TargetName="VerdictText" Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
         </Grid>
       </Grid>
     </DockPanel>
