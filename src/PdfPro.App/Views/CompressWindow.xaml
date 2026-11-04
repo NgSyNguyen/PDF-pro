@@ -1,0 +1,292 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.CompressWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:optimizing="clr-namespace:PdfPro.App.ViewModels.Optimizing"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=optimizing:CompressViewModel}"
+  Title="{loc:Tr Compress_Title}"
+  Width="1000"
+  Height="680"
+  MinWidth="820"
+  MinHeight="560"
+  AutomationProperties.AutomationId="CompressWindow"
+  ExtendsContentIntoTitleBar="True"
+  ShowInTaskbar="False"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,8,0,4" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+    <!-- A preview page: fitted to its box, or pixel for pixel in a scrolling box. -->
+    <Style x:Key="PreviewScroller" TargetType="ScrollViewer">
+      <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+      <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding ShowActualSize}" Value="True">
+          <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+          <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="PreviewImage" TargetType="Image">
+      <Setter Property="Stretch" Value="Uniform" />
+      <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding ShowActualSize}" Value="True">
+          <Setter Property="Stretch" Value="None" />
+          <Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <ui:TitleBar
+      Title="{loc:Tr Compress_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <Grid Grid.Row="1" Margin="24,4,24,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="300" />
+        <ColumnDefinition Width="24" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <!-- Settings -->
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,8,12">
+          <TextBlock
+            FontWeight="SemiBold"
+            Text="{Binding FileName}"
+            TextTrimming="CharacterEllipsis"
+            ToolTip="{Binding FileName}" />
+          <TextBlock
+            Margin="0,2,0,0"
+            AutomationProperties.AutomationId="CompressOriginalSize"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{Binding OriginalSizeText}" />
+
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Compress_Preset}" />
+          <ListBox
+            AutomationProperties.AutomationId="CompressPresets"
+            AutomationProperties.Name="{loc:Tr Compress_Preset}"
+            ItemsSource="{Binding Presets}"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            SelectedValue="{Binding Preset}"
+            SelectedValuePath="Preset">
+            <ListBox.ItemContainerStyle>
+              <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                <Setter Property="AutomationProperties.AutomationId" Value="{Binding Preset, StringFormat=CompressPreset_{0}}" />
+                <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+              </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type optimizing:CompressPresetOption}">
+                <StackPanel Margin="0,4">
+                  <TextBlock FontWeight="SemiBold" Text="{Binding Label}" />
+                  <TextBlock
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding Details}"
+                    TextWrapping="Wrap" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <Grid Margin="0,4,0,0" Visibility="{Binding IsCustom, Converter={StaticResource BoolToVisibility}}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="12" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+              <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Compress_Dpi}" />
+              <TextBox
+                AutomationProperties.AutomationId="CompressDpi"
+                AutomationProperties.Name="{loc:Tr Compress_Dpi}"
+                Text="{Binding DpiText, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+              <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Compress_Quality}" />
+              <TextBox
+                AutomationProperties.AutomationId="CompressQuality"
+                AutomationProperties.Name="{loc:Tr Compress_Quality}"
+                Text="{Binding QualityText, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+          </Grid>
+
+          <TextBlock
+            Margin="0,12,0,0"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr Compress_Note}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- Preview -->
+      <Grid Grid.Column="2">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <WrapPanel VerticalAlignment="Center">
+          <TextBlock
+            Margin="0,0,8,0"
+            VerticalAlignment="Center"
+            Text="{loc:Tr Compress_PreviewPage}" />
+          <TextBox
+            Width="64"
+            Margin="0,0,4,0"
+            AutomationProperties.AutomationId="CompressPreviewPage"
+            AutomationProperties.Name="{loc:Tr Compress_PreviewPage}"
+            Text="{Binding PreviewPageText, UpdateSourceTrigger=PropertyChanged}" />
+          <TextBlock
+            Margin="0,0,12,0"
+            VerticalAlignment="Center"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{Binding PageCount, StringFormat=/ {0}}" />
+          <ui:Button
+            Margin="0,0,8,0"
+            AutomationProperties.AutomationId="CompressPreview"
+            Command="{Binding PreviewCommand}"
+            Content="{loc:Tr Compress_Preview}"
+            Icon="{ui:SymbolIcon Eye24}" />
+          <ui:Button
+            Margin="0,0,12,0"
+            AutomationProperties.AutomationId="CompressPreviewStop"
+            Command="{Binding PreviewCancelCommand}"
+            Content="{loc:Tr Compress_PreviewStop}"
+            Visibility="{Binding IsPreviewing, Converter={StaticResource BoolToVisibility}}" />
+          <CheckBox
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="CompressActualSize"
+            Content="{loc:Tr Compress_ActualSize}"
+            IsChecked="{Binding ShowActualSize}" />
+        </WrapPanel>
+
+        <Grid Grid.Row="1" Margin="0,12,0,4">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <TextBlock FontWeight="SemiBold" Text="{loc:Tr Compress_Before}" />
+          <TextBlock
+            Grid.Column="2"
+            FontWeight="SemiBold"
+            Text="{loc:Tr Compress_After}" />
+        </Grid>
+
+        <Grid Grid.Row="2">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Border
+            Background="{DynamicResource ControlFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1">
+            <ScrollViewer
+              x:Name="BeforeScroller"
+              ScrollChanged="OnPreviewScrolled"
+              Style="{StaticResource PreviewScroller}">
+              <Image
+                AutomationProperties.AutomationId="CompressBeforeImage"
+                Source="{Binding Before}"
+                Style="{StaticResource PreviewImage}" />
+            </ScrollViewer>
+          </Border>
+          <Border
+            Grid.Column="2"
+            Background="{DynamicResource ControlFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1">
+            <ScrollViewer
+              x:Name="AfterScroller"
+              ScrollChanged="OnPreviewScrolled"
+              Style="{StaticResource PreviewScroller}">
+              <Image
+                AutomationProperties.AutomationId="CompressAfterImage"
+                Source="{Binding After}"
+                Style="{StaticResource PreviewImage}" />
+            </ScrollViewer>
+          </Border>
+          <ui:ProgressRing
+            Grid.ColumnSpan="3"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsIndeterminate="True"
+            Visibility="{Binding IsPreviewing, Converter={StaticResource BoolToVisibility}}" />
+        </Grid>
+
+        <StackPanel Grid.Row="3" Margin="0,8,0,0">
+          <TextBlock
+            AutomationProperties.AutomationId="CompressPreviewSummary"
+            Text="{Binding PreviewSummary}"
+            TextWrapping="Wrap"
+            Visibility="{Binding PreviewSummary, Converter={StaticResource NullToCollapsed}}" />
+          <TextBlock
+            Margin="0,4,0,0"
+            Foreground="{DynamicResource SystemFillColorCautionBrush}"
+            Text="{loc:Tr Compress_PreviewStale}"
+            TextWrapping="Wrap"
+            Visibility="{Binding IsPreviewStale, Converter={StaticResource BoolToVisibility}}" />
+          <TextBlock
+            Margin="0,4,0,0"
+            AutomationProperties.AutomationId="CompressPreviewError"
+            Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+            Text="{Binding PreviewError}"
+            TextWrapping="Wrap"
+            Visibility="{Binding PreviewError, Converter={StaticResource NullToCollapsed}}" />
+        </StackPanel>
+      </Grid>
+    </Grid>
+
+    <StackPanel Grid.Row="2" Margin="24,12,24,24">
+      <TextBlock
+        AutomationProperties.AutomationId="CompressError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+      <StackPanel
+        Margin="0,12,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="CompressApply"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr Compress_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="CompressCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </Grid>
+</ui:FluentWindow>

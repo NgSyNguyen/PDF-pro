@@ -1411,4 +1411,45 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Redaction_Pending_SaveAnyway" xml:space="preserve"><value>Save, keep the marks</value></data>
   <data name="Redaction_Pending_Close" xml:space="preserve"><value>{0} area(s) are marked for redaction in "{1}" but not applied. Closing the document drops the marks.</value></data>
   <data name="Redaction_Pending_Drop" xml:space="preserve"><value>Drop the marks</value></data>
+  <data name="Cmd_Compress_ToolTip" xml:space="preserve"><value>Writes a smaller copy: pictures brought down to the size they are shown at, duplicates shared, structure optimized</value></data>
+  <data name="Compress_Title" xml:space="preserve"><value>Compress</value></data>
+  <data name="Compress_OriginalSize" xml:space="preserve"><value>Size now: {0}</value></data>
+  <data name="Compress_Preset" xml:space="preserve"><value>Preset</value></data>
+  <data name="Compress_Preset_Screen" xml:space="preserve"><value>Screen</value></data>
+  <data name="Compress_Preset_Screen_Details" xml:space="preserve"><value>Pictures at 96 DPI, JPEG quality 60 — smallest, for screens and email</value></data>
+  <data name="Compress_Preset_Ebook" xml:space="preserve"><value>eBook</value></data>
+  <data name="Compress_Preset_Ebook_Details" xml:space="preserve"><value>Pictures at 150 DPI, JPEG quality 75 — for reading on computers and tablets; scanned text stays clear</value></data>
+  <data name="Compress_Preset_Print" xml:space="preserve"><value>Print</value></data>
+  <data name="Compress_Preset_Print_Details" xml:space="preserve"><value>Pictures at 300 DPI, JPEG quality 85 — keeps print quality</value></data>
+  <data name="Compress_Preset_Archive" xml:space="preserve"><value>Archive</value></data>
+  <data name="Compress_Preset_Archive_Details" xml:space="preserve"><value>Nothing lost: duplicates shared, lossless recompression, structure optimized</value></data>
+  <data name="Compress_Preset_Custom" xml:space="preserve"><value>Custom</value></data>
+  <data name="Compress_Preset_Custom_Details" xml:space="preserve"><value>Choose the resolution and the JPEG quality</value></data>
+  <data name="Compress_Dpi" xml:space="preserve"><value>Resolution (DPI)</value></data>
+  <data name="Compress_Quality" xml:space="preserve"><value>JPEG quality</value></data>
+  <data name="Compress_Note" xml:space="preserve"><value>Pictures are only brought down when shown finer than 1.5 × the chosen resolution. Black-and-white pictures (scanned text) stay 1-bit. If the compressed copy is not smaller, the document is kept as it is.</value></data>
+  <data name="Compress_PreviewPage" xml:space="preserve"><value>Preview page</value></data>
+  <data name="Compress_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Compress_PreviewStop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Compress_ActualSize" xml:space="preserve"><value>Actual size (100 %)</value></data>
+  <data name="Compress_Before" xml:space="preserve"><value>Before</value></data>
+  <data name="Compress_After" xml:space="preserve"><value>After</value></data>
+  <data name="Compress_PreviewStale" xml:space="preserve"><value>The settings changed — press Preview again.</value></data>
+  <data name="Compress_Preview_Sizes" xml:space="preserve"><value>Page {0} on its own: {1} → {2}, {3} smaller.</value></data>
+  <data name="Compress_Preview_Kept" xml:space="preserve"><value>Page {0} on its own ({1}): not smaller when compressed, it stays as it is.</value></data>
+  <data name="Compress_Preview_Images" xml:space="preserve"><value>{0} pictures brought down, {1} pictures coded anew.</value></data>
+  <data name="Compress_Error_Dpi" xml:space="preserve"><value>The resolution must be a whole number from 36 to 1200.</value></data>
+  <data name="Compress_Error_Quality" xml:space="preserve"><value>The JPEG quality must be a whole number from 10 to 100.</value></data>
+  <data name="Compress_Error_Page" xml:space="preserve"><value>The preview page must be between 1 and {0}.</value></data>
+  <data name="Compress_Error_Preview" xml:space="preserve"><value>This page cannot be previewed.</value></data>
+  <data name="Compress_Apply" xml:space="preserve"><value>Compress…</value></data>
+  <data name="Compress_Error_Title" xml:space="preserve"><value>The file could not be compressed</value></data>
+  <data name="Compress_Name" xml:space="preserve"><value>{0} (compressed)</value></data>
+  <data name="Compress_Progress" xml:space="preserve"><value>Compressing "{0}"…</value></data>
+  <data name="Compress_Done" xml:space="preserve"><value>Compressed: "{0}"</value></data>
+  <data name="Compress_Done_Title" xml:space="preserve"><value>Compression finished</value></data>
+  <data name="Compress_Done_Message" xml:space="preserve"><value>"{0}": {1} → {2}, {3} smaller.</value></data>
+  <data name="Compress_Done_Details" xml:space="preserve"><value>{0} pictures brought down, {1} pictures coded anew, {2} duplicate copies shared, {3} other streams compressed better.</value></data>
+  <data name="Compress_Kept_Message" xml:space="preserve"><value>Compressing did not make the file smaller ({1}), so "{0}" is an unchanged copy of the document.</value></data>
+  <data name="Compress_Open" xml:space="preserve"><value>Open the file</value></data>
 </root>

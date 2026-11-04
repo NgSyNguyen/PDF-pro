@@ -1411,4 +1411,45 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Redaction_Pending_SaveAnyway" xml:space="preserve"><value>Lưu, giữ đánh dấu</value></data>
   <data name="Redaction_Pending_Close" xml:space="preserve"><value>Có {0} vùng đánh dấu xóa chưa áp dụng trong "{1}". Đóng tài liệu sẽ bỏ các đánh dấu này.</value></data>
   <data name="Redaction_Pending_Drop" xml:space="preserve"><value>Bỏ đánh dấu</value></data>
+  <data name="Cmd_Compress_ToolTip" xml:space="preserve"><value>Ghi một bản sao nhỏ hơn: ảnh giảm độ phân giải theo kích thước hiển thị thật, dữ liệu trùng dùng chung, cấu trúc được tối ưu</value></data>
+  <data name="Compress_Title" xml:space="preserve"><value>Nén tài liệu</value></data>
+  <data name="Compress_OriginalSize" xml:space="preserve"><value>Dung lượng hiện tại: {0}</value></data>
+  <data name="Compress_Preset" xml:space="preserve"><value>Mức nén</value></data>
+  <data name="Compress_Preset_Screen" xml:space="preserve"><value>Màn hình</value></data>
+  <data name="Compress_Preset_Screen_Details" xml:space="preserve"><value>Ảnh 96 DPI, JPEG chất lượng 60 — nhỏ nhất, để xem trên màn hình, gửi email</value></data>
+  <data name="Compress_Preset_Ebook" xml:space="preserve"><value>eBook</value></data>
+  <data name="Compress_Preset_Ebook_Details" xml:space="preserve"><value>Ảnh 150 DPI, JPEG chất lượng 75 — đọc trên máy tính, máy tính bảng; chữ scan vẫn rõ</value></data>
+  <data name="Compress_Preset_Print" xml:space="preserve"><value>In ấn</value></data>
+  <data name="Compress_Preset_Print_Details" xml:space="preserve"><value>Ảnh 300 DPI, JPEG chất lượng 85 — giữ chất lượng in</value></data>
+  <data name="Compress_Preset_Archive" xml:space="preserve"><value>Lưu trữ</value></data>
+  <data name="Compress_Preset_Archive_Details" xml:space="preserve"><value>Không giảm chất lượng: chỉ dùng chung dữ liệu trùng, nén lại không mất dữ liệu, tối ưu cấu trúc</value></data>
+  <data name="Compress_Preset_Custom" xml:space="preserve"><value>Tùy chỉnh</value></data>
+  <data name="Compress_Preset_Custom_Details" xml:space="preserve"><value>Tự chọn độ phân giải và chất lượng JPEG</value></data>
+  <data name="Compress_Dpi" xml:space="preserve"><value>Độ phân giải (DPI)</value></data>
+  <data name="Compress_Quality" xml:space="preserve"><value>Chất lượng JPEG</value></data>
+  <data name="Compress_Note" xml:space="preserve"><value>Ảnh chỉ bị giảm độ phân giải khi hiển thị mịn hơn 1,5 lần mức đã chọn. Ảnh đen trắng (scan văn bản) giữ nguyên 1-bit. Nếu bản nén không nhỏ hơn, tài liệu được giữ nguyên.</value></data>
+  <data name="Compress_PreviewPage" xml:space="preserve"><value>Xem thử trang</value></data>
+  <data name="Compress_Preview" xml:space="preserve"><value>Xem thử</value></data>
+  <data name="Compress_PreviewStop" xml:space="preserve"><value>Dừng</value></data>
+  <data name="Compress_ActualSize" xml:space="preserve"><value>Xem thực tế (100 %)</value></data>
+  <data name="Compress_Before" xml:space="preserve"><value>Trước</value></data>
+  <data name="Compress_After" xml:space="preserve"><value>Sau</value></data>
+  <data name="Compress_PreviewStale" xml:space="preserve"><value>Đã đổi lựa chọn — bấm Xem thử để xem lại.</value></data>
+  <data name="Compress_Preview_Sizes" xml:space="preserve"><value>Trang {0} (tách riêng): {1} → {2}, giảm {3}.</value></data>
+  <data name="Compress_Preview_Kept" xml:space="preserve"><value>Trang {0} (tách riêng, {1}): nén không nhỏ hơn, sẽ giữ nguyên.</value></data>
+  <data name="Compress_Preview_Images" xml:space="preserve"><value>{0} ảnh giảm độ phân giải, {1} ảnh được mã hóa lại.</value></data>
+  <data name="Compress_Error_Dpi" xml:space="preserve"><value>Độ phân giải phải là số nguyên từ 36 đến 1200.</value></data>
+  <data name="Compress_Error_Quality" xml:space="preserve"><value>Chất lượng JPEG phải là số nguyên từ 10 đến 100.</value></data>
+  <data name="Compress_Error_Page" xml:space="preserve"><value>Trang xem thử phải từ 1 đến {0}.</value></data>
+  <data name="Compress_Error_Preview" xml:space="preserve"><value>Không xem thử được trang này.</value></data>
+  <data name="Compress_Apply" xml:space="preserve"><value>Nén…</value></data>
+  <data name="Compress_Error_Title" xml:space="preserve"><value>Không nén được</value></data>
+  <data name="Compress_Name" xml:space="preserve"><value>{0} (nén)</value></data>
+  <data name="Compress_Progress" xml:space="preserve"><value>Đang nén "{0}"…</value></data>
+  <data name="Compress_Done" xml:space="preserve"><value>Đã nén: "{0}"</value></data>
+  <data name="Compress_Done_Title" xml:space="preserve"><value>Đã nén xong</value></data>
+  <data name="Compress_Done_Message" xml:space="preserve"><value>"{0}": {1} → {2}, giảm {3}.</value></data>
+  <data name="Compress_Done_Details" xml:space="preserve"><value>{0} ảnh giảm độ phân giải, {1} ảnh được mã hóa lại, {2} bản sao trùng được dùng chung, {3} luồng dữ liệu khác được nén tốt hơn.</value></data>
+  <data name="Compress_Kept_Message" xml:space="preserve"><value>Nén không làm tệp nhỏ hơn ({1}), nên "{0}" là bản sao nguyên vẹn của tài liệu.</value></data>
+  <data name="Compress_Open" xml:space="preserve"><value>Mở tệp</value></data>
 </root>

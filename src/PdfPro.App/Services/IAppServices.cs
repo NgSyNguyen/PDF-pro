@@ -215,4 +215,7 @@ public interface IPageDialogService
 
     /// <summary>"Ký số": the certificate and how the signature shows; true when the user confirmed.</summary>
     bool ShowSign(ViewModels.Security.SignDialogViewModel viewModel);
+
+    /// <summary>"Nén": preset, sizes and a preview of one page before and after.</summary>
+    bool ShowCompress(ViewModels.Optimizing.CompressViewModel viewModel);
 }

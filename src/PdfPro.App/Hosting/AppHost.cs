@@ -148,7 +148,12 @@ internal static class AppHost
         services.AddOperation<LinearizeOperation>();
         services.AddOperation<RepairOperation>();
         services.AddOperation<CompressOperation>();
-        services.AddSingleton(sp => new OptimizingServices(sp.GetRequiredService<LinearizeOperation>(), sp.GetRequiredService<RepairOperation>()));
+        services.AddSingleton<ICompressPreviews, CompressPreviews>();
+        services.AddSingleton(sp => new OptimizingServices(
+            sp.GetRequiredService<LinearizeOperation>(),
+            sp.GetRequiredService<RepairOperation>(),
+            sp.GetRequiredService<CompressOperation>(),
+            sp.GetRequiredService<ICompressPreviews>()));
         services.AddSingleton(sp => new SigningServices(
             sp.GetRequiredService<ICertificateStore>(),
             sp.GetRequiredService<ITimestampClient>(),

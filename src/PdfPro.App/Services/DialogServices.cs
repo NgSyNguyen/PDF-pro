@@ -367,6 +367,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new SignWindow(viewModel));
     }
 
+    public bool ShowCompress(ViewModels.Optimizing.CompressViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new CompressWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

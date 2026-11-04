@@ -153,7 +153,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -841,7 +841,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Optimize,
                 [
-                    new("optimize.compress", Strings.Cmd_Compress, SymbolRegular.ArrowMinimize24),
+                    new("optimize.compress", Strings.Cmd_Compress, SymbolRegular.ArrowMinimize24, CompressCommand, Strings.Cmd_Compress_ToolTip),
                     new("optimize.linearize", Strings.Cmd_Linearize, SymbolRegular.GlobeArrowForward24, LinearizeCommand, Strings.Cmd_Linearize_ToolTip),
                     new("optimize.repair", Strings.Cmd_Repair, SymbolRegular.DocumentError24, RepairCommand, Strings.Cmd_Repair_ToolTip),
                     new("convert.toPdfA", Strings.Cmd_PdfA, SymbolRegular.Archive24),

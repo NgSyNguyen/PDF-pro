@@ -393,6 +393,7 @@ public sealed partial class MainWindowViewModel : IExitGuard
         SignBatchCommand.NotifyCanExecuteChanged();
         LinearizeCommand.NotifyCanExecuteChanged();
         RepairCommand.NotifyCanExecuteChanged();
+        CompressCommand.NotifyCanExecuteChanged();
     }
 
     private static string Format(string template, params object?[] arguments) => string.Format(CultureInfo.CurrentCulture, template, arguments);

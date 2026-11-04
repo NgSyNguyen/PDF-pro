@@ -3,14 +3,17 @@ using System.Text;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
+using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.ViewModels.Optimizing;
 using PdfPro.Core.ExternalTools;
 using PdfPro.Core.Operations;
+using PdfPro.Core.Text;
 using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.App.ViewModels;
 
-/// <summary>"Tối ưu cho web" (optimize.linearize) and "Sửa tệp hỏng" (optimize.repair).</summary>
+/// <summary>"Tối ưu cho web" (optimize.linearize), "Sửa tệp hỏng" (optimize.repair) and "Nén" (optimize.compress).</summary>
 public sealed partial class MainWindowViewModel
 {
     /// <summary>
@@ -60,7 +63,7 @@ public sealed partial class MainWindowViewModel
             var fileName = Path.GetFileName(output);
             await RunOptimizingAsync(
                 Format(Strings.Linearize_Progress, fileName),
-                token => optimizing.Linearize.WriteAsync(input, output, token),
+                (_, token) => optimizing.Linearize.WriteAsync(input, output, token),
                 Format(Strings.Linearize_Done, fileName),
                 Strings.Linearize_Error_Title);
         }
@@ -103,7 +106,7 @@ public sealed partial class MainWindowViewModel
         var fileName = Path.GetFileName(output);
         var done = await RunOptimizingAsync(
             Format(Strings.Repair_Progress, Path.GetFileName(input)),
-            async token => report = await optimizing.Repair.RepairAsync(input, output, token),
+            async (_, token) => report = await optimizing.Repair.RepairAsync(input, output, token),
             Format(Strings.Repair_Done, fileName),
             Strings.Repair_Error_Title);
         if (!done || report is null)
@@ -119,14 +122,115 @@ public sealed partial class MainWindowViewModel
     private bool CanRepair() => _optimizing is not null && _activeSave is null && !StatusBar.IsTaskRunning;
 
     /// <summary>
+    /// "Nén": the dialog (preset, size now, one page before and after) on the active document as it is shown, then a
+    /// smaller copy written in the background to a file the user names. A copy that would not be smaller is the original
+    /// unchanged, and the user is told so; otherwise the sizes and what was done, with an offer to open it.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanCompress))]
+    private async Task CompressAsync()
+    {
+        if (_optimizing is not { Compress: { } compress } optimizing || ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsReadOnly || document.Workspace.Protection is not null)
+        {
+            await _messages.ShowErrorAsync(Strings.Compress_Error_Title, Strings.Optimize_Error_Protected);
+            return;
+        }
+
+        if (!await ApplyPendingEditsAsync(document) || !Tabs.Contains(document))
+        {
+            return;
+        }
+
+        var (input, workingFolder) = await DocumentFileAsync(document, "compress");
+        try
+        {
+            if (input is null)
+            {
+                await _messages.ShowErrorAsync(Strings.Compress_Error_Title, Strings.Optimize_Error_Unreadable);
+                return;
+            }
+
+            var source = new CompressSource(
+                document.FileName,
+                input,
+                document.Viewer.PageCount,
+                document.Viewer.CurrentPageIndex,
+                Path.Combine(document.Workspace.WorkDirectory, "compress-preview"));
+            CompressParams parameters;
+            using (var dialog = new CompressViewModel(source, optimizing.Previews, _logger))
+            {
+                if (!_pageDialogs.ShowCompress(dialog) || dialog.Result is not { } chosen)
+                {
+                    return;
+                }
+
+                parameters = chosen;
+            }
+
+            var name = Format(Strings.Compress_Name, Path.GetFileNameWithoutExtension(document.FileName)) + ".pdf";
+            var output = _fileDialogs.PickSavePath(name, Path.GetDirectoryName(document.FilePath));
+            if (output is null)
+            {
+                return;
+            }
+
+            if (Documents.Any(d => d.IsSameFile(output)) || string.Equals(Path.GetFullPath(output), Path.GetFullPath(input), StringComparison.OrdinalIgnoreCase))
+            {
+                await _messages.ShowErrorAsync(Strings.Compress_Error_Title, Format(Strings.Save_AlreadyOpen, Path.GetFileName(output)));
+                return;
+            }
+
+            CompressReport? report = null;
+            var fileName = Path.GetFileName(output);
+            var done = await RunOptimizingAsync(
+                Format(Strings.Compress_Progress, document.FileName),
+                async (progress, token) => report = await compress.WriteAsync(input, output, parameters, progress, token),
+                Format(Strings.Compress_Done, fileName),
+                Strings.Compress_Error_Title);
+            if (!done || report is null)
+            {
+                return;
+            }
+
+            _logger.LogInformation(
+                "A file was compressed ({Preset}): {Saving:P0} smaller, {Resampled} images resampled, {Recompressed} recoded, kept original {Kept}",
+                parameters.Preset,
+                report.Saving,
+                report.ImagesResampled,
+                report.ImagesRecompressed,
+                report.KeptOriginal);
+            if (await _messages.AskAsync(Strings.Compress_Done_Title, CompressMessage(fileName, report), Strings.Compress_Open, null, Strings.Common_Close) == DialogChoice.Primary)
+            {
+                await OpenFilesAsync([output]);
+            }
+        }
+        finally
+        {
+            if (workingFolder is not null)
+            {
+                TryDeleteFolder(workingFolder);
+            }
+
+            TryDeleteFolder(Path.Combine(document.Workspace.WorkDirectory, "compress-preview"));
+        }
+    }
+
+    private bool CanCompress() => _optimizing?.Compress is not null && CanLinearize();
+
+    /// <summary>
     /// Runs <paramref name="work"/> in the background with progress and cancel in the status bar; failures are
     /// explained. True when it finished.
     /// </summary>
-    private async Task<bool> RunOptimizingAsync(string progressText, Func<CancellationToken, Task> work, string doneText, string errorTitle)
+    private async Task<bool> RunOptimizingAsync(string progressText, Func<IProgress<OperationProgress>, CancellationToken, Task> work, string doneText, string errorTitle)
     {
         await WaitForBackgroundWorkAsync(cancelPrint: false);
         var task = StatusBar.StartTask(progressText);
-        var running = Task.Run(() => work(task.Token), task.Token);
+        var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, progressText));
+        var running = Task.Run(() => work(progress, task.Token), task.Token);
         _activeSave = running;
         NotifySaveCommands();
         string error;
@@ -153,7 +257,7 @@ public sealed partial class MainWindowViewModel
             task.Complete(Strings.Optimize_FailedStatus);
             error = RepairFailure(ex);
         }
-        catch (Exception ex) when (ex is QpdfException or ExternalToolException or IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception ex) when (ex is QpdfException or ExternalToolException or IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
         {
             _logger.LogWarning("Optimizing a file failed: {ErrorType}", ex.GetType().Name);
             task.Complete(Strings.Optimize_FailedStatus);
@@ -202,6 +306,25 @@ public sealed partial class MainWindowViewModel
             _logger.LogWarning("The open document could not be written for {Purpose}: {ErrorType}", purpose, ex.GetType().Name);
             return (null, folder);
         }
+    }
+
+    /// <summary>"“a (nén).pdf”: 12 MB → 3,1 MB, giảm 74 %." and what was done, or that the original was kept.</summary>
+    private static string CompressMessage(string fileName, CompressReport report)
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        if (report.KeptOriginal)
+        {
+            return Format(Strings.Compress_Kept_Message, fileName, ByteSizeFormatter.Format(report.OriginalSize, culture));
+        }
+
+        return Format(
+                Strings.Compress_Done_Message,
+                fileName,
+                ByteSizeFormatter.Format(report.OriginalSize, culture),
+                ByteSizeFormatter.Format(report.CompressedSize, culture),
+                report.Saving.ToString("P0", culture))
+            + Environment.NewLine
+            + Format(Strings.Compress_Done_Details, report.ImagesResampled, report.ImagesRecompressed, report.SharedCopies, report.StreamsRecompressed);
     }
 
     private static string RepairFailure(RepairFailedException failure)
