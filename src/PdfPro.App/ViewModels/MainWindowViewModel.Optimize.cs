@@ -373,7 +373,7 @@ public sealed partial class MainWindowViewModel
             task.Complete(Strings.Optimize_FailedStatus);
             error = RepairFailure(ex);
         }
-        catch (Exception ex) when (ex is QpdfException or ExternalToolException or IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception ex) when (ex is QpdfException or ExternalToolException or IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or Pdfium.PdfDocumentException or OperationValidationException)
         {
             _logger.LogWarning("Optimizing a file failed: {ErrorType}", ex.GetType().Name);
             task.Complete(Strings.Optimize_FailedStatus);

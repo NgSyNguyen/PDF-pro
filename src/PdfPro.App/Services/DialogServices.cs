@@ -379,6 +379,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new GrayscaleWindow(viewModel));
     }
 
+    public bool ShowToImages(ViewModels.Converting.ToImagesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new ToImagesWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

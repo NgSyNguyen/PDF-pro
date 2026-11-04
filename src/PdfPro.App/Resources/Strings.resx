@@ -1473,4 +1473,30 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Grayscale_Done_AllPictures" xml:space="preserve"><value>Mọi trang là ảnh: chữ không còn chọn hay tìm được.</value></data>
   <data name="Grayscale_Done_Pictures" xml:space="preserve"><value>Trang {0} có thành phần không chuyển được nên đã thành ảnh xám (chữ ở các trang này không còn chọn được).</value></data>
   <data name="Grayscale_Done_Colored" xml:space="preserve"><value>Trang {0} vẫn còn chút màu sau khi chuyển. Hãy kiểm tra lại bằng mắt.</value></data>
+  <data name="Cmd_ToImages_ToolTip" xml:space="preserve"><value>Xuất các trang thành ảnh PNG, JPEG hoặc TIFF (một tệp nhiều trang hay mỗi trang một tệp)</value></data>
+  <data name="ToImages_Title" xml:space="preserve"><value>PDF sang ảnh</value></data>
+  <data name="ToImages_Format" xml:space="preserve"><value>Định dạng</value></data>
+  <data name="ToImages_Format_Png" xml:space="preserve"><value>PNG</value></data>
+  <data name="ToImages_Format_Jpeg" xml:space="preserve"><value>JPEG</value></data>
+  <data name="ToImages_Format_Tiff" xml:space="preserve"><value>TIFF</value></data>
+  <data name="ToImages_Transparent" xml:space="preserve"><value>Nền trong suốt (phần trang không vẽ gì)</value></data>
+  <data name="ToImages_Quality" xml:space="preserve"><value>Chất lượng JPEG (10–100)</value></data>
+  <data name="ToImages_Tiff_Colors" xml:space="preserve"><value>Màu của TIFF</value></data>
+  <data name="ToImages_Tiff_Color" xml:space="preserve"><value>Màu (nén LZW)</value></data>
+  <data name="ToImages_Tiff_Gray" xml:space="preserve"><value>Xám (nén LZW)</value></data>
+  <data name="ToImages_Tiff_BlackWhite" xml:space="preserve"><value>Đen trắng (nén CCITT G4, cho văn bản scan)</value></data>
+  <data name="ToImages_OneTiff" xml:space="preserve"><value>Gộp mọi trang vào một tệp TIFF</value></data>
+  <data name="ToImages_Dpi" xml:space="preserve"><value>Độ phân giải (DPI)</value></data>
+  <data name="ToImages_Size" xml:space="preserve"><value>Trang 1: {0} × {1} điểm ảnh</value></data>
+  <data name="ToImages_Folder" xml:space="preserve"><value>Lưu vào thư mục</value></data>
+  <data name="ToImages_Folder_Default" xml:space="preserve"><value>{0} (ảnh)</value></data>
+  <data name="ToImages_Folder_Pick_Title" xml:space="preserve"><value>Chọn thư mục lưu ảnh</value></data>
+  <data name="ToImages_Apply" xml:space="preserve"><value>Xuất ảnh</value></data>
+  <data name="ToImages_Error_Dpi" xml:space="preserve"><value>Độ phân giải phải là số nguyên từ 36 đến 1200.</value></data>
+  <data name="ToImages_Error_Quality" xml:space="preserve"><value>Chất lượng JPEG phải là số nguyên từ 10 đến 100.</value></data>
+  <data name="ToImages_Error_Folder" xml:space="preserve"><value>Hãy chọn một thư mục đầy đủ đường dẫn, ví dụ D:\Ảnh.</value></data>
+  <data name="ToImages_Error_Title" xml:space="preserve"><value>Không xuất được ảnh</value></data>
+  <data name="ToImages_Progress" xml:space="preserve"><value>Đang xuất ảnh các trang của "{0}"…</value></data>
+  <data name="ToImages_Done" xml:space="preserve"><value>Đã xuất ảnh vào "{0}"</value></data>
+  <data name="ToImages_Reduced" xml:space="preserve"><value>Trang {0} quá lớn ở độ phân giải đã chọn nên được xuất nhỏ hơn (tối đa 50 triệu điểm ảnh mỗi trang).</value></data>
 </root>

@@ -1473,4 +1473,30 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Grayscale_Done_AllPictures" xml:space="preserve"><value>Every page is a picture: text can no longer be selected or found.</value></data>
   <data name="Grayscale_Done_Pictures" xml:space="preserve"><value>Page(s) {0} had something that could not be converted and became grey pictures (their text can no longer be selected).</value></data>
   <data name="Grayscale_Done_Colored" xml:space="preserve"><value>Page(s) {0} still show some colour. Please check them.</value></data>
+  <data name="Cmd_ToImages_ToolTip" xml:space="preserve"><value>Writes the pages as PNG, JPEG or TIFF pictures (one multi-page file or one file per page)</value></data>
+  <data name="ToImages_Title" xml:space="preserve"><value>PDF to pictures</value></data>
+  <data name="ToImages_Format" xml:space="preserve"><value>Format</value></data>
+  <data name="ToImages_Format_Png" xml:space="preserve"><value>PNG</value></data>
+  <data name="ToImages_Format_Jpeg" xml:space="preserve"><value>JPEG</value></data>
+  <data name="ToImages_Format_Tiff" xml:space="preserve"><value>TIFF</value></data>
+  <data name="ToImages_Transparent" xml:space="preserve"><value>Transparent background (where the page paints nothing)</value></data>
+  <data name="ToImages_Quality" xml:space="preserve"><value>JPEG quality (10–100)</value></data>
+  <data name="ToImages_Tiff_Colors" xml:space="preserve"><value>TIFF colours</value></data>
+  <data name="ToImages_Tiff_Color" xml:space="preserve"><value>Colour (LZW)</value></data>
+  <data name="ToImages_Tiff_Gray" xml:space="preserve"><value>Grey (LZW)</value></data>
+  <data name="ToImages_Tiff_BlackWhite" xml:space="preserve"><value>Black and white (CCITT G4, for scanned text)</value></data>
+  <data name="ToImages_OneTiff" xml:space="preserve"><value>All pages in one TIFF file</value></data>
+  <data name="ToImages_Dpi" xml:space="preserve"><value>Resolution (DPI)</value></data>
+  <data name="ToImages_Size" xml:space="preserve"><value>Page 1: {0} × {1} pixels</value></data>
+  <data name="ToImages_Folder" xml:space="preserve"><value>Save in the folder</value></data>
+  <data name="ToImages_Folder_Default" xml:space="preserve"><value>{0} (pictures)</value></data>
+  <data name="ToImages_Folder_Pick_Title" xml:space="preserve"><value>Choose the folder for the pictures</value></data>
+  <data name="ToImages_Apply" xml:space="preserve"><value>Write pictures</value></data>
+  <data name="ToImages_Error_Dpi" xml:space="preserve"><value>The resolution must be a whole number from 36 to 1200.</value></data>
+  <data name="ToImages_Error_Quality" xml:space="preserve"><value>The JPEG quality must be a whole number from 10 to 100.</value></data>
+  <data name="ToImages_Error_Folder" xml:space="preserve"><value>Choose a folder with its full path, e.g. D:\Pictures.</value></data>
+  <data name="ToImages_Error_Title" xml:space="preserve"><value>The pictures could not be written</value></data>
+  <data name="ToImages_Progress" xml:space="preserve"><value>Writing the pages of "{0}" as pictures…</value></data>
+  <data name="ToImages_Done" xml:space="preserve"><value>Pictures written to "{0}"</value></data>
+  <data name="ToImages_Reduced" xml:space="preserve"><value>Page(s) {0} were too large at the chosen resolution and were written smaller (at most 50 megapixels a page).</value></data>
 </root>

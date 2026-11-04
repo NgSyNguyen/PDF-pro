@@ -221,4 +221,7 @@ public interface IPageDialogService
 
     /// <summary>"Thang xám": converting colours or making the pages pictures.</summary>
     bool ShowGrayscale(ViewModels.Optimizing.GrayscaleViewModel viewModel);
+
+    /// <summary>"PDF sang ảnh": format, resolution, pages and folder.</summary>
+    bool ShowToImages(ViewModels.Converting.ToImagesViewModel viewModel);
 }

@@ -153,7 +153,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -831,7 +831,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             [
                 new(Strings.Ribbon_Group_Export,
                 [
-                    new("convert.toImages", Strings.Cmd_ToImages, SymbolRegular.Image24),
+                    new("convert.toImages", Strings.Cmd_ToImages, SymbolRegular.Image24, ToImagesCommand, Strings.Cmd_ToImages_ToolTip),
                     new("convert.toText", Strings.Cmd_ToText, SymbolRegular.DocumentText24),
                 ]),
                 new(Strings.Ribbon_Group_Import,

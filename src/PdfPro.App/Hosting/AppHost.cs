@@ -149,13 +149,15 @@ internal static class AppHost
         services.AddOperation<RepairOperation>();
         services.AddOperation<CompressOperation>();
         services.AddOperation<GrayscaleOperation>();
+        services.AddOperation<Operations.Converting.ToImagesOperation>();
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),
             sp.GetRequiredService<RepairOperation>(),
             sp.GetRequiredService<CompressOperation>(),
             sp.GetRequiredService<ICompressPreviews>(),
-            sp.GetRequiredService<GrayscaleOperation>()));
+            sp.GetRequiredService<GrayscaleOperation>(),
+            sp.GetRequiredService<Operations.Converting.ToImagesOperation>()));
         services.AddSingleton(sp => new SigningServices(
             sp.GetRequiredService<ICertificateStore>(),
             sp.GetRequiredService<ITimestampClient>(),

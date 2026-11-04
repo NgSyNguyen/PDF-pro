@@ -5,6 +5,7 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels;
+using PdfPro.App.ViewModels.Converting;
 using PdfPro.App.ViewModels.Optimizing;
 using PdfPro.Core.ExternalTools;
 using PdfPro.Core.Text;
@@ -218,6 +219,41 @@ public sealed partial class MainWindowViewModelTests
             Strings.Compress_Open,
             Arg.Is<string?>(p => p == null),
             Strings.Common_Close);
+    }
+
+    [Fact]
+    public async Task ToImages_WritesThePages_IntoTheChosenFolder_AndOpensIt()
+    {
+        var (viewModel, path) = await CreateWithPhotoAsync();
+        var folder = Path.Combine(Path.GetDirectoryName(path)!, Format(Strings.ToImages_Folder_Default, "ảnh"));
+        ToImagesViewModel? shown = null;
+        _pageDialogs.ShowToImages(Arg.Any<ToImagesViewModel>()).Returns(call =>
+        {
+            shown = call.Arg<ToImagesViewModel>();
+            shown.IsJpeg = true;
+            shown.DpiText = "72";
+            shown.ApplyCommand.Execute(null);
+            return true;
+        });
+
+        await viewModel.ToImagesCommand.ExecuteAsync(null);
+
+        shown.ShouldNotBeNull().OutputFolder.ShouldBe(folder, "the folder proposed is next to the document");
+        Directory.GetFiles(folder).Select(Path.GetFileName).ShouldBe(["ảnh-001.jpg"]);
+        _shell.Received(1).OpenFolder(folder);
+        viewModel.StatusBar.TaskText.ShouldBe(Format(Strings.ToImages_Done, folder));
+    }
+
+    [Fact]
+    public async Task ToImages_CancelledInTheDialog_WritesNothing()
+    {
+        var (viewModel, path) = await CreateWithPhotoAsync();
+        _pageDialogs.ShowToImages(Arg.Any<ToImagesViewModel>()).Returns(false);
+
+        await viewModel.ToImagesCommand.ExecuteAsync(null);
+
+        Directory.Exists(Path.Combine(Path.GetDirectoryName(path)!, Format(Strings.ToImages_Folder_Default, "ảnh"))).ShouldBeFalse();
+        _shell.DidNotReceive().OpenFolder(Arg.Any<string>());
     }
 
     /// <summary>"ảnh.pdf" (a page with a 400 DPI photograph) open and saved; qpdf is not installed.</summary>

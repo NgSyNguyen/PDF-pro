@@ -74,4 +74,43 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         PdfFile.PageTexts(grey).ShouldBe(PdfFile.PageTexts(path), "converting the colours keeps the text");
         Sha256(path).ShouldBe(original, "the document's own file is not touched");
     }
+
+    [Fact]
+    public void ThePages_BecomeOneMultiPageTiff_InTheChosenFolder()
+    {
+        RequireEnabled();
+        var path = _folder.Copy("basic-vi.pdf");
+        var folder = Path.Combine(_folder.Documents, "ảnh trang");
+        using var app = AppUnderTest.Start(_folder, path);
+        app.WaitForTab("basic-vi.pdf", Long);
+
+        app.Ribbon("convert", "convert.toImages");
+        var dialog = app.WaitForWindow(Text("ToImages_Title"));
+        app.Select("ToImagesTiff", dialog);
+        app.SetText("ToImagesDpi", "100", dialog);
+        app.SetText("ToImagesFolder", folder, dialog);
+        app.SetChecked("ToImagesOpenFolder", false, dialog);
+        app.Invoke("ToImagesApply", dialog);
+        var tiff = Path.Combine(folder, "basic-vi.tif");
+        var elapsed = AppUnderTest.WaitUntil(() => File.Exists(tiff), Long, "the TIFF file");
+        app.WaitForStatus(Format("ToImages_Done", folder), Long);
+        output.WriteLine($"6 pages at 100 DPI as one TIFF: {elapsed.TotalMilliseconds:N0} ms, {new FileInfo(tiff).Length:N0} bytes");
+
+        TiffPages(File.ReadAllBytes(tiff)).ShouldBe(PdfFile.PageCount(path));
+        Directory.GetFiles(folder).ShouldBe([tiff], "no temporary file is left");
+    }
+
+    /// <summary>The number of directories (pages) of a little-endian TIFF.</summary>
+    private static int TiffPages(byte[] file)
+    {
+        var pages = 0;
+        var offset = BitConverter.ToUInt32(file, 4);
+        while (offset != 0 && pages < 10_000)
+        {
+            pages++;
+            offset = BitConverter.ToUInt32(file, (int)offset + 2 + (12 * BitConverter.ToUInt16(file, (int)offset)));
+        }
+
+        return pages;
+    }
 }
