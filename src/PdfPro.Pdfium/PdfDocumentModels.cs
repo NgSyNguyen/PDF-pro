@@ -96,4 +96,10 @@ public sealed record PageRenderOptions
 
     /// <summary>Extra clockwise quarter turns on top of the page's own /Rotate (used by the page plan).</summary>
     public int ExtraQuarterTurns { get; init; }
+
+    /// <summary>
+    /// Leave what the page does not paint transparent (BGRA, alpha not premultiplied) instead of white; the bitmap
+    /// is BGRx otherwise.
+    /// </summary>
+    public bool Transparent { get; init; }
 }

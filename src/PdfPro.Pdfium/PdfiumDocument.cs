@@ -225,7 +225,7 @@ public sealed partial class PdfiumDocument : IDisposable
             throw new ArgumentOutOfRangeException(nameof(options), region.Area, "The requested bitmap is too large; render a region instead.");
         }
 
-        var bitmap = fpdfview.FPDFBitmapCreate(region.Width, region.Height, 0);
+        var bitmap = fpdfview.FPDFBitmapCreate(region.Width, region.Height, options.Transparent ? 1 : 0);
         if (bitmap is null || bitmap.__Instance == IntPtr.Zero)
         {
             throw new InsufficientMemoryException("PDFium could not allocate the page bitmap.");
@@ -234,7 +234,7 @@ public sealed partial class PdfiumDocument : IDisposable
         var handle = new BitmapSafeHandle(_gate, bitmap);
         try
         {
-            fpdfview.FPDFBitmapFillRect(bitmap, 0, 0, region.Width, region.Height, 0xFFFFFFFF);
+            fpdfview.FPDFBitmapFillRect(bitmap, 0, 0, region.Width, region.Height, options.Transparent ? 0x00FFFFFF : 0xFFFFFFFF);
             fpdfview.FPDF_RenderPageBitmap(bitmap, page.Native, -region.X, -region.Y, pageWidth, pageHeight, quarterTurns, ToNativeFlags(options.Flags));
             if (options.Flags.HasFlag(PdfRenderFlags.Annotations) && FormHandle() is { } form)
             {
