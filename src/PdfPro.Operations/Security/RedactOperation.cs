@@ -323,46 +323,16 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
     /// <summary>The page shows its picture and the boxes; its old content, resources and thumbnail are gone.</summary>
     private static void ReplaceContent(PdfDocument document, PdfPage page, RasterPage raster, IReadOnlyList<PdfRect> rects, RgbColor fill)
     {
-        var image = new PdfDictionary(document);
-        image.Elements.SetName("/Type", "/XObject");
-        image.Elements.SetName("/Subtype", "/Image");
-        image.Elements.SetInteger("/Width", raster.Width);
-        image.Elements.SetInteger("/Height", raster.Height);
-        image.Elements.SetName("/ColorSpace", raster.IsGray ? "/DeviceGray" : "/DeviceRGB");
-        image.Elements.SetInteger("/BitsPerComponent", 8);
-        image.CreateStream(raster.FlateData);
-        image.Elements.SetName("/Filter", "/FlateDecode");
-        document.Internals.AddObject(image);
-
-        // The picture covers the visible box as shown: its unit square goes to the shown page, then to PDF space.
-        var geometry = PageStamper.Geometry(page);
-        var shown = geometry.DisplaySize;
-        var m = new PdfMatrix(shown.Width, 0, 0, -shown.Height, 0, shown.Height).Then(new PageCoordinateMapper(geometry, 1).ScreenToPdfMatrix);
-        var content = new StringBuilder();
-        content.Append(CultureInfo.InvariantCulture, $"q {N(m.A)} {N(m.B)} {N(m.C)} {N(m.D)} {N(m.E)} {N(m.F)} cm {ImageName} Do Q\n");
-        content.Append(CultureInfo.InvariantCulture, $"q {N(fill.R / 255.0)} {N(fill.G / 255.0)} {N(fill.B / 255.0)} rg\n");
+        var boxes = new StringBuilder();
+        boxes.Append(CultureInfo.InvariantCulture, $"q {N(fill.R / 255.0)} {N(fill.G / 255.0)} {N(fill.B / 255.0)} rg\n");
         foreach (var rect in rects)
         {
-            content.Append(CultureInfo.InvariantCulture, $"{N(rect.Left)} {N(rect.Bottom)} {N(rect.Width)} {N(rect.Height)} re\n");
+            boxes.Append(CultureInfo.InvariantCulture, $"{N(rect.Left)} {N(rect.Bottom)} {N(rect.Width)} {N(rect.Height)} re\n");
         }
 
-        content.Append("f Q\n");
-        var stream = new PdfDictionary(document);
-        stream.CreateStream(Encoding.ASCII.GetBytes(content.ToString()));
-        document.Internals.AddObject(stream);
-        page.Elements["/Contents"] = stream.Reference!;
-
-        var xObjects = new PdfDictionary(document);
-        xObjects.Elements[ImageName] = image.Reference!;
-        var resources = new PdfDictionary(document);
-        resources.Elements["/XObject"] = xObjects;
-        page.Elements["/Resources"] = resources;
-
-        // Old pictures of the page, private data of the program that made it and page-level metadata could show the content.
-        foreach (var key in new[] { "/Thumb", "/PieceInfo", "/Metadata", "/StructParents", "/B" })
-        {
-            page.Elements.Remove(key);
-        }
+        boxes.Append("f Q\n");
+        var picture = new Materializing.PagePicture(raster.Width, raster.Height, raster.IsGray, raster.FlateData, "/FlateDecode");
+        Materializing.PagePictures.Replace(document, page, picture, ImageName, boxes.ToString());
     }
 
     /// <summary>The label in every box, upright as the page is shown, white on dark boxes; left out where it cannot fit.</summary>
