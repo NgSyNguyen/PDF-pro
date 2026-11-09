@@ -8,7 +8,7 @@ using PdfPro.Operations.Converting;
 
 namespace PdfPro.App.ViewModels;
 
-/// <summary>"PDF sang ảnh" (convert.toImages) and "Ảnh sang PDF" (convert.fromImages).</summary>
+/// <summary>"PDF sang ảnh" (convert.toImages), "Ảnh sang PDF" (convert.fromImages), "PDF sang văn bản" (convert.toText).</summary>
 public sealed partial class MainWindowViewModel
 {
     /// <summary>
@@ -133,6 +133,79 @@ public sealed partial class MainWindowViewModel
             await OpenFilesAsync([choice.OutputPath]);
         }
     }
+
+    /// <summary>
+    /// The dialog (plain text or Markdown, page split, pages, folder), then the text of the active document as it is
+    /// shown written in the background; pages that are only pictures are reported (they need OCR).
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanConvertToText))]
+    private async Task ToTextAsync()
+    {
+        if (_optimizing is not { ToText: { } toText } || ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsReadOnly || document.Workspace.Protection is not null)
+        {
+            await _messages.ShowErrorAsync(Strings.ToText_Error_Title, Strings.Optimize_Error_Protected);
+            return;
+        }
+
+        if (!await ApplyPendingEditsAsync(document) || !Tabs.Contains(document))
+        {
+            return;
+        }
+
+        var near = Path.GetDirectoryName(document.FilePath) is { Length: > 0 } folder ? folder : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        IReadOnlyList<int> selected = document.IsOrganizing && document.Organizer is { } organizer ? organizer.SelectedIndices : [];
+        var dialog = new ToTextViewModel(document.FileName, document.Viewer.PageCount, selected, near, _fileDialogs);
+        if (!_pageDialogs.ShowToText(dialog) || dialog.Result is not { } choice)
+        {
+            return;
+        }
+
+        var (input, workingFolder) = await DocumentFileAsync(document, "text");
+        try
+        {
+            if (input is null)
+            {
+                await _messages.ShowErrorAsync(Strings.ToText_Error_Title, Strings.Optimize_Error_Unreadable);
+                return;
+            }
+
+            ToTextResult? result = null;
+            var done = await RunOptimizingAsync(
+                Format(Strings.ToText_Progress, document.FileName),
+                async (progress, token) => result = await toText.WriteAsync(input, null, choice.OutputFolder, Path.GetFileNameWithoutExtension(document.FileName), choice.Parameters, progress, token),
+                Format(Strings.ToText_Done, choice.OutputFolder),
+                Strings.ToText_Error_Title);
+            if (!done || result is null)
+            {
+                return;
+            }
+
+            _logger.LogInformation("The text of a document was written ({Format}): {PageCount} pages, {Files} files, {Scans} pages without text", choice.Parameters.Format, result.PageCount, result.Files.Count, result.PagesWithoutText.Count);
+            if (result.PagesWithoutText.Count > 0)
+            {
+                await _messages.ShowInfoAsync(Strings.ToText_Title, Format(Strings.ToText_PagesWithoutText, PageRanges.Format(result.PagesWithoutText)));
+            }
+
+            if (choice.OpenFolder)
+            {
+                _shell.OpenFolder(choice.OutputFolder);
+            }
+        }
+        finally
+        {
+            if (workingFolder is not null)
+            {
+                TryDeleteFolder(workingFolder);
+            }
+        }
+    }
+
+    private bool CanConvertToText() => _optimizing?.ToText is not null && CanLinearize();
 
     private bool CanConvertFromImages() => _optimizing?.FromImages is not null && _activeSave is null && !StatusBar.IsTaskRunning;
 

@@ -1530,4 +1530,22 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="FromImages_Error_TooLarge" xml:space="preserve"><value>The picture "{0}" is too large (more than 200 megapixels).</value></data>
   <data name="FromImages_Progress" xml:space="preserve"><value>Making a PDF of {0} pictures…</value></data>
   <data name="FromImages_Done" xml:space="preserve"><value>Made "{0}"</value></data>
+  <data name="Cmd_ToText_ToolTip" xml:space="preserve"><value>Writes the text of the pages in reading order as TXT or Markdown</value></data>
+  <data name="ToText_Title" xml:space="preserve"><value>PDF to text</value></data>
+  <data name="ToText_Plain" xml:space="preserve"><value>Plain text (.txt)</value></data>
+  <data name="ToText_Plain_Details" xml:space="preserve"><value>Lines as on the page, a blank line between blocks of text</value></data>
+  <data name="ToText_Markdown" xml:space="preserve"><value>Markdown (.md)</value></data>
+  <data name="ToText_Markdown_Details" xml:space="preserve"><value>Each block a paragraph, large titles as headings — handy for Word, Notion, wikis</value></data>
+  <data name="ToText_Split" xml:space="preserve"><value>The pages</value></data>
+  <data name="ToText_PageBreaks" xml:space="preserve"><value>One file, with a break between pages</value></data>
+  <data name="ToText_OneFile" xml:space="preserve"><value>One file, the pages run on</value></data>
+  <data name="ToText_FilePerPage" xml:space="preserve"><value>One file per page</value></data>
+  <data name="ToText_Names" xml:space="preserve"><value>Will write: {0}</value></data>
+  <data name="ToText_Folder_Pick_Title" xml:space="preserve"><value>Choose the folder for the text</value></data>
+  <data name="ToText_Note" xml:space="preserve"><value>The text is put in reading order (one column, then the next) and normalised (NFC). Scanned pages that are only pictures have no text — they need OCR.</value></data>
+  <data name="ToText_Apply" xml:space="preserve"><value>Write the text</value></data>
+  <data name="ToText_Error_Title" xml:space="preserve"><value>The text could not be written</value></data>
+  <data name="ToText_Progress" xml:space="preserve"><value>Reading the text of "{0}"…</value></data>
+  <data name="ToText_Done" xml:space="preserve"><value>Text written to "{0}"</value></data>
+  <data name="ToText_PagesWithoutText" xml:space="preserve"><value>Page(s) {0} are only pictures (scans) and have no text to take. Run text recognition (OCR) on them first.</value></data>
 </root>

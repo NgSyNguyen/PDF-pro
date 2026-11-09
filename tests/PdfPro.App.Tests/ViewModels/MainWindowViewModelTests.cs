@@ -106,7 +106,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
                 "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
                 "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten",
-                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify", "convert.toImages", "convert.fromImages", "optimize.compress", "optimize.grayscale", "optimize.linearize", "optimize.repair"],
+                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify", "convert.toImages", "convert.toText", "convert.fromImages", "optimize.compress", "optimize.grayscale", "optimize.linearize", "optimize.repair"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -555,5 +555,6 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 new CompressOperation(new Qpdf(_tools, new QpdfOptions("qpdf"))),
                 Grayscale: new GrayscaleOperation(TestOperations.PdfiumGate),
                 ToImages: new Operations.Converting.ToImagesOperation(TestOperations.PdfiumGate),
-                FromImages: new Operations.Converting.FromImagesOperation()));
+                FromImages: new Operations.Converting.FromImagesOperation(),
+                ToText: new Operations.Converting.ToTextOperation()));
 }

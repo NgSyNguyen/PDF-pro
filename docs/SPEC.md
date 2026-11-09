@@ -569,6 +569,7 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Tệp có mật khẩu mở bằng mật khẩu (thiếu/sai → `DocumentPasswordException`). Trang **có ảnh mà không có chữ** → `PagesWithoutText` (bản scan — gợi ý OCR ở P10); trang trắng không báo.
 - Đọc hết các trang rồi mới ghi (trang hỏng → `InvalidDataException`, không ghi gì); tệp tạm cạnh đích rồi đổi tên; hủy/lỗi không để lại tệp.
 - Giới hạn: bảng ra thành các khối chữ (không giữ cột/ô), chữ dọc/xoay theo khối của Docstrum; chữ ẩn của lớp OCR được lấy như chữ thường.
+- App (lát 7b): ribbon Chuyển đổi › "Sang văn bản". Hộp thoại `ToTextWindow`: Văn bản thường (.txt: giữ dòng như trên trang) / Markdown (.md: mỗi khối một đoạn, tiêu đề lớn thành đề mục); các trang: một tệp có ngắt trang (mặc định) / một tệp nối liền / mỗi trang một tệp; áp dụng cho trang (tất cả / lẻ / chẵn / khoảng / đang chọn trong Sắp xếp); thư mục mặc định là thư mục của tài liệu, dòng "Sẽ ghi: …" cho thấy tên tệp; ghi đè; mở thư mục khi xong. Tài liệu có mật khẩu bị từ chối (như các lệnh Tối ưu); đối tượng chờ được áp dụng; tài liệu như đang hiển thị; chạy nền có tiến độ, hủy được; trang chỉ là ảnh scan → thông báo "cần nhận dạng chữ (OCR)" kèm khoảng trang. Đo (FlaUI): `vanban-vi` 14 trang → Markdown 0,55 s.
 
 ### Hệ tọa độ — nguồn bug số một
 

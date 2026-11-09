@@ -132,6 +132,32 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         Jpegs(pdf, 3).ShouldBe([jpegs[2], jpegs[1], jpegs[0]], "natural order, and each JPEG byte for byte");
     }
 
+    [Fact]
+    public void TheVietnameseText_IsWrittenAsMarkdown_InReadingOrder()
+    {
+        RequireEnabled();
+        var path = _folder.Copy("vanban-vi.pdf");
+        var folder = Path.Combine(_folder.Documents, "văn bản");
+        using var app = AppUnderTest.Start(_folder, path);
+        app.WaitForTab("vanban-vi.pdf", Long);
+
+        app.Ribbon("convert", "convert.toText");
+        var dialog = app.WaitForWindow(Text("ToText_Title"));
+        app.Select("ToTextMarkdown", dialog);
+        app.SetText("ToTextFolder", folder, dialog);
+        app.SetChecked("ToTextOpenFolder", false, dialog);
+        app.Invoke("ToTextApply", dialog);
+        var markdown = Path.Combine(folder, "vanban-vi.md");
+        var elapsed = AppUnderTest.WaitUntil(() => File.Exists(markdown), Long, "the Markdown file");
+        app.WaitForStatus(Format("ToText_Done", folder), Long);
+        output.WriteLine($"14 pages as Markdown: {elapsed.TotalMilliseconds:N0} ms");
+
+        var text = File.ReadAllText(markdown);
+        text.ShouldContain("VIỆT NAM");
+        text.ShouldBe(text.Normalize(System.Text.NormalizationForm.FormC), "NFC");
+        text.IndexOf("CỘNG HÒA", StringComparison.Ordinal).ShouldBeLessThan(text.IndexOf("Độc lập", StringComparison.Ordinal), "the national heading reads in order");
+    }
+
     /// <summary>The first <paramref name="count"/> JPEG images of a PDF's pages, as stored.</summary>
     private static List<byte[]> Jpegs(string path, int count)
     {

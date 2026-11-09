@@ -151,6 +151,7 @@ internal static class AppHost
         services.AddOperation<GrayscaleOperation>();
         services.AddOperation<Operations.Converting.ToImagesOperation>();
         services.AddOperation<Operations.Converting.FromImagesOperation>();
+        services.AddOperation<Operations.Converting.ToTextOperation>();
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),
@@ -159,7 +160,8 @@ internal static class AppHost
             sp.GetRequiredService<ICompressPreviews>(),
             sp.GetRequiredService<GrayscaleOperation>(),
             sp.GetRequiredService<Operations.Converting.ToImagesOperation>(),
-            sp.GetRequiredService<Operations.Converting.FromImagesOperation>()));
+            sp.GetRequiredService<Operations.Converting.FromImagesOperation>(),
+            sp.GetRequiredService<Operations.Converting.ToTextOperation>()));
         services.AddSingleton(sp => new SigningServices(
             sp.GetRequiredService<ICertificateStore>(),
             sp.GetRequiredService<ITimestampClient>(),

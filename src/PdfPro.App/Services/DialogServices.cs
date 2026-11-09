@@ -404,6 +404,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new FromImagesWindow(viewModel));
     }
 
+    public bool ShowToText(ViewModels.Converting.ToTextViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new ToTextWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

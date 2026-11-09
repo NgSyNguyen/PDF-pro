@@ -1530,4 +1530,22 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="FromImages_Error_TooLarge" xml:space="preserve"><value>Ảnh "{0}" quá lớn (hơn 200 triệu điểm ảnh).</value></data>
   <data name="FromImages_Progress" xml:space="preserve"><value>Đang tạo PDF từ {0} ảnh…</value></data>
   <data name="FromImages_Done" xml:space="preserve"><value>Đã tạo "{0}"</value></data>
+  <data name="Cmd_ToText_ToolTip" xml:space="preserve"><value>Lấy chữ của các trang theo thứ tự đọc ra tệp TXT hoặc Markdown</value></data>
+  <data name="ToText_Title" xml:space="preserve"><value>PDF sang văn bản</value></data>
+  <data name="ToText_Plain" xml:space="preserve"><value>Văn bản thường (.txt)</value></data>
+  <data name="ToText_Plain_Details" xml:space="preserve"><value>Giữ các dòng như trên trang, một dòng trống giữa các khối chữ</value></data>
+  <data name="ToText_Markdown" xml:space="preserve"><value>Markdown (.md)</value></data>
+  <data name="ToText_Markdown_Details" xml:space="preserve"><value>Mỗi khối chữ một đoạn, tiêu đề lớn thành đề mục — tiện dán vào Word, Notion, wiki</value></data>
+  <data name="ToText_Split" xml:space="preserve"><value>Các trang</value></data>
+  <data name="ToText_PageBreaks" xml:space="preserve"><value>Một tệp, có dấu ngắt giữa các trang</value></data>
+  <data name="ToText_OneFile" xml:space="preserve"><value>Một tệp, các trang nối liền</value></data>
+  <data name="ToText_FilePerPage" xml:space="preserve"><value>Mỗi trang một tệp</value></data>
+  <data name="ToText_Names" xml:space="preserve"><value>Sẽ ghi: {0}</value></data>
+  <data name="ToText_Folder_Pick_Title" xml:space="preserve"><value>Chọn thư mục lưu văn bản</value></data>
+  <data name="ToText_Note" xml:space="preserve"><value>Chữ được sắp theo thứ tự đọc (cột trước rồi cột sau) và chuẩn hóa tiếng Việt (NFC). Trang scan chỉ là ảnh thì chưa có chữ — cần nhận dạng chữ (OCR).</value></data>
+  <data name="ToText_Apply" xml:space="preserve"><value>Xuất văn bản</value></data>
+  <data name="ToText_Error_Title" xml:space="preserve"><value>Không xuất được văn bản</value></data>
+  <data name="ToText_Progress" xml:space="preserve"><value>Đang lấy chữ của "{0}"…</value></data>
+  <data name="ToText_Done" xml:space="preserve"><value>Đã xuất văn bản vào "{0}"</value></data>
+  <data name="ToText_PagesWithoutText" xml:space="preserve"><value>Trang {0} chỉ là ảnh (scan) nên không có chữ để lấy. Hãy nhận dạng chữ (OCR) cho các trang này trước.</value></data>
 </root>

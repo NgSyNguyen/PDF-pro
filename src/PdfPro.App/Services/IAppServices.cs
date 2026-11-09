@@ -232,4 +232,7 @@ public interface IPageDialogService
 
     /// <summary>"Ảnh sang PDF": the pictures, the page size and the PDF to write.</summary>
     bool ShowFromImages(ViewModels.Converting.FromImagesViewModel viewModel);
+
+    /// <summary>"PDF sang văn bản": format, page split, pages and folder.</summary>
+    bool ShowToText(ViewModels.Converting.ToTextViewModel viewModel);
 }

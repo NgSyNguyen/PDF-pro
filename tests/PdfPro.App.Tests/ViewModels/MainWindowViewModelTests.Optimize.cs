@@ -309,6 +309,47 @@ public sealed partial class MainWindowViewModelTests
         File.Exists(output).ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task ToText_WritesTheVietnameseText_NextToTheDocument()
+    {
+        var path = _fixture.CreateFile("văn bản.pdf", File.ReadAllBytes(Samples.Basic));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        _pageDialogs.ShowToText(Arg.Any<ToTextViewModel>()).Returns(call =>
+        {
+            call.Arg<ToTextViewModel>().ApplyCommand.Execute(null);
+            return true;
+        });
+
+        await viewModel.ToTextCommand.ExecuteAsync(null);
+
+        var text = File.ReadAllText(Path.Combine(Path.GetDirectoryName(path)!, "văn bản.txt"));
+        text.ShouldNotBeNullOrWhiteSpace();
+        text.ShouldBe(text.Normalize(System.Text.NormalizationForm.FormC), "NFC");
+        viewModel.StatusBar.TaskText.ShouldBe(Format(Strings.ToText_Done, Path.GetDirectoryName(path)));
+        await _messages.DidNotReceive().ShowInfoAsync(Strings.ToText_Title, Arg.Any<string>());
+        _shell.DidNotReceive().OpenFolder(Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task ToText_OfAScan_SaysThePagesNeedOcr()
+    {
+        var path = _fixture.CreateFile("scan.pdf", File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(Samples.Basic)!, "scan-vi.pdf")));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(18), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        _pageDialogs.ShowToText(Arg.Any<ToTextViewModel>()).Returns(call =>
+        {
+            call.Arg<ToTextViewModel>().ApplyCommand.Execute(null);
+            return true;
+        });
+
+        await viewModel.ToTextCommand.ExecuteAsync(null);
+
+        await _messages.Received(1).ShowInfoAsync(Strings.ToText_Title, Format(Strings.ToText_PagesWithoutText, "1-18"));
+    }
+
     /// <summary>A grey JPEG of <paramref name="width"/> × 50 pixels, without a resolution (96 DPI is used).</summary>
     private static string Jpeg(string folder, string name, int width)
     {
