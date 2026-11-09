@@ -1499,4 +1499,35 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="ToImages_Progress" xml:space="preserve"><value>Đang xuất ảnh các trang của "{0}"…</value></data>
   <data name="ToImages_Done" xml:space="preserve"><value>Đã xuất ảnh vào "{0}"</value></data>
   <data name="ToImages_Reduced" xml:space="preserve"><value>Trang {0} quá lớn ở độ phân giải đã chọn nên được xuất nhỏ hơn (tối đa 50 triệu điểm ảnh mỗi trang).</value></data>
+  <data name="Cmd_FromImages_ToolTip" xml:space="preserve"><value>Ghép nhiều ảnh (JPEG, PNG, TIFF nhiều trang…) thành một tệp PDF, mỗi ảnh một trang</value></data>
+  <data name="FromImages_Title" xml:space="preserve"><value>Ảnh sang PDF</value></data>
+  <data name="FromImages_Files_Header" xml:space="preserve"><value>Các ảnh, theo thứ tự trang</value></data>
+  <data name="FromImages_Summary" xml:space="preserve"><value>{0} ảnh</value></data>
+  <data name="FromImages_AddFiles" xml:space="preserve"><value>Thêm ảnh…</value></data>
+  <data name="FromImages_AddFolder" xml:space="preserve"><value>Thêm thư mục…</value></data>
+  <data name="FromImages_Pick_Title" xml:space="preserve"><value>Chọn ảnh</value></data>
+  <data name="FromImages_Folder_Pick_Title" xml:space="preserve"><value>Chọn thư mục chứa ảnh</value></data>
+  <data name="FromImages_Dialog_Filter" xml:space="preserve"><value>Ảnh (*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp)|*.jpg;*.jpeg;*.jpe;*.jfif;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp|Tất cả tệp (*.*)|*.*</value></data>
+  <data name="FromImages_PageSize" xml:space="preserve"><value>Khổ trang</value></data>
+  <data name="FromImages_FitImage" xml:space="preserve"><value>Theo kích thước ảnh</value></data>
+  <data name="FromImages_FitImage_Details" xml:space="preserve"><value>Mỗi trang đúng cỡ ảnh theo độ phân giải ghi trong ảnh (không có thì 96 DPI)</value></data>
+  <data name="FromImages_A4Fit" xml:space="preserve"><value>A4 vừa khít</value></data>
+  <data name="FromImages_A4Fit_Details" xml:space="preserve"><value>Ảnh phóng vừa khổ A4, trang xoay ngang khi ảnh nằm ngang</value></data>
+  <data name="FromImages_A4Margins" xml:space="preserve"><value>A4 có lề</value></data>
+  <data name="FromImages_Margin" xml:space="preserve"><value>Lề (mm)</value></data>
+  <data name="FromImages_Note" xml:space="preserve"><value>JPEG được đưa nguyên vào PDF, không giảm chất lượng; ảnh được xoay đứng theo EXIF; TIFF nhiều trang thành nhiều trang.</value></data>
+  <data name="FromImages_Output" xml:space="preserve"><value>Lưu thành</value></data>
+  <data name="FromImages_OpenWhenDone" xml:space="preserve"><value>Mở tệp PDF khi xong</value></data>
+  <data name="FromImages_Run" xml:space="preserve"><value>Tạo PDF</value></data>
+  <data name="FromImages_DefaultName" xml:space="preserve"><value>Ảnh</value></data>
+  <data name="FromImages_Error_None" xml:space="preserve"><value>Hãy thêm ít nhất một ảnh.</value></data>
+  <data name="FromImages_Error_Output" xml:space="preserve"><value>Hãy chọn nơi lưu tệp PDF (đường dẫn đầy đủ, đuôi .pdf).</value></data>
+  <data name="FromImages_Error_Margin" xml:space="preserve"><value>Lề phải là số từ 0 đến 50 mm.</value></data>
+  <data name="FromImages_Error_Folder" xml:space="preserve"><value>Không đọc được thư mục đã chọn.</value></data>
+  <data name="FromImages_Error_Title" xml:space="preserve"><value>Không tạo được PDF từ ảnh</value></data>
+  <data name="FromImages_Error_Unreadable" xml:space="preserve"><value>Không đọc được ảnh "{0}" (tệp hỏng hoặc không phải ảnh). Hãy bỏ ảnh này ra khỏi danh sách rồi thử lại.</value></data>
+  <data name="FromImages_Error_NotSupported" xml:space="preserve"><value>Ảnh "{0}" thuộc loại chưa hỗ trợ (ví dụ TIFF nén CCITT G3 hoặc chia ô, JPEG 12 bit). Hãy lưu lại ảnh dạng khác rồi thử lại.</value></data>
+  <data name="FromImages_Error_TooLarge" xml:space="preserve"><value>Ảnh "{0}" quá lớn (hơn 200 triệu điểm ảnh).</value></data>
+  <data name="FromImages_Progress" xml:space="preserve"><value>Đang tạo PDF từ {0} ảnh…</value></data>
+  <data name="FromImages_Done" xml:space="preserve"><value>Đã tạo "{0}"</value></data>
 </root>

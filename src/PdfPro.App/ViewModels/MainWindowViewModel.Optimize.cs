@@ -339,10 +339,17 @@ public sealed partial class MainWindowViewModel
 
     /// <summary>
     /// Runs <paramref name="work"/> in the background with progress and cancel in the status bar; failures are
-    /// explained. True when it finished.
+    /// explained (<paramref name="explain"/> gives the message of failures only this work has, or null). True when it
+    /// finished.
     /// </summary>
-    private async Task<bool> RunOptimizingAsync(string progressText, Func<IProgress<OperationProgress>, CancellationToken, Task> work, string doneText, string errorTitle)
+    private async Task<bool> RunOptimizingAsync(
+        string progressText,
+        Func<IProgress<OperationProgress>, CancellationToken, Task> work,
+        string doneText,
+        string errorTitle,
+        Func<Exception, string?>? explain = null)
     {
+        string? explained = null;
         await WaitForBackgroundWorkAsync(cancelPrint: false);
         var task = StatusBar.StartTask(progressText);
         var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, progressText));
@@ -366,6 +373,12 @@ public sealed partial class MainWindowViewModel
             _logger.LogWarning("qpdf is not installed");
             task.Complete(Strings.Optimize_FailedStatus);
             error = Strings.Optimize_Error_NoQpdf;
+        }
+        catch (Exception ex) when (explain is not null && (explained = explain(ex)) is not null)
+        {
+            _logger.LogWarning("A file tool failed: {ErrorType}", ex.GetType().Name);
+            task.Complete(Strings.Optimize_FailedStatus);
+            error = explained;
         }
         catch (RepairFailedException ex)
         {

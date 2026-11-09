@@ -100,6 +100,59 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         Directory.GetFiles(folder).ShouldBe([tiff], "no temporary file is left");
     }
 
+    [Fact]
+    public void AFolderOfScans_BecomesOnePdf_InNaturalOrder_WithTheJpegsUntouched()
+    {
+        RequireEnabled();
+        var folder = Path.Combine(_folder.Documents, "ảnh scan");
+        Directory.CreateDirectory(folder);
+        var jpegs = Jpegs(Sample("scan-vi.pdf"), 3);
+        string[] names = ["trang 10.jpg", "trang 2.jpg", "trang 1.jpg"];
+        for (var i = 0; i < names.Length; i++)
+        {
+            File.WriteAllBytes(Path.Combine(folder, names[i]), jpegs[i]);
+        }
+
+        var pdf = Path.Combine(_folder.Documents, "hồ sơ scan.pdf");
+        using var app = AppUnderTest.Start(_folder);
+
+        app.Ribbon("convert", "convert.fromImages");
+        var dialog = app.WaitForWindow(Text("FromImages_Title"));
+        app.Invoke("FromImagesAddFolder", dialog);
+        app.UseFileDialog(Text("FromImages_Folder_Pick_Title"), folder);
+        AppUnderTest.WaitUntil(() => app.ItemCount("FromImagesFiles", dialog) == 3, Long, "the three pictures in the list");
+        app.SetText("FromImagesOutput", pdf, dialog);
+        app.SetChecked("FromImagesOpenWhenDone", false, dialog);
+        app.Invoke("FromImagesRun", dialog);
+        var elapsed = AppUnderTest.WaitUntil(() => File.Exists(pdf), Long, "the PDF");
+        app.WaitForStatus(Format("FromImages_Done", Path.GetFileName(pdf)), Long);
+        output.WriteLine($"3 scanned JPEG pages into one PDF: {elapsed.TotalMilliseconds:N0} ms");
+
+        // trang 1, trang 2, trang 10: the files written as jpegs[2], jpegs[1], jpegs[0].
+        Jpegs(pdf, 3).ShouldBe([jpegs[2], jpegs[1], jpegs[0]], "natural order, and each JPEG byte for byte");
+    }
+
+    /// <summary>The first <paramref name="count"/> JPEG images of a PDF's pages, as stored.</summary>
+    private static List<byte[]> Jpegs(string path, int count)
+    {
+        using var document = PdfSharp.Pdf.IO.PdfReader.Open(path, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import);
+        var found = new List<byte[]>();
+        foreach (var page in document.Pages.Cast<PdfSharp.Pdf.PdfPage>())
+        {
+            var xObjects = page.Resources.Elements.GetDictionary("/XObject");
+            foreach (var item in xObjects?.Elements.Values ?? [])
+            {
+                if ((item as PdfSharp.Pdf.Advanced.PdfReference)?.Value is PdfSharp.Pdf.PdfDictionary image
+                    && image.Elements.GetName("/Filter") == "/DCTDecode" && found.Count < count)
+                {
+                    found.Add(image.Stream.Value);
+                }
+            }
+        }
+
+        return found;
+    }
+
     /// <summary>The number of directories (pages) of a little-endian TIFF.</summary>
     private static int TiffPages(byte[] file)
     {

@@ -836,7 +836,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Import,
                 [
-                    new("convert.fromImages", Strings.Cmd_FromImages, SymbolRegular.ImageMultiple24),
+                    new("convert.fromImages", Strings.Cmd_FromImages, SymbolRegular.ImageMultiple24, FromImagesCommand, Strings.Cmd_FromImages_ToolTip),
                     new("convert.officeToPdf", Strings.Cmd_FromOffice, SymbolRegular.DocumentArrowDown24),
                 ]),
                 new(Strings.Ribbon_Group_Optimize,

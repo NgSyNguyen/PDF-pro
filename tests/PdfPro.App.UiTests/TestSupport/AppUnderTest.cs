@@ -198,13 +198,17 @@ internal sealed partial class AppUnderTest : IDisposable
         return watch.Elapsed;
     }
 
-    /// <summary>Uses the Windows file dialog titled <paramref name="title"/>: types the path and confirms.</summary>
+    /// <summary>
+    /// Uses the Windows file or folder dialog titled <paramref name="title"/>: types the path and confirms (a folder
+    /// picker's box is "Folder:", id 1152).
+    /// </summary>
     public void UseFileDialog(string title, string path)
     {
         var dialog = WaitForWindow(title);
         var nameBox = WaitFor(
             () => dialog.FindFirstDescendant(cf => cf.ByAutomationId("1148").And(cf.ByClassName("Edit")))
-                ?? dialog.FindFirstDescendant(cf => cf.ByAutomationId("1001").And(cf.ByClassName("Edit"))),
+                ?? dialog.FindFirstDescendant(cf => cf.ByAutomationId("1001").And(cf.ByClassName("Edit")))
+                ?? dialog.FindFirstDescendant(cf => cf.ByAutomationId("1152").And(cf.ByClassName("Edit"))),
             DefaultTimeout,
             "the file name box");
         SendMessage(nameBox.Properties.NativeWindowHandle.Value, WmSetText, 0, path);

@@ -8,7 +8,7 @@ using PdfPro.Operations.Converting;
 
 namespace PdfPro.App.ViewModels;
 
-/// <summary>"PDF sang ảnh" (convert.toImages).</summary>
+/// <summary>"PDF sang ảnh" (convert.toImages) and "Ảnh sang PDF" (convert.fromImages).</summary>
 public sealed partial class MainWindowViewModel
 {
     /// <summary>
@@ -90,4 +90,62 @@ public sealed partial class MainWindowViewModel
     }
 
     private bool CanConvertToImages() => _optimizing?.ToImages is not null && CanLinearize();
+
+    /// <summary>
+    /// The dialog (pictures in order, page size, the PDF to write), then the PDF written in the background; a picture
+    /// that cannot be used is named. Needs no open document.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanConvertFromImages))]
+    private async Task FromImagesAsync()
+    {
+        if (_optimizing is not { FromImages: { } fromImages })
+        {
+            return;
+        }
+
+        var dialog = new FromImagesViewModel(_fileDialogs);
+        if (!_pageDialogs.ShowFromImages(dialog) || dialog.Result is not { } choice)
+        {
+            return;
+        }
+
+        if (Documents.Any(d => d.IsSameFile(choice.OutputPath)))
+        {
+            await _messages.ShowErrorAsync(Strings.FromImages_Error_Title, Format(Strings.Save_AlreadyOpen, Path.GetFileName(choice.OutputPath)));
+            return;
+        }
+
+        FromImagesResult? result = null;
+        var done = await RunOptimizingAsync(
+            Format(Strings.FromImages_Progress, choice.Files.Count),
+            async (progress, token) => result = await fromImages.WriteAsync(choice.Files, choice.OutputPath, choice.Parameters, progress, token),
+            Format(Strings.FromImages_Done, Path.GetFileName(choice.OutputPath)),
+            Strings.FromImages_Error_Title,
+            ex => ex is ImageFileException picture ? PictureProblem(picture, choice.Files) : null);
+        if (!done || result is null)
+        {
+            return;
+        }
+
+        _logger.LogInformation("Pictures were made a PDF: {PageCount} pages, {Jpegs} JPEG kept as they are", result.PageCount, result.JpegsKept);
+        if (choice.OpenWhenDone)
+        {
+            await OpenFilesAsync([choice.OutputPath]);
+        }
+    }
+
+    private bool CanConvertFromImages() => _optimizing?.FromImages is not null && _activeSave is null && !StatusBar.IsTaskRunning;
+
+    private static string PictureProblem(ImageFileException failure, IReadOnlyList<string> files)
+    {
+        var name = failure.FileIndex >= 0 && failure.FileIndex < files.Count ? Path.GetFileName(files[failure.FileIndex]) : string.Empty;
+        return Format(
+            failure.Problem switch
+            {
+                ImageFileProblem.NotSupported => Strings.FromImages_Error_NotSupported,
+                ImageFileProblem.TooLarge => Strings.FromImages_Error_TooLarge,
+                _ => Strings.FromImages_Error_Unreadable,
+            },
+            name);
+    }
 }

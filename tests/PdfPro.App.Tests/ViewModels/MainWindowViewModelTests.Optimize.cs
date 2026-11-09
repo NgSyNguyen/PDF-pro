@@ -256,6 +256,71 @@ public sealed partial class MainWindowViewModelTests
         _shell.DidNotReceive().OpenFolder(Arg.Any<string>());
     }
 
+    [Fact]
+    public async Task FromImages_MakesAPdf_OfThePicturesInOrder_AndOpensIt()
+    {
+        var folder = Directory.CreateDirectory(_fixture.CreateFolder("ảnh chụp")).FullName;
+        string[] pictures = [Jpeg(folder, "trang 2.jpg", 200), Jpeg(folder, "trang 1.jpg", 100)];
+        var output = Path.Combine(folder, "hồ sơ.pdf");
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(2), call.ArgAt<string>(0)));
+        _pageDialogs.ShowFromImages(Arg.Any<FromImagesViewModel>()).Returns(call =>
+        {
+            var dialog = call.Arg<FromImagesViewModel>();
+            dialog.AddPaths(pictures);
+            dialog.OutputPath = output;
+            dialog.RunCommand.Execute(null);
+            return true;
+        });
+        var viewModel = Create(isDebugBuild: false);
+
+        await viewModel.FromImagesCommand.ExecuteAsync(null);
+
+        using (var pdf = PdfReader.Open(output, PdfDocumentOpenMode.Import))
+        {
+            pdf.PageCount.ShouldBe(2);
+            pdf.Pages[0].Width.Point.ShouldBe(100 * 72 / 96.0, 0.01, "trang 1 comes first (natural order)");
+            pdf.Pages[1].Width.Point.ShouldBe(200 * 72 / 96.0, 0.01);
+        }
+
+        viewModel.StatusBar.TaskText.ShouldBe(Format(Strings.FromImages_Done, "hồ sơ.pdf"));
+        viewModel.ActiveDocument.ShouldNotBeNull().FilePath.ShouldBe(output, "the PDF opens when done");
+    }
+
+    [Fact]
+    public async Task FromImages_APictureThatCannotBeRead_IsNamed()
+    {
+        var folder = Directory.CreateDirectory(_fixture.CreateFolder("ảnh hỏng")).FullName;
+        var bad = Path.Combine(folder, "hỏng.jpg");
+        File.WriteAllBytes(bad, [0xFF, 0xD8, 0, 0]);
+        var output = Path.Combine(folder, "x.pdf");
+        _pageDialogs.ShowFromImages(Arg.Any<FromImagesViewModel>()).Returns(call =>
+        {
+            var dialog = call.Arg<FromImagesViewModel>();
+            dialog.AddPaths([Jpeg(folder, "tốt.jpg", 50), bad]);
+            dialog.OutputPath = output;
+            dialog.RunCommand.Execute(null);
+            return true;
+        });
+        var viewModel = Create(isDebugBuild: false);
+
+        await viewModel.FromImagesCommand.ExecuteAsync(null);
+
+        await _messages.Received(1).ShowErrorAsync(Strings.FromImages_Error_Title, Format(Strings.FromImages_Error_Unreadable, "hỏng.jpg"));
+        File.Exists(output).ShouldBeFalse();
+    }
+
+    /// <summary>A grey JPEG of <paramref name="width"/> × 50 pixels, without a resolution (96 DPI is used).</summary>
+    private static string Jpeg(string folder, string name, int width)
+    {
+        var encoder = new System.Windows.Media.Imaging.JpegBitmapEncoder();
+        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(System.Windows.Media.Imaging.BitmapSource.Create(
+            width, 50, 96, 96, System.Windows.Media.PixelFormats.Gray8, null, new byte[width * 50], width)));
+        var path = Path.Combine(folder, name);
+        using var file = File.Create(path);
+        encoder.Save(file);
+        return path;
+    }
+
     /// <summary>"ảnh.pdf" (a page with a 400 DPI photograph) open and saved; qpdf is not installed.</summary>
     private async Task<(MainWindowViewModel ViewModel, string Path)> CreateWithPhotoAsync()
     {

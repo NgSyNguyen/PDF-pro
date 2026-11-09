@@ -130,6 +130,11 @@ public interface IFileDialogService
     /// <returns>The chosen file, or null when cancelled.</returns>
     string? PickImageFile(string title);
 
+    /// <summary>Asks for pictures (JPEG, PNG, BMP, GIF, TIFF, WebP) to make a PDF of.</summary>
+    /// <param name="title">The dialog title.</param>
+    /// <returns>The chosen files, empty when cancelled.</returns>
+    IReadOnlyList<string> PickImageFiles(string title);
+
     /// <summary>Asks where to write the comments list: Markdown (.md) or CSV (.csv); overwriting asks for confirmation.</summary>
     /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
     /// <returns>The chosen path, or null when cancelled.</returns>
@@ -224,4 +229,7 @@ public interface IPageDialogService
 
     /// <summary>"PDF sang ảnh": format, resolution, pages and folder.</summary>
     bool ShowToImages(ViewModels.Converting.ToImagesViewModel viewModel);
+
+    /// <summary>"Ảnh sang PDF": the pictures, the page size and the PDF to write.</summary>
+    bool ShowFromImages(ViewModels.Converting.FromImagesViewModel viewModel);
 }

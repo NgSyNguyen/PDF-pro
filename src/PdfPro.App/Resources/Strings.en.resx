@@ -1499,4 +1499,35 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="ToImages_Progress" xml:space="preserve"><value>Writing the pages of "{0}" as pictures…</value></data>
   <data name="ToImages_Done" xml:space="preserve"><value>Pictures written to "{0}"</value></data>
   <data name="ToImages_Reduced" xml:space="preserve"><value>Page(s) {0} were too large at the chosen resolution and were written smaller (at most 50 megapixels a page).</value></data>
+  <data name="Cmd_FromImages_ToolTip" xml:space="preserve"><value>Makes one PDF of several pictures (JPEG, PNG, multi-page TIFF…), a page per picture</value></data>
+  <data name="FromImages_Title" xml:space="preserve"><value>Pictures to PDF</value></data>
+  <data name="FromImages_Files_Header" xml:space="preserve"><value>The pictures, in page order</value></data>
+  <data name="FromImages_Summary" xml:space="preserve"><value>{0} pictures</value></data>
+  <data name="FromImages_AddFiles" xml:space="preserve"><value>Add pictures…</value></data>
+  <data name="FromImages_AddFolder" xml:space="preserve"><value>Add a folder…</value></data>
+  <data name="FromImages_Pick_Title" xml:space="preserve"><value>Choose pictures</value></data>
+  <data name="FromImages_Folder_Pick_Title" xml:space="preserve"><value>Choose the folder of the pictures</value></data>
+  <data name="FromImages_Dialog_Filter" xml:space="preserve"><value>Pictures (*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp)|*.jpg;*.jpeg;*.jpe;*.jfif;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp|All files (*.*)|*.*</value></data>
+  <data name="FromImages_PageSize" xml:space="preserve"><value>Page size</value></data>
+  <data name="FromImages_FitImage" xml:space="preserve"><value>The picture's size</value></data>
+  <data name="FromImages_FitImage_Details" xml:space="preserve"><value>Each page is the picture's size at the resolution it gives (96 DPI otherwise)</value></data>
+  <data name="FromImages_A4Fit" xml:space="preserve"><value>A4, filled</value></data>
+  <data name="FromImages_A4Fit_Details" xml:space="preserve"><value>The picture as large as fits on A4, the sheet turned for a landscape picture</value></data>
+  <data name="FromImages_A4Margins" xml:space="preserve"><value>A4 with a margin</value></data>
+  <data name="FromImages_Margin" xml:space="preserve"><value>Margin (mm)</value></data>
+  <data name="FromImages_Note" xml:space="preserve"><value>JPEG goes into the PDF as it is, with no loss; pictures are turned upright by their EXIF; a multi-page TIFF gives several pages.</value></data>
+  <data name="FromImages_Output" xml:space="preserve"><value>Save as</value></data>
+  <data name="FromImages_OpenWhenDone" xml:space="preserve"><value>Open the PDF when done</value></data>
+  <data name="FromImages_Run" xml:space="preserve"><value>Make the PDF</value></data>
+  <data name="FromImages_DefaultName" xml:space="preserve"><value>Pictures</value></data>
+  <data name="FromImages_Error_None" xml:space="preserve"><value>Add at least one picture.</value></data>
+  <data name="FromImages_Error_Output" xml:space="preserve"><value>Choose where to save the PDF (a full path ending in .pdf).</value></data>
+  <data name="FromImages_Error_Margin" xml:space="preserve"><value>The margin must be a number from 0 to 50 mm.</value></data>
+  <data name="FromImages_Error_Folder" xml:space="preserve"><value>The folder chosen cannot be read.</value></data>
+  <data name="FromImages_Error_Title" xml:space="preserve"><value>The PDF could not be made from the pictures</value></data>
+  <data name="FromImages_Error_Unreadable" xml:space="preserve"><value>The picture "{0}" cannot be read (damaged, or not a picture). Remove it from the list and try again.</value></data>
+  <data name="FromImages_Error_NotSupported" xml:space="preserve"><value>The picture "{0}" is of a kind not supported (for example a CCITT G3 or tiled TIFF, a 12-bit JPEG). Save it in another format and try again.</value></data>
+  <data name="FromImages_Error_TooLarge" xml:space="preserve"><value>The picture "{0}" is too large (more than 200 megapixels).</value></data>
+  <data name="FromImages_Progress" xml:space="preserve"><value>Making a PDF of {0} pictures…</value></data>
+  <data name="FromImages_Done" xml:space="preserve"><value>Made "{0}"</value></data>
 </root>
