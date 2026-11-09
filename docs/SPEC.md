@@ -561,6 +561,14 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Ghi bằng `Converting/ImagePdfWriter` (PDF 1.7, bảng xref thường, ghi dần — mỗi lúc một ảnh trong bộ nhớ) vào tệp tạm cạnh đích rồi thay; ảnh hỏng/không hỗ trợ/quá 200 MP → `ImageFileException(FileIndex, Problem)`, không ghi gì.
 - Kiểm chứng: TIFF do **WIC của Windows** ghi (không nén, LZW, Zip, PackBits, G4) thành trang PDF mà PDFium vẽ ra **đúng từng điểm ảnh** của ảnh gốc (`TiffCompatibilityTests`).
 
+**PDF sang văn bản (`convert.toText`, lõi — lát 7a)** — Export, PdfPig (Apache-2.0, đã đóng gói): ký tự → từ (`NearestNeighbourWordExtractor`) → dòng và khối (`DocstrumBoundingBoxes`) → thứ tự đọc (`UnsupervisedReadingOrderDetector`): cột đọc hết cột này mới sang cột kia, hai nửa phần đầu văn bản hành chính (cơ quan | quốc hiệu) mỗi nửa liền một khối. `/ActualText` được dùng khi có.
+- **TXT**: mỗi khối = các dòng như trên trang, một dòng trống giữa các khối. **Markdown**: mỗi khối một đoạn (các dòng nối bằng dấu cách; từ bị gạch nối cuối dòng được ghép lại khi dòng sau bắt đầu bằng chữ thường); khối ≤ 3 dòng có cỡ chữ (trung vị) ≥ 1,6× / 1,25× cỡ chữ thân trang (cỡ nhiều ký tự nhất) → `#` / `##`; thoát bằng gạch chéo ngược các ký tự `\`, dấu huyền ngược, `*`, `[`, `]`, `<` ở mọi nơi, `#` và `>` ở đầu đoạn, và dấu mở danh sách/đường kẻ ở đầu đoạn (`- `, `+ `, `= `, `_ `, `1. `, `1) `); `_` giữa từ giữ nguyên.
+- Trang: một tệp, nối bằng dòng trống / **dấu ngắt trang** (form feed `\f` cho TXT, `---` cho Markdown) / **mỗi trang một tệp** "{tên}-001.txt" (số trang của tài liệu). Khoảng trang như mọi thao tác.
+- Chữ ra NFC, ký tự điều khiển bỏ, khoảng trắng liền gộp một; UTF-8 **không BOM**, xuống dòng CRLF.
+- Tệp có mật khẩu mở bằng mật khẩu (thiếu/sai → `DocumentPasswordException`). Trang **có ảnh mà không có chữ** → `PagesWithoutText` (bản scan — gợi ý OCR ở P10); trang trắng không báo.
+- Đọc hết các trang rồi mới ghi (trang hỏng → `InvalidDataException`, không ghi gì); tệp tạm cạnh đích rồi đổi tên; hủy/lỗi không để lại tệp.
+- Giới hạn: bảng ra thành các khối chữ (không giữ cột/ô), chữ dọc/xoay theo khối của Docstrum; chữ ẩn của lớp OCR được lấy như chữ thường.
+
 ### Hệ tọa độ — nguồn bug số một
 
 PDF dùng đơn vị point (1/72 inch), gốc ở góc **dưới-trái**, trang có thể có `/Rotate` 90/180/270 và CropBox không bắt đầu từ (0,0). WPF dùng DIP (1/96 inch), gốc ở góc **trên-trái**. Mọi chuyển đổi bắt buộc đi qua một lớp duy nhất, có unit test cho cả 4 góc xoay × CropBox lệch gốc × nhiều mức zoom.
