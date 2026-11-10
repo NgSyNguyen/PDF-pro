@@ -74,6 +74,38 @@ public sealed class PdfiumTextPage : IDisposable
         return new PageText(chars);
     }
 
+    /// <summary>
+    /// How many characters are painted and how many are not (text render mode 3: the hidden text OCR puts over a scan);
+    /// spaces and the characters the extractor generates between words are not counted.
+    /// </summary>
+    public PageTextCounts CountCharacters()
+    {
+        var native = Native;
+        var count = fpdf_text.FPDFTextCountChars(native);
+        var (visible, invisible) = (0, 0);
+        for (var i = 0; i < count; i++)
+        {
+            var code = fpdf_text.FPDFTextGetUnicode(native, i);
+            if (fpdf_text.FPDFTextIsGenerated(native, i) == 1 || code > 0xFFFF || char.IsWhiteSpace((char)code) || char.IsControl((char)code))
+            {
+                continue;
+            }
+
+            var owner = fpdf_text.FPDFTextGetTextObject(native, i);
+            if (owner is not null && owner.__Instance != IntPtr.Zero
+                && fpdf_edit.FPDFTextObjGetTextRenderMode(owner) == FPDF_TEXT_RENDERMODE.FPDF_TEXTRENDERMODE_INVISIBLE)
+            {
+                invisible++;
+            }
+            else
+            {
+                visible++;
+            }
+        }
+
+        return new PageTextCounts(visible, invisible);
+    }
+
     public void Dispose() => _handle.Dispose();
 
     /// <summary>

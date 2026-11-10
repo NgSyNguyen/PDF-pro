@@ -61,6 +61,12 @@ public sealed record PdfDocumentFeatures(
     public bool CanAssemble => (Permissions & AssemblePermission) != 0;
 }
 
+/// <summary>The characters of a page: painted ones, and invisible ones (text render mode 3, the hidden text of OCR).</summary>
+public readonly record struct PageTextCounts(int Visible, int Invisible)
+{
+    public bool HasText => Visible + Invisible > 0;
+}
+
 /// <summary>Target of a bookmark or link. Coordinates are in PDF user space; null means "keep current".</summary>
 public sealed record PdfDestination(int PageIndex, double? Left, double? Top, double? Zoom);
 

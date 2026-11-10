@@ -134,6 +134,13 @@ public sealed partial class PdfiumDocument : IDisposable
         return text.GetText();
     }
 
+    /// <summary>How many characters of a page are painted and how many are invisible (the hidden text of OCR).</summary>
+    public PageTextCounts GetPageTextCounts(int pageIndex)
+    {
+        using var text = GetCachedPage(pageIndex).LoadText();
+        return text.CountCharacters();
+    }
+
     /// <summary>The characters of a page with their boxes (not normalized).</summary>
     public PageText GetPageTextLayer(int pageIndex)
     {
