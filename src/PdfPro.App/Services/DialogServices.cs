@@ -429,6 +429,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new OfficeToPdfWindow(viewModel));
     }
 
+    public bool ShowPdfA(ViewModels.Converting.PdfAViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new PdfAWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

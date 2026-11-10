@@ -261,6 +261,31 @@ public sealed class SettingsViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task VeraPdf_IsLookedFor_AndAChosenFolderIsSaved_WithWhatIsThere()
+    {
+        var veraPdf = Substitute.For<IVeraPdfLocator>();
+        veraPdf.Find(null).Returns((VeraPdfInstallation?)null);
+        veraPdf.Find(@"D:\veraPDF").Returns(new VeraPdfInstallation(@"D:\veraPDF", @"C:\Java\bin\java.exe"));
+        veraPdf.Find(@"E:\vp").Returns(new VeraPdfInstallation(@"E:\vp", null));
+        var files = Substitute.For<IFileDialogService>();
+        var viewModel = CreateViewModel(files: files, veraPdf: veraPdf);
+
+        viewModel.VeraPdfStatus.ShouldBe(Strings.Settings_VeraPdf_Missing);
+
+        files.PickFolder(Strings.Settings_VeraPdf_Pick_Title, Arg.Is<string?>(p => p == null)).Returns(@"D:\veraPDF");
+        viewModel.PickVeraPdfCommand.Execute(null);
+        await viewModel.PendingSave;
+        viewModel.VeraPdfStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Using, @"D:\veraPDF"));
+        _settings.Current.VeraPdfPath.ShouldBe(@"D:\veraPDF");
+
+        viewModel.VeraPdfPath = @"E:\vp";
+        await viewModel.PendingSave;
+        viewModel.VeraPdfStatus.ShouldBe(Strings.Settings_VeraPdf_NoJava);
+        viewModel.VeraPdfPath = @"F:\không có";
+        viewModel.VeraPdfStatus.ShouldBe(Strings.Settings_VeraPdf_NotThere);
+    }
+
+    [Fact]
     public void WithoutALocator_NoLibreOfficeStatusIsShown()
     {
         var viewModel = CreateViewModel();
@@ -269,6 +294,6 @@ public sealed class SettingsViewModelTests : IDisposable
         viewModel.CanPickLibreOffice.ShouldBeFalse();
     }
 
-    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null)
-        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files);
+    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null, IVeraPdfLocator? veraPdf = null)
+        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files, veraPdf);
 }

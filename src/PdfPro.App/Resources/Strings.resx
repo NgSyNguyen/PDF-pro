@@ -1585,4 +1585,68 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Settings_LibreOffice_Using" xml:space="preserve"><value>Đang dùng: {0}</value></data>
   <data name="Settings_LibreOffice_Missing" xml:space="preserve"><value>Chưa tìm thấy LibreOffice. Tải miễn phí tại https://www.libreoffice.org/download.</value></data>
   <data name="Settings_LibreOffice_NotThere" xml:space="preserve"><value>Không có LibreOffice ở đường dẫn này.</value></data>
+  <data name="Cmd_PdfA_ToolTip" xml:space="preserve"><value>Tạo bản sao PDF/A (chuẩn lưu trữ lâu dài ISO 19005): nhúng phông, định nghĩa màu, gỡ mã chạy và nội dung phụ thuộc bên ngoài</value></data>
+  <data name="PdfA_Title" xml:space="preserve"><value>PDF/A</value></data>
+  <data name="PdfA_Intro" xml:space="preserve"><value>PDF/A là chuẩn ISO để lưu trữ tài liệu lâu dài: phông chữ được nhúng, màu được định nghĩa, không có mã chạy hay nội dung phụ thuộc bên ngoài. PDF_Pro tạo một bản sao PDF/A; tệp gốc giữ nguyên.</value></data>
+  <data name="PdfA_A2B" xml:space="preserve"><value>PDF/A-2b (khuyên dùng)</value></data>
+  <data name="PdfA_A2B_Details" xml:space="preserve"><value>Theo PDF 1.7: giữ độ trong suốt, các lớp và chữ chọn được như bản gốc. Hợp với hầu hết yêu cầu lưu trữ.</value></data>
+  <data name="PdfA_A1B" xml:space="preserve"><value>PDF/A-1b</value></data>
+  <data name="PdfA_A1B_Details" xml:space="preserve"><value>Theo PDF 1.4, chỉ khi nơi nhận đòi đúng PDF/A-1: trang có độ trong suốt (hình mờ, bóng đổ…) sẽ thành ảnh — chữ trên trang đó không chọn được nữa và tệp có thể lớn hơn nhiều; các lớp được gộp vào trang.</value></data>
+  <data name="PdfA_Signed" xml:space="preserve"><value>Tài liệu có chữ ký số: bản PDF/A sẽ không còn chữ ký hợp lệ (tệp gốc vẫn giữ chữ ký).</value></data>
+  <data name="PdfA_Validate" xml:space="preserve"><value>Kiểm bằng veraPDF sau khi chuyển</value></data>
+  <data name="PdfA_VeraPdf_Found" xml:space="preserve"><value>veraPDF: {0}</value></data>
+  <data name="PdfA_VeraPdf_NoJava" xml:space="preserve"><value>veraPDF đã cài nhưng máy chưa có Java (11 trở lên) để chạy nó. Cài Java rồi thử lại.</value></data>
+  <data name="PdfA_VeraPdf_Missing" xml:space="preserve"><value>Chưa cài veraPDF (bộ kiểm định PDF/A miễn phí, verapdf.org). PDF_Pro vẫn tự kiểm những lỗi thường gặp.</value></data>
+  <data name="PdfA_VeraPdf_Failed" xml:space="preserve"><value>veraPDF không kiểm được tệp (chạy lỗi hoặc quá lâu).</value></data>
+  <data name="PdfA_Apply" xml:space="preserve"><value>Tạo bản PDF/A</value></data>
+  <data name="PdfA_Name" xml:space="preserve"><value>{0} (PDF-A)</value></data>
+  <data name="PdfA_Progress" xml:space="preserve"><value>Đang chuyển "{0}" sang PDF/A…</value></data>
+  <data name="PdfA_Done" xml:space="preserve"><value>Đã tạo "{0}"</value></data>
+  <data name="PdfA_Done_Title" xml:space="preserve"><value>PDF/A</value></data>
+  <data name="PdfA_Error_Title" xml:space="preserve"><value>Không tạo được bản PDF/A</value></data>
+  <data name="PdfA_Report_Clean" xml:space="preserve"><value>Đã tạo "{0}" ({1}). PDF_Pro không thấy vấn đề nào.</value></data>
+  <data name="PdfA_Report_Problems" xml:space="preserve"><value>Đã tạo "{0}" nhưng còn {2} vấn đề khiến tệp chưa đạt {1}:</value></data>
+  <data name="PdfA_Report_Changes" xml:space="preserve"><value>Những gì đã sửa để đạt chuẩn:</value></data>
+  <data name="PdfA_Report_NotValidated" xml:space="preserve"><value>Chưa kiểm bằng veraPDF.</value></data>
+  <data name="PdfA_VeraPdf_Pass" xml:space="preserve"><value>veraPDF: tệp đạt {0}.</value></data>
+  <data name="PdfA_VeraPdf_Fail" xml:space="preserve"><value>veraPDF: tệp chưa đạt {0} — {1} quy tắc không qua:</value></data>
+  <data name="PdfA_VeraPdf_More" xml:space="preserve"><value>… và {0} quy tắc khác</value></data>
+  <data name="PdfA_Fix_Decrypted" xml:space="preserve"><value>Gỡ bảo vệ bằng mật khẩu (PDF/A cấm mã hóa)</value></data>
+  <data name="PdfA_Fix_Scripts" xml:space="preserve"><value>Gỡ {0} đoạn mã/hành động tự chạy (JavaScript)</value></data>
+  <data name="PdfA_Fix_Actions" xml:space="preserve"><value>Gỡ {0} hành động bị cấm (chạy chương trình, xóa biểu mẫu…)</value></data>
+  <data name="PdfA_Fix_Attachments" xml:space="preserve"><value>Gỡ {0} tệp đính kèm</value></data>
+  <data name="PdfA_Fix_Multimedia" xml:space="preserve"><value>Gỡ {0} nội dung âm thanh, video, 3D</value></data>
+  <data name="PdfA_Fix_HiddenAnnotations" xml:space="preserve"><value>Gỡ {0} chú thích ẩn</value></data>
+  <data name="PdfA_Fix_AnnotationFlags" xml:space="preserve"><value>Cho {0} chú thích hiện khi in</value></data>
+  <data name="PdfA_Fix_AnnotationAppearances" xml:space="preserve"><value>Thêm hoặc sửa hình hiển thị của {0} chú thích</value></data>
+  <data name="PdfA_Fix_FormAppearances" xml:space="preserve"><value>Vẽ {0} ô biểu mẫu</value></data>
+  <data name="PdfA_Fix_Xfa" xml:space="preserve"><value>Gỡ biểu mẫu XFA (giữ các ô biểu mẫu thường)</value></data>
+  <data name="PdfA_Fix_FlattenedAnnotations" xml:space="preserve"><value>Vẽ {0} chú thích kiểu mới vào trang</value></data>
+  <data name="PdfA_Fix_AnnotationOpacity" xml:space="preserve"><value>Bỏ độ trong suốt của {0} chú thích</value></data>
+  <data name="PdfA_Fix_Layers" xml:space="preserve"><value>Xử lý các lớp nội dung ({0})</value></data>
+  <data name="PdfA_Fix_LzwStreams" xml:space="preserve"><value>Nén lại {0} luồng dữ liệu LZW</value></data>
+  <data name="PdfA_Fix_ImageInterpolation" xml:space="preserve"><value>Bỏ yêu cầu làm mượt của {0} ảnh</value></data>
+  <data name="PdfA_Fix_AlternateImages" xml:space="preserve"><value>Gỡ {0} ảnh thay thế hoặc tham chiếu ngoài</value></data>
+  <data name="PdfA_Fix_PostScript" xml:space="preserve"><value>Gỡ {0} đoạn PostScript</value></data>
+  <data name="PdfA_Fix_TransferFunctions" xml:space="preserve"><value>Gỡ {0} hàm chuyển màu</value></data>
+  <data name="PdfA_Fix_ObjectMetadata" xml:space="preserve"><value>Gỡ siêu dữ liệu XMP của {0} đối tượng</value></data>
+  <data name="PdfA_Fix_SignaturesInvalidated" xml:space="preserve"><value>{0} chữ ký số không còn hiệu lực trong bản PDF/A</value></data>
+  <data name="PdfA_Fix_FontsEmbedded" xml:space="preserve"><value>Nhúng {0} phông chữ từ máy này</value></data>
+  <data name="PdfA_Fix_FontsSubstituted" xml:space="preserve"><value>Thay {0} phông chữ không có trên máy bằng phông Noto (chữ có thể lệch đôi chút)</value></data>
+  <data name="PdfA_Fix_CmykProfile" xml:space="preserve"><value>Gắn hồ sơ màu cho các màu CMYK</value></data>
+  <data name="PdfA_Fix_PagesAsPictures" xml:space="preserve"><value>{0} trang có độ trong suốt đã thành ảnh (trang {1}); chữ trên các trang này không chọn được nữa</value></data>
+  <data name="PdfA_Fix_Metadata" xml:space="preserve"><value>Viết lại siêu dữ liệu</value></data>
+  <data name="PdfA_Fix_OutputIntent" xml:space="preserve"><value>Thêm hồ sơ màu sRGB</value></data>
+  <data name="PdfA_Problem_FontNotEmbedded" xml:space="preserve"><value>Phông "{1}" chưa nhúng được (trang {0}): máy này không có phông đó, hoặc đó là phông ký hiệu hay phông mã TCVN3, VNI không thể thay.</value></data>
+  <data name="PdfA_Problem_DeviceCmyk" xml:space="preserve"><value>Màu CMYK chưa có hồ sơ màu (trang {0}).</value></data>
+  <data name="PdfA_Problem_Transparency" xml:space="preserve"><value>Còn độ trong suốt (trang {0}).</value></data>
+  <data name="PdfA_Problem_Jpeg2000" xml:space="preserve"><value>Ảnh JPEG 2000 (trang {0}) — PDF/A-1 không cho phép.</value></data>
+  <data name="PdfA_Problem_SixteenBitImages" xml:space="preserve"><value>Ảnh 16 bit mỗi màu (trang {0}) — PDF/A-1 không cho phép.</value></data>
+  <data name="PdfA_Problem_LzwStreams" xml:space="preserve"><value>Còn luồng dữ liệu nén LZW không giải được.</value></data>
+  <data name="Settings_VeraPdf" xml:space="preserve"><value>veraPDF (kiểm PDF/A)</value></data>
+  <data name="Settings_VeraPdf_Hint" xml:space="preserve"><value>Thư mục cài veraPDF, bộ kiểm định PDF/A miễn phí (verapdf.org, cần Java). Để trống: PDF_Pro tự tìm.</value></data>
+  <data name="Settings_VeraPdf_Pick_Title" xml:space="preserve"><value>Chọn thư mục cài veraPDF</value></data>
+  <data name="Settings_VeraPdf_Missing" xml:space="preserve"><value>Chưa tìm thấy veraPDF. Tải miễn phí tại https://verapdf.org.</value></data>
+  <data name="Settings_VeraPdf_NotThere" xml:space="preserve"><value>Không có veraPDF ở đường dẫn này.</value></data>
+  <data name="Settings_VeraPdf_NoJava" xml:space="preserve"><value>Đã có veraPDF nhưng chưa có Java (11 trở lên) để chạy nó.</value></data>
 </root>

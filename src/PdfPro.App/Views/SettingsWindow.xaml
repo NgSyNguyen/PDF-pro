@@ -120,6 +120,40 @@
         </StackPanel>
       </ui:CardControl>
 
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Archive24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_VeraPdf}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_VeraPdf_Hint}"
+              TextWrapping="Wrap" />
+            <TextBlock
+              Margin="0,4,0,0"
+              AutomationProperties.AutomationId="SettingsVeraPdfStatus"
+              FontSize="12"
+              Text="{Binding VeraPdfStatus}"
+              TextWrapping="Wrap"
+              Visibility="{Binding VeraPdfStatus, Converter={StaticResource NullToCollapsed}}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <StackPanel Orientation="Horizontal">
+          <ui:TextBox
+            Width="220"
+            AutomationProperties.AutomationId="SettingsVeraPdfPath"
+            AutomationProperties.Name="{loc:Tr Settings_VeraPdf}"
+            PlaceholderText="{loc:Tr Settings_LibreOffice_Placeholder}"
+            Text="{Binding VeraPdfPath, UpdateSourceTrigger=LostFocus}" />
+          <ui:Button
+            Margin="8,0,0,0"
+            AutomationProperties.AutomationId="SettingsVeraPdfPick"
+            Command="{Binding PickVeraPdfCommand}"
+            Content="{loc:Tr Split_Folder_Pick}"
+            Visibility="{Binding CanPickLibreOffice, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+      </ui:CardControl>
+
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Ram20}">
         <ui:CardControl.Header>
           <StackPanel>

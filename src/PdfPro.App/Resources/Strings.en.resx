@@ -1585,4 +1585,68 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Settings_LibreOffice_Using" xml:space="preserve"><value>Using: {0}</value></data>
   <data name="Settings_LibreOffice_Missing" xml:space="preserve"><value>LibreOffice was not found. Download it free from https://www.libreoffice.org/download.</value></data>
   <data name="Settings_LibreOffice_NotThere" xml:space="preserve"><value>LibreOffice is not at this path.</value></data>
+  <data name="Cmd_PdfA_ToolTip" xml:space="preserve"><value>Make a PDF/A copy (ISO 19005, for long-term archiving): fonts embedded, colours defined, scripts and outside dependencies removed</value></data>
+  <data name="PdfA_Title" xml:space="preserve"><value>PDF/A</value></data>
+  <data name="PdfA_Intro" xml:space="preserve"><value>PDF/A is the ISO standard for keeping documents in the long run: fonts embedded, colours defined, no scripts or outside dependencies. PDF_Pro makes a PDF/A copy; the original stays as it is.</value></data>
+  <data name="PdfA_A2B" xml:space="preserve"><value>PDF/A-2b (recommended)</value></data>
+  <data name="PdfA_A2B_Details" xml:space="preserve"><value>On PDF 1.7: transparency, layers and selectable text stay as they are. Suits most archiving requirements.</value></data>
+  <data name="PdfA_A1B" xml:space="preserve"><value>PDF/A-1b</value></data>
+  <data name="PdfA_A1B_Details" xml:space="preserve"><value>On PDF 1.4, only when PDF/A-1 is required: pages with transparency (watermarks, shadows…) become pictures — their text can no longer be selected and the file can be much larger; layers are merged into the page.</value></data>
+  <data name="PdfA_Signed" xml:space="preserve"><value>The document is digitally signed: the PDF/A copy will not carry valid signatures (the original keeps them).</value></data>
+  <data name="PdfA_Validate" xml:space="preserve"><value>Check with veraPDF afterwards</value></data>
+  <data name="PdfA_VeraPdf_Found" xml:space="preserve"><value>veraPDF: {0}</value></data>
+  <data name="PdfA_VeraPdf_NoJava" xml:space="preserve"><value>veraPDF is installed but Java (11 or later), which runs it, is not. Install Java and try again.</value></data>
+  <data name="PdfA_VeraPdf_Missing" xml:space="preserve"><value>veraPDF (the free PDF/A validator, verapdf.org) is not installed. PDF_Pro still checks the usual problems itself.</value></data>
+  <data name="PdfA_VeraPdf_Failed" xml:space="preserve"><value>veraPDF could not check the file (it failed or took too long).</value></data>
+  <data name="PdfA_Apply" xml:space="preserve"><value>Make the PDF/A copy</value></data>
+  <data name="PdfA_Name" xml:space="preserve"><value>{0} (PDF-A)</value></data>
+  <data name="PdfA_Progress" xml:space="preserve"><value>Converting "{0}" to PDF/A…</value></data>
+  <data name="PdfA_Done" xml:space="preserve"><value>"{0}" written</value></data>
+  <data name="PdfA_Done_Title" xml:space="preserve"><value>PDF/A</value></data>
+  <data name="PdfA_Error_Title" xml:space="preserve"><value>Could not make the PDF/A copy</value></data>
+  <data name="PdfA_Report_Clean" xml:space="preserve"><value>"{0}" was written ({1}). PDF_Pro found no problem.</value></data>
+  <data name="PdfA_Report_Problems" xml:space="preserve"><value>"{0}" was written, but {2} problem(s) keep it from being {1}:</value></data>
+  <data name="PdfA_Report_Changes" xml:space="preserve"><value>What was changed to meet the standard:</value></data>
+  <data name="PdfA_Report_NotValidated" xml:space="preserve"><value>Not checked with veraPDF.</value></data>
+  <data name="PdfA_VeraPdf_Pass" xml:space="preserve"><value>veraPDF: the file is {0}.</value></data>
+  <data name="PdfA_VeraPdf_Fail" xml:space="preserve"><value>veraPDF: the file is not {0} — {1} rule(s) failed:</value></data>
+  <data name="PdfA_VeraPdf_More" xml:space="preserve"><value>… and {0} more</value></data>
+  <data name="PdfA_Fix_Decrypted" xml:space="preserve"><value>Password protection removed (PDF/A forbids encryption)</value></data>
+  <data name="PdfA_Fix_Scripts" xml:space="preserve"><value>{0} script(s) and automatic action(s) removed (JavaScript)</value></data>
+  <data name="PdfA_Fix_Actions" xml:space="preserve"><value>{0} forbidden action(s) removed (launching programs, resetting forms…)</value></data>
+  <data name="PdfA_Fix_Attachments" xml:space="preserve"><value>{0} attachment(s) removed</value></data>
+  <data name="PdfA_Fix_Multimedia" xml:space="preserve"><value>{0} sound, video or 3D item(s) removed</value></data>
+  <data name="PdfA_Fix_HiddenAnnotations" xml:space="preserve"><value>{0} hidden comment(s) removed</value></data>
+  <data name="PdfA_Fix_AnnotationFlags" xml:space="preserve"><value>{0} comment(s) set to print</value></data>
+  <data name="PdfA_Fix_AnnotationAppearances" xml:space="preserve"><value>Appearance of {0} comment(s) added or settled</value></data>
+  <data name="PdfA_Fix_FormAppearances" xml:space="preserve"><value>{0} form field(s) drawn</value></data>
+  <data name="PdfA_Fix_Xfa" xml:space="preserve"><value>XFA form removed (the usual form fields stay)</value></data>
+  <data name="PdfA_Fix_FlattenedAnnotations" xml:space="preserve"><value>{0} comment(s) of newer kinds drawn into the page</value></data>
+  <data name="PdfA_Fix_AnnotationOpacity" xml:space="preserve"><value>Transparency of {0} comment(s) removed</value></data>
+  <data name="PdfA_Fix_Layers" xml:space="preserve"><value>Layers settled ({0})</value></data>
+  <data name="PdfA_Fix_LzwStreams" xml:space="preserve"><value>{0} LZW stream(s) compressed again</value></data>
+  <data name="PdfA_Fix_ImageInterpolation" xml:space="preserve"><value>Smoothing request of {0} image(s) removed</value></data>
+  <data name="PdfA_Fix_AlternateImages" xml:space="preserve"><value>{0} alternate image(s) or outside reference(s) removed</value></data>
+  <data name="PdfA_Fix_PostScript" xml:space="preserve"><value>{0} PostScript fragment(s) removed</value></data>
+  <data name="PdfA_Fix_TransferFunctions" xml:space="preserve"><value>{0} transfer function(s) removed</value></data>
+  <data name="PdfA_Fix_ObjectMetadata" xml:space="preserve"><value>XMP metadata of {0} object(s) removed</value></data>
+  <data name="PdfA_Fix_SignaturesInvalidated" xml:space="preserve"><value>{0} digital signature(s) no longer valid in the PDF/A copy</value></data>
+  <data name="PdfA_Fix_FontsEmbedded" xml:space="preserve"><value>{0} font(s) embedded from this computer</value></data>
+  <data name="PdfA_Fix_FontsSubstituted" xml:space="preserve"><value>{0} font(s) not on this computer replaced by Noto (text may shift slightly)</value></data>
+  <data name="PdfA_Fix_CmykProfile" xml:space="preserve"><value>A colour profile given to the CMYK colours</value></data>
+  <data name="PdfA_Fix_PagesAsPictures" xml:space="preserve"><value>{0} page(s) with transparency made pictures (page(s) {1}); their text can no longer be selected</value></data>
+  <data name="PdfA_Fix_Metadata" xml:space="preserve"><value>Metadata written anew</value></data>
+  <data name="PdfA_Fix_OutputIntent" xml:space="preserve"><value>sRGB output intent added</value></data>
+  <data name="PdfA_Problem_FontNotEmbedded" xml:space="preserve"><value>Font "{1}" could not be embedded (page(s) {0}): this computer does not have it, or it is a symbol font or a TCVN3/VNI font that cannot be replaced.</value></data>
+  <data name="PdfA_Problem_DeviceCmyk" xml:space="preserve"><value>CMYK colours without a colour profile (page(s) {0}).</value></data>
+  <data name="PdfA_Problem_Transparency" xml:space="preserve"><value>Transparency left (page(s) {0}).</value></data>
+  <data name="PdfA_Problem_Jpeg2000" xml:space="preserve"><value>JPEG 2000 images (page(s) {0}) — PDF/A-1 does not allow them.</value></data>
+  <data name="PdfA_Problem_SixteenBitImages" xml:space="preserve"><value>16-bit images (page(s) {0}) — PDF/A-1 does not allow them.</value></data>
+  <data name="PdfA_Problem_LzwStreams" xml:space="preserve"><value>LZW streams that could not be decompressed are left.</value></data>
+  <data name="Settings_VeraPdf" xml:space="preserve"><value>veraPDF (PDF/A checks)</value></data>
+  <data name="Settings_VeraPdf_Hint" xml:space="preserve"><value>The folder veraPDF, the free PDF/A validator, is installed in (verapdf.org, needs Java). Blank: PDF_Pro looks for it.</value></data>
+  <data name="Settings_VeraPdf_Pick_Title" xml:space="preserve"><value>Choose the folder veraPDF is installed in</value></data>
+  <data name="Settings_VeraPdf_Missing" xml:space="preserve"><value>veraPDF was not found. Download it free from https://verapdf.org.</value></data>
+  <data name="Settings_VeraPdf_NotThere" xml:space="preserve"><value>veraPDF is not at this path.</value></data>
+  <data name="Settings_VeraPdf_NoJava" xml:space="preserve"><value>veraPDF is there but Java (11 or later), which runs it, is not.</value></data>
 </root>

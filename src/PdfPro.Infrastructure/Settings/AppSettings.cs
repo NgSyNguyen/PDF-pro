@@ -70,6 +70,9 @@ public sealed record AppSettings
     /// </summary>
     public string LibreOfficePath { get; init; } = string.Empty;
 
+    /// <summary>Where veraPDF is (checking PDF/A copies): its installation folder; blank: looked for where it is usually installed.</summary>
+    public string VeraPdfPath { get; init; } = string.Empty;
+
     /// <summary>A free public time-stamping authority (DigiCert).</summary>
     public const string DefaultTimestampServer = "http://timestamp.digicert.com";
 }

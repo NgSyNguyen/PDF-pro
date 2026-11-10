@@ -240,4 +240,6 @@ public interface IPageDialogService
     bool ShowToText(ViewModels.Converting.ToTextViewModel viewModel);
 
     bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel);
+
+    bool ShowPdfA(ViewModels.Converting.PdfAViewModel viewModel);
 }

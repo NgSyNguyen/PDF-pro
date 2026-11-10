@@ -399,6 +399,7 @@ public sealed partial class MainWindowViewModel : IExitGuard
         FromImagesCommand.NotifyCanExecuteChanged();
         ToTextCommand.NotifyCanExecuteChanged();
         OfficeToPdfCommand.NotifyCanExecuteChanged();
+        ToPdfACommand.NotifyCanExecuteChanged();
     }
 
     private static string Format(string template, params object?[] arguments) => string.Format(CultureInfo.CurrentCulture, template, arguments);

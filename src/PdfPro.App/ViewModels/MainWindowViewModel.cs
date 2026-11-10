@@ -153,7 +153,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToPdfACommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -845,7 +845,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("optimize.grayscale", Strings.Cmd_Grayscale, SymbolRegular.DarkTheme24, GrayscaleCommand, Strings.Cmd_Grayscale_ToolTip),
                     new("optimize.linearize", Strings.Cmd_Linearize, SymbolRegular.GlobeArrowForward24, LinearizeCommand, Strings.Cmd_Linearize_ToolTip),
                     new("optimize.repair", Strings.Cmd_Repair, SymbolRegular.DocumentError24, RepairCommand, Strings.Cmd_Repair_ToolTip),
-                    new("convert.toPdfA", Strings.Cmd_PdfA, SymbolRegular.Archive24),
+                    new("convert.toPdfA", Strings.Cmd_PdfA, SymbolRegular.Archive24, ToPdfACommand, Strings.Cmd_PdfA_ToolTip),
                 ]),
             ]),
             new("tools", Strings.Ribbon_Tab_Tools,

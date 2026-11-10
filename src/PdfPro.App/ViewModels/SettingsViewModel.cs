@@ -32,6 +32,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly ILogger<SettingsViewModel> _logger;
     private readonly ILibreOfficeLocator? _libreOffice;
     private readonly IFileDialogService? _files;
+    private readonly IVeraPdfLocator? _veraPdf;
     private readonly bool _isInitialized;
 
     public SettingsViewModel(
@@ -43,7 +44,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         ThumbnailDiskCache thumbnailCache,
         ILogger<SettingsViewModel> logger,
         ILibreOfficeLocator? libreOffice = null,
-        IFileDialogService? files = null)
+        IFileDialogService? files = null,
+        IVeraPdfLocator? veraPdf = null)
     {
         _settings = settings;
         _theme = theme;
@@ -54,6 +56,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _logger = logger;
         _libreOffice = libreOffice;
         _files = files;
+        _veraPdf = veraPdf;
 
         ThemeOptions =
         [
@@ -74,6 +77,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         AnnotationAuthor = settings.Current.AnnotationAuthor;
         LibreOfficePath = settings.Current.LibreOfficePath;
         LibreOfficeStatus = DescribeLibreOffice(LibreOfficePath);
+        VeraPdfPath = settings.Current.VeraPdfPath;
+        VeraPdfStatus = DescribeVeraPdf(VeraPdfPath);
         DiskCacheSize = Strings.Settings_Measuring;
         _isInitialized = true;
     }
@@ -116,6 +121,14 @@ public sealed partial class SettingsViewModel : ObservableObject
     public partial string? LibreOfficeStatus { get; private set; }
 
     public bool CanPickLibreOffice => _files is not null;
+
+    /// <summary>Where veraPDF is (checking PDF/A copies); blank: looked for. Saved when it changes.</summary>
+    [ObservableProperty]
+    public partial string VeraPdfPath { get; set; } = string.Empty;
+
+    /// <summary>"Đang dùng: C:\…\verapdf", or what is missing; null when not looked for.</summary>
+    [ObservableProperty]
+    public partial string? VeraPdfStatus { get; private set; }
 
     /// <summary>Size of the thumbnail cache on disk ("12 MB"); null until measured.</summary>
     [ObservableProperty]
@@ -214,6 +227,45 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             LibreOfficePath = folder;
         }
+    }
+
+    partial void OnVeraPdfPathChanged(string value)
+    {
+        var path = (value ?? string.Empty).Trim();
+        VeraPdfStatus = DescribeVeraPdf(path);
+        if (!_isInitialized || string.Equals(path, _settings.Current.VeraPdfPath, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        PendingSave = SaveAsync(s => s with { VeraPdfPath = path });
+    }
+
+    /// <summary>"Chọn…": veraPDF's installation folder.</summary>
+    [RelayCommand]
+    private void PickVeraPdf()
+    {
+        var current = VeraPdfPath.Trim();
+        if (_files?.PickFolder(Strings.Settings_VeraPdf_Pick_Title, current.Length == 0 ? null : current) is { } folder)
+        {
+            VeraPdfPath = folder;
+        }
+    }
+
+    /// <summary>What is found where <paramref name="path"/> says (or where veraPDF is installed when blank).</summary>
+    private string? DescribeVeraPdf(string path)
+    {
+        if (_veraPdf is null)
+        {
+            return null;
+        }
+
+        return _veraPdf.Find(path.Length == 0 ? null : path) switch
+        {
+            { Java: null } => Strings.Settings_VeraPdf_NoJava,
+            { } found => string.Format(CultureInfo.CurrentCulture, path.Length == 0 ? Strings.Settings_LibreOffice_Found : Strings.Settings_LibreOffice_Using, found.Folder),
+            null => path.Length == 0 ? Strings.Settings_VeraPdf_Missing : Strings.Settings_VeraPdf_NotThere,
+        };
     }
 
     /// <summary>What is found where <paramref name="path"/> says (or where LibreOffice is installed when blank).</summary>

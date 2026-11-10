@@ -154,6 +154,9 @@ internal static class AppHost
         services.AddOperation<Operations.Converting.ToTextOperation>();
         services.AddSingleton<Operations.Converting.ILibreOfficeLocator>(_ => new Operations.Converting.LibreOfficeLocator());
         services.AddOperation<Operations.Converting.OfficeToPdfOperation>();
+        services.AddOperation<Operations.Converting.ToPdfAOperation>();
+        services.AddSingleton<Operations.Converting.IVeraPdfLocator>(_ => new Operations.Converting.VeraPdfLocator());
+        services.AddSingleton<Operations.Converting.VeraPdfValidator>();
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),
@@ -165,7 +168,10 @@ internal static class AppHost
             sp.GetRequiredService<Operations.Converting.FromImagesOperation>(),
             sp.GetRequiredService<Operations.Converting.ToTextOperation>(),
             sp.GetRequiredService<Operations.Converting.OfficeToPdfOperation>(),
-            sp.GetRequiredService<Operations.Converting.ILibreOfficeLocator>()));
+            sp.GetRequiredService<Operations.Converting.ILibreOfficeLocator>(),
+            sp.GetRequiredService<Operations.Converting.ToPdfAOperation>(),
+            sp.GetRequiredService<Operations.Converting.VeraPdfValidator>(),
+            sp.GetRequiredService<Operations.Converting.IVeraPdfLocator>()));
         services.AddSingleton(sp => new SigningServices(
             sp.GetRequiredService<ICertificateStore>(),
             sp.GetRequiredService<ITimestampClient>(),
