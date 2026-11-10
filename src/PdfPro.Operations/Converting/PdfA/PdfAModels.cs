@@ -82,6 +82,18 @@ public enum PdfAFix
 
     /// <summary>Digital signatures were in the document: the converted copy no longer carries valid ones.</summary>
     SignaturesInvalidated,
+
+    /// <summary>Fonts that were not embedded were embedded from the fonts of this computer of the same name.</summary>
+    FontsEmbedded,
+
+    /// <summary>Fonts that were not embedded, and not on this computer, were replaced by a bundled font (Noto Sans or Serif): their text may look different.</summary>
+    FontsSubstituted,
+
+    /// <summary>A CMYK colour profile was given to the CMYK colours (PDF/A wants every colour defined).</summary>
+    CmykProfile,
+
+    /// <summary>Pages with transparency were made pictures of themselves (PDF/A-1): their text can no longer be selected.</summary>
+    PagesAsPictures,
 }
 
 /// <param name="Fix">What was changed.</param>
@@ -121,8 +133,12 @@ public sealed record PdfAProblem(PdfAProblemKind Kind, IReadOnlyList<int> Pages,
 /// <param name="PageCount">Its pages.</param>
 /// <param name="Changes">What was changed.</param>
 /// <param name="Problems">What still keeps it from being PDF/A (PDF_Pro's own checks, not a full validation).</param>
-public sealed record PdfAReport(string Output, PdfALevel Level, int PageCount, IReadOnlyList<PdfAChange> Changes, IReadOnlyList<PdfAProblem> Problems)
+/// <param name="PicturePages">The pages made pictures of themselves (1-based), when <see cref="PdfAFix.PagesAsPictures"/>.</param>
+public sealed record PdfAReport(string Output, PdfALevel Level, int PageCount, IReadOnlyList<PdfAChange> Changes, IReadOnlyList<PdfAProblem> Problems, IReadOnlyList<int>? PicturePages = null)
 {
+    /// <summary>The pages made pictures of themselves (1-based), ascending.</summary>
+    public IReadOnlyList<int> PicturePages { get; init; } = PicturePages ?? [];
+
     /// <summary>Whether PDF_Pro's own checks found something left.</summary>
     public bool HasProblems => Problems.Count > 0;
 }

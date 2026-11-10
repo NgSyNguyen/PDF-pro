@@ -125,6 +125,7 @@ internal static class PdfAInspection
     private sealed class PageInspector(PdfALevel level, int page, SortedDictionary<string, SortedSet<int>> fonts, SortedDictionary<PdfAProblemKind, SortedSet<int>> found)
     {
         private readonly HashSet<PdfDictionary> _visited = new(ReferenceEqualityComparer.Instance);
+        private readonly HashSet<PdfDictionary> _visitedStates = new(ReferenceEqualityComparer.Instance);
 
         public void Page(PdfPage pageDictionary)
         {
@@ -191,11 +192,6 @@ internal static class PdfAInspection
                 Shading(shading, resources);
             }
 
-            foreach (var state in Values(resources, "/ExtGState"))
-            {
-                GraphicsState(state, resources);
-            }
-
             if (AsDictionary(resources.Elements["/ColorSpace"]) is { } spaces && !HasDefaultCmyk(resources)
                 && spaces.Elements.Values.Any(s => UsesCmyk(s)))
             {
@@ -254,11 +250,6 @@ internal static class PdfAInspection
 
                     if (level == PdfALevel.A1B)
                     {
-                        if (xobject.Elements.ContainsKey("/SMask") || StreamData.Integer(xobject, "/SMaskInData") is > 0)
-                        {
-                            Found(PdfAProblemKind.Transparency);
-                        }
-
                         if (StreamData.Filters(xobject)?.Any(f => f.Name == "/JPXDecode") == true)
                         {
                             Found(PdfAProblemKind.Jpeg2000);
@@ -337,9 +328,10 @@ internal static class PdfAInspection
             }
         }
 
+        /// <summary>A graphics state a content stream sets (gs): its transparency (PDF/A-1) and what its soft mask draws.</summary>
         private void GraphicsState(PdfDictionary state, PdfDictionary? resources)
         {
-            if (!_visited.Add(state))
+            if (!_visitedStates.Add(state))
             {
                 return;
             }
@@ -367,33 +359,47 @@ internal static class PdfAInspection
         }
 
         /// <summary>
-        /// Colour operators of a content stream: k / K (DeviceCMYK), cs / CS naming it, inline images in CMYK —
-        /// unless the resources it draws with set a default colour space for it.
+        /// A content stream: its colour operators — k / K (DeviceCMYK), cs / CS naming it, inline images in CMYK —
+        /// unless the resources it draws with set a default colour space for it; the graphics states it sets (gs) and,
+        /// for PDF/A-1, the images it paints with a soft mask (Do).
         /// </summary>
         private void Content(byte[] content, PdfDictionary? resources)
         {
-            if (content.Length == 0 || HasDefaultCmyk(resources))
+            if (content.Length == 0)
             {
                 return;
             }
 
+            var defined = HasDefaultCmyk(resources);
+            var cmykFound = false;
             var reader = new ContentReader(content);
             while (reader.MoveNext())
             {
-                var cmyk = reader.Operator switch
+                var name = reader.Operands.Count == 1 && reader.Operands[0].IsName ? reader.Operands[0].Text : null;
+                switch (reader.Operator)
                 {
-                    "k" or "K" => true,
-                    "cs" or "CS" => reader.Operands.Count == 1 && reader.Operands[0] is { IsName: true, Text: "DeviceCMYK" },
-                    "BI" => InlineImageIsCmyk(content.AsSpan(reader.Start, reader.End - reader.Start)),
-                    _ => false,
-                };
-                if (cmyk)
-                {
-                    Found(PdfAProblemKind.DeviceCmyk);
-                    return;
+                    case "gs" when name is not null && Entry(resources, "/ExtGState", name) is { } state:
+                        GraphicsState(state, resources);
+                        break;
+                    case "Do" when level == PdfALevel.A1B && name is not null && Entry(resources, "/XObject", name) is { } image
+                        && Name(image, "/Subtype") == "/Image" && (image.Elements.ContainsKey("/SMask") || StreamData.Integer(image, "/SMaskInData") is > 0):
+                        Found(PdfAProblemKind.Transparency);
+                        break;
+                    case "k" or "K" when !defined && !cmykFound:
+                    case "cs" or "CS" when !defined && !cmykFound && name == "DeviceCMYK":
+                        Found(PdfAProblemKind.DeviceCmyk);
+                        cmykFound = true;
+                        break;
+                    case "BI" when !defined && !cmykFound && InlineImageIsCmyk(content.AsSpan(reader.Start, reader.End - reader.Start)):
+                        Found(PdfAProblemKind.DeviceCmyk);
+                        cmykFound = true;
+                        break;
                 }
             }
         }
+
+        private static PdfDictionary? Entry(PdfDictionary? resources, string category, string name)
+            => resources is not null && AsDictionary(resources.Elements[category]) is { } entries ? AsDictionary(entries.Elements["/" + name]) : null;
 
         private static bool InlineImageIsCmyk(ReadOnlySpan<byte> image)
         {
