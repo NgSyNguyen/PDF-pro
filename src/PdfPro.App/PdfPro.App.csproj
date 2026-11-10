@@ -62,6 +62,9 @@
   <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)..\..\tools\qpdf\bin\qpdf.exe')">
     <Content Include="..\..\tools\qpdf\**\*" LinkBase="tools\qpdf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)..\..\tools\tesseract\tesseract.exe')">
+    <Content Include="..\..\tools\tesseract\**\*" LinkBase="tools\tesseract" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="PdfPro.App.Tests" />

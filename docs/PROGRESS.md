@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 10/11/2026 — **Phase 9 xong về code** (cloud: 8a, 8b, 9a-1…3, 9b, 10). Việc của máy Windows: chạy `Phase9AcceptanceTests` (3 kịch bản mới), kiểm tay theo SPEC mục Phase 9 "Kiểm tay" (qpdf, LibreOffice, veraPDF). Kế tiếp: P10 (OCR). Máy Windows tắt; **phiên cloud "Đọc repo" nhận toàn bộ phần còn lại của P9** (8a, 8b, 9a, 9b, 10). Ảnh PNG/JPEG xuất ra giờ ghi DPI. Xem "Lời nhắn bàn giao" ngay dưới.
+Cập nhật lần cuối: 10/11/2026 — **Phase 10 (OCR) đang làm** trên cloud: lát 1 (bộ máy Tesseract) xong. Phase 9 xong về code (CI xanh tới `2a5be01`). Việc của máy Windows: chạy `tools/fetch-tools.ps1` (qpdf + **Tesseract + tessdata**, ghim SHA-256 in ra), `Phase9AcceptanceTests` (3 kịch bản mới), kiểm tay P9 (LibreOffice, veraPDF). Xem "Lời nhắn bàn giao" ngay dưới.
 
 ## 0. Lời nhắn bàn giao (10/11/2026, cập nhật lần 3)
 
@@ -16,7 +16,7 @@ Cập nhật lần cuối: 10/11/2026 — **Phase 9 xong về code** (cloud: 8a,
 3. Kiểm tay theo SPEC mục Phase 9 "Kiểm tay": `tools/fetch-tools.ps1` (qpdf), LibreOffice thật, **veraPDF thật** (container cloud không chạy được bộ cài veraPDF — mọi quy tắc veraPDF báo đều là việc cần sửa ở `Converting/PdfA/`).
 4. Ghi số đo vào SPEC mục Phase 9, cập nhật tệp này.
 
-**Kế tiếp:** P10 (OCR tiếng Việt, `PdfPro.Ocr` còn trống) theo `docs/PROMPTS.md`.
+**Đang làm:** P10 (OCR tiếng Việt) theo `docs/PROMPTS.md` — kế hoạch và các lát ở mục 4 "Phase 10". Trên Windows: chạy `tools/fetch-tools.ps1` một lần (tải Tesseract của UB Mannheim + tessdata best/fast vie, eng, osd), **chép các giá trị SHA-256 nó in ra vào script** (`-TesseractSha256`, bảng `$TessdataSha256`) để ghim — container cloud không tải được từ GitHub (proxy chặn) nên chưa ghim.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -32,7 +32,7 @@ Cập nhật lần cuối: 10/11/2026 — **Phase 9 xong về code** (cloud: 8a,
 | Nhánh làm việc | `claude/laughing-pasteur-x9yt44` |
 | PR | NgSyNguyen/PDF-pro#1 (draft → `main`) — gom toàn bộ phần còn lại của Phase 5 |
 | CI | `.github/workflows/build.yml`, `windows-latest`; chạy khi push vào `main` hoặc trên pull request (nhánh không có PR thì **không** chạy CI) |
-| CI gần nhất | `d325333` (P9 lát 9b): **xanh** (cả `f9d5dc8`, `0c6658c`, `a4b6f55`, `0e51f6a`, `6ce96c5`, `cea9fb0`, `39dfd96`, `7f538c4`, `84d3efb`, `22e6489`, `77af225`, `f376296`, `7cae483`, `8fa89df`, `d028948`, `f366110`). `ea46071` đỏ do test named pipe chập chờn (sửa ở `f376296`, xem mục 6); `5282022` đỏ do đặc tả NSubstitute mơ hồ (sửa ở `40439cf`) |
+| CI gần nhất | `2a5be01` (P9 lát 10): **xanh** (cả `d325333`, `f9d5dc8`, `0c6658c`, `a4b6f55`, `0e51f6a`, `6ce96c5`, `cea9fb0`, `39dfd96`, `7f538c4`, `84d3efb`, `22e6489`, `77af225`, `f376296`, `7cae483`, `8fa89df`, `d028948`, `f366110`). `ea46071` đỏ do test named pipe chập chờn (sửa ở `f376296`, xem mục 6); `5282022` đỏ do đặc tả NSubstitute mơ hồ (sửa ở `40439cf`) |
 
 - Trên máy chủ dự án có `README.md` chưa track (không rõ nguồn) — **chưa commit**; README chính thức để tới P13.
 - Máy chủ dự án cần `git config user.name/user.email` trong repo (đã từng thiếu → commit thất bại im lặng).
@@ -53,6 +53,7 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 - `dot.net`/`builds.dotnet.microsoft.com` bị proxy chặn → cài SDK từ kho Ubuntu: `apt-get install -y dotnet-sdk-10.0` (10.0.1xx khớp `global.json`).
 - Build cả WPF được: `dotnet build PdfPro.slnx -c Release -p:EnableWindowsTargeting=true`.
 - Chạy được: `Core.Tests`, `Operations.Tests`, `Infrastructure.Tests` (`dotnet test --project tests/PdfPro.X.Tests -c Release --no-build`).
+- OCR thật (P10): `apt-get install -y tesseract-ocr tesseract-ocr-vie tesseract-ocr-eng tesseract-ocr-osd` (Tesseract 5.3.4, dữ liệu ở `/usr/share/tesseract-ocr/5/tessdata` có `pdf.ttf`); test cần Tesseract tự bỏ qua khi không có (CI Windows chưa có Tesseract).
 - **Không** chạy được: `App.Tests`, `Pdfium.Tests` (net10.0-windows) → dựa vào CI của PR.
 - Lỗi chỉ có trên Linux (bỏ qua, trên Windows đều xanh): Core 1 test (`SessionSource_RejectsUnsafeIdsAndPaths("C:\\s0.pdf")`), Infrastructure 27 test (đường dẫn `C:\`, khóa tệp, `.exe` giả, named pipe).
 
@@ -69,7 +70,8 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | P7 Sửa nội dung gốc & biểu mẫu | Xong về code (`d5d3523` … lát 9), có mục SPEC và `Phase7AcceptanceTests` (chưa chạy tay) |
 | P8 Bảo mật, xóa vĩnh viễn & chữ ký số | Xong về code (lát 1–9), có mục SPEC và `Phase8AcceptanceTests` (chưa chạy tay) |
 | P9 Tối ưu, sửa lỗi & chuyển đổi | Xong về code (lát 1–10), có mục SPEC và `Phase9AcceptanceTests` (5 kịch bản đạt trên Windows, 3 mới chưa chạy tay) |
-| P10–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
+| **P10 OCR & bộ công cụ scan** | **Đang làm** — xem bảng lát "Phase 10" |
+| P11–P13 | Chưa bắt đầu (`PdfPro.Cli` mới có `--version`) |
 
 ### Phase 5 — các lát
 
@@ -210,6 +212,25 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | 9b | `convert.toPdfA` — App: ribbon `convert.toPdfA` ("PDF/A", `Archive24`, nhóm Tối ưu) → `ToPdfACommand` (`MainWindowViewModel.PdfA.cs`: từ chối tài liệu có mật khẩu, áp dụng đối tượng chờ, `ViewModels/Converting/PdfAViewModel.cs` + `Views/PdfAWindow.xaml` (2b khuyên dùng / 1b có mô tả đánh đổi, cảnh báo chữ ký số, ô kiểm veraPDF chỉ bật khi có veraPDF + Java), hỏi nơi lưu "{tên} (PDF-A).pdf", tài liệu như đang hiển thị, chạy nền rồi veraPDF nếu chọn, báo cáo `PdfAMessage` (vấn đề còn lại theo trang, thay đổi theo `PdfA_Fix_*`, trang thành ảnh, kết luận + tối đa 10 quy tắc veraPDF) + "Mở tệp"); Cài đặt: thẻ veraPDF (`AppSettings.VeraPdfPath`, `SettingsViewModel.VeraPdfPath/VeraPdfStatus/PickVeraPdfCommand`, tham số tùy chọn `IVeraPdfLocator?`); `OptimizingServices.ToPdfA/VeraPdf/VeraPdfLocator`; DI `AddOperation<ToPdfAOperation>`, `IVeraPdfLocator` → `new VeraPdfLocator()`, `VeraPdfValidator`; `IPageDialogService.ShowPdfA`; 64 chuỗi vi/en. Test: `PdfAViewModelTests` (3), `MainWindowViewModelTests.PdfA.cs` (3: bản 2b thật + veraPDF giả đạt; 1b không có veraPDF rồi mở tệp; nội dung báo cáo), `SettingsViewModelTests` +1, id ribbon. FlaUI: lát 10 | commit `feat(app): PDF/A copies from the ribbon, checked by veraPDF when installed` | Xong (App test chỉ chạy trên CI) |
 | 10 | Mục SPEC Phase 9 hoàn chỉnh (quyết định/giới hạn, nghiệm thu, kiểm tay, số đo) + `Phase9AcceptanceTests` thêm 3 kịch bản: `AScanOfFiftyPages_IsCompressedForEBooks_ToLessThan15MB_AtAReadableResolution` (scan 50 trang A4 300 DPI vẽ bằng WPF `TestSupport/ScanPdf.cs`, > 40 MB → eBook < 15 MB, ảnh ≥ 140 DPI), `AWordDocument_BecomesAPdf_WithItsVietnameseText` (bỏ qua khi không có LibreOffice), `ADocument_BecomesAPdfA2bCopy_WithItsTextAndAnOutputIntent`; UiTests bật `UseWPF` (+ `<Using Include="System.IO" />`) | commit `test: Phase 9 acceptance scenarios, and the Phase 9 section of the SPEC` | Xong — **3 kịch bản mới chưa chạy tay trên Windows** |
 
+### Phase 10 — các lát (kế hoạch do agent tự quyết, 10/11/2026)
+
+**Quyết định (sẽ vào SPEC mục Phase 10):**
+- Phân lớp: hợp đồng `IOcrEngine` (+ `OcrImage`, `OcrOptions`, `OcrPageResult`, `OcrWord`, `OcrOrientation`, `OcrException`/`OcrFailure`) ở **Core** (`PdfPro.Core.Ocr`); bản cài đặt Tesseract ở **`PdfPro.Ocr`** (`TesseractLocator`, `TesseractEngine`); pipeline `ocr.run` và `scan.*` ở **Operations** dùng `IOcrEngine` qua DI (Operations không tham chiếu ngang Ocr — `ArchitectureTests`). Xử lý ảnh quét (nghiêng, trang trắng, viền đen) viết bằng C# thuần ở Core `Imaging` trên `GrayImage`.
+- **Không thêm OpenCvSharp4** (dù có trong stack của SPEC): gói native ~60 MB, khó chạy test trên Linux; các việc cần (ước lượng nghiêng theo hình chiếu, xoay, ngưỡng, trang trắng, viền) viết tay được và test nhanh; nhị phân hóa để Tesseract tự làm (Otsu mặc định — đo trên `scan-vi` 7 trang: Otsu 90,9 / Sauvola 90,8 / Otsu cục bộ 82,3 độ tin cậy trung bình).
+- Tesseract chạy một lần mỗi trang ra cả PDF chỉ có lớp chữ (`textonly_pdf=1`), TSV (từ, hộp, độ tin cậy), TXT và (khi cần) hOCR; dùng `-c tessedit_create_*` thay cho tệp cấu hình (thư mục tessdata tải về không có `configs/`). PDF lớp chữ cần **`pdf.ttf`** trong thư mục dữ liệu → bộ tìm chỉ nhận thư mục có `pdf.ttf` + ít nhất một ngôn ngữ; `fetch-tools.ps1` chép `pdf.ttf` vào `tessdata-best`/`tessdata-fast`. Mỗi lần chạy một luồng (`OMP_THREAD_LIMIT=1`), song song do pipeline lo.
+- Ngôn ngữ mặc định **`vie`**: `vie+eng` đọc chữ hoa có dấu kém hơn (đo: "ỦY BAN" → "UY BAN", "CỘNG" → "CONG") — tiếng Anh là tùy chọn.
+- Trang render 300 DPI bằng PDFium cho OCR (bản quét 90 DPI của `scan-vi` đọc tốt hơn hẳn khi phóng lên 300 DPI).
+- OSD: dòng "Rotate: N" = số độ phải xoay ảnh **theo chiều kim đồng hồ** cho chữ đứng thẳng (ảnh bị xoay 90° thuận → Rotate 270); trang quá ít chữ → Tesseract thoát mã 1 "Too few characters" → `null` (không phải lỗi).
+
+| Lát | Nội dung | Commit | Trạng thái |
+|---|---|---|---|
+| 1 | Bộ máy Tesseract: Core `Ocr/OcrEngine.cs` (hợp đồng), `Imaging/GrayImage.cs` (`FromBgra` luma trên nền trắng, `White`), `PngCodec.EncodeGray` (PNG xám 8 bit, lọc Sub, `pHYs`); `PdfPro.Ocr/TesseractLocator.cs` (đường dẫn chọn là chỗ duy nhất khi có; `tools/tesseract` → Program Files/LocalAppData `Tesseract-OCR` → /usr/bin… → PATH; dữ liệu: `tessdata-best`/`-fast` cạnh chương trình hoặc trong tools → `tessdata` của chương trình → `TESSDATA_PREFIX` → thư mục hệ thống; `TesseractInstallation.Data` null = dữ liệu của chính Tesseract), `TesseractEngine.cs` (`TesseractSettings(ProgramPath, Data)`; mã ngôn ngữ được kiểm; thư mục làm việc riêng `pdfpro-ocr-{guid}` xóa sau; `TESSDATA_PREFIX` bị gỡ khỏi môi trường con; lỗi → `OcrFailure` NotInstalled/LanguageMissing/Failed/TimedOut), `TesseractOutput` (TSV → từ NFC bỏ ô trống/conf −1; OSD); `tools/fetch-tools.ps1` tải Tesseract 5.5.0.20241111 (UB Mannheim; 7-Zip giải nén, không có thì bộ cài im lặng `/S /D=`) + tessdata best/fast thẻ 4.1.0 (vie, eng, osd) + `SHA256SUMS.txt`; App csproj chép `tools/tesseract` khi có; THIRD_PARTY_NOTICES. Test: `TesseractEngineTests` (12, có Tesseract thật: trang 1 `scan-vi` ra "ủy ban nhân dân", độ tin cậy > 70, PDF lớp chữ đúng khổ, hOCR; OSD trang 12 lộn ngược = 180, trang trắng = null), `GrayImageTests` (3) | commit `feat: a Tesseract engine for OCR` | Xong (script tải Tesseract **chưa chạy thử trên Windows**, SHA-256 chưa ghim) |
+| 2 | Phân tích ảnh quét (Core `Imaging`): ước lượng nghiêng ±10° theo hình chiếu, xoay ảnh, tăng tương phản/khử nhiễu cho ảnh đưa vào OCR, phát hiện trang trắng (ngưỡng mực, bỏ lề, chịu bóng gáy), phát hiện viền đen | — | Chưa làm |
+| 3 | `ocr.run` lõi (Operations, thao tác nội dung): lớp chữ có sẵn (bỏ qua / thay lớp ẩn cũ / OCR mọi trang), render 300 DPI, hướng (OSD) + nghiêng chỉ cho ảnh OCR, Tesseract song song (mặc định số nhân − 1), PDF lớp chữ đặt như form XObject lên trang gốc qua ma trận (xoay/nghiêng/hộp hiển thị), phông GlyphLessFont dùng chung, ảnh gốc giữ nguyên từng byte; báo cáo độ tin cậy từng trang + trang dưới ngưỡng; TXT/hOCR; tiến độ + ước lượng thời gian còn lại; hủy = không đổi gì | — | Chưa làm |
+| 4 | App: lệnh OCR (ribbon), hộp thoại (ngôn ngữ, lớp chữ có sẵn, số luồng, làm thẳng trang thật, xuất TXT/hOCR, ngưỡng), Cài đặt (đường dẫn Tesseract, best/fast), revision + tiến độ/ETA, báo cáo; gợi ý OCR của panel Tìm kiếm / Sang văn bản mở lệnh này; DI | — | Chưa làm |
+| 5 | `scan.removeBlankPages` (xem trước + xác nhận, thao tác trang), `scan.deskew` (ma trận quanh tâm, ảnh không đổi), `scan.autoRotate` (OSD → xoay trong PagePlan), `scan.cleanBorders`, lối vào `scan.splitByBlank` (tách theo trang trắng của P4) | — | Chưa làm |
+| 6 | Mục SPEC Phase 10, `Phase10AcceptanceTests`, số đo 100 trang song song / tuần tự | — | Chưa làm |
+
 ## 5. Bản đồ mã Phase 5
 
 - **Core:** `Overlay/OverlayItems.cs` (đối tượng, `OverlayLimits`), `Overlay/OverlaySnapping.cs`, `Geometry/RotatedBox.cs`, `Geometry/PdfMatrix.cs`, `Text/TextLayout.cs`, `Text/FontFamilies.cs`, `Stamping/StampTemplate.cs` (`Parse`, `Render`, `Escape`), `Stamping/PageNumbering.cs`, `Stamping/BatesNumbering.cs`, `Stamping/StampPlacement.cs`, `Imaging/SignatureImages.cs`, `Imaging/ExifOrientation.cs`, `Organizing/MaterializedGeometry.cs`.
@@ -291,6 +312,7 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - `ListBox` có mẫu mục chứa `TextWrapping="Wrap"` phải đặt `ScrollViewer.HorizontalScrollBarVisibility="Disabled"`, không thì chữ không xuống dòng mà hiện thanh cuộn ngang.
 - **Bộ giải LZW của PDFsharp 6.2.4 sai**: mất byte (1038/1040 với dữ liệu qpdf giải đúng), ném `NullReferenceException` với `/EarlyChange 0`. `StreamData` giải LZW bằng `TiffLzw.Decode` (cả hai kiểu đổi độ rộng mã, đã đối chiếu qpdf trên 20 KB) rồi tự gỡ predictor PNG/TIFF 2; **mọi chỗ đọc stream dùng `StreamData.Bytes`** (không dùng `PdfDictionary.Stream.UnfilteredValue` trực tiếp). Trước đó nén, thang xám, đóng dấu, bố cục trang, làm sạch có thể làm hỏng âm thầm content stream LZW.
 - **PDFsharp gắn `/Group /S /Transparency /CS /DeviceRGB` vào mọi trang khi lưu** (để Acrobat vẽ đúng) trừ khi `document.Options.ColorMode = PdfColorMode.Undefined` — PDF/A-1 cấm nhóm trong suốt, nên PDF/A đặt `Undefined`. `PdfDocument.SetPdfA()` của PDFsharp ghi cứng XMP "PDF/A-1a" → không dùng; chỉ lấy hồ sơ `PdfSharp.Resources.sRGB2014.icc`.
+- **Tesseract (P10):** proxy của container cloud **chặn GitHub raw/API** (403) → không tải được tessdata/bộ cài Windows để ghim SHA-256 ở cloud; trên Linux dùng gói `apt`. Tesseract ghi tiếng Việt dựng sẵn (U+1EE6 "Ủ"…) trong TSV/TXT và trong `/ToUnicode` của PDF lớp chữ (mã CID = mã UTF-16, `GlyphLessFont` Identity-H) — vẫn chuẩn hóa NFC khi đọc.
 - `qpdf --check` báo "input stream is complete but output may still be valid" với stream Flate do PDFsharp nén (có cả trong `samples/` gốc) — vô hại.
 - **veraPDF trong container cloud**: Java 21 có sẵn, bộ cài veraPDF 1.30.3 có trên Maven Central (`org/verapdf/apps/installer/1.30.3/installer-1.30.3-installer.zip`, sha1 `1bf5cef7be4c87abbd93d37034cc320fa06b747a`) nhưng **chạy bộ cài tải về bị bộ phân loại an toàn chặn** → muốn kiểm PDF/A thật cần chủ dự án cho phép, hoặc kiểm trên Windows.
 - `PdfOperation.ExecuteAsync` **chỉ kiểm DataAnnotations**, không gọi `ValidateCore` — thao tác tự gọi `Validate` trong `ExecuteCoreAsync` khi cần (như `BatesOperation`, `ProtectDocumentOperation`).

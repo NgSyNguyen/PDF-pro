@@ -73,6 +73,60 @@ public static class PngCodec
         return output.ToArray();
     }
 
+    /// <summary>
+    /// Encodes a grey picture as an 8-bit grey PNG, with its resolution (pHYs) when given. Pictures handed to another
+    /// program (OCR) are written fast rather than small.
+    /// </summary>
+    public static byte[] EncodeGray(GrayImage image, double? dpi = null, CompressionLevel level = CompressionLevel.Fastest)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        var raw = new byte[(long)(image.Width + 1) * image.Height];
+        for (var y = 0; y < image.Height; y++)
+        {
+            // Filter 1 (Sub) compresses scanned pages much better than none at the same speed.
+            var row = y * (image.Width + 1);
+            raw[row] = 1;
+            var source = image.Row(y);
+            raw[row + 1] = source[0];
+            for (var x = 1; x < source.Length; x++)
+            {
+                raw[row + 1 + x] = (byte)(source[x] - source[x - 1]);
+            }
+        }
+
+        using var output = new MemoryStream();
+        output.Write(Signature);
+        var header = new byte[13];
+        BinaryPrimitives.WriteInt32BigEndian(header, image.Width);
+        BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4), image.Height);
+        header[8] = 8; // bit depth
+        header[9] = 0; // grey
+        WriteChunk(output, "IHDR", header);
+        if (dpi is { } resolution)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(resolution, nameof(dpi));
+            var physical = new byte[9];
+            var perMetre = (int)Math.Round(resolution / 0.0254);
+            BinaryPrimitives.WriteInt32BigEndian(physical, perMetre);
+            BinaryPrimitives.WriteInt32BigEndian(physical.AsSpan(4), perMetre);
+            physical[8] = 1; // metres
+            WriteChunk(output, "pHYs", physical);
+        }
+
+        using (var compressed = new MemoryStream())
+        {
+            using (var zlib = new ZLibStream(compressed, level, leaveOpen: true))
+            {
+                zlib.Write(raw);
+            }
+
+            WriteChunk(output, "IDAT", compressed.ToArray());
+        }
+
+        WriteChunk(output, "IEND", []);
+        return output.ToArray();
+    }
+
     /// <summary>Decodes a PNG into BGRA pixels.</summary>
     /// <exception cref="InvalidDataException">Not a PNG this codec reads (damaged, interlaced, too large).</exception>
     public static BgraImage Decode(ReadOnlySpan<byte> data)
