@@ -6,6 +6,7 @@ using PdfPro.Operations.Forms;
 using PdfPro.Operations.Materializing;
 using PdfSharp.Pdf;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.Operations.Security;
 
@@ -242,9 +243,9 @@ internal static class RedactionCleanup
 
         var catalog = document.Internals.Catalog;
         var xmp = false;
-        if (AsDictionary(catalog.Elements["/Metadata"]) is { Stream: { } stream })
+        if (AsDictionary(catalog.Elements["/Metadata"]) is { Stream: not null } metadata)
         {
-            var bytes = stream.UnfilteredValue;
+            var bytes = StreamData.Bytes(metadata);
             var text = Encoding.UTF8.GetString(bytes);
             if (Names(System.Net.WebUtility.HtmlDecode(text), needles))
             {

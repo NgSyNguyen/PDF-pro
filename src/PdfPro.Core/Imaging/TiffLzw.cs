@@ -13,7 +13,10 @@ public static class TiffLzw
     private const int MaxCode = 4094;
     private const int Keys = 4096 * 256;
 
-    public static byte[] Encode(ReadOnlySpan<byte> data)
+    /// <summary>LZW codes for <paramref name="data"/>.</summary>
+    /// <param name="data">The data.</param>
+    /// <param name="earlyChange">Whether the code width grows one code early (TIFF; PDF's default /EarlyChange 1).</param>
+    public static byte[] Encode(ReadOnlySpan<byte> data, bool earlyChange = true)
     {
         var output = new BitWriter(Math.Max(64, data.Length / 2));
         var codes = new int[Keys];
@@ -50,7 +53,7 @@ public static class TiffLzw
                 width = 9;
                 next = FirstCode;
             }
-            else if (next > (1 << width) - 1 && width < 12)
+            else if (next > (1 << width) - (earlyChange ? 1 : 0) && width < 12)
             {
                 // The decoder adds its entries one code later: it widens when its next code would be 2^n − 1.
                 width++;
@@ -66,7 +69,7 @@ public static class TiffLzw
             output.Write(Clear, width);
             width = 9;
         }
-        else if (next > (1 << width) - 1 && width < 12)
+        else if (next > (1 << width) - (earlyChange ? 1 : 0) && width < 12)
         {
             width++;
         }
@@ -76,8 +79,13 @@ public static class TiffLzw
     }
 
     /// <summary>The data LZW-coded <paramref name="encoded"/> stands for (stops at EndOfInformation or the end).</summary>
+    /// <param name="encoded">The codes.</param>
+    /// <param name="earlyChange">
+    /// Whether the code width grows one code early, as TIFF and PDF (/EarlyChange 1, the default) write it; false for
+    /// PDF streams with /EarlyChange 0.
+    /// </param>
     /// <exception cref="InvalidDataException">A code that is not in the table.</exception>
-    public static byte[] Decode(ReadOnlySpan<byte> encoded)
+    public static byte[] Decode(ReadOnlySpan<byte> encoded, bool earlyChange = true)
     {
         var output = new List<byte>(encoded.Length * 3);
         var prefixes = new int[4096];
@@ -132,7 +140,7 @@ public static class TiffLzw
             }
 
             previous = code;
-            if (next == (1 << width) - 1 && width < 12)
+            if (next == (1 << width) - (earlyChange ? 1 : 0) && width < 12)
             {
                 width++;
             }

@@ -35,6 +35,8 @@ Before adding a package: state its name, license and reason, and add it below.
 | [qpdf](https://github.com/qpdf/qpdf) (`qpdf.exe` and its DLLs, fetched by `tools/fetch-tools.ps1` into `tools/qpdf`, shipped next to `PdfPro.exe` in `tools\qpdf` with its license files) | 12.2.0 (msvc64) | Apache-2.0 | Fast Web View (linearize), object streams, cross-reference recovery of damaged files; run as a separate process (`IExternalToolRunner`), never linked |
 | [Dancing Script](https://github.com/impallari/DancingScript) Regular (`assets/fonts/DancingScript`) | OTF, 2026-10 | SIL OFL 1.1, Reserved Font Name "Dancing Script" (`assets/fonts/DancingScript/OFL.txt`); shipped unmodified | Handwriting style for signatures typed by name (drawn into the signature picture); shipped as files in `Fonts` next to `PdfPro.exe`, with their OFL.txt |
 
+The ICC's **sRGB2014.icc** profile (International Color Consortium; "may be copied, distributed, embedded, made, used, and sold without restriction") is embedded into documents converted to PDF/A as their output intent. PDF_Pro takes it from the resource PDFsharp 6.2.4 ships it as (`PdfSharp.Resources.sRGB2014.icc`).
+
 ### Libraries bundled inside PDFium (and, for JPEG, inside Skia)
 
 | Component | License |

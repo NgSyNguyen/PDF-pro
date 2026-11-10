@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using PdfSharp.Pdf;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.Operations.Editing;
 
@@ -57,9 +58,9 @@ public static class FontCoverage
     /// <summary>The code points the font can write, or null when that cannot be known.</summary>
     internal static IReadOnlySet<int>? Covered(PdfDictionary font)
     {
-        if (AsDictionary(font.Elements["/ToUnicode"]) is { Stream: { } stream })
+        if (AsDictionary(font.Elements["/ToUnicode"]) is { Stream: not null } cmap)
         {
-            var bytes = stream.UnfilteredValue;
+            var bytes = StreamData.Bytes(cmap);
             return bytes.Length is > 0 and <= MaxCMapBytes ? ParseToUnicode(bytes) : null;
         }
 

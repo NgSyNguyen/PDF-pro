@@ -6,6 +6,7 @@ using PdfPro.Core.Geometry;
 using PdfPro.Core.Text;
 using PdfSharp.Pdf;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.Operations.Forms;
 
@@ -172,7 +173,7 @@ public static partial class FormReader
     private static string? Script(PdfItem? item) => Resolve(item) switch
     {
         PdfString text => text.Value,
-        PdfDictionary { Stream: { } stream } => Encoding.Latin1.GetString(stream.UnfilteredValue.AsSpan(0, Math.Min(stream.UnfilteredValue.Length, 65_536))),
+        PdfDictionary { Stream: not null } dictionary when StreamData.Bytes(dictionary) is var bytes => Encoding.Latin1.GetString(bytes.AsSpan(0, Math.Min(bytes.Length, 65_536))),
         _ => null,
     };
 

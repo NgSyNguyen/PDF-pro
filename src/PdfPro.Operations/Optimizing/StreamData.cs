@@ -83,14 +83,21 @@ internal static class StreamData
             for (; at < filters.Count && IsGeneral(filters[at].Name); at++)
             {
                 var (name, parameters) = filters[at];
-                if (parameters is not null && Integer(parameters, "/Predictor") is > 1 and < 10)
+                if (name == "/LZWDecode")
+                {
+                    data = Lzw(data, parameters);
+                }
+                else if (parameters is not null && Integer(parameters, "/Predictor") is > 1 and < 10)
                 {
                     return null; // the TIFF predictor, which PDFsharp does not undo
                 }
+                else
+                {
+                    data = name == "/RunLengthDecode"
+                        ? RunLength(data)
+                        : Filtering.GetFilter(name)?.Decode(data, parameters is null ? new FilterParms(null) : new FilterParms(parameters));
+                }
 
-                data = name == "/RunLengthDecode"
-                    ? RunLength(data)
-                    : Filtering.GetFilter(name)?.Decode(data, parameters is null ? new FilterParms(null) : new FilterParms(parameters));
                 if (data is null)
                 {
                     return null;
@@ -108,6 +115,90 @@ internal static class StreamData
 
     /// <summary>The data of a stream whose filters are all general-purpose, decoded; null otherwise.</summary>
     public static byte[]? Decode(PdfDictionary stream) => Decode(stream, out var remaining) is { } data && remaining.Count == 0 ? data : null;
+
+    /// <summary>
+    /// A stream's data decoded (content, CMaps, appearances): by <see cref="Decode(PdfDictionary)"/>, else as PDFsharp
+    /// undoes it (which may throw on damaged data, as before). PDFsharp alone is not trusted with LZW.
+    /// </summary>
+    public static byte[] Bytes(PdfDictionary stream) => Decode(stream) ?? stream.Stream?.UnfilteredValue ?? [];
+
+    /// <summary>
+    /// LZWDecode (7.4.4) undone by PDF_Pro's own decoder — PDFsharp 6.2.4 loses bytes of some LZW data — then its
+    /// predictor: PNG (10–15, a filter byte per row) or TIFF 2 (8 bits per component). Null when it cannot be undone.
+    /// </summary>
+    private static byte[]? Lzw(byte[] data, PdfDictionary? parameters)
+    {
+        var earlyChange = parameters is null || Integer(parameters, "/EarlyChange") is not 0;
+        var decoded = PdfPro.Core.Imaging.TiffLzw.Decode(data, earlyChange);
+        var predictor = parameters is null ? 1 : Integer(parameters, "/Predictor") ?? 1;
+        if (predictor <= 1)
+        {
+            return decoded;
+        }
+
+        var colors = Math.Max(1, Integer(parameters!, "/Colors") ?? 1);
+        var bits = Integer(parameters!, "/BitsPerComponent") ?? 8;
+        var columns = Math.Max(1, Integer(parameters!, "/Columns") ?? 1);
+        if (bits is not (1 or 2 or 4 or 8 or 16) || (long)colors * bits * columns > int.MaxValue / 2)
+        {
+            return null;
+        }
+
+        var row = ((colors * bits * columns) + 7) / 8;
+        return predictor >= 10 ? UndoPng(decoded, row, Math.Max(1, colors * bits / 8)) : predictor == 2 && bits == 8 ? UndoTiff(decoded, row, colors) : null;
+    }
+
+    /// <summary>PNG predictors: each row starts with its filter (0 none, 1 sub, 2 up, 3 average, 4 Paeth).</summary>
+    private static byte[] UndoPng(byte[] data, int row, int pixel)
+    {
+        var rows = data.Length / (row + 1);
+        var output = new byte[rows * row];
+        for (var y = 0; y < rows; y++)
+        {
+            var filter = data[y * (row + 1)];
+            var source = (y * (row + 1)) + 1;
+            var at = y * row;
+            for (var x = 0; x < row; x++)
+            {
+                int left = x >= pixel ? output[at + x - pixel] : 0;
+                int up = y > 0 ? output[at - row + x] : 0;
+                int corner = x >= pixel && y > 0 ? output[at - row + x - pixel] : 0;
+                var value = data[source + x];
+                output[at + x] = (byte)(filter switch
+                {
+                    1 => value + left,
+                    2 => value + up,
+                    3 => value + ((left + up) / 2),
+                    4 => value + Paeth(left, up, corner),
+                    _ => value,
+                });
+            }
+        }
+
+        return output;
+    }
+
+    private static int Paeth(int left, int up, int corner)
+    {
+        var estimate = left + up - corner;
+        var (a, b, c) = (Math.Abs(estimate - left), Math.Abs(estimate - up), Math.Abs(estimate - corner));
+        return a <= b && a <= c ? left : b <= c ? up : corner;
+    }
+
+    /// <summary>TIFF predictor 2 for 8-bit components: each sample after the first pixel of a row adds the one before it.</summary>
+    private static byte[] UndoTiff(byte[] data, int row, int colors)
+    {
+        var output = (byte[])data.Clone();
+        for (var start = 0; start + row <= output.Length; start += row)
+        {
+            for (var x = colors; x < row; x++)
+            {
+                output[start + x] += output[start + x - colors];
+            }
+        }
+
+        return output;
+    }
 
     public static int? Integer(PdfDictionary dictionary, string key) => Resolve(dictionary.Elements[key]) switch
     {

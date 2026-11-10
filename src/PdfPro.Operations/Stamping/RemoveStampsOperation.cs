@@ -6,6 +6,7 @@ using PdfPro.Operations.Organizing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.Operations.Stamping;
 
@@ -89,7 +90,7 @@ public sealed partial class RemoveStampsOperation : DocumentContentOperation<Rem
 
         foreach (var stream in removed)
         {
-            var text = Encoding.ASCII.GetString(AsDictionary(stream)?.Stream?.UnfilteredValue ?? []);
+            var text = Encoding.ASCII.GetString(AsDictionary(stream) is { } dictionary ? StreamData.Bytes(dictionary) : []);
             foreach (Match match in ResourceName().Matches(text))
             {
                 var key = match.Groups["kind"].Value switch { "X" => "/XObject", "OC" => "/Properties", _ => "/ExtGState" };

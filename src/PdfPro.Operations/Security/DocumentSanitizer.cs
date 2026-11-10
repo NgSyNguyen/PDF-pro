@@ -2,6 +2,7 @@ using PdfPro.Operations.Annotating;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.Operations.Security;
 
@@ -438,14 +439,14 @@ internal static class DocumentSanitizer
         {
             var resources = AsDictionary(form.Elements["/Resources"]) ?? pageResources;
             var changed = false;
-            if (form.Stream is { } stream)
+            if (form.Stream is not null)
             {
-                var bytes = stream.UnfilteredValue;
+                var bytes = StreamData.Bytes(form);
                 var found = ContentSections.Find(bytes, HiddenProperty(resources), HiddenXObject(resources));
                 unbalanced += found.Unbalanced;
                 if (found.Spans.Count > 0)
                 {
-                    stream.Value = SanitizeOperation.Compress(ContentSections.Remove(bytes, found.Spans));
+                    form.Stream.Value = SanitizeOperation.Compress(ContentSections.Remove(bytes, found.Spans));
                     form.Elements.SetName("/Filter", "/FlateDecode");
                     form.Elements.Remove("/DecodeParms");
                     content += found.Spans.Count;
@@ -545,7 +546,7 @@ internal static class DocumentSanitizer
         using var joined = new MemoryStream();
         foreach (var stream in streams)
         {
-            joined.Write(stream.Stream.UnfilteredValue);
+            joined.Write(StreamData.Bytes(stream));
             joined.WriteByte((byte)'\n');
         }
 
