@@ -278,7 +278,8 @@ public static class PngCodec
         return (palette[index * 3], palette[(index * 3) + 1], palette[(index * 3) + 2], alpha);
     }
 
-    private static void WriteChunk(Stream output, string type, ReadOnlySpan<byte> body)
+    /// <summary>Writes one chunk: length, type, body and its CRC-32.</summary>
+    internal static void WriteChunk(Stream output, string type, ReadOnlySpan<byte> body)
     {
         Span<byte> length = stackalloc byte[4];
         BinaryPrimitives.WriteInt32BigEndian(length, body.Length);

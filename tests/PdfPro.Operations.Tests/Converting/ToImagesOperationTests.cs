@@ -34,6 +34,7 @@ public sealed class ToImagesOperationTests(PdfiumFixture pdfium) : IDisposable
         bitmap.AlphaType.ShouldBe(SKAlphaType.Opaque);
         Directory.GetFiles(folder).Length.ShouldBe(2, "no temporary file is left");
         result.Bytes.ShouldBe(result.Files.Sum(f => new FileInfo(f).Length));
+        ImageResolution.ReadPng(File.ReadAllBytes(result.Files[0])).ShouldNotBeNull().X.ShouldBe(72, 0.05, "the PNG says its resolution");
     }
 
     [Fact]
@@ -65,6 +66,7 @@ public sealed class ToImagesOperationTests(PdfiumFixture pdfium) : IDisposable
         ((double)JpegHeader.Read(File.ReadAllBytes(good.Files[0])).ShouldNotBeNull().Quality!.Value).ShouldBe(95, 2);
         ((double)JpegHeader.Read(File.ReadAllBytes(poor.Files[0])).ShouldNotBeNull().Quality!.Value).ShouldBe(30, 2);
         poor.Bytes.ShouldBeLessThan(good.Bytes);
+        ImageResolution.ReadJpeg(File.ReadAllBytes(good.Files[0])).ShouldBe((100.0, 100.0), "the JFIF header says the resolution");
     }
 
     [Theory]

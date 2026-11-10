@@ -83,6 +83,94 @@ public static class ImageResolution
         return null;
     }
 
+    /// <summary>
+    /// The JPEG with its JFIF header saying <paramref name="dpi"/> dots per inch both ways: the first JFIF APP0 segment
+    /// is patched, and one is added after the start of image when there is none. The coded picture is not touched.
+    /// </summary>
+    /// <exception cref="InvalidDataException">The bytes are not a JPEG.</exception>
+    public static byte[] WithJpegResolution(ReadOnlySpan<byte> jpeg, double dpi)
+    {
+        if (jpeg.Length < 4 || jpeg[0] != 0xFF || jpeg[1] != 0xD8)
+        {
+            throw new InvalidDataException("The picture is not a JPEG.");
+        }
+
+        var density = Density(dpi);
+        var at = 2;
+        while (at + 4 <= jpeg.Length && jpeg[at] == 0xFF && jpeg[at + 1] is not (0xD9 or 0xDA))
+        {
+            var length = BinaryPrimitives.ReadUInt16BigEndian(jpeg[(at + 2)..]);
+            if (length < 2 || at + 2 + length > jpeg.Length)
+            {
+                break;
+            }
+
+            if (jpeg[at + 1] == 0xE0 && length >= 2 + 12 && jpeg.Slice(at + 4, 5).SequenceEqual("JFIF\0"u8))
+            {
+                var patched = jpeg.ToArray();
+                var units = at + 4 + 7;
+                patched[units] = 1; // dots per inch
+                BinaryPrimitives.WriteUInt16BigEndian(patched.AsSpan(units + 1), density);
+                BinaryPrimitives.WriteUInt16BigEndian(patched.AsSpan(units + 3), density);
+                return patched;
+            }
+
+            at += 2 + length;
+        }
+
+        byte[] header = [0xFF, 0xE0, 0, 16, .. "JFIF\0"u8, 1, 1, 1, (byte)(density >> 8), (byte)density, (byte)(density >> 8), (byte)density, 0, 0];
+        return [0xFF, 0xD8, .. header, .. jpeg[2..]];
+    }
+
+    /// <summary>
+    /// The PNG with a pHYs chunk saying <paramref name="dpi"/> dots per inch both ways, right after its header; any
+    /// pHYs it had is dropped. The other chunks are copied as they are.
+    /// </summary>
+    /// <exception cref="InvalidDataException">The bytes are not a PNG, or its chunks are cut short.</exception>
+    public static byte[] WithPngResolution(ReadOnlySpan<byte> png, double dpi)
+    {
+        if (!PngCodec.IsPng(png))
+        {
+            throw new InvalidDataException("The picture is not a PNG.");
+        }
+
+        Span<byte> body = stackalloc byte[9];
+        var perMetre = (uint)Math.Clamp(Math.Round(dpi / 0.0254), 1, int.MaxValue);
+        BinaryPrimitives.WriteUInt32BigEndian(body, perMetre);
+        BinaryPrimitives.WriteUInt32BigEndian(body[4..], perMetre);
+        body[8] = 1; // the metre
+        using var output = new MemoryStream(png.Length + 21);
+        output.Write(png[..8]);
+        var at = 8;
+        var first = true;
+        while (at < png.Length)
+        {
+            var length = at + 12 <= png.Length ? (long)BinaryPrimitives.ReadUInt32BigEndian(png[at..]) : -1;
+            if (length < 0 || at + 12 + length > png.Length)
+            {
+                throw new InvalidDataException("A PNG chunk is cut short.");
+            }
+
+            var chunk = png.Slice(at, 12 + (int)length);
+            if (!chunk.Slice(4, 4).SequenceEqual("pHYs"u8))
+            {
+                output.Write(chunk);
+            }
+
+            if (first)
+            {
+                PngCodec.WriteChunk(output, "pHYs", body);
+                first = false;
+            }
+
+            at += chunk.Length;
+        }
+
+        return output.ToArray();
+    }
+
+    private static ushort Density(double dpi) => (ushort)Math.Clamp(Math.Round(dpi), 1, ushort.MaxValue);
+
     /// <summary>XResolution, YResolution and ResolutionUnit of an EXIF block's first directory.</summary>
     private static (double, double)? FromTiff(ReadOnlySpan<byte> tiff)
     {

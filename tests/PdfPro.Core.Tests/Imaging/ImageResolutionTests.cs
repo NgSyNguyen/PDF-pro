@@ -46,6 +46,55 @@ public sealed class ImageResolutionTests
         ImageResolution.ReadJpeg("not a picture"u8).ShouldBeNull();
     }
 
+    [Fact]
+    public void AJfifHeader_IsPatchedInPlace_AndAJpegWithoutOne_GetsOne()
+    {
+        var withJfif = Jpeg(Jfif(0, 1, 1), Segment(0xDB, new byte[65]));
+        var patched = ImageResolution.WithJpegResolution(withJfif, 150);
+
+        ImageResolution.ReadJpeg(patched).ShouldNotBeNull().ShouldBe((150.0, 150.0));
+        patched.Length.ShouldBe(withJfif.Length, "only the density changes");
+
+        var bare = Jpeg(Segment(0xDB, new byte[65]));
+        var added = ImageResolution.WithJpegResolution(bare, 299.6);
+
+        ImageResolution.ReadJpeg(added).ShouldNotBeNull().ShouldBe((300.0, 300.0), "JFIF holds whole dots per inch");
+        added.AsSpan(added.Length - (bare.Length - 2)).ToArray().ShouldBe(bare[2..], "the rest is copied as it was");
+        Should.Throw<InvalidDataException>(() => ImageResolution.WithJpegResolution("not a picture"u8, 96));
+    }
+
+    [Fact]
+    public void APngGetsOnePhys_AfterItsHeader_AndStillDecodes()
+    {
+        var picture = new BgraImage(2, 1, [0, 0, 255, 255, 255, 0, 0, 255]);
+        var png = ImageResolution.WithPngResolution(PngCodec.Encode(picture), 150);
+
+        ImageResolution.ReadPng(png).ShouldNotBeNull().X.ShouldBe(150, 0.05, "pHYs holds whole pixels per metre");
+        PngCodec.Decode(png).Pixels.ShouldBe(picture.Pixels);
+        System.Text.Encoding.ASCII.GetString(png, 8 + (12 + 13) + 4, 4).ShouldBe("pHYs", "right after IHDR");
+
+        var replaced = ImageResolution.WithPngResolution(Png(("pHYs", [.. Big32(11811), .. Big32(11811), 1])), 96);
+
+        ImageResolution.ReadPng(replaced).ShouldNotBeNull().X.ShouldBe(96, 0.05);
+        Occurrences(replaced, "pHYs"u8.ToArray()).ShouldBe(1);
+        Should.Throw<InvalidDataException>(() => ImageResolution.WithPngResolution(Png()[..30], 96));
+        Should.Throw<InvalidDataException>(() => ImageResolution.WithPngResolution("not a picture"u8, 96));
+    }
+
+    private static int Occurrences(byte[] data, byte[] value)
+    {
+        var count = 0;
+        var rest = data.AsSpan();
+        int at;
+        while ((at = rest.IndexOf(value)) >= 0)
+        {
+            count++;
+            rest = rest[(at + 1)..];
+        }
+
+        return count;
+    }
+
     private static byte[] Jpeg(params byte[][] segments) => [0xFF, 0xD8, .. segments.SelectMany(s => s), 0xFF, 0xD9];
 
     private static byte[] Jfif(byte units, int x, int y)

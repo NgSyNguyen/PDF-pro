@@ -253,7 +253,8 @@ public sealed class ToImagesOperation(PdfiumGate gate) : PdfOperation<ToImagesPa
     {
         if (parameters.Format == PageImageFormat.Jpeg)
         {
-            return JpegCodec.Encode(new PixelImage(Rgb(picture), picture.Width, picture.Height, 3), parameters.JpegQuality);
+            var jpeg = JpegCodec.Encode(new PixelImage(Rgb(picture), picture.Width, picture.Height, 3), parameters.JpegQuality);
+            return ImageResolution.WithJpegResolution(jpeg, picture.Dpi);
         }
 
         var info = new SKImageInfo(picture.Width, picture.Height, SKColorType.Bgra8888, picture.Transparent ? SKAlphaType.Unpremul : SKAlphaType.Opaque);
@@ -263,7 +264,7 @@ public sealed class ToImagesOperation(PdfiumGate gate) : PdfOperation<ToImagesPa
             using var pixmap = new SKPixmap(info, handle.AddrOfPinnedObject(), info.RowBytes);
             using var encoded = pixmap.Encode(new SKPngEncoderOptions(SKPngEncoderFilterFlags.AllFilters, 6))
                 ?? throw new InvalidOperationException("Skia could not encode the page as PNG.");
-            return encoded.ToArray();
+            return ImageResolution.WithPngResolution(encoded.AsSpan(), picture.Dpi);
         }
         finally
         {
