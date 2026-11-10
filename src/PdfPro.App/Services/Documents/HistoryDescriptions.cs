@@ -7,6 +7,7 @@ using PdfPro.Operations.Annotating;
 using PdfPro.Operations.Editing;
 using PdfPro.Operations.Forms;
 using PdfPro.Operations.Ocr;
+using PdfPro.Operations.Scanning;
 using PdfPro.Operations.Organizing;
 using PdfPro.Operations.Security;
 using PdfPro.Operations.Stamping;
@@ -59,6 +60,10 @@ internal static class HistoryDescriptions
             SanitizeParams => Strings.History_Sanitize,
             OcrParams { Pages: { } pages } => Format(Strings.History_OcrPages, pages.Count),
             OcrParams => Strings.History_Ocr,
+            RemoveBlankPagesParams p => Format(Strings.History_RemoveBlankPages, Count(p.Pages, before)),
+            AutoRotateParams p => Format(Strings.History_AutoRotate, p.Turns.Count),
+            DeskewParams p => Format(Strings.History_Deskew, p.Pages.Count),
+            CleanBordersParams p => Format(Strings.History_CleanBorders, p.Pages.Count),
             FlattenAnnotationsParams p when string.IsNullOrWhiteSpace(p.Pages) => Strings.History_FlattenAnnotations,
             FlattenAnnotationsParams p => Format(Strings.History_FlattenAnnotationsOn, Count(p.Pages!, before)),
             _ => Strings.History_Other,

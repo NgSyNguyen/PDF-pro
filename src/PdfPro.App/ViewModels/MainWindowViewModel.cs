@@ -38,6 +38,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IBatesService? _bates;
     private readonly Services.Security.SigningServices? _signing;
     private readonly Services.Optimizing.OptimizingServices? _optimizing;
+    private readonly Services.Scanning.ScanServices? _scan;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -63,7 +64,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ILogger<MainWindowViewModel> logger,
         IBatesService? bates = null,
         Services.Security.SigningServices? signing = null,
-        Services.Optimizing.OptimizingServices? optimizing = null)
+        Services.Optimizing.OptimizingServices? optimizing = null,
+        Services.Scanning.ScanServices? scan = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _dialogs = dialogs;
@@ -85,6 +87,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _bates = bates;
         _signing = signing;
         _optimizing = optimizing;
+        _scan = scan;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -111,6 +114,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ToggleRedactionCommand = new ActiveDocumentCommand(d => d.ToggleRedactionCommand);
         SanitizeCommand = new ActiveDocumentCommand(d => d.SanitizeCommand);
         OcrCommand = new ActiveDocumentCommand(d => d.OcrCommand);
+        SplitByBlankPagesCommand = new ActiveDocumentCommand(d => d.SplitByBlankPagesCommand);
         ToggleFormDesignCommand = new ActiveDocumentCommand(d => d.ToggleFormDesignCommand);
         ExportFormDataCommand = new ActiveDocumentCommand(d => d.ExportFormDataCommand);
         ImportFormDataCommand = new ActiveDocumentCommand(d => d.ImportFormDataCommand);
@@ -222,6 +226,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     /// <summary>"Nhận dạng chữ (OCR)" of the active document.</summary>
     public ActiveDocumentCommand OcrCommand { get; }
+
+    /// <summary>"Tách theo trang trắng": the split dialog of the active document, at blank separator sheets.</summary>
+    public ActiveDocumentCommand SplitByBlankPagesCommand { get; }
 
     public ActiveDocumentCommand ToggleFormDesignCommand { get; }
 
@@ -514,7 +521,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand, SanitizeCommand, OcrCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand, SanitizeCommand, OcrCommand, SplitByBlankPagesCommand,
             ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand, FlattenFormCommand, ResetFormCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
@@ -858,6 +865,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("ocr.run", Strings.Cmd_Ocr, SymbolRegular.ScanText24, OcrCommand, Strings.Cmd_Ocr_ToolTip),
                     new("compare.documents", Strings.Cmd_Compare, SymbolRegular.ArrowSwap24),
+                ]),
+                new(Strings.Ribbon_Group_Scan,
+                [
+                    new("scan.removeBlankPages", Strings.Cmd_RemoveBlankPages, SymbolRegular.DocumentDismiss24, RemoveBlankPagesCommand, Strings.Cmd_RemoveBlankPages_ToolTip),
+                    new("scan.autoRotate", Strings.Cmd_AutoRotate, SymbolRegular.ArrowRotateClockwise24, AutoRotateCommand, Strings.Cmd_AutoRotate_ToolTip),
+                    new("scan.deskew", Strings.Cmd_Deskew, SymbolRegular.Ruler24, DeskewCommand, Strings.Cmd_Deskew_ToolTip),
+                    new("scan.cleanBorders", Strings.Cmd_CleanBorders, SymbolRegular.BorderOutside24, CleanBordersCommand, Strings.Cmd_CleanBorders_ToolTip),
+                    new("scan.splitByBlank", Strings.Cmd_SplitByBlank, SymbolRegular.DocumentSplitHint24, SplitByBlankPagesCommand, Strings.Cmd_SplitByBlank_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Automation,
                 [

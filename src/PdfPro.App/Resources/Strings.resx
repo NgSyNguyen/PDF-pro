@@ -1722,4 +1722,51 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Settings_OcrData_Best" xml:space="preserve"><value>Chính xác nhất (chậm hơn)</value></data>
   <data name="Settings_OcrData_Fast" xml:space="preserve"><value>Nhanh (kém chính xác hơn một chút)</value></data>
   <data name="Search_RunOcr" xml:space="preserve"><value>Nhận dạng chữ (OCR)…</value></data>
+  <data name="Ribbon_Group_Scan" xml:space="preserve"><value>Bản quét</value></data>
+  <data name="Cmd_RemoveBlankPages" xml:space="preserve"><value>Xóa trang trắng</value></data>
+  <data name="Cmd_RemoveBlankPages_ToolTip" xml:space="preserve"><value>Tìm tờ trắng (tờ phân cách, mặt sau để trống) trong bản quét, xem rồi xóa; chịu được viền đen và bóng gáy sách</value></data>
+  <data name="Cmd_AutoRotate" xml:space="preserve"><value>Xoay đúng chiều</value></data>
+  <data name="Cmd_AutoRotate_ToolTip" xml:space="preserve"><value>Tìm trang quét bị quay ngang hoặc lộn ngược (bằng OCR) và xoay lại cho đúng chiều</value></data>
+  <data name="Cmd_Deskew" xml:space="preserve"><value>Làm thẳng trang</value></data>
+  <data name="Cmd_Deskew_ToolTip" xml:space="preserve"><value>Đo độ nghiêng của trang quét và xoay nội dung cho thẳng; ảnh gốc không bị nén lại</value></data>
+  <data name="Cmd_CleanBorders" xml:space="preserve"><value>Xóa viền đen</value></data>
+  <data name="Cmd_CleanBorders_ToolTip" xml:space="preserve"><value>Tô trắng viền đen của máy quét và bóng gáy sách dọc mép trang</value></data>
+  <data name="Cmd_SplitByBlank" xml:space="preserve"><value>Tách theo trang trắng</value></data>
+  <data name="Cmd_SplitByBlank_ToolTip" xml:space="preserve"><value>Tách tập quét thành nhiều tệp ở các tờ trắng phân cách</value></data>
+  <data name="Scan_ShowInOrganizer" xml:space="preserve"><value>Xem trong Sắp xếp</value></data>
+  <data name="Scan_Error_Title" xml:space="preserve"><value>Công cụ bản quét</value></data>
+  <data name="Scan_Cancelled" xml:space="preserve"><value>Đã dừng xem các trang.</value></data>
+  <data name="Scan_Failed" xml:space="preserve"><value>Không xem được các trang.</value></data>
+  <data name="Scan_Blank_Title" xml:space="preserve"><value>Xóa trang trắng</value></data>
+  <data name="Scan_Blank_Progress" xml:space="preserve"><value>Đang tìm trang trắng trong {0}…</value></data>
+  <data name="Scan_Blank_None" xml:space="preserve"><value>Không có trang trắng nào.</value></data>
+  <data name="Scan_Blank_All" xml:space="preserve"><value>Mọi trang đều trắng: không xóa trang nào.</value></data>
+  <data name="Scan_Blank_Found" xml:space="preserve"><value>Tìm thấy {0} trang trắng: trang {1}. Xóa các trang này? (Hoàn tác được.)</value></data>
+  <data name="Scan_Blank_Remove" xml:space="preserve"><value>Xóa các trang này</value></data>
+  <data name="Scan_Rotate_Title" xml:space="preserve"><value>Xoay đúng chiều</value></data>
+  <data name="Scan_Rotate_NoEngine" xml:space="preserve"><value>Cần Tesseract kèm dữ liệu nhận hướng trang (osd) để biết trang nào bị quay. Chạy tools\fetch-tools.ps1 hoặc cài Tesseract OCR, rồi xem Cài đặt › Tesseract.</value></data>
+  <data name="Scan_Rotate_Progress" xml:space="preserve"><value>Đang xem hướng các trang của {0}…</value></data>
+  <data name="Scan_Rotate_None" xml:space="preserve"><value>Mọi trang đã đúng chiều.</value></data>
+  <data name="Scan_Rotate_Item" xml:space="preserve"><value>trang {0} ({1}°)</value></data>
+  <data name="Scan_Rotate_Found" xml:space="preserve"><value>{0} trang cần xoay theo chiều kim đồng hồ: {1}. Xoay các trang này? (Hoàn tác được.)</value></data>
+  <data name="Scan_Rotate_Apply" xml:space="preserve"><value>Xoay</value></data>
+  <data name="Scan_Deskew_Title" xml:space="preserve"><value>Làm thẳng trang</value></data>
+  <data name="Scan_Deskew_Progress" xml:space="preserve"><value>Đang đo độ nghiêng các trang của {0}…</value></data>
+  <data name="Scan_Deskew_None" xml:space="preserve"><value>Không trang nào nghiêng đáng kể.</value></data>
+  <data name="Scan_Deskew_Item" xml:space="preserve"><value>trang {0} ({1:0.0}°)</value></data>
+  <data name="Scan_Deskew_Found" xml:space="preserve"><value>{0} trang bị nghiêng: {1}. Làm thẳng các trang này? (Hoàn tác được.)</value></data>
+  <data name="Scan_Deskew_Apply" xml:space="preserve"><value>Làm thẳng</value></data>
+  <data name="Scan_Borders_Title" xml:space="preserve"><value>Xóa viền đen</value></data>
+  <data name="Scan_Borders_Progress" xml:space="preserve"><value>Đang tìm viền tối của các trang trong {0}…</value></data>
+  <data name="Scan_Borders_None" xml:space="preserve"><value>Không trang nào có viền tối dọc mép.</value></data>
+  <data name="Scan_Borders_Found" xml:space="preserve"><value>Tìm thấy viền tối ở {0} trang: trang {1}. Tô trắng các viền này? (Hoàn tác được; ảnh gốc vẫn nằm dưới.)</value></data>
+  <data name="Scan_Borders_Apply" xml:space="preserve"><value>Tô trắng</value></data>
+  <data name="History_RemoveBlankPages" xml:space="preserve"><value>Xóa {0} trang trắng</value></data>
+  <data name="History_AutoRotate" xml:space="preserve"><value>Xoay đúng chiều {0} trang</value></data>
+  <data name="History_Deskew" xml:space="preserve"><value>Làm thẳng {0} trang</value></data>
+  <data name="History_CleanBorders" xml:space="preserve"><value>Xóa viền đen {0} trang</value></data>
+  <data name="Stage_FindBlankPages" xml:space="preserve"><value>Đang tìm trang trắng</value></data>
+  <data name="Stage_DetectOrientation" xml:space="preserve"><value>Đang xem hướng trang</value></data>
+  <data name="Stage_Deskew" xml:space="preserve"><value>Đang làm thẳng trang</value></data>
+  <data name="Stage_CleanBorders" xml:space="preserve"><value>Đang xóa viền đen</value></data>
 </root>

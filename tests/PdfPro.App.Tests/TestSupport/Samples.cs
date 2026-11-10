@@ -11,6 +11,9 @@ internal static class Samples
     /// <summary>Three pages whose cross-reference table and trailer were cut off (PROMPTS P9: repaired).</summary>
     public static string Broken => System.IO.Path.Combine(RepositoryRoot, "samples", "broken.pdf");
 
+    /// <summary>18 pages of JPEG scans (90 DPI) without text: tilted pages, page 12 upside down, blank sheets 4, 7, 10 and 14.</summary>
+    public static string ScanVi => System.IO.Path.Combine(RepositoryRoot, "samples", "scan-vi.pdf");
+
     /// <summary>Six A4 pages of Vietnamese text, no form, not encrypted.</summary>
     public static string Basic => System.IO.Path.Combine(RepositoryRoot, "samples", "basic-vi.pdf");
 

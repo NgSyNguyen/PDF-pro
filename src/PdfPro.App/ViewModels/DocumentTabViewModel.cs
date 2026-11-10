@@ -900,11 +900,21 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
     /// confirmed split is written by the window in the background. The document itself does not change.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanSplit))]
-    private void Split()
+    private void Split() => Split(null);
+
+    /// <summary>"Tách theo trang trắng" (scan.splitByBlank): the split dialog, at blank separator sheets.</summary>
+    [RelayCommand(CanExecute = nameof(CanSplit))]
+    private void SplitByBlankPages() => Split(SplitMode.BlankSeparators);
+
+    private void Split(SplitMode? mode)
     {
         var operation = _operations.Get<SplitOperation>();
         var document = CreateSplitDocument();
         using var dialog = new SplitViewModel(document, operation, DefaultSplitFolder(), FilePath.Length > 0 ? FilePath : null, LoadPagePreviewAsync, _services.FileDialogs);
+        if (mode is { } chosen && dialog.Modes.FirstOrDefault(m => m.Mode == chosen) is { } option)
+        {
+            dialog.SelectedMode = option;
+        }
         if (!_services.PageDialogs.ShowSplit(dialog) || dialog.Result is not { } choice)
         {
             return;
@@ -1267,6 +1277,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         MarkSplitCommand.NotifyCanExecuteChanged();
         ClearSplitMarksCommand.NotifyCanExecuteChanged();
         SplitCommand.NotifyCanExecuteChanged();
+        SplitByBlankPagesCommand.NotifyCanExecuteChanged();
         InterleaveCommand.NotifyCanExecuteChanged();
         NUpCommand.NotifyCanExecuteChanged();
         BookletCommand.NotifyCanExecuteChanged();

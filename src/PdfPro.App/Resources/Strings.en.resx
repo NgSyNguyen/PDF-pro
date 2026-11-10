@@ -1722,4 +1722,51 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Settings_OcrData_Best" xml:space="preserve"><value>Most accurate (slower)</value></data>
   <data name="Settings_OcrData_Fast" xml:space="preserve"><value>Fast (a little less accurate)</value></data>
   <data name="Search_RunOcr" xml:space="preserve"><value>Recognise text (OCR)…</value></data>
+  <data name="Ribbon_Group_Scan" xml:space="preserve"><value>Scans</value></data>
+  <data name="Cmd_RemoveBlankPages" xml:space="preserve"><value>Remove blank pages</value></data>
+  <data name="Cmd_RemoveBlankPages_ToolTip" xml:space="preserve"><value>Find blank sheets (separators, empty backs) in a scan, look at them, then remove them; scanner borders and spine shadows do not count</value></data>
+  <data name="Cmd_AutoRotate" xml:space="preserve"><value>Turn upright</value></data>
+  <data name="Cmd_AutoRotate_ToolTip" xml:space="preserve"><value>Find pages scanned sideways or upside down (with OCR) and turn them the right way up</value></data>
+  <data name="Cmd_Deskew" xml:space="preserve"><value>Straighten pages</value></data>
+  <data name="Cmd_Deskew_ToolTip" xml:space="preserve"><value>Measure the tilt of scanned pages and turn their content level; the images are not re-encoded</value></data>
+  <data name="Cmd_CleanBorders" xml:space="preserve"><value>Clean borders</value></data>
+  <data name="Cmd_CleanBorders_ToolTip" xml:space="preserve"><value>Paint white the black borders of the scanner and the shadow of the book's spine along the page edges</value></data>
+  <data name="Cmd_SplitByBlank" xml:space="preserve"><value>Split at blank pages</value></data>
+  <data name="Cmd_SplitByBlank_ToolTip" xml:space="preserve"><value>Split a scanned bundle into files at the blank separator sheets</value></data>
+  <data name="Scan_ShowInOrganizer" xml:space="preserve"><value>Show in the organizer</value></data>
+  <data name="Scan_Error_Title" xml:space="preserve"><value>Scan tools</value></data>
+  <data name="Scan_Cancelled" xml:space="preserve"><value>Looking at the pages was stopped.</value></data>
+  <data name="Scan_Failed" xml:space="preserve"><value>The pages could not be looked at.</value></data>
+  <data name="Scan_Blank_Title" xml:space="preserve"><value>Remove blank pages</value></data>
+  <data name="Scan_Blank_Progress" xml:space="preserve"><value>Looking for blank pages in {0}…</value></data>
+  <data name="Scan_Blank_None" xml:space="preserve"><value>There is no blank page.</value></data>
+  <data name="Scan_Blank_All" xml:space="preserve"><value>Every page is blank: no page was removed.</value></data>
+  <data name="Scan_Blank_Found" xml:space="preserve"><value>{0} blank pages found: pages {1}. Remove them? (It can be undone.)</value></data>
+  <data name="Scan_Blank_Remove" xml:space="preserve"><value>Remove them</value></data>
+  <data name="Scan_Rotate_Title" xml:space="preserve"><value>Turn upright</value></data>
+  <data name="Scan_Rotate_NoEngine" xml:space="preserve"><value>Telling turned pages needs Tesseract with its orientation data (osd). Run tools\fetch-tools.ps1 or install Tesseract OCR, then see Settings › Tesseract.</value></data>
+  <data name="Scan_Rotate_Progress" xml:space="preserve"><value>Looking at how the pages of {0} are turned…</value></data>
+  <data name="Scan_Rotate_None" xml:space="preserve"><value>Every page is the right way up.</value></data>
+  <data name="Scan_Rotate_Item" xml:space="preserve"><value>page {0} ({1}°)</value></data>
+  <data name="Scan_Rotate_Found" xml:space="preserve"><value>{0} pages need turning clockwise: {1}. Turn them? (It can be undone.)</value></data>
+  <data name="Scan_Rotate_Apply" xml:space="preserve"><value>Turn them</value></data>
+  <data name="Scan_Deskew_Title" xml:space="preserve"><value>Straighten pages</value></data>
+  <data name="Scan_Deskew_Progress" xml:space="preserve"><value>Measuring the tilt of the pages of {0}…</value></data>
+  <data name="Scan_Deskew_None" xml:space="preserve"><value>No page is noticeably tilted.</value></data>
+  <data name="Scan_Deskew_Item" xml:space="preserve"><value>page {0} ({1:0.0}°)</value></data>
+  <data name="Scan_Deskew_Found" xml:space="preserve"><value>{0} pages are tilted: {1}. Straighten them? (It can be undone.)</value></data>
+  <data name="Scan_Deskew_Apply" xml:space="preserve"><value>Straighten</value></data>
+  <data name="Scan_Borders_Title" xml:space="preserve"><value>Clean borders</value></data>
+  <data name="Scan_Borders_Progress" xml:space="preserve"><value>Looking for dark borders on the pages of {0}…</value></data>
+  <data name="Scan_Borders_None" xml:space="preserve"><value>No page has dark bands along its edges.</value></data>
+  <data name="Scan_Borders_Found" xml:space="preserve"><value>Dark borders found on {0} pages: pages {1}. Paint them white? (It can be undone; the images stay underneath.)</value></data>
+  <data name="Scan_Borders_Apply" xml:space="preserve"><value>Paint white</value></data>
+  <data name="History_RemoveBlankPages" xml:space="preserve"><value>Remove {0} blank pages</value></data>
+  <data name="History_AutoRotate" xml:space="preserve"><value>Turn {0} pages upright</value></data>
+  <data name="History_Deskew" xml:space="preserve"><value>Straighten {0} pages</value></data>
+  <data name="History_CleanBorders" xml:space="preserve"><value>Clean the borders of {0} pages</value></data>
+  <data name="Stage_FindBlankPages" xml:space="preserve"><value>Looking for blank pages</value></data>
+  <data name="Stage_DetectOrientation" xml:space="preserve"><value>Looking at page orientation</value></data>
+  <data name="Stage_Deskew" xml:space="preserve"><value>Straightening pages</value></data>
+  <data name="Stage_CleanBorders" xml:space="preserve"><value>Cleaning borders</value></data>
 </root>

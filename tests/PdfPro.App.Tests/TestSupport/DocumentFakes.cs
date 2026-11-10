@@ -91,6 +91,10 @@ internal static class TestOperations
             new Operations.Security.SanitizeOperation(Gate.Value),
             new Operations.Signing.SignOperation(),
             new Operations.Ocr.OcrOperation(Gate.Value, Substitute.For<Core.Ocr.IOcrEngine>()),
+            new Operations.Scanning.RemoveBlankPagesOperation(materializer, loader),
+            new Operations.Scanning.AutoRotateOperation(materializer, loader),
+            new Operations.Scanning.DeskewOperation(),
+            new Operations.Scanning.CleanBordersOperation(),
         ]);
     }
 }

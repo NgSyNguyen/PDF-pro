@@ -167,6 +167,17 @@ internal static class AppHost
                 () => new PdfPro.Ocr.TesseractSettings(string.IsNullOrWhiteSpace(settings.Current.TesseractPath) ? null : settings.Current.TesseractPath.Trim(), settings.Current.OcrData));
         });
         services.AddOperation<Operations.Ocr.OcrOperation>();
+        services.AddOperation<Operations.Scanning.RemoveBlankPagesOperation>();
+        services.AddOperation<Operations.Scanning.AutoRotateOperation>();
+        services.AddOperation<Operations.Scanning.DeskewOperation>();
+        services.AddOperation<Operations.Scanning.CleanBordersOperation>();
+        services.AddSingleton(sp => new Services.Scanning.ScanServices(
+            sp.GetRequiredService<PdfPro.Pdfium.PdfiumGate>(),
+            sp.GetRequiredService<Operations.Scanning.RemoveBlankPagesOperation>(),
+            sp.GetRequiredService<Operations.Scanning.AutoRotateOperation>(),
+            sp.GetRequiredService<Operations.Scanning.DeskewOperation>(),
+            sp.GetRequiredService<Operations.Scanning.CleanBordersOperation>(),
+            sp.GetRequiredService<PdfPro.Core.Ocr.IOcrEngine>()));
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),
