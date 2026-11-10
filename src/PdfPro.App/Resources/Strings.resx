@@ -1548,4 +1548,41 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="ToText_Progress" xml:space="preserve"><value>Đang lấy chữ của "{0}"…</value></data>
   <data name="ToText_Done" xml:space="preserve"><value>Đã xuất văn bản vào "{0}"</value></data>
   <data name="ToText_PagesWithoutText" xml:space="preserve"><value>Trang {0} chỉ là ảnh (scan) nên không có chữ để lấy. Hãy nhận dạng chữ (OCR) cho các trang này trước.</value></data>
+  <data name="Cmd_FromOffice_ToolTip" xml:space="preserve"><value>Chuyển tài liệu Word, Excel, PowerPoint, OpenDocument, RTF sang PDF bằng LibreOffice (cần cài LibreOffice)</value></data>
+  <data name="OfficeToPdf_Title" xml:space="preserve"><value>Office sang PDF</value></data>
+  <data name="OfficeToPdf_Files_Header" xml:space="preserve"><value>Các tài liệu</value></data>
+  <data name="OfficeToPdf_Summary" xml:space="preserve"><value>{0} tài liệu</value></data>
+  <data name="OfficeToPdf_AddFiles" xml:space="preserve"><value>Thêm tài liệu…</value></data>
+  <data name="OfficeToPdf_Pick_Title" xml:space="preserve"><value>Chọn tài liệu Office</value></data>
+  <data name="OfficeToPdf_Dialog_Filter" xml:space="preserve"><value>Tài liệu Office (*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|Văn bản (*.docx;*.doc;*.odt;*.rtf)|*.docx;*.doc;*.odt;*.rtf|Bảng tính (*.xlsx;*.xls;*.ods)|*.xlsx;*.xls;*.ods|Trình chiếu (*.pptx;*.ppt;*.odp)|*.pptx;*.ppt;*.odp|Tất cả tệp (*.*)|*.*</value></data>
+  <data name="OfficeToPdf_Folder_Pick_Title" xml:space="preserve"><value>Chọn thư mục lưu các tệp PDF</value></data>
+  <data name="OfficeToPdf_Folder" xml:space="preserve"><value>Lưu các tệp PDF vào thư mục</value></data>
+  <data name="OfficeToPdf_Overwrite" xml:space="preserve"><value>Ghi đè tệp PDF cùng tên (không chọn: thêm số, ví dụ "báo cáo (2).pdf")</value></data>
+  <data name="OfficeToPdf_OpenWhenDone" xml:space="preserve"><value>Mở khi xong (một tài liệu: mở tệp PDF; nhiều tài liệu: mở thư mục)</value></data>
+  <data name="OfficeToPdf_Run" xml:space="preserve"><value>Chuyển sang PDF</value></data>
+  <data name="OfficeToPdf_Note" xml:space="preserve"><value>Mỗi tài liệu thành một tệp PDF cùng tên. LibreOffice chuyển đổi ngay trên máy này, tệp không được gửi đi đâu; phông chữ không có trên máy được thay bằng phông tương tự. Có thể kéo tệp từ Explorer thả vào danh sách.</value></data>
+  <data name="OfficeToPdf_LibreOffice" xml:space="preserve"><value>Chuyển đổi bằng LibreOffice: {0}</value></data>
+  <data name="OfficeToPdf_Error_None" xml:space="preserve"><value>Hãy thêm ít nhất một tài liệu Word, Excel, PowerPoint, OpenDocument hoặc RTF.</value></data>
+  <data name="OfficeToPdf_Error_Folder" xml:space="preserve"><value>Hãy chọn thư mục lưu các tệp PDF (đường dẫn đầy đủ).</value></data>
+  <data name="OfficeToPdf_Error_Title" xml:space="preserve"><value>Không chuyển được sang PDF</value></data>
+  <data name="OfficeToPdf_Error_NoLibreOffice" xml:space="preserve"><value>Chưa tìm thấy LibreOffice trên máy. "Office sang PDF" dùng LibreOffice (miễn phí) để chuyển đổi: hãy tải và cài từ https://www.libreoffice.org/download rồi thử lại. Nếu LibreOffice đã được cài ở chỗ khác, hãy chọn thư mục cài trong Cài đặt › LibreOffice.</value></data>
+  <data name="OfficeToPdf_Error_NotAtPath" xml:space="preserve"><value>Không thấy LibreOffice ở "{0}" (đường dẫn chọn trong Cài đặt). Hãy sửa đường dẫn trong Cài đặt › LibreOffice, hoặc để trống để PDF_Pro tự tìm.</value></data>
+  <data name="OfficeToPdf_Progress" xml:space="preserve"><value>Đang chuyển {0} tài liệu sang PDF…</value></data>
+  <data name="OfficeToPdf_Done" xml:space="preserve"><value>Đã chuyển sang PDF vào "{0}"</value></data>
+  <data name="OfficeToPdf_Failed" xml:space="preserve"><value>{0}/{1} tài liệu đã thành PDF. Những tài liệu sau không chuyển được:</value></data>
+  <data name="OfficeToPdf_Failed_Line" xml:space="preserve"><value>• {0}: {1}</value></data>
+  <data name="OfficeToPdf_Failed_More" xml:space="preserve"><value>… và {0} tài liệu khác</value></data>
+  <data name="OfficeToPdf_Failure_Timeout" xml:space="preserve"><value>LibreOffice chạy quá lâu nên đã bị dừng</value></data>
+  <data name="OfficeToPdf_Failure_Unsupported" xml:space="preserve"><value>loại tệp chưa hỗ trợ</value></data>
+  <data name="OfficeToPdf_Failure_Failed" xml:space="preserve"><value>LibreOffice không chuyển được (tệp hỏng hoặc có mật khẩu)</value></data>
+  <data name="OfficeToPdf_Failure_Missing" xml:space="preserve"><value>không còn tệp này</value></data>
+  <data name="OfficeToPdf_Failure_Access" xml:space="preserve"><value>không đọc hoặc ghi được tệp (đang mở trong chương trình khác hoặc không có quyền)</value></data>
+  <data name="Settings_LibreOffice" xml:space="preserve"><value>LibreOffice (Office sang PDF)</value></data>
+  <data name="Settings_LibreOffice_Hint" xml:space="preserve"><value>Thư mục cài LibreOffice, dùng để chuyển Word, Excel, PowerPoint sang PDF. Để trống: PDF_Pro tự tìm.</value></data>
+  <data name="Settings_LibreOffice_Placeholder" xml:space="preserve"><value>Tự tìm</value></data>
+  <data name="Settings_LibreOffice_Pick_Title" xml:space="preserve"><value>Chọn thư mục cài LibreOffice</value></data>
+  <data name="Settings_LibreOffice_Found" xml:space="preserve"><value>Đã tìm thấy: {0}</value></data>
+  <data name="Settings_LibreOffice_Using" xml:space="preserve"><value>Đang dùng: {0}</value></data>
+  <data name="Settings_LibreOffice_Missing" xml:space="preserve"><value>Chưa tìm thấy LibreOffice. Tải miễn phí tại https://www.libreoffice.org/download.</value></data>
+  <data name="Settings_LibreOffice_NotThere" xml:space="preserve"><value>Không có LibreOffice ở đường dẫn này.</value></data>
 </root>

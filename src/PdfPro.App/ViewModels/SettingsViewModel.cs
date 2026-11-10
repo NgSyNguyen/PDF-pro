@@ -10,6 +10,7 @@ using PdfPro.App.Services.Rendering;
 using PdfPro.Core.Text;
 using PdfPro.Infrastructure.Caching;
 using PdfPro.Infrastructure.Settings;
+using PdfPro.Operations.Converting;
 
 namespace PdfPro.App.ViewModels;
 
@@ -29,6 +30,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly RenderCache _renderCache;
     private readonly ThumbnailDiskCache _thumbnailCache;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly ILibreOfficeLocator? _libreOffice;
+    private readonly IFileDialogService? _files;
     private readonly bool _isInitialized;
 
     public SettingsViewModel(
@@ -38,7 +41,9 @@ public sealed partial class SettingsViewModel : ObservableObject
         ILocalizationService localization,
         RenderCache renderCache,
         ThumbnailDiskCache thumbnailCache,
-        ILogger<SettingsViewModel> logger)
+        ILogger<SettingsViewModel> logger,
+        ILibreOfficeLocator? libreOffice = null,
+        IFileDialogService? files = null)
     {
         _settings = settings;
         _theme = theme;
@@ -47,6 +52,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         _renderCache = renderCache;
         _thumbnailCache = thumbnailCache;
         _logger = logger;
+        _libreOffice = libreOffice;
+        _files = files;
 
         ThemeOptions =
         [
@@ -65,6 +72,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         IsRestartRequired = SelectedLanguage != localization.ActiveLanguage;
         RenderCacheMegabytes = settings.Current.RenderCacheMegabytes;
         AnnotationAuthor = settings.Current.AnnotationAuthor;
+        LibreOfficePath = settings.Current.LibreOfficePath;
+        LibreOfficeStatus = DescribeLibreOffice(LibreOfficePath);
         DiskCacheSize = Strings.Settings_Measuring;
         _isInitialized = true;
     }
@@ -97,6 +106,16 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>The name new annotations are signed with; blank: the Windows user name. Saved when it changes.</summary>
     [ObservableProperty]
     public partial string AnnotationAuthor { get; set; } = string.Empty;
+
+    /// <summary>Where LibreOffice is ("Office sang PDF"); blank: looked for. Saved when it changes.</summary>
+    [ObservableProperty]
+    public partial string LibreOfficePath { get; set; } = string.Empty;
+
+    /// <summary>"Đang dùng: C:\…\soffice.exe", or why LibreOffice is not there; null when not looked for.</summary>
+    [ObservableProperty]
+    public partial string? LibreOfficeStatus { get; private set; }
+
+    public bool CanPickLibreOffice => _files is not null;
 
     /// <summary>Size of the thumbnail cache on disk ("12 MB"); null until measured.</summary>
     [ObservableProperty]
@@ -171,6 +190,48 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
 
         PendingSave = SaveAsync(s => s with { AnnotationAuthor = name });
+    }
+
+    partial void OnLibreOfficePathChanged(string value)
+    {
+        var path = (value ?? string.Empty).Trim();
+        LibreOfficeStatus = DescribeLibreOffice(path);
+        if (!_isInitialized || string.Equals(path, _settings.Current.LibreOfficePath, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        PendingSave = SaveAsync(s => s with { LibreOfficePath = path });
+    }
+
+    /// <summary>"Chọn…": LibreOffice's installation folder (or its "program" folder).</summary>
+    [RelayCommand]
+    private void PickLibreOffice()
+    {
+        var current = LibreOfficePath.Trim();
+        var initial = current.Length == 0 ? null : Directory.Exists(current) ? current : Path.GetDirectoryName(current);
+        if (_files?.PickFolder(Strings.Settings_LibreOffice_Pick_Title, initial) is { } folder)
+        {
+            LibreOfficePath = folder;
+        }
+    }
+
+    /// <summary>What is found where <paramref name="path"/> says (or where LibreOffice is installed when blank).</summary>
+    private string? DescribeLibreOffice(string path)
+    {
+        if (_libreOffice is null)
+        {
+            return null;
+        }
+
+        var found = _libreOffice.Find(path.Length == 0 ? null : path);
+        return (found, path.Length == 0) switch
+        {
+            ({ } program, true) => string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Found, program),
+            ({ } program, false) => string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Using, program),
+            (null, true) => Strings.Settings_LibreOffice_Missing,
+            (null, false) => Strings.Settings_LibreOffice_NotThere,
+        };
     }
 
     /// <summary>Drops rendered pages from memory and every thumbnail stored on disk.</summary>

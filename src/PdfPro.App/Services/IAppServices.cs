@@ -135,6 +135,9 @@ public interface IFileDialogService
     /// <returns>The chosen files, empty when cancelled.</returns>
     IReadOnlyList<string> PickImageFiles(string title);
 
+    /// <summary>Word, Excel, PowerPoint, OpenDocument and RTF documents to convert (several at once); empty when cancelled.</summary>
+    IReadOnlyList<string> PickOfficeFiles(string title);
+
     /// <summary>Asks where to write the comments list: Markdown (.md) or CSV (.csv); overwriting asks for confirmation.</summary>
     /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
     /// <returns>The chosen path, or null when cancelled.</returns>
@@ -235,4 +238,6 @@ public interface IPageDialogService
 
     /// <summary>"PDF sang văn bản": format, page split, pages and folder.</summary>
     bool ShowToText(ViewModels.Converting.ToTextViewModel viewModel);
+
+    bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel);
 }

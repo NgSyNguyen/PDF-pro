@@ -64,6 +64,12 @@ public sealed record AppSettings
     /// <summary>Digital signatures get a timestamp from <see cref="TimestampServer"/> (needs the network).</summary>
     public bool UseTimestamp { get; init; } = true;
 
+    /// <summary>
+    /// Where LibreOffice is ("Office sang PDF"): its soffice program, its "program" folder or its installation folder;
+    /// blank: looked for where it is usually installed.
+    /// </summary>
+    public string LibreOfficePath { get; init; } = string.Empty;
+
     /// <summary>A free public time-stamping authority (DigiCert).</summary>
     public const string DefaultTimestampServer = "http://timestamp.digicert.com";
 }

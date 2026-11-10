@@ -110,6 +110,19 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileNames : [];
     }
 
+    public IReadOnlyList<string> PickOfficeFiles(string title)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = title,
+            Filter = Strings.OfficeToPdf_Dialog_Filter,
+            Multiselect = true,
+            CheckFileExists = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileNames : [];
+    }
+
     public string? PickImageSavePath(string suggestedFileName, string extension)
     {
         var dialog = new SaveFileDialog
@@ -408,6 +421,12 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new ToTextWindow(viewModel));
+    }
+
+    public bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new OfficeToPdfWindow(viewModel));
     }
 
     private static bool Show(Window window)

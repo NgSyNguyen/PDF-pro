@@ -1548,4 +1548,41 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="ToText_Progress" xml:space="preserve"><value>Reading the text of "{0}"…</value></data>
   <data name="ToText_Done" xml:space="preserve"><value>Text written to "{0}"</value></data>
   <data name="ToText_PagesWithoutText" xml:space="preserve"><value>Page(s) {0} are only pictures (scans) and have no text to take. Run text recognition (OCR) on them first.</value></data>
+  <data name="Cmd_FromOffice_ToolTip" xml:space="preserve"><value>Convert Word, Excel, PowerPoint, OpenDocument and RTF documents to PDF with LibreOffice (LibreOffice must be installed)</value></data>
+  <data name="OfficeToPdf_Title" xml:space="preserve"><value>Office to PDF</value></data>
+  <data name="OfficeToPdf_Files_Header" xml:space="preserve"><value>Documents</value></data>
+  <data name="OfficeToPdf_Summary" xml:space="preserve"><value>{0} document(s)</value></data>
+  <data name="OfficeToPdf_AddFiles" xml:space="preserve"><value>Add documents…</value></data>
+  <data name="OfficeToPdf_Pick_Title" xml:space="preserve"><value>Choose Office documents</value></data>
+  <data name="OfficeToPdf_Dialog_Filter" xml:space="preserve"><value>Office documents (*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|Documents (*.docx;*.doc;*.odt;*.rtf)|*.docx;*.doc;*.odt;*.rtf|Spreadsheets (*.xlsx;*.xls;*.ods)|*.xlsx;*.xls;*.ods|Presentations (*.pptx;*.ppt;*.odp)|*.pptx;*.ppt;*.odp|All files (*.*)|*.*</value></data>
+  <data name="OfficeToPdf_Folder_Pick_Title" xml:space="preserve"><value>Choose the folder for the PDFs</value></data>
+  <data name="OfficeToPdf_Folder" xml:space="preserve"><value>Save the PDFs in the folder</value></data>
+  <data name="OfficeToPdf_Overwrite" xml:space="preserve"><value>Replace PDFs of the same name (otherwise a number is added, e.g. "report (2).pdf")</value></data>
+  <data name="OfficeToPdf_OpenWhenDone" xml:space="preserve"><value>Open when done (one document: the PDF; several: the folder)</value></data>
+  <data name="OfficeToPdf_Run" xml:space="preserve"><value>Convert to PDF</value></data>
+  <data name="OfficeToPdf_Note" xml:space="preserve"><value>Each document becomes a PDF of the same name. LibreOffice converts them on this computer and nothing is sent anywhere; fonts this computer does not have are replaced by similar ones. Files can be dropped onto the list from Explorer.</value></data>
+  <data name="OfficeToPdf_LibreOffice" xml:space="preserve"><value>Converted by LibreOffice: {0}</value></data>
+  <data name="OfficeToPdf_Error_None" xml:space="preserve"><value>Add at least one Word, Excel, PowerPoint, OpenDocument or RTF document.</value></data>
+  <data name="OfficeToPdf_Error_Folder" xml:space="preserve"><value>Choose the folder for the PDFs (a full path).</value></data>
+  <data name="OfficeToPdf_Error_Title" xml:space="preserve"><value>Could not convert to PDF</value></data>
+  <data name="OfficeToPdf_Error_NoLibreOffice" xml:space="preserve"><value>LibreOffice was not found on this computer. "Office to PDF" uses LibreOffice (free) to convert: download and install it from https://www.libreoffice.org/download, then try again. If LibreOffice is installed somewhere else, choose its folder in Settings › LibreOffice.</value></data>
+  <data name="OfficeToPdf_Error_NotAtPath" xml:space="preserve"><value>LibreOffice is not at "{0}" (the path chosen in Settings). Correct it in Settings › LibreOffice, or leave it blank for PDF_Pro to look for LibreOffice.</value></data>
+  <data name="OfficeToPdf_Progress" xml:space="preserve"><value>Converting {0} document(s) to PDF…</value></data>
+  <data name="OfficeToPdf_Done" xml:space="preserve"><value>Converted to PDF in "{0}"</value></data>
+  <data name="OfficeToPdf_Failed" xml:space="preserve"><value>{0} of {1} document(s) became PDFs. These could not be converted:</value></data>
+  <data name="OfficeToPdf_Failed_Line" xml:space="preserve"><value>• {0}: {1}</value></data>
+  <data name="OfficeToPdf_Failed_More" xml:space="preserve"><value>… and {0} more</value></data>
+  <data name="OfficeToPdf_Failure_Timeout" xml:space="preserve"><value>LibreOffice took too long and was stopped</value></data>
+  <data name="OfficeToPdf_Failure_Unsupported" xml:space="preserve"><value>this kind of file is not supported</value></data>
+  <data name="OfficeToPdf_Failure_Failed" xml:space="preserve"><value>LibreOffice could not convert it (the file is damaged or has a password)</value></data>
+  <data name="OfficeToPdf_Failure_Missing" xml:space="preserve"><value>the file is no longer there</value></data>
+  <data name="OfficeToPdf_Failure_Access" xml:space="preserve"><value>the file could not be read or written (open in another program, or no permission)</value></data>
+  <data name="Settings_LibreOffice" xml:space="preserve"><value>LibreOffice (Office to PDF)</value></data>
+  <data name="Settings_LibreOffice_Hint" xml:space="preserve"><value>The folder LibreOffice is installed in, used to convert Word, Excel and PowerPoint to PDF. Blank: PDF_Pro looks for it.</value></data>
+  <data name="Settings_LibreOffice_Placeholder" xml:space="preserve"><value>Look for it</value></data>
+  <data name="Settings_LibreOffice_Pick_Title" xml:space="preserve"><value>Choose the folder LibreOffice is installed in</value></data>
+  <data name="Settings_LibreOffice_Found" xml:space="preserve"><value>Found: {0}</value></data>
+  <data name="Settings_LibreOffice_Using" xml:space="preserve"><value>Using: {0}</value></data>
+  <data name="Settings_LibreOffice_Missing" xml:space="preserve"><value>LibreOffice was not found. Download it free from https://www.libreoffice.org/download.</value></data>
+  <data name="Settings_LibreOffice_NotThere" xml:space="preserve"><value>LibreOffice is not at this path.</value></data>
 </root>

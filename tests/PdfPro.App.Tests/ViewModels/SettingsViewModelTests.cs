@@ -11,6 +11,7 @@ using PdfPro.Core.Text;
 using PdfPro.Infrastructure;
 using PdfPro.Infrastructure.Caching;
 using PdfPro.Infrastructure.Settings;
+using PdfPro.Operations.Converting;
 
 namespace PdfPro.App.Tests.ViewModels;
 
@@ -227,6 +228,47 @@ public sealed class SettingsViewModelTests : IDisposable
         viewModel.DiskCacheSize.ShouldBe(ByteSizeFormatter.Format(0, CultureInfo.CurrentCulture));
     }
 
-    private SettingsViewModel CreateViewModel()
-        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance);
+    [Fact]
+    public async Task LibreOffice_IsLookedFor_AndAChosenPathIsSaved_WithWhatIsThere()
+    {
+        const string Installed = @"C:\Program Files\LibreOffice\program\soffice.exe";
+        var locator = Substitute.For<ILibreOfficeLocator>();
+        locator.Find(null).Returns(Installed);
+        locator.Find(@"D:\LibreOffice").Returns((string?)null);
+        locator.Find(@"E:\LO").Returns(@"E:\LO\program\soffice.exe");
+        var files = Substitute.For<IFileDialogService>();
+        var viewModel = CreateViewModel(locator, files);
+
+        viewModel.LibreOfficePath.ShouldBeEmpty();
+        viewModel.LibreOfficeStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Found, Installed));
+        viewModel.CanPickLibreOffice.ShouldBeTrue();
+
+        viewModel.LibreOfficePath = @"  D:\LibreOffice ";
+        await viewModel.PendingSave;
+        viewModel.LibreOfficeStatus.ShouldBe(Strings.Settings_LibreOffice_NotThere);
+        _settings.Current.LibreOfficePath.ShouldBe(@"D:\LibreOffice", "trimmed");
+
+        files.PickFolder(Strings.Settings_LibreOffice_Pick_Title, Arg.Any<string?>()).Returns(@"E:\LO");
+        viewModel.PickLibreOfficeCommand.Execute(null);
+        await viewModel.PendingSave;
+        viewModel.LibreOfficeStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Using, @"E:\LO\program\soffice.exe"));
+        _settings.Current.LibreOfficePath.ShouldBe(@"E:\LO");
+
+        viewModel.LibreOfficePath = string.Empty;
+        await viewModel.PendingSave;
+        _settings.Current.LibreOfficePath.ShouldBeEmpty("blank: looked for again");
+        CreateViewModel(locator, files).LibreOfficeStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Found, Installed));
+    }
+
+    [Fact]
+    public void WithoutALocator_NoLibreOfficeStatusIsShown()
+    {
+        var viewModel = CreateViewModel();
+
+        viewModel.LibreOfficeStatus.ShouldBeNull();
+        viewModel.CanPickLibreOffice.ShouldBeFalse();
+    }
+
+    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null)
+        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files);
 }

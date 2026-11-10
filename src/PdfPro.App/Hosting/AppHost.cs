@@ -152,6 +152,8 @@ internal static class AppHost
         services.AddOperation<Operations.Converting.ToImagesOperation>();
         services.AddOperation<Operations.Converting.FromImagesOperation>();
         services.AddOperation<Operations.Converting.ToTextOperation>();
+        services.AddSingleton<Operations.Converting.ILibreOfficeLocator>(_ => new Operations.Converting.LibreOfficeLocator());
+        services.AddOperation<Operations.Converting.OfficeToPdfOperation>();
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),
@@ -161,7 +163,9 @@ internal static class AppHost
             sp.GetRequiredService<GrayscaleOperation>(),
             sp.GetRequiredService<Operations.Converting.ToImagesOperation>(),
             sp.GetRequiredService<Operations.Converting.FromImagesOperation>(),
-            sp.GetRequiredService<Operations.Converting.ToTextOperation>()));
+            sp.GetRequiredService<Operations.Converting.ToTextOperation>(),
+            sp.GetRequiredService<Operations.Converting.OfficeToPdfOperation>(),
+            sp.GetRequiredService<Operations.Converting.ILibreOfficeLocator>()));
         services.AddSingleton(sp => new SigningServices(
             sp.GetRequiredService<ICertificateStore>(),
             sp.GetRequiredService<ITimestampClient>(),
