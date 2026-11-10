@@ -64,6 +64,12 @@ The complete license texts will be collected in this file before the first relea
 Fonts installed on the user's computer are embedded (as subsets) into documents only when the font's own license
 bits (OS/2 `fsType`) allow editable embedding; PDF_Pro never ships them.
 
+## Used when the user has installed them (not shipped)
+
+| Component | License | Used for |
+|---|---|---|
+| [LibreOffice](https://www.libreoffice.org) (`soffice`, found where it is installed or where the user points) | MPL-2.0 | "Office sang PDF" (`convert.officeToPdf`, Phase 9): Word, Excel, PowerPoint, OpenDocument and RTF files converted by running `soffice --headless --convert-to pdf` as a separate process (`IExternalToolRunner`), never linked; PDF_Pro neither ships nor downloads it |
+
 ## Planned (added in later phases, listed here once added)
 
 OpenCvSharp4, Tesseract + tessdata,
