@@ -4,18 +4,19 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 10/11/2026 — P9 lát 8a + 8b + 9a-1 xong (CI xanh), 9a-2 xong (PDF/A: phông, CMYK, trong suốt cho 1b), 9a-3 xong (veraPDF qua Java, chưa chạy thật), 9b xong (App); còn lát 10. Máy Windows tắt; **phiên cloud "Đọc repo" nhận toàn bộ phần còn lại của P9** (8a, 8b, 9a, 9b, 10). Ảnh PNG/JPEG xuất ra giờ ghi DPI. Xem "Lời nhắn bàn giao" ngay dưới.
+Cập nhật lần cuối: 10/11/2026 — **Phase 9 xong về code** (cloud: 8a, 8b, 9a-1…3, 9b, 10). Việc của máy Windows: chạy `Phase9AcceptanceTests` (3 kịch bản mới), kiểm tay theo SPEC mục Phase 9 "Kiểm tay" (qpdf, LibreOffice, veraPDF). Kế tiếp: P10 (OCR). Máy Windows tắt; **phiên cloud "Đọc repo" nhận toàn bộ phần còn lại của P9** (8a, 8b, 9a, 9b, 10). Ảnh PNG/JPEG xuất ra giờ ghi DPI. Xem "Lời nhắn bàn giao" ngay dưới.
 
-## 0. Lời nhắn bàn giao (10/11/2026, cập nhật lần 2)
+## 0. Lời nhắn bàn giao (10/11/2026, cập nhật lần 3)
 
-Máy Windows của chủ dự án **tắt**; phiên cloud "Đọc repo" làm **tất cả** phần còn lại của Phase 9 trên nhánh `claude/laughing-pasteur-x9yt44`:
-1. `git pull --rebase` trước khi làm và trước mỗi lần push. Thứ tự: **8a → 8b → 9a → 9b → 10**; mỗi lát commit + push, đọc CI một lần sau mỗi push.
-2. Lõi (8a/9a): như các dòng 8a/9a của bảng Phase 9. Test cần LibreOffice/veraPDF tự bỏ qua khi máy không có.
-3. App (8b/9b): theo mẫu lát 7b (`ToTextViewModel`/`ToTextWindow.xaml`, lệnh trong `MainWindowViewModel.Convert.cs`, `OptimizingServices`, DI trong `Hosting/AppHost.cs`, `IPageDialogService` + `DialogServices.cs`, chuỗi vi/en trong `Strings.resx`/`Strings.en.resx`, id ribbon vào `Ribbon_OnlyImplementedCommandsAreAvailable`, test factory `Create` trong `MainWindowViewModelTests.cs`). Build bằng `-p:EnableWindowsTargeting=true`; `App.Tests` chỉ chạy trên CI → **phải đọc CI** sau push. Tên biểu tượng `SymbolRegular` phải kiểm trong `Wpf.Ui.dll` (mục 6).
-4. Lát 10: viết kịch bản FlaUI còn thiếu vào `tests/PdfPro.App.UiTests/Phase9AcceptanceTests.cs` (scan 50 trang ~80 MB → eBook < 15 MB, chữ đọc rõ; Office sang PDF; PDF/A) và hoàn chỉnh mục SPEC Phase 9 — ghi rõ "chưa chạy tay trên Windows".
-5. Chỉ thêm package MIT/Apache/BSD, ghi `THIRD_PARTY_NOTICES.md`; không AGPL/GPL.
+**Phase 9 xong về code** trên nhánh `claude/laughing-pasteur-x9yt44` (phiên cloud "Đọc repo" làm 8a → 10 khi máy Windows tắt; CI xanh tới lát 9b, xem mục 2).
 
-**Khi máy Windows bật lại:** fast-forward, build + test toàn bộ, chạy `Phase9AcceptanceTests` (`PDFPRO_UI_TESTS=1`), sửa gì cần sửa.
+**Khi máy Windows bật lại:**
+1. Fast-forward nhánh, `dotnet build PdfPro.slnx -c Release`, `dotnet test --solution PdfPro.slnx -c Release`.
+2. Chạy `Phase9AcceptanceTests` (`PDFPRO_UI_TESTS=1`) — 3 kịch bản mới chưa chạy lần nào: scan 50 trang → eBook < 15 MB (ghi số đo; nếu bản scan vẽ ra nhỏ hơn 40 MB thì tăng `QualityLevel`/nhiễu trong `TestSupport/ScanPdf.cs`), Word → PDF (cần LibreOffice), PDF/A-2b.
+3. Kiểm tay theo SPEC mục Phase 9 "Kiểm tay": `tools/fetch-tools.ps1` (qpdf), LibreOffice thật, **veraPDF thật** (container cloud không chạy được bộ cài veraPDF — mọi quy tắc veraPDF báo đều là việc cần sửa ở `Converting/PdfA/`).
+4. Ghi số đo vào SPEC mục Phase 9, cập nhật tệp này.
+
+**Kế tiếp:** P10 (OCR tiếng Việt, `PdfPro.Ocr` còn trống) theo `docs/PROMPTS.md`.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -31,7 +32,7 @@ Máy Windows của chủ dự án **tắt**; phiên cloud "Đọc repo" làm **t
 | Nhánh làm việc | `claude/laughing-pasteur-x9yt44` |
 | PR | NgSyNguyen/PDF-pro#1 (draft → `main`) — gom toàn bộ phần còn lại của Phase 5 |
 | CI | `.github/workflows/build.yml`, `windows-latest`; chạy khi push vào `main` hoặc trên pull request (nhánh không có PR thì **không** chạy CI) |
-| CI gần nhất | `a4b6f55` (P9 lát 9a-1): **xanh** (cả `0e51f6a`, `6ce96c5`, `cea9fb0`, `39dfd96`, `7f538c4`, `84d3efb`, `22e6489`, `77af225`, `f376296`, `7cae483`, `8fa89df`, `d028948`, `f366110`). `ea46071` đỏ do test named pipe chập chờn (sửa ở `f376296`, xem mục 6); `5282022` đỏ do đặc tả NSubstitute mơ hồ (sửa ở `40439cf`) |
+| CI gần nhất | `d325333` (P9 lát 9b): **xanh** (cả `f9d5dc8`, `0c6658c`, `a4b6f55`, `0e51f6a`, `6ce96c5`, `cea9fb0`, `39dfd96`, `7f538c4`, `84d3efb`, `22e6489`, `77af225`, `f376296`, `7cae483`, `8fa89df`, `d028948`, `f366110`). `ea46071` đỏ do test named pipe chập chờn (sửa ở `f376296`, xem mục 6); `5282022` đỏ do đặc tả NSubstitute mơ hồ (sửa ở `40439cf`) |
 
 - Trên máy chủ dự án có `README.md` chưa track (không rõ nguồn) — **chưa commit**; README chính thức để tới P13.
 - Máy chủ dự án cần `git config user.name/user.email` trong repo (đã từng thiếu → commit thất bại im lặng).
@@ -67,7 +68,7 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | P6 Chú thích & tìm kiếm | Xong về code (`66c9fc5` … lát 9e), có mục SPEC và `Phase6AcceptanceTests` (chưa chạy tay) |
 | P7 Sửa nội dung gốc & biểu mẫu | Xong về code (`d5d3523` … lát 9), có mục SPEC và `Phase7AcceptanceTests` (chưa chạy tay) |
 | P8 Bảo mật, xóa vĩnh viễn & chữ ký số | Xong về code (lát 1–9), có mục SPEC và `Phase8AcceptanceTests` (chưa chạy tay) |
-| **P9 Tối ưu, sửa lỗi & chuyển đổi** | **Đang làm** — xem bảng lát Phase 9 |
+| P9 Tối ưu, sửa lỗi & chuyển đổi | Xong về code (lát 1–10), có mục SPEC và `Phase9AcceptanceTests` (5 kịch bản đạt trên Windows, 3 mới chưa chạy tay) |
 | P10–P13 | Chưa bắt đầu (`PdfPro.Ocr` trống, `PdfPro.Cli` mới có `--version`) |
 
 ### Phase 5 — các lát
@@ -207,7 +208,7 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | 9a-2 | `convert.toPdfA` — lõi, phông/màu/trong suốt: `Converting/PdfA/PdfAFonts.cs` (nhúng chương trình TrueType của phông cùng họ trên máy, thay bằng Noto đóng gói cho phông đơn khi không có, không thay phông ký hiệu/TCVN3/VNI; mã hóa + `/Widths` theo chương trình; Type0/CIDFontType2 chỉ cùng tên; `/CIDSet` cho 1b; `Face`, `Key`, `PresentGlyphs`), `PdfAColor.cs` (`/DefaultCMYK` + ICC CMYK tự sinh `IccProfiles.Cmyk`, `IccProfiles.Lab`), `PdfAInspection` tính trong suốt theo `gs`/`Do` thật sự dùng; `ToPdfAOperation(PdfiumGate gate, FontLibrary? fonts = null)` — **constructor đổi** (DI: `AddOperation<ToPdfAOperation>` lấy `PdfiumGate` từ DI); 1b: trang dùng trong suốt → ảnh 200 DPI (`PdfAReport.PicturePages`); `PdfAFix` thêm `FontsEmbedded`, `FontsSubstituted`, `CmykProfile`, `PagesAsPictures`; `TrueTypeFont.GlyphCount/BoundingBox/CapHeight/AdvanceOfGlyph`. Test `ToPdfAOperationTests` 22 (thêm: Helvetica → Noto Sans + Differences + độ rộng khớp chương trình, phông của máy nhúng nguyên (1b WinAnsi), Symbol/.VnTime/VNI-Times chỉ báo, CMYK có hồ sơ + trang vẽ như trước, 1b trang trong suốt thành ảnh (trang chỉ có trạng thái không dùng thì giữ) + màu hòa trộn còn, CIDSet chỉ ở 1b, hồ sơ CMYK). Đo: `big-1000` 1b 222 s, 3 → 171 MB | commit `feat: PDF/A embeds fonts, defines CMYK and pictures transparent pages for PDF/A-1` | Xong |
 | 9a-3 | `convert.toPdfA` — veraPDF: `Converting/PdfA/VeraPdf.cs` (`VeraPdfMissing` Program/Java, `VeraPdfNotFoundException(Missing)`, `VeraPdfFailedException`, `VeraPdfInstallation(Folder, Java?)`, `IVeraPdfLocator.Find(preferred = null)` + `VeraPdfLocator` (đường dẫn chọn → `~/verapdf` → Program Files/LocalAppData → /opt… → PATH; Java từ `JAVA_HOME` hoặc PATH), `PdfARuleFailure`, `PdfAValidation(IsCompliant, Profile, Failures)`, `VeraPdfValidator(IExternalToolRunner, IVeraPdfLocator).ValidateAsync(file, level, veraPdfPath, ct)`: chạy `java … org.verapdf.apps.GreenfieldCliWrapper --flavour 2b/1b --format xml` **không qua .bat**, đọc XML an toàn). Test `VeraPdfTests` (16: báo cáo chưa đạt/đạt, không phải báo cáo, dòng lệnh đúng mức, thiếu chương trình/Java/quá giờ/không báo cáo, dò trên Windows; chạy thật bỏ qua khi không có) | commit `feat: PDF/A copies checked by veraPDF when it is installed` | Xong (**chưa chạy với veraPDF thật**) |
 | 9b | `convert.toPdfA` — App: ribbon `convert.toPdfA` ("PDF/A", `Archive24`, nhóm Tối ưu) → `ToPdfACommand` (`MainWindowViewModel.PdfA.cs`: từ chối tài liệu có mật khẩu, áp dụng đối tượng chờ, `ViewModels/Converting/PdfAViewModel.cs` + `Views/PdfAWindow.xaml` (2b khuyên dùng / 1b có mô tả đánh đổi, cảnh báo chữ ký số, ô kiểm veraPDF chỉ bật khi có veraPDF + Java), hỏi nơi lưu "{tên} (PDF-A).pdf", tài liệu như đang hiển thị, chạy nền rồi veraPDF nếu chọn, báo cáo `PdfAMessage` (vấn đề còn lại theo trang, thay đổi theo `PdfA_Fix_*`, trang thành ảnh, kết luận + tối đa 10 quy tắc veraPDF) + "Mở tệp"); Cài đặt: thẻ veraPDF (`AppSettings.VeraPdfPath`, `SettingsViewModel.VeraPdfPath/VeraPdfStatus/PickVeraPdfCommand`, tham số tùy chọn `IVeraPdfLocator?`); `OptimizingServices.ToPdfA/VeraPdf/VeraPdfLocator`; DI `AddOperation<ToPdfAOperation>`, `IVeraPdfLocator` → `new VeraPdfLocator()`, `VeraPdfValidator`; `IPageDialogService.ShowPdfA`; 64 chuỗi vi/en. Test: `PdfAViewModelTests` (3), `MainWindowViewModelTests.PdfA.cs` (3: bản 2b thật + veraPDF giả đạt; 1b không có veraPDF rồi mở tệp; nội dung báo cáo), `SettingsViewModelTests` +1, id ribbon. FlaUI: lát 10 | commit `feat(app): PDF/A copies from the ribbon, checked by veraPDF when installed` | Xong (App test chỉ chạy trên CI) |
-| 10 | Mục SPEC Phase 9 hoàn chỉnh + `Phase9AcceptanceTests` (đã có 5 kịch bản đạt trên Windows: nén, xám, sang TIFF, ảnh sang PDF, sang Markdown; còn: scan 50 trang ~80 MB → nén eBook < 15 MB, Office sang PDF, PDF/A) (**cloud viết; chạy tay trên Windows sau**) | | Chưa làm |
+| 10 | Mục SPEC Phase 9 hoàn chỉnh (quyết định/giới hạn, nghiệm thu, kiểm tay, số đo) + `Phase9AcceptanceTests` thêm 3 kịch bản: `AScanOfFiftyPages_IsCompressedForEBooks_ToLessThan15MB_AtAReadableResolution` (scan 50 trang A4 300 DPI vẽ bằng WPF `TestSupport/ScanPdf.cs`, > 40 MB → eBook < 15 MB, ảnh ≥ 140 DPI), `AWordDocument_BecomesAPdf_WithItsVietnameseText` (bỏ qua khi không có LibreOffice), `ADocument_BecomesAPdfA2bCopy_WithItsTextAndAnOutputIntent`; UiTests bật `UseWPF` (+ `<Using Include="System.IO" />`) | commit `test: Phase 9 acceptance scenarios, and the Phase 9 section of the SPEC` | Xong — **3 kịch bản mới chưa chạy tay trên Windows** |
 
 ## 5. Bản đồ mã Phase 5
 

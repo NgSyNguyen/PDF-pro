@@ -158,6 +158,100 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         text.IndexOf("CỘNG HÒA", StringComparison.Ordinal).ShouldBeLessThan(text.IndexOf("Độc lập", StringComparison.Ordinal), "the national heading reads in order");
     }
 
+    [Fact]
+    public void AScanOfFiftyPages_IsCompressedForEBooks_ToLessThan15MB_AtAReadableResolution()
+    {
+        RequireEnabled();
+        var path = Path.Combine(_folder.Documents, "scan 50 trang.pdf");
+        ScanPdf.Write(path, 50);
+        var size = new FileInfo(path).Length;
+        output.WriteLine($"made-up scan: {size:N0} bytes");
+        size.ShouldBeGreaterThan(40L * 1024 * 1024, "a heavy scan, as PROMPTS P9 has it (~80 MB)");
+        using var app = AppUnderTest.Start(_folder, path);
+        app.WaitForTab("scan 50 trang.pdf", Long);
+
+        app.Ribbon("convert", "optimize.compress");
+        var dialog = app.WaitForWindow(Text("Compress_Title"), Long);
+        app.Select("CompressPreset_Ebook", dialog);
+        app.Invoke("CompressApply", dialog);
+        var compressed = Path.Combine(_folder.Documents, Format("Compress_Name", "scan 50 trang") + ".pdf");
+        app.UseFileDialog(Text("Save_Dialog_Title"), compressed);
+        var started = DateTime.UtcNow;
+        var done = app.WaitForWindow(Text("Compress_Done_Title"), TimeSpan.FromMinutes(10));
+        output.WriteLine($"compressed in {(DateTime.UtcNow - started).TotalSeconds:N1} s");
+        done.FindFirstDescendant(cf => cf.ByName(Text("Common_Close")))!.AsButton().Invoke();
+
+        var after = new FileInfo(compressed).Length;
+        output.WriteLine($"{size:N0} → {after:N0} bytes");
+        after.ShouldBeLessThan(15L * 1024 * 1024, "eBook: under 15 MB");
+        PdfFile.PageCount(compressed).ShouldBe(50);
+        ScanPdf.ImageResolutions(compressed).ShouldAllBe(dpi => dpi >= 140, "eBook keeps 150 DPI, at which the text stays readable");
+    }
+
+    [Fact]
+    public void AWordDocument_BecomesAPdf_WithItsVietnameseText()
+    {
+        RequireEnabled();
+        var soffice = new[] { "ProgramFiles", "ProgramW6432" }
+            .Select(v => Environment.GetEnvironmentVariable(v))
+            .Where(f => !string.IsNullOrEmpty(f))
+            .Select(f => Path.Combine(f!, "LibreOffice", "program", "soffice.exe"))
+            .FirstOrDefault(File.Exists);
+        Assert.SkipUnless(soffice is not null, "LibreOffice is not installed");
+        var docx = Path.Combine(_folder.Documents, "tờ trình.docx");
+        ScanPdf.WriteDocx(docx, "Cộng hòa xã hội chủ nghĩa Việt Nam", "Kính gửi Ủy ban nhân dân xã");
+        var folder = Path.Combine(_folder.Documents, "bản PDF");
+        using var app = AppUnderTest.Start(_folder);
+
+        app.Ribbon("convert", "convert.officeToPdf");
+        var dialog = app.WaitForWindow(Text("OfficeToPdf_Title"));
+        app.Invoke("OfficeToPdfAddFiles", dialog);
+        app.UseFileDialog(Text("OfficeToPdf_Pick_Title"), docx);
+        AppUnderTest.WaitUntil(() => app.ItemCount("OfficeToPdfFiles", dialog) == 1, Long, "the document in the list");
+        app.SetText("OfficeToPdfFolder", folder, dialog);
+        app.SetChecked("OfficeToPdfOpenWhenDone", false, dialog);
+        app.Invoke("OfficeToPdfRun", dialog);
+        var pdf = Path.Combine(folder, "tờ trình.pdf");
+        var elapsed = AppUnderTest.WaitUntil(() => File.Exists(pdf), Long, "the PDF");
+        app.WaitForStatus(Format("OfficeToPdf_Done", folder), Long);
+        output.WriteLine($"one Word document through LibreOffice: {elapsed.TotalSeconds:N1} s");
+
+        var text = string.Join('\n', PdfFile.PageTexts(pdf)).Normalize(System.Text.NormalizationForm.FormC);
+        text.ShouldContain("Cộng hòa xã hội chủ nghĩa Việt Nam");
+        text.ShouldContain("Kính gửi Ủy ban nhân dân xã");
+        Directory.GetFileSystemEntries(folder).ShouldBe([pdf], "LibreOffice's working folder is gone");
+    }
+
+    [Fact]
+    public void ADocument_BecomesAPdfA2bCopy_WithItsTextAndAnOutputIntent()
+    {
+        RequireEnabled();
+        var path = _folder.Copy("vanban-vi.pdf");
+        var original = Sha256(path);
+        using var app = AppUnderTest.Start(_folder, path);
+        app.WaitForTab("vanban-vi.pdf", Long);
+
+        app.Ribbon("convert", "convert.toPdfA");
+        var dialog = app.WaitForWindow(Text("PdfA_Title"));
+        app.Select("PdfAA2B", dialog);
+        app.Invoke("PdfAApply", dialog);
+        var copy = Path.Combine(_folder.Documents, Format("PdfA_Name", "vanban-vi") + ".pdf");
+        app.UseFileDialog(Text("Save_Dialog_Title"), copy);
+        var done = app.WaitForWindow(Text("PdfA_Done_Title"), Long);
+        output.WriteLine(done.Name);
+        done.FindFirstDescendant(cf => cf.ByName(Text("Common_Close")))!.AsButton().Invoke();
+
+        using (var pdf = PdfSharp.Pdf.IO.PdfReader.Open(copy, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import))
+        {
+            var metadata = (pdf.Internals.Catalog.Elements["/Metadata"] as PdfSharp.Pdf.Advanced.PdfReference)!.Value as PdfSharp.Pdf.PdfDictionary;
+            System.Text.Encoding.UTF8.GetString(metadata!.Stream.Value).ShouldContain("<pdfaid:part>2</pdfaid:part>");
+            pdf.Internals.Catalog.Elements.ContainsKey("/OutputIntents").ShouldBeTrue();
+        }
+
+        PdfFile.PageTexts(copy).ShouldBe(PdfFile.PageTexts(path), "the text is kept");
+        Sha256(path).ShouldBe(original, "the document's own file is not touched");
+    }
+
     /// <summary>The first <paramref name="count"/> JPEG images of a PDF's pages, as stored.</summary>
     private static List<byte[]> Jpegs(string path, int count)
     {

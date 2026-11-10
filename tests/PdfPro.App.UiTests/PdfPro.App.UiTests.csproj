@@ -11,6 +11,8 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- WPF draws and JPEG-encodes the made-up scans of the Phase 9 scenarios. -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +23,8 @@
     <PackageReference Include="PdfPig" />
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
+    <!-- UseWPF drops System.IO from the implicit usings (WPF has a Path shape); nothing here uses the shapes. -->
+    <Using Include="System.IO" />
   </ItemGroup>
 
   <!-- Built first so the tests can start it; not referenced as an assembly (the app is tested as a black box). -->
