@@ -238,7 +238,7 @@ public sealed class ToTextOperation : PdfOperation<ToTextParams>
     }
 
     /// <summary>The blocks of a page in reading order; empty for a page without text.</summary>
-    private static IReadOnlyList<TextBlock> Blocks(Page page)
+    internal static IReadOnlyList<TextBlock> Blocks(Page page)
     {
         var letters = page.Letters;
         if (!letters.Any(l => !string.IsNullOrWhiteSpace(l.Value)))

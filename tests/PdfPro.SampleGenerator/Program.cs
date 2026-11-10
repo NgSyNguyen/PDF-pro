@@ -22,6 +22,9 @@ ISample[] samples =
     new VanBanSample(),
     new ScanSample(Path.Combine(outputDirectory, "vanban-vi.pdf")),
     new PiiSample(),
+    new ContractSample(1),
+    new ContractSample(2),
+    new TablesSample(),
 ];
 
 Console.WriteLine($"Writing samples to {outputDirectory}");

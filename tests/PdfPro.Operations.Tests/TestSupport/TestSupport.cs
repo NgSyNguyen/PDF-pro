@@ -41,6 +41,15 @@ internal static class Samples
     /// <summary>Fake personal data (CCCD, phones, e-mails, accounts, dates), also in metadata, a bookmark, a note and a link.</summary>
     public static string Pii => Path("pii.pdf");
 
+    /// <summary>A fake contract, version 1 (4 pages).</summary>
+    public static string ContractV1 => Path("contract-v1.pdf");
+
+    /// <summary>Version 2: a page inserted after page 2, the price, the time to pay and the place of signing changed.</summary>
+    public static string ContractV2 => Path("contract-v2.pdf");
+
+    /// <summary>A ruled table (page 1) and a table without rules (page 2), in Vietnamese.</summary>
+    public static string Tables => Path("tables.pdf");
+
     private static string Path(string fileName)
     {
         var path = System.IO.Path.Combine(RepositoryRoot, "samples", fileName);

@@ -17,7 +17,7 @@ Cập nhật lần cuối: 10/11/2026 — **Phase 10 (OCR & bộ công cụ scan
 4. `$env:PDFPRO_UI_TESTS=1`: `Phase10AcceptanceTests` (OCR `scan-vi` rồi tìm "Ủy ban nhân dân", ảnh trùng byte; xóa 4 tờ trắng), `Phase9AcceptanceTests` (3 kịch bản mới của P9).
 5. Kiểm tay theo SPEC mục Phase 10 "Kiểm tay" (bôi đen chữ trên trang OCR khớp ảnh, Xoay đúng chiều trang 12, hủy OCR giữa chừng) và mục Phase 9 (LibreOffice, veraPDF thật). Ghi số đo vào SPEC, cập nhật tệp này.
 
-**Kế tiếp:** P11 (so sánh, trích xuất & cấu trúc tài liệu) theo `docs/PROMPTS.md`.
+**Đang làm:** P11 (so sánh, trích xuất & cấu trúc tài liệu) — kế hoạch ở mục 4 "Phase 11".
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -72,7 +72,8 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | P8 Bảo mật, xóa vĩnh viễn & chữ ký số | Xong về code (lát 1–9), có mục SPEC và `Phase8AcceptanceTests` (chưa chạy tay) |
 | P9 Tối ưu, sửa lỗi & chuyển đổi | Xong về code (lát 1–10), có mục SPEC và `Phase9AcceptanceTests` (5 kịch bản đạt trên Windows, 3 mới chưa chạy tay) |
 | P10 OCR & bộ công cụ scan | Xong về code (lát 1–6), có mục SPEC và `Phase10AcceptanceTests` (chưa chạy tay; test Tesseract thật chỉ chạy ở cloud) |
-| P11–P13 | Chưa bắt đầu (`PdfPro.Cli` mới có `--version`) |
+| **P11 So sánh, trích xuất & cấu trúc** | **Đang làm** — xem bảng lát "Phase 11" |
+| P12–P13 | Chưa bắt đầu (`PdfPro.Cli` mới có `--version`) |
 
 ### Phase 5 — các lát
 
@@ -236,6 +237,22 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | 5a | Công cụ scan — lõi (`Operations/Scanning/`): mỗi công cụ = **đo** (tĩnh, trên bản "như đang hiển thị") + **áp dụng** dữ liệu đã đo (tất định, phát lại được từ manifest). `ScanPages` (`MeasureAsync` render xám từng trang qua gate ưu tiên thấp rồi đo ngoài gate; `Render`; `Straighten` bọc nội dung `q cm … Q` quanh tâm hộp hiển thị — chuyển từ `OcrTextLayers`; `PaintWhite` ô trắng đè lên; stream đánh dấu `/PdfProScan`); `scan.removeBlankPages` (thao tác trang, `RemoveBlankPagesParams(Pages)`; `MeasureAsync` = `InkCoverage` ở 54 DPI như `BlankPageDetector`), `scan.autoRotate` (thao tác trang, `AutoRotateParams(Turns: PageTurn(Page, Degrees))` → `/Rotate` của plan; `DetectAsync`: trang trắng bỏ qua, OSD chắc ≥ 10 thì xoay luôn, không thì đọc hai hướng bằng `OcrPageReader.ReadTurnedAsync` giữ hướng tin cậy hơn; song song), `scan.deskew` (thao tác nội dung, `DeskewParams(Pages: PageAngle)`, ≤ 15°; `MeasureAsync` 120 DPI, `SkewDetector` tin được và ≥ 0,2°), `scan.cleanBorders` (thao tác nội dung, `CleanBordersParams(Pages: PageBorders)` — dải là tỉ lệ của khổ hiển thị, ≤ 25 %; `MeasureAsync` 100 DPI `ScanBorders` + 1 điểm ảnh). Test `ScanOperationsTests` (5: `scan-vi` tờ phân cách 4, 7, 10, 14 → xóa 1 bước, không xóa hết; hướng chắc → không đọc; **Tesseract thật** chỉ tìm ra trang 12 lộn ngược (trang 13 OSD báo nhầm nhưng đọc thẳng tốt hơn); trang 2/8 nghiêng +0,92°/−1,15° → làm thẳng còn < 0,3°, ảnh giữ nguyên SHA-256, 30° bị từ chối; viền đen 30 pt + bóng xám 45 pt đo đúng → sơn trắng, đo lại không còn, chữ giữa trang còn) | commit `feat: scan tools — blank pages, turned pages, tilt and dark borders` | Xong |
 | 5b | App: ribbon Công cụ › nhóm "Bản quét" (`MainWindowViewModel.Scan.cs`, `Services/Scanning/ScanServices.cs`): **Xóa trang trắng** / **Xoay đúng chiều** / **Làm thẳng trang** / **Xóa viền đen** — tài liệu như đang hiển thị (`DocumentFileAsync`) được đo nền (thanh trạng thái có tiến độ, hủy được) → danh sách trang tìm thấy → "Xóa các trang này" / "Xoay" / "Làm thẳng" / "Tô trắng" (1 bước hoàn tác: thao tác trang qua `document.Apply`, thao tác nội dung qua `ChangeContentAsync`) hoặc **"Xem trong Sắp xếp"** (bật Sắp xếp, chọn sẵn các trang đó — xem ảnh thu nhỏ trước khi quyết); không thấy gì → báo; Xoay đúng chiều cần Tesseract có `osd` (không có → hướng dẫn), dùng ngôn ngữ + số luồng của OCR trong Cài đặt; **Tách theo trang trắng** = hộp thoại Tách (P4) mở sẵn chế độ `BlankSeparators` (`DocumentTabViewModel.SplitByBlankPagesCommand`); DI 4 thao tác + `ScanServices`; tên lịch sử "Xóa n trang trắng", "Xoay đúng chiều n trang", "Làm thẳng n trang", "Xóa viền đen n trang"; 47 chuỗi vi/en. Test: `MainWindowViewModelTests.Scan.cs` (6, trên `scan-vi` thật: xóa 4 tờ trắng 1 bước; xem trong Sắp xếp chọn đúng 4 trang; thiếu `osd` → báo, có → xoay các trang được báo; làm thẳng gửi `DeskewParams` có trang 2, 8; `basic-vi` không có viền; tách mở chế độ trang trắng), id ribbon | commit `feat(app): scan tools in the ribbon` | Xong (App test chỉ chạy trên CI) |
 | 6 | Mục SPEC "OCR & bộ công cụ scan (Phase 10)" (phân lớp, Tesseract, `ocr.run`, `scan.*`, quyết định/giới hạn, nghiệm thu, kiểm tay, số đo); bảng stack ghi không dùng OpenCvSharp4; `Phase10AcceptanceTests` (FlaUI: OCR `scan-vi` → panel Tìm kiếm thấy "Ủy ban nhân dân" → Lưu → PdfPig đọc ra chữ, JPEG trùng SHA-256 — bỏ qua khi không có Tesseract; xóa tờ trắng 1 bước, hoàn tác/làm lại, lưu ra 14 trang) | commit `docs: Phase 10 in the SPEC, and its acceptance tests` | Xong — **chưa chạy tay trên Windows** |
+
+### Phase 11 — các lát (kế hoạch do agent tự quyết, 10/11/2026)
+
+**Quyết định (sẽ vào SPEC mục Phase 11):**
+- **Diff tự viết** (`Core/Comparing/SequenceDiff`: Myers O(ND) + cắt đầu/cuối chung, giới hạn số sửa → thay cả khúc giữa) thay cho DiffPlex; **ghi XLSX tự viết** (như đọc XLSX ở P7) thay cho ClosedXML (ClosedXML kéo theo SixLabors.Fonts — bản 2.x không còn Apache-2.0); **trích bảng dùng `Tabula` 1.0.1** (tabula-sharp, MIT, cần PdfPig ≥ 0.1.14 — hợp với 0.1.16) vì phát hiện bảng lattice/stream là phần khó, đã được kiểm nhiều.
+- So sánh văn bản: dòng (PdfPig như "Sang văn bản") diff trên **toàn tài liệu** rồi mỗi khúc dòng khác nhau diff theo từ → trang chèn/xóa chỉ là các dòng của nó, không làm mọi trang sau "khác"; khúc mà từ giống hệt (chỉ ngắt dòng khác) không tính; mỗi khúc = 1 thay đổi; **bỏ qua đầu/chân trang lặp** (dòng ở 10 % trên/dưới mà hình dạng — chữ số thay bằng # — có ở ≥ nửa số trang) vì "Trang 3/4" → "Trang 4/5" sau mỗi trang chèn.
+
+| Lát | Nội dung | Commit | Trạng thái |
+|---|---|---|---|
+| 1 | Mẫu `contract-v1.pdf`/`contract-v2.pdf` (`ContractSample`), `tables.pdf` (`TablesSample`) — sinh trên Linux bằng Noto qua chương trình tạm dùng các lớp của bộ sinh; Core `Comparing/SequenceDiff` (`DiffRun`, `DiffKind`); Operations `Comparing/` — `ComparisonModels` (`ChangeKind` Added/Deleted/Modified, `ChangeMark(Page, Box, Kind)`, `DocumentChange`, `PagePair`, `TextCompareOptions(IgnoreRunningLines, IgnoreCase)`, `TextComparison`), `DocumentWords` (PdfPig, NFC, dòng chạy), `TextComparer.CompareAsync` (diff dòng → diff từ trong khúc; đoạn xóa+chèn = sửa (vàng), chỉ chèn = thêm (xanh), chỉ xóa = xóa (đỏ); ô đánh dấu gộp theo dòng; trang của thay đổi = trang của từ, không có thì trang của dòng trước; ghép trang theo số dòng chung, trang thừa hai bên ghép theo thứ tự); `ToTextOperation.Blocks` thành `internal`. Test: `SequenceDiffTests` (7, đối chiếu LCS quy hoạch động trên dãy ngẫu nhiên), `TextComparerTests` (5: hợp đồng **đúng 4 thay đổi** đúng loại/chữ/trang + ghép trang (0,0)(1,1)(–,2)(2,3)(3,4); tự so = 0; không bỏ chân trang thì > 4; bản scan không chữ ghép theo thứ tự; tệp mật khẩu) | commit `feat: compare the text of two documents, pages aligned by content` | Xong |
+| 2 | So sánh hình ảnh (render cùng DPI, so điểm ảnh có ngưỡng → vùng khác), báo cáo so sánh ra PDF | — | Chưa làm |
+| 3 | App: cửa sổ so sánh hai bên (cuộn/zoom đồng bộ, tô xanh/đỏ/vàng, danh sách thay đổi nhảy hai bên, lớp chồng/thanh trượt, xuất báo cáo) | — | Chưa làm |
+| 4 | `extract.tables` (Tabula lattice/stream, XLSX tự viết mỗi bảng một sheet, CSV UTF-8 BOM) + App (vùng bảng trên trang, xem trước lưới) | — | Chưa làm |
+| 5 | `extract.images` (định dạng gốc, lọc cỡ, bỏ trùng), tệp đính kèm (liệt kê/mở/lưu/thêm/xóa), danh sách phông (nhúng/subset/không) | — | Chưa làm |
+| 6 | Cấu trúc: sửa bookmark (+ tự tạo theo cỡ chữ/regex), metadata + thiết lập khi mở, nhãn trang, liên kết (tạo/sửa/xóa, tự nhận URL/email) | — | Chưa làm |
+| 7 | Mục SPEC Phase 11, `Phase11AcceptanceTests` | — | Chưa làm |
 
 ## 5. Bản đồ mã Phase 5
 
