@@ -245,6 +245,39 @@ public sealed class SessionReplayTests
     }
 
     [Fact]
+    public void OcrSteps_ComeBackFromTheManifest_AsTheyWere()
+    {
+        object[] steps =
+        [
+            new Operations.Ocr.OcrParams(["vie"]),
+            new Operations.Ocr.OcrParams(["vie", "eng"], Operations.Ocr.ExistingTextMode.Replace, [0, 2], 3, 400, AutoRotate: false, Deskew: false, StraightenPages: true, ConfidenceThreshold: 75, Hocr: true),
+        ];
+        var state = new SessionState(PagePlan.Identity(SourceIds.Original, 5, RandomPageKeys.Instance), SourceIds.Original, 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [Original],
+            State = state,
+            HistoryBase = state,
+            Undo = [.. steps.Select(p => new HistoryRecord(Operations.Ocr.OcrOperation.OperationId, p, []))],
+            Redo = [],
+        };
+        var created = DateTimeOffset.UtcNow;
+
+        var json = Infrastructure.Sessions.SessionManifestSerializer.Serialize(Infrastructure.Sessions.SessionManifestSerializer.ToManifest(snapshot, created));
+        var restored = Infrastructure.Sessions.SessionManifestSerializer.ToSnapshot(Infrastructure.Sessions.SessionManifestSerializer.Deserialize(json), _operations.ParameterType);
+
+        static string WithoutTime(string text) => System.Text.RegularExpressions.Regex.Replace(text, "\"updatedUtc\":\"[^\"]*\"", string.Empty);
+        WithoutTime(Infrastructure.Sessions.SessionManifestSerializer.Serialize(Infrastructure.Sessions.SessionManifestSerializer.ToManifest(restored, created)))
+            .ShouldBe(WithoutTime(json));
+        restored.Undo[0].Parameters.ShouldBeOfType<Operations.Ocr.OcrParams>().Pages.ShouldBeNull();
+        var second = restored.Undo[1].Parameters.ShouldBeOfType<Operations.Ocr.OcrParams>();
+        (second.ExistingText, second.Parallelism, second.Dpi, second.StraightenPages, second.Hocr).ShouldBe((Operations.Ocr.ExistingTextMode.Replace, 3, 400, true, true));
+        second.Languages.ShouldBe(["vie", "eng"]);
+        second.Pages.ShouldBe([0, 2]);
+    }
+
+    [Fact]
     public void ProtectionSteps_ComeBackAfterACrash_WithoutTheirPasswords()
     {
         var protection = new Core.Security.ProtectionSetting(Guid.NewGuid(), Core.Security.EncryptionAlgorithm.Aes128, Core.Security.DocumentPermissions.Print, HasOpenPassword: true);

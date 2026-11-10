@@ -110,6 +110,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ToggleContentEditingCommand = new ActiveDocumentCommand(d => d.ToggleContentEditingCommand);
         ToggleRedactionCommand = new ActiveDocumentCommand(d => d.ToggleRedactionCommand);
         SanitizeCommand = new ActiveDocumentCommand(d => d.SanitizeCommand);
+        OcrCommand = new ActiveDocumentCommand(d => d.OcrCommand);
         ToggleFormDesignCommand = new ActiveDocumentCommand(d => d.ToggleFormDesignCommand);
         ExportFormDataCommand = new ActiveDocumentCommand(d => d.ExportFormDataCommand);
         ImportFormDataCommand = new ActiveDocumentCommand(d => d.ImportFormDataCommand);
@@ -218,6 +219,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ActiveDocumentCommand ToggleRedactionCommand { get; }
 
     public ActiveDocumentCommand SanitizeCommand { get; }
+
+    /// <summary>"Nhận dạng chữ (OCR)" of the active document.</summary>
+    public ActiveDocumentCommand OcrCommand { get; }
 
     public ActiveDocumentCommand ToggleFormDesignCommand { get; }
 
@@ -510,7 +514,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand, SanitizeCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand, SanitizeCommand, OcrCommand,
             ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand, FlattenFormCommand, ResetFormCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
@@ -852,7 +856,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             [
                 new(Strings.Ribbon_Group_Tools,
                 [
-                    new("ocr.run", Strings.Cmd_Ocr, SymbolRegular.ScanText24),
+                    new("ocr.run", Strings.Cmd_Ocr, SymbolRegular.ScanText24, OcrCommand, Strings.Cmd_Ocr_ToolTip),
                     new("compare.documents", Strings.Cmd_Compare, SymbolRegular.ArrowSwap24),
                 ]),
                 new(Strings.Ribbon_Group_Automation,

@@ -146,6 +146,11 @@ public interface IFileDialogService
     /// <summary>Where to save a report as text (.txt); null when cancelled.</summary>
     string? PickReportSavePath(string suggestedFileName);
 
+    /// <summary>Where to save what OCR recognised: text (.txt) or hOCR (.hocr); overwriting asks for confirmation; null when cancelled.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <param name="hocr">hOCR rather than text.</param>
+    string? PickOcrExportPath(string suggestedFileName, bool hocr);
+
     /// <summary>Asks where to save an image taken out of a page (overwriting asks for confirmation).</summary>
     /// <param name="suggestedFileName">File name proposed in the dialog, with its extension.</param>
     /// <param name="extension">".jpg", ".jp2" or ".png": the only type offered.</param>
@@ -238,6 +243,9 @@ public interface IPageDialogService
 
     /// <summary>"PDF sang văn bản": format, page split, pages and folder.</summary>
     bool ShowToText(ViewModels.Converting.ToTextViewModel viewModel);
+
+    /// <summary>"Nhận dạng chữ (OCR)"; true when confirmed.</summary>
+    bool ShowOcr(ViewModels.Ocr.OcrViewModel viewModel);
 
     bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel);
 

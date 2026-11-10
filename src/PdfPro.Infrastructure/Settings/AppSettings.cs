@@ -73,6 +73,21 @@ public sealed record AppSettings
     /// <summary>Where veraPDF is (checking PDF/A copies): its installation folder; blank: looked for where it is usually installed.</summary>
     public string VeraPdfPath { get; init; } = string.Empty;
 
+    /// <summary>
+    /// Where Tesseract is (OCR): its program or its folder; blank: the copy in the app's tools folder, then where it is
+    /// usually installed.
+    /// </summary>
+    public string TesseractPath { get; init; } = string.Empty;
+
+    /// <summary>Which trained data OCR reads with: the most accurate or the fast one.</summary>
+    public PdfPro.Core.Ocr.OcrDataKind OcrData { get; init; } = PdfPro.Core.Ocr.OcrDataKind.Best;
+
+    /// <summary>The languages OCR was last run with (proposed next time), main language first.</summary>
+    public IReadOnlyList<string> OcrLanguages { get; init; } = ["vie"];
+
+    /// <summary>How many pages OCR reads at once; 0: the number of processors less one.</summary>
+    public int OcrParallelism { get; init; }
+
     /// <summary>A free public time-stamping authority (DigiCert).</summary>
     public const string DefaultTimestampServer = "http://timestamp.digicert.com";
 }

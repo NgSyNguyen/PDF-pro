@@ -157,6 +157,16 @@ internal static class AppHost
         services.AddOperation<Operations.Converting.ToPdfAOperation>();
         services.AddSingleton<Operations.Converting.IVeraPdfLocator>(_ => new Operations.Converting.VeraPdfLocator());
         services.AddSingleton<Operations.Converting.VeraPdfValidator>();
+        services.AddSingleton<PdfPro.Ocr.ITesseractLocator>(sp => new PdfPro.Ocr.TesseractLocator(sp.GetRequiredService<AppPaths>().ToolsDirectory));
+        services.AddSingleton<PdfPro.Core.Ocr.IOcrEngine>(sp =>
+        {
+            var settings = sp.GetRequiredService<PdfPro.Infrastructure.Settings.ISettingsService>();
+            return new PdfPro.Ocr.TesseractEngine(
+                sp.GetRequiredService<PdfPro.Core.ExternalTools.IExternalToolRunner>(),
+                sp.GetRequiredService<PdfPro.Ocr.ITesseractLocator>(),
+                () => new PdfPro.Ocr.TesseractSettings(string.IsNullOrWhiteSpace(settings.Current.TesseractPath) ? null : settings.Current.TesseractPath.Trim(), settings.Current.OcrData));
+        });
+        services.AddOperation<Operations.Ocr.OcrOperation>();
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),

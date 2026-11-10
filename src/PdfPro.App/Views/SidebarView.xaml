@@ -451,6 +451,14 @@
                 Text="{Binding ScannedPagesText}"
                 TextWrapping="Wrap"
                 Visibility="{Binding ScannedPagesText, Converter={StaticResource NullToCollapsed}}" />
+              <ui:Button
+                Margin="0,4,0,0"
+                Appearance="Secondary"
+                AutomationProperties.AutomationId="SearchRunOcr"
+                Icon="{ui:SymbolIcon ScanText24}"
+                Command="{Binding DataContext.OcrCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Content="{loc:Tr Search_RunOcr}"
+                Visibility="{Binding ScannedPagesText, Converter={StaticResource NullToCollapsed}}" />
             </StackPanel>
             <ListBox
               AutomationProperties.AutomationId="SearchResults"

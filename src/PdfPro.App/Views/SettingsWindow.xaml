@@ -154,6 +154,51 @@
         </StackPanel>
       </ui:CardControl>
 
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ScanText24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_Tesseract}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_Tesseract_Hint}"
+              TextWrapping="Wrap" />
+            <TextBlock
+              Margin="0,4,0,0"
+              AutomationProperties.AutomationId="SettingsTesseractStatus"
+              FontSize="12"
+              Text="{Binding TesseractStatus}"
+              TextWrapping="Wrap"
+              Visibility="{Binding TesseractStatus, Converter={StaticResource NullToCollapsed}}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <ui:TextBox
+              Width="220"
+              AutomationProperties.AutomationId="SettingsTesseractPath"
+              AutomationProperties.Name="{loc:Tr Settings_Tesseract}"
+              PlaceholderText="{loc:Tr Settings_LibreOffice_Placeholder}"
+              Text="{Binding TesseractPath, UpdateSourceTrigger=LostFocus}" />
+            <ui:Button
+              Margin="8,0,0,0"
+              AutomationProperties.AutomationId="SettingsTesseractPick"
+              Command="{Binding PickTesseractCommand}"
+              Content="{loc:Tr Split_Folder_Pick}"
+              Visibility="{Binding CanPickLibreOffice, Converter={StaticResource BoolToVisibility}}" />
+          </StackPanel>
+          <ComboBox
+            Margin="0,8,0,0"
+            HorizontalAlignment="Stretch"
+            AutomationProperties.AutomationId="SettingsOcrData"
+            AutomationProperties.Name="{loc:Tr Settings_OcrData}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding OcrDataOptions}"
+            SelectedValue="{Binding SelectedOcrData}"
+            SelectedValuePath="Value" />
+        </StackPanel>
+      </ui:CardControl>
+
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Ram20}">
         <ui:CardControl.Header>
           <StackPanel>

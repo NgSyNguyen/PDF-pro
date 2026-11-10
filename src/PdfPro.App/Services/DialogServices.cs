@@ -185,6 +185,20 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickOcrExportPath(string suggestedFileName, bool hocr)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = hocr ? Strings.Ocr_SaveHocr_Title : Strings.Ocr_SaveText_Title,
+            Filter = hocr ? Strings.Ocr_SaveHocr_Filter : Strings.Ocr_SaveText_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = hocr ? ".hocr" : ".txt",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickFormDataSavePath(string suggestedFileName)
     {
         var dialog = new SaveFileDialog
@@ -421,6 +435,12 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new ToTextWindow(viewModel));
+    }
+
+    public bool ShowOcr(ViewModels.Ocr.OcrViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new OcrWindow(viewModel));
     }
 
     public bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel)

@@ -63,7 +63,8 @@ public sealed record DocumentTabServices(
     StampServices? Stamps = null,
     Func<string>? AnnotationAuthor = null,
     IFormSource? Forms = null,
-    Services.Security.ISignatureVerification? SignatureChecks = null);
+    Services.Security.ISignatureVerification? SignatureChecks = null,
+    Services.Ocr.OcrServices? Ocr = null);
 
 /// <summary>What the stamp dialogs use besides the operations.</summary>
 /// <param name="CreatePreview">Shows page n (0-based) of the document with a stamp, until disposed.</param>
@@ -79,7 +80,14 @@ public sealed record StampServices(
 /// <param name="Parameters">Its parameters.</param>
 /// <param name="Description">The step's name ("Đổi khổ giấy 3 trang"), for the status bar.</param>
 /// <param name="Completed">Told whether the change was made (false: refused, failed or cancelled).</param>
-public sealed record ContentChangeRequest(IContentOperation Operation, object Parameters, string Description, Action<bool>? Completed = null);
+public sealed record ContentChangeRequest(IContentOperation Operation, object Parameters, string Description, Action<bool>? Completed = null)
+{
+    /// <summary>Long changes (OCR) say in the status bar about how long is left.</summary>
+    public bool ShowsTimeLeft { get; init; }
+
+    /// <summary>The explanation of a failure of the operation, or null for the usual one.</summary>
+    public Func<Exception, string?>? Explain { get; init; }
+}
 
 /// <summary>A split confirmed in the dialog, written by the window in the background.</summary>
 /// <param name="Operation">Writes the files.</param>
@@ -1275,6 +1283,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         NotifyAnnotationCommands();
         ToggleContentEditingCommand.NotifyCanExecuteChanged();
         ToggleFormDesignCommand.NotifyCanExecuteChanged();
+        OcrCommand.NotifyCanExecuteChanged();
         NotifyFormDataCommands();
     }
 }
@@ -1303,7 +1312,8 @@ internal sealed class DocumentTabFactory(
     IDocumentSaver? saver = null,
     ISettingsService? settings = null,
     IFormSource? forms = null,
-    Services.Security.ISignatureVerification? signatureChecks = null) : IDocumentTabFactory
+    Services.Security.ISignatureVerification? signatureChecks = null,
+    PdfPro.Core.Ocr.IOcrEngine? ocr = null) : IDocumentTabFactory
 {
     /// <summary>Builds the tab and starts reading the bookmarks in the background.</summary>
     public DocumentTabViewModel Create(DocumentWorkspace workspace)
@@ -1327,7 +1337,8 @@ internal sealed class DocumentTabFactory(
             Stamps(),
             AnnotationAuthor,
             forms,
-            signatureChecks);
+            signatureChecks,
+            ocr is null ? null : new Services.Ocr.OcrServices(ocr, settings));
         return new DocumentTabViewModel(workspace, viewer, thumbnailList, bookmarks, cache, services, loggers.CreateLogger<DocumentTabViewModel>());
     }
 

@@ -1649,4 +1649,77 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Settings_VeraPdf_Missing" xml:space="preserve"><value>Chưa tìm thấy veraPDF. Tải miễn phí tại https://verapdf.org.</value></data>
   <data name="Settings_VeraPdf_NotThere" xml:space="preserve"><value>Không có veraPDF ở đường dẫn này.</value></data>
   <data name="Settings_VeraPdf_NoJava" xml:space="preserve"><value>Đã có veraPDF nhưng chưa có Java (11 trở lên) để chạy nó.</value></data>
+  <data name="Cmd_Ocr_ToolTip" xml:space="preserve"><value>Nhận dạng chữ trên trang scan (OCR) để tìm, chọn và sao chép được; ảnh trang giữ nguyên</value></data>
+  <data name="Stage_Ocr" xml:space="preserve"><value>Đang nhận dạng chữ</value></data>
+  <data name="History_Ocr" xml:space="preserve"><value>Nhận dạng chữ (OCR)</value></data>
+  <data name="History_OcrPages" xml:space="preserve"><value>Nhận dạng chữ (OCR) {0} trang</value></data>
+  <data name="Content_ProgressTimeLeft" xml:space="preserve"><value>{0} — {1}…</value></data>
+  <data name="TimeLeft_Seconds" xml:space="preserve"><value>còn khoảng {0} giây</value></data>
+  <data name="TimeLeft_Minutes" xml:space="preserve"><value>còn khoảng {0} phút</value></data>
+  <data name="TimeLeft_Hours" xml:space="preserve"><value>còn khoảng {0} giờ {1} phút</value></data>
+  <data name="Ocr_Title" xml:space="preserve"><value>Nhận dạng chữ (OCR)</value></data>
+  <data name="Ocr_Engine" xml:space="preserve"><value>Nhận dạng bằng {0} — {1}</value></data>
+  <data name="Ocr_Data_Best" xml:space="preserve"><value>dữ liệu chính xác nhất</value></data>
+  <data name="Ocr_Data_Fast" xml:space="preserve"><value>dữ liệu nhanh</value></data>
+  <data name="Ocr_Data_Own" xml:space="preserve"><value>dữ liệu cài kèm Tesseract</value></data>
+  <data name="Ocr_Languages" xml:space="preserve"><value>Ngôn ngữ của tài liệu</value></data>
+  <data name="Ocr_Languages_Details" xml:space="preserve"><value>Ngôn ngữ chọn trước là ngôn ngữ chính. Chỉ chọn thêm tiếng Anh khi tài liệu có nhiều tiếng Anh: nhận dạng hai ngôn ngữ đọc chữ hoa có dấu kém hơn.</value></data>
+  <data name="Ocr_Language_vie" xml:space="preserve"><value>Tiếng Việt</value></data>
+  <data name="Ocr_Language_eng" xml:space="preserve"><value>Tiếng Anh</value></data>
+  <data name="Ocr_Language_fra" xml:space="preserve"><value>Tiếng Pháp</value></data>
+  <data name="Ocr_Language_deu" xml:space="preserve"><value>Tiếng Đức</value></data>
+  <data name="Ocr_Language_chi_sim" xml:space="preserve"><value>Tiếng Trung (giản thể)</value></data>
+  <data name="Ocr_Language_jpn" xml:space="preserve"><value>Tiếng Nhật</value></data>
+  <data name="Ocr_Language_kor" xml:space="preserve"><value>Tiếng Hàn</value></data>
+  <data name="Ocr_ExistingText" xml:space="preserve"><value>Trang đã có chữ</value></data>
+  <data name="Ocr_Skip" xml:space="preserve"><value>Bỏ qua (khuyên dùng)</value></data>
+  <data name="Ocr_Skip_Details" xml:space="preserve"><value>Chỉ nhận dạng trang chưa có chữ nào: trang đã nhận dạng hoặc có chữ thật được giữ nguyên.</value></data>
+  <data name="Ocr_Replace" xml:space="preserve"><value>Nhận dạng lại lớp chữ ẩn cũ</value></data>
+  <data name="Ocr_Replace_Details" xml:space="preserve"><value>Lớp chữ ẩn của lần OCR trước (của PDF_Pro hay phần mềm khác) bị xóa rồi nhận dạng lại; trang có chữ thật được giữ nguyên.</value></data>
+  <data name="Ocr_All" xml:space="preserve"><value>Nhận dạng mọi trang</value></data>
+  <data name="Ocr_All_Details" xml:space="preserve"><value>Cho tài liệu có chữ nhưng sao chép ra ký tự lạ. Lớp chữ ẩn cũ bị xóa; chữ hiển thị giữ nguyên nên khi tìm có thể thấy hai lần.</value></data>
+  <data name="Ocr_Scans" xml:space="preserve"><value>Bản quét</value></data>
+  <data name="Ocr_AutoRotate" xml:space="preserve"><value>Tự nhận trang quay ngang, lộn ngược để đọc đúng chiều</value></data>
+  <data name="Ocr_Deskew" xml:space="preserve"><value>Làm thẳng ảnh khi dòng chữ nghiêng (chỉ ảnh dùng để nhận dạng)</value></data>
+  <data name="Ocr_Straighten" xml:space="preserve"><value>Làm thẳng luôn trang trong tài liệu</value></data>
+  <data name="Ocr_Straighten_Details" xml:space="preserve"><value>Nội dung trang nghiêng được xoay cho thẳng; ảnh gốc không bị nén lại hay đổi điểm ảnh.</value></data>
+  <data name="Ocr_Parallelism" xml:space="preserve"><value>Số trang nhận dạng cùng lúc</value></data>
+  <data name="Ocr_Parallelism_Details" xml:space="preserve"><value>Nhiều hơn thì nhanh hơn nhưng máy bận hơn; mặc định bằng số nhân CPU trừ một.</value></data>
+  <data name="Ocr_Save" xml:space="preserve"><value>Lưu thêm</value></data>
+  <data name="Ocr_SaveText" xml:space="preserve"><value>Văn bản nhận dạng (.txt)</value></data>
+  <data name="Ocr_SaveHocr" xml:space="preserve"><value>hOCR — chữ kèm vị trí (.hocr)</value></data>
+  <data name="Ocr_Note" xml:space="preserve"><value>Ảnh trang không bị thay đổi: chữ nhận dạng được đặt thành lớp vô hình đè lên đúng chỗ, nên tìm, bôi đen và sao chép được. Là một bước, hoàn tác được; hủy giữa chừng thì tài liệu giữ nguyên.</value></data>
+  <data name="Ocr_Apply" xml:space="preserve"><value>Nhận dạng</value></data>
+  <data name="Ocr_Error_NoLanguage" xml:space="preserve"><value>Hãy chọn ít nhất một ngôn ngữ.</value></data>
+  <data name="Ocr_Error_Parallelism" xml:space="preserve"><value>Số trang cùng lúc phải từ 1 đến {0}.</value></data>
+  <data name="Ocr_Error_NotInstalled" xml:space="preserve"><value>Chưa có Tesseract (bộ nhận dạng chữ) hoặc dữ liệu ngôn ngữ của nó. Chạy tools\fetch-tools.ps1 để tải về, hoặc cài Tesseract OCR rồi chỉ đường dẫn trong Cài đặt › Tesseract.</value></data>
+  <data name="Ocr_Error_LanguageMissing" xml:space="preserve"><value>Tesseract không có dữ liệu cho {0}. Hãy bỏ chọn ngôn ngữ này hoặc tải thêm dữ liệu của nó.</value></data>
+  <data name="Ocr_Error_TimedOut" xml:space="preserve"><value>Nhận dạng một trang quá lâu nên đã dừng. Tài liệu giữ nguyên; hãy thử với ít trang hơn hoặc dữ liệu nhanh trong Cài đặt.</value></data>
+  <data name="Ocr_Error_Failed" xml:space="preserve"><value>Tesseract không nhận dạng được. Tài liệu giữ nguyên; chi tiết có trong nhật ký.</value></data>
+  <data name="Ocr_Error_Save" xml:space="preserve"><value>Không lưu được "{0}".</value></data>
+  <data name="Ocr_Done_Title" xml:space="preserve"><value>Nhận dạng chữ</value></data>
+  <data name="Ocr_Report_Nothing" xml:space="preserve"><value>Không trang nào được nhận dạng.</value></data>
+  <data name="Ocr_Report_Recognized" xml:space="preserve"><value>Đã nhận dạng {0} trang, độ tin cậy trung bình {1:0} %, {2} từ, trong {3:0} giây.</value></data>
+  <data name="Ocr_Report_LowConfidence" xml:space="preserve"><value>Độ tin cậy dưới {0:0} %, nên kiểm tra: trang {1}</value></data>
+  <data name="Ocr_Report_Turned" xml:space="preserve"><value>Đọc khi xoay đúng chiều (trang quay ngang hoặc lộn ngược): trang {0}</value></data>
+  <data name="Ocr_Report_Straightened" xml:space="preserve"><value>Đã làm thẳng: trang {0}</value></data>
+  <data name="Ocr_Report_Replaced" xml:space="preserve"><value>Đã thay lớp chữ ẩn cũ: trang {0}</value></data>
+  <data name="Ocr_Report_HadText" xml:space="preserve"><value>Đã có chữ, giữ nguyên: trang {0}</value></data>
+  <data name="Ocr_Report_Blank" xml:space="preserve"><value>Trang trắng, bỏ qua: trang {0}</value></data>
+  <data name="Ocr_Report_NoText" xml:space="preserve"><value>Không thấy chữ: trang {0}</value></data>
+  <data name="Ocr_Report_Failed" xml:space="preserve"><value>Không nhận dạng được (giữ nguyên): trang {0}</value></data>
+  <data name="Ocr_SaveText_Title" xml:space="preserve"><value>Lưu văn bản nhận dạng</value></data>
+  <data name="Ocr_SaveText_Filter" xml:space="preserve"><value>Văn bản (*.txt)|*.txt</value></data>
+  <data name="Ocr_SaveHocr_Title" xml:space="preserve"><value>Lưu hOCR</value></data>
+  <data name="Ocr_SaveHocr_Filter" xml:space="preserve"><value>hOCR (*.hocr)|*.hocr|HTML (*.html)|*.html</value></data>
+  <data name="Settings_Tesseract" xml:space="preserve"><value>Tesseract (nhận dạng chữ — OCR)</value></data>
+  <data name="Settings_Tesseract_Hint" xml:space="preserve"><value>Để trống để dùng bản trong thư mục tools của PDF_Pro, rồi bản đã cài trên máy; hoặc chọn thư mục có tesseract.exe.</value></data>
+  <data name="Settings_Tesseract_Missing" xml:space="preserve"><value>Chưa tìm thấy Tesseract hay dữ liệu ngôn ngữ của nó. Chạy tools\fetch-tools.ps1 hoặc cài Tesseract OCR.</value></data>
+  <data name="Settings_Tesseract_NotThere" xml:space="preserve"><value>Không thấy Tesseract (kèm dữ liệu ngôn ngữ và pdf.ttf) ở đường dẫn này.</value></data>
+  <data name="Settings_Tesseract_Found" xml:space="preserve"><value>Đang dùng: {0} — {1} — {2}</value></data>
+  <data name="Settings_Tesseract_Pick_Title" xml:space="preserve"><value>Chọn thư mục có tesseract.exe</value></data>
+  <data name="Settings_OcrData" xml:space="preserve"><value>Dữ liệu nhận dạng</value></data>
+  <data name="Settings_OcrData_Best" xml:space="preserve"><value>Chính xác nhất (chậm hơn)</value></data>
+  <data name="Settings_OcrData_Fast" xml:space="preserve"><value>Nhanh (kém chính xác hơn một chút)</value></data>
+  <data name="Search_RunOcr" xml:space="preserve"><value>Nhận dạng chữ (OCR)…</value></data>
 </root>

@@ -109,7 +109,24 @@ public sealed partial class MainWindowViewModel
         }
 
         var task = StatusBar.StartTask(Format(Strings.Content_Progress, request.Description));
-        var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, Format(Strings.Content_Progress, request.Description)));
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        TimeSpan? operationStarted = null;
+        var progress = new Progress<OperationProgress>(p =>
+        {
+            var text = Format(Strings.Content_Progress, request.Description);
+
+            // The changer reports writing the pages as the first half and the operation as the second.
+            if (request.ShowsTimeLeft && p.Fraction >= 0.5)
+            {
+                operationStarted ??= clock.Elapsed;
+                if (RemainingTime.Estimate(clock.Elapsed - operationStarted.Value, (p.Fraction * 2) - 1) is { } left)
+                {
+                    text = Format(Strings.Content_ProgressTimeLeft, request.Description, RemainingTime.Describe(left));
+                }
+            }
+
+            task.Report(p.Fraction, text);
+        });
         var change = _contentChanger.ApplyAsync(document.Workspace, request.Operation, request.Parameters, progress, task.Token);
         _activeSave = change;
         NotifySaveCommands();
@@ -133,7 +150,7 @@ public sealed partial class MainWindowViewModel
         catch (ContentChangeException ex)
         {
             task.Complete(Format(Strings.Content_FailedStatus, request.Description));
-            error = ex.Failure switch
+            error = (ex.InnerException is { } inner ? request.Explain?.Invoke(inner) : null) ?? ex.Failure switch
             {
                 ContentChangeFailure.SourceUnreadable => Strings.Content_Error_SourceUnreadable,
                 ContentChangeFailure.DiskFull => Strings.Content_Error_DiskFull,

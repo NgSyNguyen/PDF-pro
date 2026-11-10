@@ -294,6 +294,34 @@ public sealed class SettingsViewModelTests : IDisposable
         viewModel.CanPickLibreOffice.ShouldBeFalse();
     }
 
-    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null, IVeraPdfLocator? veraPdf = null)
-        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files, veraPdf);
+    [Fact]
+    public async Task Tesseract_IsLookedFor_WithTheDataChosen_AndBothAreSaved()
+    {
+        var tesseract = Substitute.For<PdfPro.Ocr.ITesseractLocator>();
+        tesseract.Find(null, PdfPro.Core.Ocr.OcrDataKind.Best).Returns((PdfPro.Ocr.TesseractInstallation?)null);
+        tesseract.Find(@"D:\OCR", PdfPro.Core.Ocr.OcrDataKind.Best).Returns(new PdfPro.Ocr.TesseractInstallation(@"D:\OCR\tesseract.exe", @"D:\OCR\tessdata-best", PdfPro.Core.Ocr.OcrDataKind.Best, ["eng", "vie"], true));
+        tesseract.Find(@"D:\OCR", PdfPro.Core.Ocr.OcrDataKind.Fast).Returns(new PdfPro.Ocr.TesseractInstallation(@"D:\OCR\tesseract.exe", @"D:\OCR\tessdata", null, ["vie"], true));
+        var files = Substitute.For<IFileDialogService>();
+        var viewModel = CreateViewModel(files: files, tesseract: tesseract);
+
+        viewModel.TesseractStatus.ShouldBe(Strings.Settings_Tesseract_Missing);
+        viewModel.SelectedOcrData.ShouldBe(PdfPro.Core.Ocr.OcrDataKind.Best);
+        viewModel.OcrDataOptions.Select(o => o.Value).ShouldBe([PdfPro.Core.Ocr.OcrDataKind.Best, PdfPro.Core.Ocr.OcrDataKind.Fast]);
+
+        files.PickFolder(Strings.Settings_Tesseract_Pick_Title, Arg.Is<string?>(p => p == null)).Returns(@"D:\OCR");
+        viewModel.PickTesseractCommand.Execute(null);
+        await viewModel.PendingSave;
+        _settings.Current.TesseractPath.ShouldBe(@"D:\OCR");
+        viewModel.TesseractStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_Tesseract_Found, @"D:\OCR\tesseract.exe", Strings.Ocr_Data_Best, $"{Strings.Ocr_Language_eng}, {Strings.Ocr_Language_vie}"));
+
+        viewModel.SelectedOcrData = PdfPro.Core.Ocr.OcrDataKind.Fast;
+        await viewModel.PendingSave;
+        _settings.Current.OcrData.ShouldBe(PdfPro.Core.Ocr.OcrDataKind.Fast);
+        viewModel.TesseractStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_Tesseract_Found, @"D:\OCR\tesseract.exe", Strings.Ocr_Data_Own, Strings.Ocr_Language_vie));
+        viewModel.TesseractPath = @"E:\không có";
+        viewModel.TesseractStatus.ShouldBe(Strings.Settings_Tesseract_NotThere);
+    }
+
+    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null, IVeraPdfLocator? veraPdf = null, PdfPro.Ocr.ITesseractLocator? tesseract = null)
+        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files, veraPdf, tesseract);
 }

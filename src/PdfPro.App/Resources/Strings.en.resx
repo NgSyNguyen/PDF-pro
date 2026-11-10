@@ -1649,4 +1649,77 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Settings_VeraPdf_Missing" xml:space="preserve"><value>veraPDF was not found. Download it free from https://verapdf.org.</value></data>
   <data name="Settings_VeraPdf_NotThere" xml:space="preserve"><value>veraPDF is not at this path.</value></data>
   <data name="Settings_VeraPdf_NoJava" xml:space="preserve"><value>veraPDF is there but Java (11 or later), which runs it, is not.</value></data>
+  <data name="Cmd_Ocr_ToolTip" xml:space="preserve"><value>Recognise the text of scanned pages (OCR) so it can be searched, selected and copied; the page images stay as they are</value></data>
+  <data name="Stage_Ocr" xml:space="preserve"><value>Recognising text</value></data>
+  <data name="History_Ocr" xml:space="preserve"><value>Text recognition (OCR)</value></data>
+  <data name="History_OcrPages" xml:space="preserve"><value>Text recognition (OCR) of {0} pages</value></data>
+  <data name="Content_ProgressTimeLeft" xml:space="preserve"><value>{0} — {1}…</value></data>
+  <data name="TimeLeft_Seconds" xml:space="preserve"><value>about {0} seconds left</value></data>
+  <data name="TimeLeft_Minutes" xml:space="preserve"><value>about {0} minutes left</value></data>
+  <data name="TimeLeft_Hours" xml:space="preserve"><value>about {0} h {1} min left</value></data>
+  <data name="Ocr_Title" xml:space="preserve"><value>Recognise text (OCR)</value></data>
+  <data name="Ocr_Engine" xml:space="preserve"><value>Recognised by {0} — {1}</value></data>
+  <data name="Ocr_Data_Best" xml:space="preserve"><value>most accurate data</value></data>
+  <data name="Ocr_Data_Fast" xml:space="preserve"><value>fast data</value></data>
+  <data name="Ocr_Data_Own" xml:space="preserve"><value>the data installed with Tesseract</value></data>
+  <data name="Ocr_Languages" xml:space="preserve"><value>Languages of the document</value></data>
+  <data name="Ocr_Languages_Details" xml:space="preserve"><value>The language ticked first is the main one. Add English only when the document has much of it: reading two languages recognises accented capitals less well.</value></data>
+  <data name="Ocr_Language_vie" xml:space="preserve"><value>Vietnamese</value></data>
+  <data name="Ocr_Language_eng" xml:space="preserve"><value>English</value></data>
+  <data name="Ocr_Language_fra" xml:space="preserve"><value>French</value></data>
+  <data name="Ocr_Language_deu" xml:space="preserve"><value>German</value></data>
+  <data name="Ocr_Language_chi_sim" xml:space="preserve"><value>Chinese (simplified)</value></data>
+  <data name="Ocr_Language_jpn" xml:space="preserve"><value>Japanese</value></data>
+  <data name="Ocr_Language_kor" xml:space="preserve"><value>Korean</value></data>
+  <data name="Ocr_ExistingText" xml:space="preserve"><value>Pages that already have text</value></data>
+  <data name="Ocr_Skip" xml:space="preserve"><value>Skip them (recommended)</value></data>
+  <data name="Ocr_Skip_Details" xml:space="preserve"><value>Only pages without any text are read: pages already recognised or with real text stay as they are.</value></data>
+  <data name="Ocr_Replace" xml:space="preserve"><value>Redo the hidden text of an earlier OCR</value></data>
+  <data name="Ocr_Replace_Details" xml:space="preserve"><value>The hidden text of an earlier OCR (by PDF_Pro or another program) is removed and the page read again; pages with real text stay as they are.</value></data>
+  <data name="Ocr_All" xml:space="preserve"><value>Read every page</value></data>
+  <data name="Ocr_All_Details" xml:space="preserve"><value>For documents whose text copies out as garbage. Earlier hidden text is removed; the visible text stays, so a search may find a word twice.</value></data>
+  <data name="Ocr_Scans" xml:space="preserve"><value>Scans</value></data>
+  <data name="Ocr_AutoRotate" xml:space="preserve"><value>Read sideways and upside-down pages the right way up</value></data>
+  <data name="Ocr_Deskew" xml:space="preserve"><value>Straighten tilted lines for reading (only the picture OCR reads)</value></data>
+  <data name="Ocr_Straighten" xml:space="preserve"><value>Also straighten the pages of the document</value></data>
+  <data name="Ocr_Straighten_Details" xml:space="preserve"><value>The content of tilted pages is turned level; the images are not re-encoded or changed.</value></data>
+  <data name="Ocr_Parallelism" xml:space="preserve"><value>Pages read at once</value></data>
+  <data name="Ocr_Parallelism_Details" xml:space="preserve"><value>More is faster but keeps the computer busier; the default is the number of CPU cores less one.</value></data>
+  <data name="Ocr_Save" xml:space="preserve"><value>Also save</value></data>
+  <data name="Ocr_SaveText" xml:space="preserve"><value>The recognised text (.txt)</value></data>
+  <data name="Ocr_SaveHocr" xml:space="preserve"><value>hOCR — text with positions (.hocr)</value></data>
+  <data name="Ocr_Note" xml:space="preserve"><value>The page images are not changed: the recognised text is laid invisibly over its place, so it can be searched, selected and copied. One step, undoable; cancelled midway, the document stays as it was.</value></data>
+  <data name="Ocr_Apply" xml:space="preserve"><value>Recognise</value></data>
+  <data name="Ocr_Error_NoLanguage" xml:space="preserve"><value>Choose at least one language.</value></data>
+  <data name="Ocr_Error_Parallelism" xml:space="preserve"><value>Pages at once must be between 1 and {0}.</value></data>
+  <data name="Ocr_Error_NotInstalled" xml:space="preserve"><value>Tesseract (the text recogniser) or its language data is missing. Run tools\fetch-tools.ps1 to fetch it, or install Tesseract OCR and point to it in Settings › Tesseract.</value></data>
+  <data name="Ocr_Error_LanguageMissing" xml:space="preserve"><value>Tesseract has no data for {0}. Untick this language or fetch its data.</value></data>
+  <data name="Ocr_Error_TimedOut" xml:space="preserve"><value>Reading a page took too long and was stopped. The document is unchanged; try fewer pages, or the fast data in Settings.</value></data>
+  <data name="Ocr_Error_Failed" xml:space="preserve"><value>Tesseract could not recognise the pages. The document is unchanged; the log has the details.</value></data>
+  <data name="Ocr_Error_Save" xml:space="preserve"><value>"{0}" could not be saved.</value></data>
+  <data name="Ocr_Done_Title" xml:space="preserve"><value>Text recognition</value></data>
+  <data name="Ocr_Report_Nothing" xml:space="preserve"><value>No page was recognised.</value></data>
+  <data name="Ocr_Report_Recognized" xml:space="preserve"><value>{0} pages recognised, mean confidence {1:0} %, {2} words, in {3:0} s.</value></data>
+  <data name="Ocr_Report_LowConfidence" xml:space="preserve"><value>Confidence below {0:0} %, worth checking: pages {1}</value></data>
+  <data name="Ocr_Report_Turned" xml:space="preserve"><value>Read turned the right way up (sideways or upside down): pages {0}</value></data>
+  <data name="Ocr_Report_Straightened" xml:space="preserve"><value>Straightened: pages {0}</value></data>
+  <data name="Ocr_Report_Replaced" xml:space="preserve"><value>Earlier hidden text replaced: pages {0}</value></data>
+  <data name="Ocr_Report_HadText" xml:space="preserve"><value>Already had text, left as they were: pages {0}</value></data>
+  <data name="Ocr_Report_Blank" xml:space="preserve"><value>Blank, skipped: pages {0}</value></data>
+  <data name="Ocr_Report_NoText" xml:space="preserve"><value>No text found: pages {0}</value></data>
+  <data name="Ocr_Report_Failed" xml:space="preserve"><value>Could not be recognised (left as they were): pages {0}</value></data>
+  <data name="Ocr_SaveText_Title" xml:space="preserve"><value>Save the recognised text</value></data>
+  <data name="Ocr_SaveText_Filter" xml:space="preserve"><value>Text (*.txt)|*.txt</value></data>
+  <data name="Ocr_SaveHocr_Title" xml:space="preserve"><value>Save hOCR</value></data>
+  <data name="Ocr_SaveHocr_Filter" xml:space="preserve"><value>hOCR (*.hocr)|*.hocr|HTML (*.html)|*.html</value></data>
+  <data name="Settings_Tesseract" xml:space="preserve"><value>Tesseract (text recognition — OCR)</value></data>
+  <data name="Settings_Tesseract_Hint" xml:space="preserve"><value>Leave blank to use the copy in PDF_Pro's tools folder, then the one installed; or choose the folder holding tesseract.exe.</value></data>
+  <data name="Settings_Tesseract_Missing" xml:space="preserve"><value>Tesseract or its language data was not found. Run tools\fetch-tools.ps1 or install Tesseract OCR.</value></data>
+  <data name="Settings_Tesseract_NotThere" xml:space="preserve"><value>No Tesseract (with language data and pdf.ttf) at this path.</value></data>
+  <data name="Settings_Tesseract_Found" xml:space="preserve"><value>Using: {0} — {1} — {2}</value></data>
+  <data name="Settings_Tesseract_Pick_Title" xml:space="preserve"><value>Choose the folder holding tesseract.exe</value></data>
+  <data name="Settings_OcrData" xml:space="preserve"><value>Recognition data</value></data>
+  <data name="Settings_OcrData_Best" xml:space="preserve"><value>Most accurate (slower)</value></data>
+  <data name="Settings_OcrData_Fast" xml:space="preserve"><value>Fast (a little less accurate)</value></data>
+  <data name="Search_RunOcr" xml:space="preserve"><value>Recognise text (OCR)…</value></data>
 </root>
