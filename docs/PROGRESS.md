@@ -4,7 +4,16 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 09/11/2026 — P9 lát 7b (hộp thoại "PDF sang văn bản", máy Windows). Chia việc: cloud "Đọc repo" làm lõi 7a/8a/9a (chỉ Core/Operations/tests/docs), máy Windows làm App 6b/7b/8b/9b. Tiếp theo trên Windows: 8b khi lõi 8a (`convert.officeToPdf`) đã đẩy lên.
+Cập nhật lần cuối: 10/11/2026 — tổng hợp sau P9 lát 7b (máy Windows): P9 xong lát 1–7b, CI `7f538c4` xanh. Còn 8a/9a (lõi, cloud "Đọc repo"), 8b/9b (App, máy Windows), 10 (nghiệm thu P9). Xem "Lời nhắn bàn giao" ngay dưới.
+
+## 0. Lời nhắn bàn giao (10/11/2026)
+
+**Cho phiên cloud "Đọc repo"** — tiếp tục từ `7f538c4`, nhánh `claude/laughing-pasteur-x9yt44`:
+1. `git pull --rebase` trước khi làm và trước mỗi lần push; chỉ sửa Core/Operations/tests/docs (App, `AppHost`, `Strings.resx` là việc của máy Windows); chỉ sửa **dòng của mình** trong bảng Phase 9 và mục 0 này.
+2. Làm **8a** `convert.officeToPdf` (lõi) rồi **9a** `convert.toPdfA` (lõi) theo bảng Phase 9 bên dưới; mỗi lát: build Release 0 cảnh báo → test Core/Operations → cập nhật dòng 8a/9a (API công khai: tên lớp, record tham số + mặc định, kết quả, ngoại lệ) → commit → push.
+3. Không đăng ký DI, không thêm chuỗi giao diện; để lại ghi chú ở dòng 8b/9b những gì App cần biết (đuôi tệp nhận, cách báo lỗi, chỗ tìm `soffice`/veraPDF).
+
+**Cho máy Windows:** khi 8a/9a đã lên nhánh → fast-forward → làm 8b/9b (hộp thoại, ribbon, DI, chuỗi vi/en, test App + FlaUI) → lát 10.
 
 ## 1. Chỉ đạo hiện hành của chủ dự án
 
@@ -20,7 +29,7 @@ Cập nhật lần cuối: 09/11/2026 — P9 lát 7b (hộp thoại "PDF sang v�
 | Nhánh làm việc | `claude/laughing-pasteur-x9yt44` |
 | PR | NgSyNguyen/PDF-pro#1 (draft → `main`) — gom toàn bộ phần còn lại của Phase 5 |
 | CI | `.github/workflows/build.yml`, `windows-latest`; chạy khi push vào `main` hoặc trên pull request (nhánh không có PR thì **không** chạy CI) |
-| CI gần nhất | `4480634` (P8 lát 6b): **xanh** (cả `6c3f996`, `2c8ec40`, `83f66b5`, `758ad99`). `5282022` đỏ do đặc tả NSubstitute mơ hồ (sửa ở `40439cf`); `573ef0c` đỏ do test named pipe chập chờn (sửa gốc ở P8 lát 1, xem mục 6) |
+| CI gần nhất | `7f538c4` (P9 lát 7b): **xanh** (cả `84d3efb`, `22e6489`, `77af225`, `f376296`, `7cae483`, `8fa89df`, `d028948`, `f366110`). `ea46071` đỏ do test named pipe chập chờn (sửa ở `f376296`, xem mục 6); `5282022` đỏ do đặc tả NSubstitute mơ hồ (sửa ở `40439cf`) |
 
 - Trên máy chủ dự án có `README.md` chưa track (không rõ nguồn) — **chưa commit**; README chính thức để tới P13.
 - Máy chủ dự án cần `git config user.name/user.email` trong repo (đã từng thiếu → commit thất bại im lặng).
@@ -189,9 +198,11 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | 6b | `convert.fromImages` — App: ribbon Chuyển đổi › "Ảnh sang PDF" (`FromImagesCommand` trong `MainWindowViewModel.Convert.cs`, không cần tài liệu đang mở); `ViewModels/Converting/FromImagesViewModel.cs` + `Views/FromImagesWindow.xaml` (danh sách ảnh: Thêm ảnh… (chọn nhiều, `IFileDialogService.PickImageFiles`), Thêm thư mục…, kéo thả từ Explorer/đổi chỗ (gong), lên/xuống/xóa, Sắp theo tên; mỗi lần thêm xếp tự nhiên, tệp không phải ảnh bị bỏ; khổ Theo ảnh / A4 vừa khít / A4 có lề + lề mm (0–50); "Lưu thành" mặc định "{ảnh đầu}.pdf" cạnh ảnh; mở tệp khi xong); `RunOptimizingAsync` thêm tham số `explain` để giải thích lỗi riêng (`ImageFileException` → nêu đúng tên ảnh, loại lỗi); `OptimizingServices.FromImages`, DI. UI test: `AppUnderTest.UseFileDialog` nhận cả hộp chọn thư mục (ô "Folder:" id 1152). Test: `FromImagesViewModelTests` (5), `MainWindowViewModelTests.FromImages_*` (2), `Phase9AcceptanceTests.AFolderOfScans_BecomesOnePdf_InNaturalOrder_WithTheJpegsUntouched` (FlaUI: thư mục 3 JPEG "trang 10/2/1" → PDF đúng thứ tự tự nhiên, JPEG trùng từng byte; 59 ms) — **đã chạy trên Windows: đạt** | commit `feat(app): pictures to PDF from the ribbon` | Xong |
 | 7a | `convert.toText` — lõi: `Converting/ToTextOperation.cs` (Export; PdfPig `NearestNeighbourWordExtractor` → `DocstrumBoundingBoxes` → `UnsupervisedReadingOrderDetector`; TXT = các dòng của mỗi khối như trên trang, dòng trống giữa các khối; Markdown = mỗi khối một đoạn (nối dòng, ghép từ gạch nối cuối dòng), khối ≤ 3 dòng cỡ chữ ≥ 1,25×/1,6× cỡ thân trang thành `##`/`#`, thoát ký tự Markdown (`ToTextOperation.Escape`); `TextPageSplit` None / PageBreaks (form feed cho TXT, `---` cho Markdown) / FilePerPage ("{tên}-001.txt"); khoảng trang; NFC; UTF-8 không BOM, CRLF; mật khẩu (sai/thiếu → `DocumentPasswordException`); trang có ảnh mà không chữ → `PagesWithoutText` (gợi ý OCR); đọc hết rồi mới ghi, tệp tạm → đổi tên). Test: `ToTextOperationTests` (15: `vanban-vi` đúng thứ tự + hai nửa đầu văn bản không xen dòng, chữ của trang khớp PDFium, Markdown, mỗi trang một tệp, `scan-vi` 18 trang không chữ, `encrypted.pdf`, ghi đè/giữ, lỗi không để lại gì, thoát Markdown). **Chưa đăng ký DI** (`AppHost` là phần của máy Windows) | commit `feat: the text of pages in reading order, as plain text or Markdown` | Xong |
 | 7b | `convert.toText` — App: ribbon Chuyển đổi › "Sang văn bản" (`ToTextCommand` trong `MainWindowViewModel.Convert.cs`), DI `AddOperation<ToTextOperation>`, `OptimizingServices.ToText`; `ViewModels/Converting/ToTextViewModel.cs` + `Views/ToTextWindow.xaml` (Văn bản thường / Markdown có mô tả; Một tệp có ngắt trang (mặc định) / nối liền / mỗi trang một tệp; `PageTargetPanel`; thư mục mặc định = thư mục tài liệu; dòng "Sẽ ghi: tên.txt" / "tên-001.md, tên-002.md…"; ghi đè; mở thư mục); tài liệu có mật khẩu bị từ chối như các lệnh Tối ưu; tài liệu như đang hiển thị; chạy nền có tiến độ; trang chỉ có ảnh → thông báo gợi ý OCR. Test: `ToTextViewModelTests` (3), `MainWindowViewModelTests.ToText_*` (2: chữ `basic-vi` NFC; `scan-vi` báo trang 1-18 cần OCR), `Phase9AcceptanceTests.TheVietnameseText_IsWrittenAsMarkdown_InReadingOrder` (FlaUI: `vanban-vi` 14 trang → Markdown 0,55 s, "CỘNG HÒA" trước "Độc lập") — **đã chạy trên Windows: đạt** | commit `feat(app): the text of a document from the ribbon` | Xong |
-| 8 | `convert.officeToPdf`: dò LibreOffice, `soffice --headless` với hồ sơ riêng mỗi lần, timeout | | |
-| 9 | `convert.toPdfA`: PDF/A-2b/1b (phông nhúng, OutputIntent sRGB, XMP, bỏ JS/mã hóa/đa phương tiện); veraPDF nếu đã cài | | |
-| 10 | Mục SPEC Phase 9 + `Phase9AcceptanceTests` | | |
+| 8a | `convert.officeToPdf` — lõi (**cloud "Đọc repo"**): dò LibreOffice (Program Files, PATH; `soffice.exe`/`soffice`), `soffice --headless --convert-to pdf` qua `IExternalToolRunner` với hồ sơ riêng mỗi lần (`-env:UserInstallation=file:///…` trong thư mục tạm, xóa sau), timeout, hủy được, stderr được giữ; .docx/.doc/.xlsx/.xls/.pptx/.ppt/.odt/.ods/.odp/.rtf; nhiều tệp; tạm → đổi tên; không có LibreOffice → ngoại lệ riêng để App hướng dẫn cài. Test tự bỏ qua khi máy không có LibreOffice | | Chưa làm |
+| 8b | `convert.officeToPdf` — App (**máy Windows**): ribbon Chuyển đổi › "Office sang PDF", hộp thoại chọn tệp + thư mục ra, DI, chuỗi vi/en, báo thiếu LibreOffice, test App + FlaUI (bỏ qua khi không có LibreOffice) | | Chờ 8a |
+| 9a | `convert.toPdfA` — lõi (**cloud "Đọc repo"**): PDF/A-2b (mặc định) / 1b: phông nhúng (phông không nhúng → thay bằng phông đóng gói hoặc báo), OutputIntent sRGB (ICC sRGB không bản quyền), XMP `pdfaid`, bỏ JavaScript/mã hóa/đa phương tiện/tệp đính kèm (1b), không trong suốt cho 1b; báo cáo những gì đã sửa và những gì không đạt; veraPDF nếu đã cài (qua `IExternalToolRunner`) để kiểm | | Chưa làm |
+| 9b | `convert.toPdfA` — App (**máy Windows**): ribbon, hộp thoại chọn mức, báo cáo, kết quả veraPDF nếu có, test App + FlaUI | | Chờ 9a |
+| 10 | Mục SPEC Phase 9 hoàn chỉnh + `Phase9AcceptanceTests` (đã có 5 kịch bản đạt trên Windows: nén, xám, sang TIFF, ảnh sang PDF, sang Markdown; còn: scan 50 trang ~80 MB → nén eBook < 15 MB, Office sang PDF, PDF/A) (**máy Windows**) | | Chưa làm |
 
 ## 5. Bản đồ mã Phase 5
 
@@ -281,4 +292,6 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - `PdfPro.Benchmarks`, `PdfPro.Worker` chưa tạo (để P13).
 - SkiaSharp kéo theo `SkiaSharp.NativeAssets.macOS` (và các RID Windows): thư mục build/publish của App (không đặt RuntimeIdentifier) có thêm `runtimes/osx*/` — gọt khi đóng gói (P13, đặt RID `win-x64`).
 - `tools/fetch-tools.ps1` (tải qpdf) chưa chạy thử trên Windows: tên tệp zip/checksum của bản phát hành qpdf 12.2.0 là phỏng đoán theo quy ước của qpdf — chạy một lần, nếu khác thì sửa biến và ghim `-QpdfSha256`.
+- Ảnh JPEG/PNG xuất từ "Sang ảnh" chưa ghi DPI vào tệp (JFIF/`pHYs`) — trình xem ảnh coi là 96/72 DPI; TIFF thì có.
+- Các `Phase5…Phase8AcceptanceTests` (FlaUI) chưa chạy tay trên Windows; bản cài tạm trên Desktop của chủ dự án còn ở `464d0de` (rất cũ).
 - Tệp đã ký: chỉ "thêm chú thích" được lưu gia tăng; điền biểu mẫu, sửa/xóa chú thích có sẵn, thao tác trang sau khi ký vẫn ghi toàn bộ (cảnh báo trước). Chữ ký chứng nhận DocMDP P=1 chưa được kiểm trước khi lưu gia tăng.
