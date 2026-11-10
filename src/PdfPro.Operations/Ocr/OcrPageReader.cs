@@ -68,7 +68,8 @@ internal sealed class OcrPageReader(IOcrEngine engine, OcrOptions options, bool 
         return best!;
     }
 
-    private async Task<PageReading> ReadTurnedAsync(GrayImage render, double dpi, int rotation, CancellationToken cancellationToken)
+    /// <summary>One reading of the page, its picture turned clockwise by <paramref name="rotation"/> and straightened when tilted.</summary>
+    internal async Task<PageReading> ReadTurnedAsync(GrayImage render, double dpi, int rotation, CancellationToken cancellationToken)
     {
         var turned = GrayTransforms.RotateQuarter(render, rotation);
         var (image, toRender, skew) = (turned.Image, turned.ToSource, 0.0);

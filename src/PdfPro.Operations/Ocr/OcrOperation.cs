@@ -218,7 +218,7 @@ public sealed class OcrOperation(PdfiumGate gate, IOcrEngine engine) : FileConte
             layers.Add(page, result.TextLayer, toDisplay, reading.Width, reading.Height);
             if (request.StraightenPages && Math.Abs(reading.Tilt) >= MinStraighten)
             {
-                layers.Straighten(page, reading.Tilt);
+                OcrTextLayers.Straighten(page, reading.Tilt);
                 straightened.Add(item.PageIndex);
             }
 

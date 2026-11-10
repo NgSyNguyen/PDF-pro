@@ -1,4 +1,3 @@
-using System.Globalization;
 using PdfPro.Core.Geometry;
 using PdfPro.Operations.Layout;
 using PdfPro.Operations.Materializing;
@@ -62,25 +61,8 @@ internal sealed class OcrTextLayers(PdfDocument document)
         }
     }
 
-    /// <summary>
-    /// Turns everything drawn on the page clockwise by <paramref name="degrees"/> around the middle of its visible box,
-    /// as the page is displayed (a scan whose lines rise to the right by that angle comes out level).
-    /// </summary>
-    public void Straighten(PdfPage page, double degrees)
-    {
-        ArgumentNullException.ThrowIfNull(page);
-        var geometry = PageStamper.Geometry(page);
-        var box = geometry.Box;
-        var (cx, cy) = ((box.Left + box.Right) / 2, (box.Bottom + box.Top) / 2);
-
-        // Clockwise on screen is clockwise in the page's own space too (a turn keeps its sense under /Rotate).
-        var m = PdfMatrix.Translation(-cx, -cy).Then(PdfMatrix.Rotation(-degrees)).Then(PdfMatrix.Translation(cx, cy));
-        var contents = new PdfArray(document);
-        contents.Elements.Add(NewStream(string.Create(CultureInfo.InvariantCulture, $"q {N(m.A)} {N(m.B)} {N(m.C)} {N(m.D)} {N(m.E)} {N(m.F)} cm\n")));
-        PageStamper.ContentStreams(page).ForEach(contents.Elements.Add);
-        contents.Elements.Add(NewStream("\nQ\n"));
-        page.Elements["/Contents"] = contents;
-    }
+    /// <summary>Turns the page's content (its text layer included) straight: see <see cref="Scanning.ScanPages.Straighten"/>.</summary>
+    public static void Straighten(PdfPage page, double degrees) => Scanning.ScanPages.Straighten(page, degrees);
 
     /// <summary>Points the form's fonts at the document's copy of Tesseract's glyph-less font when it is the same font.</summary>
     private void ShareFont(PdfDictionary form)
@@ -117,13 +99,4 @@ internal sealed class OcrTextLayers(PdfDocument document)
         return AsDictionary(descriptor?.Elements["/FontFile2"])?.Stream?.Value;
     }
 
-    private PdfReference NewStream(string text)
-    {
-        var content = new PdfContent(document);
-        content.CreateStream(System.Text.Encoding.ASCII.GetBytes(text));
-        document.Internals.AddObject(content);
-        return content.Reference!;
-    }
-
-    private static string N(double value) => Math.Round(value, 6).ToString("0.######", CultureInfo.InvariantCulture);
 }
