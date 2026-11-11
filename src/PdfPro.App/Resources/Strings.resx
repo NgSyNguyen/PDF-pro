@@ -1829,4 +1829,54 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Compare_Report_Footer" xml:space="preserve"><value>Trang {0}/{1}</value></data>
   <data name="Stage_CompareText" xml:space="preserve"><value>Đang so sánh chữ</value></data>
   <data name="Stage_CompareVisual" xml:space="preserve"><value>Đang so sánh hình ảnh</value></data>
+  <data name="Ribbon_Group_Extract" xml:space="preserve"><value>Trích xuất</value></data>
+  <data name="Cmd_ExtractTables" xml:space="preserve"><value>Trích bảng</value></data>
+  <data name="Cmd_ExtractTables_ToolTip" xml:space="preserve"><value>Tìm các bảng trong tài liệu, xem trước từng ô và xuất ra Excel hoặc CSV (tiếng Việt mở đúng trong Excel)</value></data>
+  <data name="Tables_Title" xml:space="preserve"><value>Trích bảng</value></data>
+  <data name="Tables_Pages" xml:space="preserve"><value>Tìm trên trang:</value></data>
+  <data name="Tables_Pages_All" xml:space="preserve"><value>tất cả</value></data>
+  <data name="Tables_Find" xml:space="preserve"><value>Tìm bảng</value></data>
+  <data name="Tables_Progress" xml:space="preserve"><value>Đang tìm bảng: trang {0}/{1}…</value></data>
+  <data name="Tables_Found" xml:space="preserve"><value>Tìm thấy {0} bảng.</value></data>
+  <data name="Tables_NoneFound" xml:space="preserve"><value>Không tìm thấy bảng nào. Hãy kéo một khung quanh bảng trên trang để đọc nó.</value></data>
+  <data name="Tables_NoTableInArea" xml:space="preserve"><value>Không đọc được bảng trong vùng này. Thử cách đọc khác hoặc vẽ khung rộng hơn.</value></data>
+  <data name="Tables_Read" xml:space="preserve"><value>Đã đọc một bảng {0} dòng × {1} cột.</value></data>
+  <data name="Tables_List" xml:space="preserve"><value>Các bảng</value></data>
+  <data name="Tables_Item" xml:space="preserve"><value>Bảng {0} · trang {1}</value></data>
+  <data name="Tables_ItemSize" xml:space="preserve"><value>{0} dòng × {1} cột · {2}</value></data>
+  <data name="Tables_Method" xml:space="preserve"><value>Cách đọc bảng</value></data>
+  <data name="Tables_Method_Auto" xml:space="preserve"><value>Tự động</value></data>
+  <data name="Tables_Method_Lattice" xml:space="preserve"><value>có đường kẻ ô</value></data>
+  <data name="Tables_Method_Stream" xml:space="preserve"><value>căn theo cột chữ</value></data>
+  <data name="Tables_Reread" xml:space="preserve"><value>Đọc lại</value></data>
+  <data name="Tables_Remove" xml:space="preserve"><value>Bỏ bảng</value></data>
+  <data name="Tables_DrawHint" xml:space="preserve"><value>Kéo một khung trên trang để đọc vùng đó thành bảng (thay bảng đang có ở đó).</value></data>
+  <data name="Tables_Page" xml:space="preserve"><value>Trang {0}/{1}</value></data>
+  <data name="Tables_PreviousPage" xml:space="preserve"><value>Trang trước</value></data>
+  <data name="Tables_NextPage" xml:space="preserve"><value>Trang sau</value></data>
+  <data name="Tables_Preview" xml:space="preserve"><value>Các ô của bảng</value></data>
+  <data name="Tables_Format" xml:space="preserve"><value>Xuất ra</value></data>
+  <data name="Tables_Format_Xlsx" xml:space="preserve"><value>Excel (.xlsx) — mỗi bảng một trang tính</value></data>
+  <data name="Tables_Format_Csv" xml:space="preserve"><value>CSV (UTF-8) — mỗi bảng một tệp</value></data>
+  <data name="Tables_Numbers" xml:space="preserve"><value>Số trong tài liệu viết kiểu</value></data>
+  <data name="Tables_Numbers_Dot" xml:space="preserve"><value>Việt Nam: 1.250.000,5 (thành số trong Excel)</value></data>
+  <data name="Tables_Numbers_Comma" xml:space="preserve"><value>Anh: 1,250,000.5 (thành số trong Excel)</value></data>
+  <data name="Tables_Numbers_Text" xml:space="preserve"><value>Giữ nguyên là chữ</value></data>
+  <data name="Tables_Separator" xml:space="preserve"><value>Dấu phân cách cột</value></data>
+  <data name="Tables_Separator_Comma" xml:space="preserve"><value>Dấu phẩy ( , )</value></data>
+  <data name="Tables_Separator_Semicolon" xml:space="preserve"><value>Dấu chấm phẩy ( ; )</value></data>
+  <data name="Tables_Separator_Tab" xml:space="preserve"><value>Tab</value></data>
+  <data name="Tables_SheetName" xml:space="preserve"><value>Bảng {0} (trang {1})</value></data>
+  <data name="Tables_Export" xml:space="preserve"><value>Xuất…</value></data>
+  <data name="Tables_OpenFolder" xml:space="preserve"><value>Mở thư mục</value></data>
+  <data name="Tables_Written" xml:space="preserve"><value>Đã ghi {0} bảng vào “{1}”.</value></data>
+  <data name="Tables_WrittenFiles" xml:space="preserve"><value>Đã ghi {0} tệp: “{1}” … “{2}”.</value></data>
+  <data name="Tables_Error_Pages" xml:space="preserve"><value>Hãy nhập các trang từ 1 đến {0}, ví dụ “1-3, 8”.</value></data>
+  <data name="Tables_Error_Read" xml:space="preserve"><value>Không đọc được tài liệu để tìm bảng.</value></data>
+  <data name="Tables_Error_NoneChosen" xml:space="preserve"><value>Hãy đánh dấu ít nhất một bảng để xuất.</value></data>
+  <data name="Tables_Error_Write" xml:space="preserve"><value>Không ghi được tệp. Hãy chọn thư mục khác, hoặc đóng tệp cùng tên đang mở trong Excel.</value></data>
+  <data name="Tables_SaveDialog_Title" xml:space="preserve"><value>Xuất bảng</value></data>
+  <data name="Tables_SaveDialog_FilterXlsx" xml:space="preserve"><value>Sổ tính Excel (*.xlsx)|*.xlsx</value></data>
+  <data name="Tables_SaveDialog_FilterCsv" xml:space="preserve"><value>CSV UTF-8 (*.csv)|*.csv</value></data>
+  <data name="Stage_ExtractTables" xml:space="preserve"><value>Đang tìm bảng</value></data>
 </root>

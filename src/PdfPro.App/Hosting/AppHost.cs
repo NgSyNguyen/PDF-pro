@@ -184,6 +184,11 @@ internal static class AppHost
             sp.GetRequiredService<PdfPro.Pdfium.IPdfDocumentLoader>(),
             sp.GetRequiredService<Services.Rendering.IPageImageRenderer>(),
             sp.GetRequiredService<IPasswordPrompt>()));
+        services.AddOperation<Operations.Extracting.ExtractTablesOperation>();
+        services.AddSingleton(sp => new Services.Extracting.ExtractingServices(
+            sp.GetRequiredService<Operations.Extracting.ExtractTablesOperation>(),
+            sp.GetRequiredService<PdfPro.Pdfium.IPdfDocumentLoader>(),
+            sp.GetRequiredService<Services.Rendering.IPageImageRenderer>()));
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),

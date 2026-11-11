@@ -398,6 +398,7 @@ public sealed partial class MainWindowViewModel : IExitGuard
         ToImagesCommand.NotifyCanExecuteChanged();
         FromImagesCommand.NotifyCanExecuteChanged();
         ToTextCommand.NotifyCanExecuteChanged();
+        ExtractTablesCommand.NotifyCanExecuteChanged();
         OfficeToPdfCommand.NotifyCanExecuteChanged();
         ToPdfACommand.NotifyCanExecuteChanged();
     }

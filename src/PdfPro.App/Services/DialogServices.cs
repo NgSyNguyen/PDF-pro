@@ -213,6 +213,25 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickTableSavePath(string suggestedFileName, string? initialDirectory, bool csv)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Tables_SaveDialog_Title,
+            Filter = csv ? Strings.Tables_SaveDialog_FilterCsv : Strings.Tables_SaveDialog_FilterXlsx,
+            FileName = suggestedFileName,
+            DefaultExt = csv ? ".csv" : ".xlsx",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        if (!string.IsNullOrEmpty(initialDirectory) && System.IO.Directory.Exists(initialDirectory))
+        {
+            dialog.InitialDirectory = initialDirectory;
+        }
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickFormDataFile()
     {
         var dialog = new OpenFileDialog
@@ -435,6 +454,12 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new ToTextWindow(viewModel));
+    }
+
+    public bool ShowTables(ViewModels.Extracting.TablesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new TablesWindow(viewModel));
     }
 
     public bool ShowCompare(ViewModels.Comparing.CompareViewModel viewModel)

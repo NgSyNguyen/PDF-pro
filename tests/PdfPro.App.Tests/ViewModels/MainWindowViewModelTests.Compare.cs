@@ -42,6 +42,26 @@ public sealed partial class MainWindowViewModelTests
         (shown.OldPath, shown.NewPath).ShouldBe((viewModel.ActiveDocument!.FilePath, viewModel.Documents.First().FilePath));
     }
 
+    [Fact]
+    public async Task ExtractTables_OpensTheTableWindow_OnTheActiveDocument()
+    {
+        var path = _fixture.CreateFile("bảng biểu.pdf", File.ReadAllBytes(Samples.Tables));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(2), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        PdfPro.App.ViewModels.Extracting.TablesViewModel? shown = null;
+        _pageDialogs.ShowTables(Arg.Do<PdfPro.App.ViewModels.Extracting.TablesViewModel>(d => shown = d)).Returns(false);
+
+        await viewModel.ExtractTablesCommand.ExecuteAsync(null);
+
+        shown.ShouldNotBeNull();
+        shown.FileName.ShouldBe("bảng biểu.pdf");
+        shown.PageCount.ShouldBe(2);
+    }
+
+    private PdfPro.App.Services.Extracting.ExtractingServices Extracting()
+        => new(new PdfPro.Operations.Extracting.ExtractTablesOperation(), Substitute.For<IPdfDocumentLoader>(), new FakePageImageRenderer());
+
     private CompareServices Compare()
         => new(Substitute.For<IDocumentComparison>(), Substitute.For<IPdfDocumentLoader>(), new FakePageImageRenderer(), Substitute.For<IPasswordPrompt>());
 }

@@ -162,6 +162,12 @@ public interface IFileDialogService
     /// <returns>The chosen path, or null when cancelled.</returns>
     string? PickFormDataSavePath(string suggestedFileName);
 
+    /// <summary>Where to write extracted tables: an Excel workbook (.xlsx) or CSV (.csv); overwriting asks for confirmation; null when cancelled.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <param name="initialDirectory">Folder shown first, or null.</param>
+    /// <param name="csv">CSV rather than Excel.</param>
+    string? PickTableSavePath(string suggestedFileName, string? initialDirectory, bool csv);
+
     /// <summary>Asks for a form data file to fill the form with (JSON, XFDF).</summary>
     /// <returns>The chosen file, or null when cancelled.</returns>
     string? PickFormDataFile();
@@ -250,6 +256,9 @@ public interface IPageDialogService
     bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel);
 
     bool ShowPdfA(ViewModels.Converting.PdfAViewModel viewModel);
+
+    /// <summary>"Trích bảng": the tables found, checked and written; true when something was written.</summary>
+    bool ShowTables(ViewModels.Extracting.TablesViewModel viewModel);
 
     /// <summary>"So sánh tài liệu": two documents compared and shown side by side; true when it closed to open its report.</summary>
     bool ShowCompare(ViewModels.Comparing.CompareViewModel viewModel);

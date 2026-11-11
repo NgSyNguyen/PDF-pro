@@ -1829,4 +1829,54 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Compare_Report_Footer" xml:space="preserve"><value>Page {0} of {1}</value></data>
   <data name="Stage_CompareText" xml:space="preserve"><value>Comparing the text</value></data>
   <data name="Stage_CompareVisual" xml:space="preserve"><value>Comparing the pages as pictures</value></data>
+  <data name="Ribbon_Group_Extract" xml:space="preserve"><value>Extract</value></data>
+  <data name="Cmd_ExtractTables" xml:space="preserve"><value>Tables</value></data>
+  <data name="Cmd_ExtractTables_ToolTip" xml:space="preserve"><value>Find the tables of the document, preview their cells and export them to Excel or CSV (Vietnamese opens right in Excel)</value></data>
+  <data name="Tables_Title" xml:space="preserve"><value>Extract tables</value></data>
+  <data name="Tables_Pages" xml:space="preserve"><value>Look on pages:</value></data>
+  <data name="Tables_Pages_All" xml:space="preserve"><value>all</value></data>
+  <data name="Tables_Find" xml:space="preserve"><value>Find tables</value></data>
+  <data name="Tables_Progress" xml:space="preserve"><value>Looking for tables: page {0} of {1}…</value></data>
+  <data name="Tables_Found" xml:space="preserve"><value>{0} tables found.</value></data>
+  <data name="Tables_NoneFound" xml:space="preserve"><value>No table was found. Drag a box around a table on the page to read it.</value></data>
+  <data name="Tables_NoTableInArea" xml:space="preserve"><value>No table could be read in this area. Try another way of reading or a larger box.</value></data>
+  <data name="Tables_Read" xml:space="preserve"><value>A table of {0} rows × {1} columns was read.</value></data>
+  <data name="Tables_List" xml:space="preserve"><value>Tables</value></data>
+  <data name="Tables_Item" xml:space="preserve"><value>Table {0} · page {1}</value></data>
+  <data name="Tables_ItemSize" xml:space="preserve"><value>{0} rows × {1} columns · {2}</value></data>
+  <data name="Tables_Method" xml:space="preserve"><value>How to read a table</value></data>
+  <data name="Tables_Method_Auto" xml:space="preserve"><value>Automatic</value></data>
+  <data name="Tables_Method_Lattice" xml:space="preserve"><value>by its ruled lines</value></data>
+  <data name="Tables_Method_Stream" xml:space="preserve"><value>by its text columns</value></data>
+  <data name="Tables_Reread" xml:space="preserve"><value>Read again</value></data>
+  <data name="Tables_Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Tables_DrawHint" xml:space="preserve"><value>Drag a box on the page to read that area as a table (it replaces the table there).</value></data>
+  <data name="Tables_Page" xml:space="preserve"><value>Page {0} of {1}</value></data>
+  <data name="Tables_PreviousPage" xml:space="preserve"><value>Previous page</value></data>
+  <data name="Tables_NextPage" xml:space="preserve"><value>Next page</value></data>
+  <data name="Tables_Preview" xml:space="preserve"><value>The table's cells</value></data>
+  <data name="Tables_Format" xml:space="preserve"><value>Export as</value></data>
+  <data name="Tables_Format_Xlsx" xml:space="preserve"><value>Excel (.xlsx), a sheet per table</value></data>
+  <data name="Tables_Format_Csv" xml:space="preserve"><value>CSV (UTF-8), a file per table</value></data>
+  <data name="Tables_Numbers" xml:space="preserve"><value>Numbers in the document are written as</value></data>
+  <data name="Tables_Numbers_Dot" xml:space="preserve"><value>Vietnamese: 1.250.000,5 (numbers in Excel)</value></data>
+  <data name="Tables_Numbers_Comma" xml:space="preserve"><value>English: 1,250,000.5 (numbers in Excel)</value></data>
+  <data name="Tables_Numbers_Text" xml:space="preserve"><value>Keep them as text</value></data>
+  <data name="Tables_Separator" xml:space="preserve"><value>Column separator</value></data>
+  <data name="Tables_Separator_Comma" xml:space="preserve"><value>Comma ( , )</value></data>
+  <data name="Tables_Separator_Semicolon" xml:space="preserve"><value>Semicolon ( ; )</value></data>
+  <data name="Tables_Separator_Tab" xml:space="preserve"><value>Tab</value></data>
+  <data name="Tables_SheetName" xml:space="preserve"><value>Table {0} (page {1})</value></data>
+  <data name="Tables_Export" xml:space="preserve"><value>Export…</value></data>
+  <data name="Tables_OpenFolder" xml:space="preserve"><value>Open folder</value></data>
+  <data name="Tables_Written" xml:space="preserve"><value>{0} tables written to “{1}”.</value></data>
+  <data name="Tables_WrittenFiles" xml:space="preserve"><value>{0} files written: “{1}” … “{2}”.</value></data>
+  <data name="Tables_Error_Pages" xml:space="preserve"><value>Enter pages from 1 to {0}, for example “1-3, 8”.</value></data>
+  <data name="Tables_Error_Read" xml:space="preserve"><value>The document cannot be read to look for tables.</value></data>
+  <data name="Tables_Error_NoneChosen" xml:space="preserve"><value>Tick at least one table to export.</value></data>
+  <data name="Tables_Error_Write" xml:space="preserve"><value>The file could not be written. Choose another folder, or close the file of that name in Excel.</value></data>
+  <data name="Tables_SaveDialog_Title" xml:space="preserve"><value>Export tables</value></data>
+  <data name="Tables_SaveDialog_FilterXlsx" xml:space="preserve"><value>Excel workbook (*.xlsx)|*.xlsx</value></data>
+  <data name="Tables_SaveDialog_FilterCsv" xml:space="preserve"><value>CSV UTF-8 (*.csv)|*.csv</value></data>
+  <data name="Stage_ExtractTables" xml:space="preserve"><value>Looking for tables</value></data>
 </root>

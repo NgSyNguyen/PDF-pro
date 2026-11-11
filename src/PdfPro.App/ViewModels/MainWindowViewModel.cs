@@ -40,6 +40,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly Services.Optimizing.OptimizingServices? _optimizing;
     private readonly Services.Scanning.ScanServices? _scan;
     private readonly Services.Comparing.CompareServices? _compare;
+    private readonly Services.Extracting.ExtractingServices? _extracting;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -67,7 +68,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Services.Security.SigningServices? signing = null,
         Services.Optimizing.OptimizingServices? optimizing = null,
         Services.Scanning.ScanServices? scan = null,
-        Services.Comparing.CompareServices? compare = null)
+        Services.Comparing.CompareServices? compare = null,
+        Services.Extracting.ExtractingServices? extracting = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _dialogs = dialogs;
@@ -91,6 +93,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _optimizing = optimizing;
         _scan = scan;
         _compare = compare;
+        _extracting = extracting;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -161,7 +164,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToPdfACommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -847,6 +850,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("convert.toImages", Strings.Cmd_ToImages, SymbolRegular.Image24, ToImagesCommand, Strings.Cmd_ToImages_ToolTip),
                     new("convert.toText", Strings.Cmd_ToText, SymbolRegular.DocumentText24, ToTextCommand, Strings.Cmd_ToText_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Extract,
+                [
+                    new("extract.tables", Strings.Cmd_ExtractTables, SymbolRegular.TableSimple24, ExtractTablesCommand, Strings.Cmd_ExtractTables_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Import,
                 [

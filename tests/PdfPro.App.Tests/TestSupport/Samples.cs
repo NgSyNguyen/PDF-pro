@@ -20,6 +20,9 @@ internal static class Samples
     /// <summary>The contract with an appendix page inserted after page 2 and three places changed.</summary>
     public static string ContractV2 => System.IO.Path.Combine(RepositoryRoot, "samples", "contract-v2.pdf");
 
+    /// <summary>Two A4 pages: a ruled table (7 × 4) and one without rules (9 × 4), in Vietnamese.</summary>
+    public static string Tables => System.IO.Path.Combine(RepositoryRoot, "samples", "tables.pdf");
+
     /// <summary>Six A4 pages of Vietnamese text, no form, not encrypted.</summary>
     public static string Basic => System.IO.Path.Combine(RepositoryRoot, "samples", "basic-vi.pdf");
 
