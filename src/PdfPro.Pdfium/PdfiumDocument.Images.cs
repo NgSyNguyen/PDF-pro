@@ -6,6 +6,9 @@ using PdfPro.Core.Imaging;
 
 namespace PdfPro.Pdfium;
 
+/// <summary>The images of a page as stored, and how many were left out (too small, or unreadable).</summary>
+public sealed record PageImageScan(IReadOnlyList<ExtractedImage> Images, int TooSmall, int Unreadable);
+
 /// <summary>Taking images out of pages at the resolution they are stored in.</summary>
 public sealed partial class PdfiumDocument
 {
@@ -22,7 +25,71 @@ public sealed partial class PdfiumDocument
         ArgumentNullException.ThrowIfNull(target);
         CheckPageIndex(pageIndex);
         var page = GetCachedPage(pageIndex).Native;
-        var item = Find(page, target);
+        return Extract(Find(page, target));
+    }
+
+    /// <summary>
+    /// Every image a page draws, those inside its forms included, as stored (see <see cref="ExtractImage"/>), in drawing
+    /// order. Images smaller than <paramref name="minSide"/> pixels on a side are not decoded (counted in
+    /// <see cref="PageImageScan.TooSmall"/>), nor images that cannot be read (<see cref="PageImageScan.Unreadable"/>).
+    /// </summary>
+    public PageImageScan ExtractPageImages(int pageIndex, int minSide, CancellationToken cancellationToken)
+    {
+        CheckPageIndex(pageIndex);
+        var page = GetCachedPage(pageIndex).Native;
+        var images = new List<ExtractedImage>();
+        var (tooSmall, unreadable) = (0, 0);
+        var count = fpdf_edit.FPDFPageCountObjects(page);
+        for (var i = 0; i < count; i++)
+        {
+            Visit(fpdf_edit.FPDFPageGetObject(page, i), 0);
+        }
+
+        return new PageImageScan(images, tooSmall, unreadable);
+
+        void Visit(FpdfPageobjectT? item, int depth)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (item is null || item.__Instance == IntPtr.Zero)
+            {
+                return;
+            }
+
+            switch (fpdf_edit.FPDFPageObjGetType(item))
+            {
+                case 3:
+                    uint width = 0, height = 0;
+                    _ = fpdf_edit.FPDFImageObjGetImagePixelSize(item, ref width, ref height);
+                    if (Math.Min(width, height) < minSide)
+                    {
+                        tooSmall++;
+                        return;
+                    }
+
+                    try
+                    {
+                        images.Add(Extract(item));
+                    }
+                    catch (InvalidDataException)
+                    {
+                        unreadable++;
+                    }
+
+                    break;
+                case 5 when depth < MaxFormDepth:
+                    var inside = fpdf_edit.FPDFFormObjCountObjects(item);
+                    for (var i = 0; i < inside; i++)
+                    {
+                        Visit(fpdf_edit.FPDFFormObjGetObject(item, (ulong)i), depth + 1);
+                    }
+
+                    break;
+            }
+        }
+    }
+
+    private static ExtractedImage Extract(FpdfPageobjectT item)
+    {
         uint width = 0, height = 0;
         _ = fpdf_edit.FPDFImageObjGetImagePixelSize(item, ref width, ref height);
         var filters = Enumerable.Range(0, Math.Max(0, fpdf_edit.FPDFImageObjGetImageFilterCount(item))).Select(i => Filter(item, i)).ToList();
