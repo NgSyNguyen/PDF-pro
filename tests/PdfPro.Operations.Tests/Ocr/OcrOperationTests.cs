@@ -160,7 +160,9 @@ public sealed class OcrOperationTests(PdfiumFixture pdfium)
     public async Task Pages_AreReadInParallel_WithProgress()
     {
         using var temp = new TempDirectory();
-        var engine = new ScriptedEngine { Delay = TimeSpan.FromMilliseconds(150) };
+        // Pages are rendered one at a time (PDFium), which on a slow machine can take longer than reading: a reading
+        // waits (a while at most) for a second one to start, so two at once are seen whenever they can happen.
+        var engine = new ScriptedEngine { Delay = TimeSpan.FromMilliseconds(50), WaitForCompany = TimeSpan.FromSeconds(20) };
         var progress = new RecordingProgress();
 
         await RunAsync(Samples.ScanVi, temp, new OcrParams(["vie"], Pages: [0, 1, 2, 4, 5, 7], Parallelism: 3, AutoRotate: false, Deskew: false), engine, progress: progress);
@@ -469,6 +471,9 @@ public sealed class OcrOperationTests(PdfiumFixture pdfium)
 
         public TimeSpan Delay { get; init; }
 
+        /// <summary>Until two readings have run at once, how long a reading waits for another to start.</summary>
+        public TimeSpan WaitForCompany { get; init; }
+
         public Func<int, bool> FailOn { get; init; } = _ => false;
 
         public Action? OnRecognize { get; init; }
@@ -478,6 +483,14 @@ public sealed class OcrOperationTests(PdfiumFixture pdfium)
         public int Calls => _calls;
 
         public int MostAtOnce { get; private set; }
+
+        private int MostAtOnceSoFar()
+        {
+            lock (this)
+            {
+                return MostAtOnce;
+            }
+        }
 
         public OcrEngineInfo? Describe() => Installed ? new OcrEngineInfo("Script", "script", OcrDataKind.Best, ["eng", "vie"], true) : null;
 
@@ -494,6 +507,12 @@ public sealed class OcrOperationTests(PdfiumFixture pdfium)
             {
                 OnRecognize?.Invoke();
                 cancellationToken.ThrowIfCancellationRequested();
+                var waited = System.Diagnostics.Stopwatch.StartNew();
+                while (waited.Elapsed < WaitForCompany && Volatile.Read(ref _running) < 2 && MostAtOnceSoFar() < 2)
+                {
+                    await Task.Delay(10, cancellationToken);
+                }
+
                 await Task.Delay(Delay, cancellationToken);
                 if (FailOn(call))
                 {
