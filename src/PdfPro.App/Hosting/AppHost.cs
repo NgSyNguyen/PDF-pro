@@ -185,10 +185,13 @@ internal static class AppHost
             sp.GetRequiredService<Services.Rendering.IPageImageRenderer>(),
             sp.GetRequiredService<IPasswordPrompt>()));
         services.AddOperation<Operations.Extracting.ExtractTablesOperation>();
+        services.AddOperation<Operations.Extracting.ExtractImagesOperation>();
+        services.AddOperation<Operations.Extracting.EditAttachmentsOperation>();
         services.AddSingleton(sp => new Services.Extracting.ExtractingServices(
             sp.GetRequiredService<Operations.Extracting.ExtractTablesOperation>(),
             sp.GetRequiredService<PdfPro.Pdfium.IPdfDocumentLoader>(),
-            sp.GetRequiredService<Services.Rendering.IPageImageRenderer>()));
+            sp.GetRequiredService<Services.Rendering.IPageImageRenderer>(),
+            sp.GetRequiredService<Operations.Extracting.ExtractImagesOperation>()));
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),

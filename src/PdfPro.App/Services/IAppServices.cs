@@ -168,6 +168,12 @@ public interface IFileDialogService
     /// <param name="csv">CSV rather than Excel.</param>
     string? PickTableSavePath(string suggestedFileName, string? initialDirectory, bool csv);
 
+    /// <summary>Files of any kind to attach to a document; empty when cancelled.</summary>
+    IReadOnlyList<string> PickAttachmentFiles(string title);
+
+    /// <summary>Where to save an attachment (its own name and type proposed); overwriting asks for confirmation; null when cancelled.</summary>
+    string? PickAttachmentSavePath(string fileName);
+
     /// <summary>Asks for a form data file to fill the form with (JSON, XFDF).</summary>
     /// <returns>The chosen file, or null when cancelled.</returns>
     string? PickFormDataFile();
@@ -256,6 +262,15 @@ public interface IPageDialogService
     bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel);
 
     bool ShowPdfA(ViewModels.Converting.PdfAViewModel viewModel);
+
+    /// <summary>"Trích ảnh": pages, smallest size, repeats and folder; true when confirmed.</summary>
+    bool ShowExtractImages(ViewModels.Extracting.ExtractImagesViewModel viewModel);
+
+    /// <summary>"Tệp đính kèm": listed, saved, opened, added and removed; true when changes were confirmed.</summary>
+    bool ShowAttachments(ViewModels.Extracting.AttachmentsViewModel viewModel);
+
+    /// <summary>"Phông chữ": the fonts of the document and whether they are embedded.</summary>
+    bool ShowFonts(ViewModels.Extracting.FontsViewModel viewModel);
 
     /// <summary>"Trích bảng": the tables found, checked and written; true when something was written.</summary>
     bool ShowTables(ViewModels.Extracting.TablesViewModel viewModel);

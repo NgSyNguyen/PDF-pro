@@ -95,6 +95,7 @@ internal static class TestOperations
             new Operations.Scanning.AutoRotateOperation(materializer, loader),
             new Operations.Scanning.DeskewOperation(),
             new Operations.Scanning.CleanBordersOperation(),
+            new Operations.Extracting.EditAttachmentsOperation(),
         ]);
     }
 }

@@ -232,6 +232,34 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public IReadOnlyList<string> PickAttachmentFiles(string title)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = title,
+            Filter = Strings.Attachments_Dialog_Filter,
+            Multiselect = true,
+            CheckFileExists = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileNames : [];
+    }
+
+    public string? PickAttachmentSavePath(string fileName)
+    {
+        var extension = System.IO.Path.GetExtension(fileName);
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Attachments_Save_Title,
+            Filter = string.IsNullOrEmpty(extension) || extension.Contains('|', StringComparison.Ordinal)
+                ? Strings.Attachments_Dialog_Filter
+                : string.Format(CultureInfo.CurrentCulture, Strings.Attachments_Save_Filter, extension),
+            FileName = fileName,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickFormDataFile()
     {
         var dialog = new OpenFileDialog
@@ -454,6 +482,24 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new ToTextWindow(viewModel));
+    }
+
+    public bool ShowExtractImages(ViewModels.Extracting.ExtractImagesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new ExtractImagesWindow(viewModel));
+    }
+
+    public bool ShowAttachments(ViewModels.Extracting.AttachmentsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new AttachmentsWindow(viewModel));
+    }
+
+    public bool ShowFonts(ViewModels.Extracting.FontsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new FontsWindow(viewModel));
     }
 
     public bool ShowTables(ViewModels.Extracting.TablesViewModel viewModel)

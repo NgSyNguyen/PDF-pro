@@ -164,7 +164,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -854,6 +854,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Extract,
                 [
                     new("extract.tables", Strings.Cmd_ExtractTables, SymbolRegular.TableSimple24, ExtractTablesCommand, Strings.Cmd_ExtractTables_ToolTip),
+                    new("extract.images", Strings.Cmd_ExtractImages, SymbolRegular.ImageMultiple24, ExtractImagesCommand, Strings.Cmd_ExtractImages_ToolTip),
+                    new("extract.attachments", Strings.Cmd_Attachments, SymbolRegular.DocumentCopy24, AttachmentsCommand, Strings.Cmd_Attachments_ToolTip),
+                    new("extract.fonts", Strings.Cmd_Fonts, SymbolRegular.TextEditStyle24, FontsCommand, Strings.Cmd_Fonts_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Import,
                 [

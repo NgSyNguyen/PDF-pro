@@ -59,8 +59,60 @@ public sealed partial class MainWindowViewModelTests
         shown.PageCount.ShouldBe(2);
     }
 
+    [Fact]
+    public async Task ExtractImages_WritesTheScansIntoTheFolderNextToTheDocument()
+    {
+        var path = _fixture.CreateFile("bản quét.pdf", File.ReadAllBytes(Samples.ScanVi));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(18), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        PdfPro.App.ViewModels.Extracting.ExtractImagesViewModel? shown = null;
+        _pageDialogs.ShowExtractImages(Arg.Do<PdfPro.App.ViewModels.Extracting.ExtractImagesViewModel>(d =>
+        {
+            shown = d;
+            d.OpenFolderWhenDone = false;
+            d.ApplyCommand.Execute(null);
+        })).Returns(true);
+
+        await viewModel.ExtractImagesCommand.ExecuteAsync(null);
+
+        var folder = Path.Combine(Path.GetDirectoryName(path)!, string.Format(System.Globalization.CultureInfo.CurrentCulture, PdfPro.App.Resources.Strings.ExtractImages_Folder_Default, "bản quét"));
+        shown.ShouldNotBeNull().OutputFolder.ShouldBe(folder);
+        Directory.GetFiles(folder, "*.jpg").Length.ShouldBeGreaterThanOrEqualTo(14);
+        await _messages.Received(1).ShowInfoAsync(PdfPro.App.Resources.Strings.ExtractImages_Title, Arg.Any<string>());
+        _shell.DidNotReceiveWithAnyArgs().OpenFolder(default!);
+    }
+
+    [Fact]
+    public async Task Attachments_ChangedInTheDialog_BecomeOneContentChange()
+    {
+        var path = _fixture.CreateFile("văn bản.pdf", File.ReadAllBytes(Samples.Basic));
+        var note = _fixture.CreateFile("ghi chú.txt", "x"u8.ToArray());
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        _fileDialogs.PickAttachmentFiles(Arg.Any<string>()).Returns([note]);
+        _pageDialogs.ShowAttachments(Arg.Do<PdfPro.App.ViewModels.Extracting.AttachmentsViewModel>(d =>
+        {
+            d.AddCommand.Execute(null);
+            d.ApplyCommand.Execute(null);
+        })).Returns(true);
+
+        await viewModel.AttachmentsCommand.ExecuteAsync(null);
+
+        // The tab asks the window for the change through an event; give it the moment it may take.
+        for (var i = 0; i < 250 && !_contentChanger.ReceivedCalls().Any(c => c.GetMethodInfo().Name == nameof(PdfPro.App.Services.Documents.IContentChanger.ApplyAsync)); i++)
+        {
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+
+        var call = _contentChanger.ReceivedCalls().Single(c => c.GetMethodInfo().Name == nameof(PdfPro.App.Services.Documents.IContentChanger.ApplyAsync));
+        call.GetArguments()[1].ShouldBeOfType<PdfPro.Operations.Extracting.EditAttachmentsOperation>();
+        call.GetArguments()[2].ShouldBeOfType<PdfPro.Operations.Extracting.EditAttachmentsParams>().Add.ShouldNotBeNull().ShouldHaveSingleItem().Path.ShouldBe(note);
+    }
+
     private PdfPro.App.Services.Extracting.ExtractingServices Extracting()
-        => new(new PdfPro.Operations.Extracting.ExtractTablesOperation(), Substitute.For<IPdfDocumentLoader>(), new FakePageImageRenderer());
+        => new(new PdfPro.Operations.Extracting.ExtractTablesOperation(), Substitute.For<IPdfDocumentLoader>(), new FakePageImageRenderer(), new PdfPro.Operations.Extracting.ExtractImagesOperation(TestOperations.PdfiumGate));
 
     private CompareServices Compare()
         => new(Substitute.For<IDocumentComparison>(), Substitute.For<IPdfDocumentLoader>(), new FakePageImageRenderer(), Substitute.For<IPasswordPrompt>());

@@ -1879,4 +1879,68 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Tables_SaveDialog_FilterXlsx" xml:space="preserve"><value>Excel workbook (*.xlsx)|*.xlsx</value></data>
   <data name="Tables_SaveDialog_FilterCsv" xml:space="preserve"><value>CSV UTF-8 (*.csv)|*.csv</value></data>
   <data name="Stage_ExtractTables" xml:space="preserve"><value>Looking for tables</value></data>
+  <data name="Cmd_ExtractImages" xml:space="preserve"><value>Images</value></data>
+  <data name="Cmd_ExtractImages_ToolTip" xml:space="preserve"><value>Save every image of the document in its own format (JPEG byte for byte), leaving out repeats and tiny images</value></data>
+  <data name="Cmd_Attachments" xml:space="preserve"><value>Attachments</value></data>
+  <data name="Cmd_Attachments_ToolTip" xml:space="preserve"><value>See, save, add and remove the files attached to the document</value></data>
+  <data name="Cmd_Fonts" xml:space="preserve"><value>Fonts</value></data>
+  <data name="Cmd_Fonts_ToolTip" xml:space="preserve"><value>The fonts of the document and whether each is embedded, partly embedded or not embedded: worth a look before printing</value></data>
+  <data name="ExtractImages_Title" xml:space="preserve"><value>Extract images</value></data>
+  <data name="ExtractImages_Note" xml:space="preserve"><value>Images are saved as they are stored: JPEG and JPEG 2000 unchanged, other images as PNG at their own resolution.</value></data>
+  <data name="ExtractImages_MinSide" xml:space="preserve"><value>Leave out images smaller than</value></data>
+  <data name="ExtractImages_Pixels" xml:space="preserve"><value>pixels on a side (0 keeps all)</value></data>
+  <data name="ExtractImages_SkipDuplicates" xml:space="preserve"><value>Save repeated images (a logo on every page) once</value></data>
+  <data name="ExtractImages_Folder_Default" xml:space="preserve"><value>{0} (images)</value></data>
+  <data name="ExtractImages_Folder_Pick_Title" xml:space="preserve"><value>Choose the folder for the images</value></data>
+  <data name="ExtractImages_Apply" xml:space="preserve"><value>Extract</value></data>
+  <data name="ExtractImages_Error_MinSide" xml:space="preserve"><value>The smallest size must be a number from 0 to 10000.</value></data>
+  <data name="ExtractImages_Progress" xml:space="preserve"><value>Extracting the images of “{0}”</value></data>
+  <data name="ExtractImages_Done" xml:space="preserve"><value>Images extracted to {0}</value></data>
+  <data name="ExtractImages_Written" xml:space="preserve"><value>{0} images saved.</value></data>
+  <data name="ExtractImages_None" xml:space="preserve"><value>The document has no image to save.</value></data>
+  <data name="ExtractImages_Duplicates" xml:space="preserve"><value>{0} repeats left out.</value></data>
+  <data name="ExtractImages_TooSmall" xml:space="preserve"><value>{0} small images left out.</value></data>
+  <data name="ExtractImages_Unreadable" xml:space="preserve"><value>{0} images could not be read.</value></data>
+  <data name="Attachments_Title" xml:space="preserve"><value>Attachments</value></data>
+  <data name="Attachments_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Attachments_Open_ToolTip" xml:space="preserve"><value>Open an attached PDF in PDF_Pro (other files can only be saved, never run from here)</value></data>
+  <data name="Attachments_Save" xml:space="preserve"><value>Save…</value></data>
+  <data name="Attachments_Save_Title" xml:space="preserve"><value>Save the attachment</value></data>
+  <data name="Attachments_Save_Filter" xml:space="preserve"><value>File (*{0})|*{0}|All files (*.*)|*.*</value></data>
+  <data name="Attachments_Dialog_Filter" xml:space="preserve"><value>All files (*.*)|*.*</value></data>
+  <data name="Attachments_Add" xml:space="preserve"><value>Attach files…</value></data>
+  <data name="Attachments_Add_Title" xml:space="preserve"><value>Choose files to attach</value></data>
+  <data name="Attachments_Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Attachments_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Attachments_Description" xml:space="preserve"><value>Description</value></data>
+  <data name="Attachments_New" xml:space="preserve"><value>To be attached</value></data>
+  <data name="Attachments_OfDocument" xml:space="preserve"><value>Document</value></data>
+  <data name="Attachments_OnPage" xml:space="preserve"><value>Page {0}</value></data>
+  <data name="Attachments_None" xml:space="preserve"><value>The document has no attachments.</value></data>
+  <data name="Attachments_Saved" xml:space="preserve"><value>“{0}” saved.</value></data>
+  <data name="Attachments_Error_Read" xml:space="preserve"><value>The attachments of the document cannot be read.</value></data>
+  <data name="Attachments_Error_Write" xml:space="preserve"><value>The file could not be written. Choose another folder.</value></data>
+  <data name="Attachments_Error_TooLarge" xml:space="preserve"><value>“{0}” is larger than 512 MB and cannot be attached.</value></data>
+  <data name="Fonts_Title" xml:space="preserve"><value>Fonts</value></data>
+  <data name="Fonts_Name" xml:space="preserve"><value>Font</value></data>
+  <data name="Fonts_Embedding" xml:space="preserve"><value>Embedded</value></data>
+  <data name="Fonts_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Fonts_Encoding" xml:space="preserve"><value>Encoding</value></data>
+  <data name="Fonts_Unicode" xml:space="preserve"><value>Text copies</value></data>
+  <data name="Fonts_Pages" xml:space="preserve"><value>Pages</value></data>
+  <data name="Fonts_Embedded" xml:space="preserve"><value>Embedded</value></data>
+  <data name="Fonts_Subset" xml:space="preserve"><value>Subset</value></data>
+  <data name="Fonts_NotEmbedded" xml:space="preserve"><value>Not embedded</value></data>
+  <data name="Fonts_NotEmbeddedStandard" xml:space="preserve"><value>Not embedded (standard font)</value></data>
+  <data name="Fonts_Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="Fonts_No" xml:space="preserve"><value>Unsure</value></data>
+  <data name="Fonts_None" xml:space="preserve"><value>The document uses no font (it may be a scan).</value></data>
+  <data name="Fonts_Summary" xml:space="preserve"><value>{0} fonts: {1} embedded, {2} subsets, {3} not embedded.</value></data>
+  <data name="Fonts_NotEmbedded_Advice" xml:space="preserve"><value>Fonts not embedded are replaced by other fonts on the computer or printer that opens the file: text may shift or lose its accents. Convert to PDF/A to embed them.</value></data>
+  <data name="Fonts_Error_Read" xml:space="preserve"><value>The fonts of the document cannot be read.</value></data>
+  <data name="History_AddAttachments" xml:space="preserve"><value>Attach {0} files</value></data>
+  <data name="History_RemoveAttachments" xml:space="preserve"><value>Remove {0} attachments</value></data>
+  <data name="History_EditAttachments" xml:space="preserve"><value>Change attachments</value></data>
+  <data name="Stage_ExtractImages" xml:space="preserve"><value>Extracting images</value></data>
+  <data name="Stage_Attachments" xml:space="preserve"><value>Writing attachments</value></data>
 </root>

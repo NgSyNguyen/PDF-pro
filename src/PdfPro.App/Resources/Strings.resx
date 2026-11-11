@@ -1879,4 +1879,68 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Tables_SaveDialog_FilterXlsx" xml:space="preserve"><value>Sổ tính Excel (*.xlsx)|*.xlsx</value></data>
   <data name="Tables_SaveDialog_FilterCsv" xml:space="preserve"><value>CSV UTF-8 (*.csv)|*.csv</value></data>
   <data name="Stage_ExtractTables" xml:space="preserve"><value>Đang tìm bảng</value></data>
+  <data name="Cmd_ExtractImages" xml:space="preserve"><value>Trích ảnh</value></data>
+  <data name="Cmd_ExtractImages_ToolTip" xml:space="preserve"><value>Lưu mọi ảnh trong tài liệu ở định dạng gốc (JPEG giữ nguyên từng byte), bỏ ảnh trùng và ảnh quá nhỏ</value></data>
+  <data name="Cmd_Attachments" xml:space="preserve"><value>Tệp đính kèm</value></data>
+  <data name="Cmd_Attachments_ToolTip" xml:space="preserve"><value>Xem, lưu, thêm và xóa các tệp được đính kèm trong tài liệu</value></data>
+  <data name="Cmd_Fonts" xml:space="preserve"><value>Phông chữ</value></data>
+  <data name="Cmd_Fonts_ToolTip" xml:space="preserve"><value>Danh sách phông chữ của tài liệu và phông nào đã nhúng, nhúng một phần hay chưa nhúng — nên xem trước khi in</value></data>
+  <data name="ExtractImages_Title" xml:space="preserve"><value>Trích ảnh</value></data>
+  <data name="ExtractImages_Note" xml:space="preserve"><value>Ảnh được lưu như chúng nằm trong tệp: JPEG và JPEG 2000 giữ nguyên, ảnh khác lưu thành PNG ở độ phân giải gốc.</value></data>
+  <data name="ExtractImages_MinSide" xml:space="preserve"><value>Bỏ ảnh nhỏ hơn</value></data>
+  <data name="ExtractImages_Pixels" xml:space="preserve"><value>điểm ảnh mỗi cạnh (0 = giữ tất cả)</value></data>
+  <data name="ExtractImages_SkipDuplicates" xml:space="preserve"><value>Ảnh trùng nhau (logo lặp mọi trang) chỉ lưu một lần</value></data>
+  <data name="ExtractImages_Folder_Default" xml:space="preserve"><value>{0} (ảnh gốc)</value></data>
+  <data name="ExtractImages_Folder_Pick_Title" xml:space="preserve"><value>Chọn thư mục lưu ảnh</value></data>
+  <data name="ExtractImages_Apply" xml:space="preserve"><value>Trích ảnh</value></data>
+  <data name="ExtractImages_Error_MinSide" xml:space="preserve"><value>Cỡ ảnh nhỏ nhất phải là số từ 0 đến 10000.</value></data>
+  <data name="ExtractImages_Progress" xml:space="preserve"><value>Đang trích ảnh của “{0}”</value></data>
+  <data name="ExtractImages_Done" xml:space="preserve"><value>Đã trích ảnh vào {0}</value></data>
+  <data name="ExtractImages_Written" xml:space="preserve"><value>Đã lưu {0} ảnh.</value></data>
+  <data name="ExtractImages_None" xml:space="preserve"><value>Tài liệu không có ảnh nào để lưu.</value></data>
+  <data name="ExtractImages_Duplicates" xml:space="preserve"><value>Bỏ {0} ảnh trùng.</value></data>
+  <data name="ExtractImages_TooSmall" xml:space="preserve"><value>Bỏ {0} ảnh nhỏ.</value></data>
+  <data name="ExtractImages_Unreadable" xml:space="preserve"><value>{0} ảnh không đọc được.</value></data>
+  <data name="Attachments_Title" xml:space="preserve"><value>Tệp đính kèm</value></data>
+  <data name="Attachments_Open" xml:space="preserve"><value>Mở</value></data>
+  <data name="Attachments_Open_ToolTip" xml:space="preserve"><value>Mở tệp PDF đính kèm trong PDF_Pro (tệp khác chỉ lưu được, không chạy từ đây)</value></data>
+  <data name="Attachments_Save" xml:space="preserve"><value>Lưu…</value></data>
+  <data name="Attachments_Save_Title" xml:space="preserve"><value>Lưu tệp đính kèm</value></data>
+  <data name="Attachments_Save_Filter" xml:space="preserve"><value>Tệp (*{0})|*{0}|Mọi tệp (*.*)|*.*</value></data>
+  <data name="Attachments_Dialog_Filter" xml:space="preserve"><value>Mọi tệp (*.*)|*.*</value></data>
+  <data name="Attachments_Add" xml:space="preserve"><value>Đính kèm tệp…</value></data>
+  <data name="Attachments_Add_Title" xml:space="preserve"><value>Chọn tệp để đính kèm</value></data>
+  <data name="Attachments_Remove" xml:space="preserve"><value>Xóa</value></data>
+  <data name="Attachments_Apply" xml:space="preserve"><value>Áp dụng</value></data>
+  <data name="Attachments_Description" xml:space="preserve"><value>Mô tả</value></data>
+  <data name="Attachments_New" xml:space="preserve"><value>Sẽ đính kèm</value></data>
+  <data name="Attachments_OfDocument" xml:space="preserve"><value>Tài liệu</value></data>
+  <data name="Attachments_OnPage" xml:space="preserve"><value>Trang {0}</value></data>
+  <data name="Attachments_None" xml:space="preserve"><value>Tài liệu không có tệp đính kèm.</value></data>
+  <data name="Attachments_Saved" xml:space="preserve"><value>Đã lưu “{0}”.</value></data>
+  <data name="Attachments_Error_Read" xml:space="preserve"><value>Không đọc được tệp đính kèm của tài liệu.</value></data>
+  <data name="Attachments_Error_Write" xml:space="preserve"><value>Không ghi được tệp. Hãy chọn thư mục khác.</value></data>
+  <data name="Attachments_Error_TooLarge" xml:space="preserve"><value>“{0}” lớn quá 512 MB, không đính kèm được.</value></data>
+  <data name="Fonts_Title" xml:space="preserve"><value>Phông chữ</value></data>
+  <data name="Fonts_Name" xml:space="preserve"><value>Phông</value></data>
+  <data name="Fonts_Embedding" xml:space="preserve"><value>Nhúng</value></data>
+  <data name="Fonts_Type" xml:space="preserve"><value>Loại</value></data>
+  <data name="Fonts_Encoding" xml:space="preserve"><value>Bảng mã</value></data>
+  <data name="Fonts_Unicode" xml:space="preserve"><value>Sao chép chữ</value></data>
+  <data name="Fonts_Pages" xml:space="preserve"><value>Trang</value></data>
+  <data name="Fonts_Embedded" xml:space="preserve"><value>Nhúng đầy đủ</value></data>
+  <data name="Fonts_Subset" xml:space="preserve"><value>Nhúng một phần</value></data>
+  <data name="Fonts_NotEmbedded" xml:space="preserve"><value>Chưa nhúng</value></data>
+  <data name="Fonts_NotEmbeddedStandard" xml:space="preserve"><value>Chưa nhúng (phông chuẩn)</value></data>
+  <data name="Fonts_Yes" xml:space="preserve"><value>Có</value></data>
+  <data name="Fonts_No" xml:space="preserve"><value>Không chắc</value></data>
+  <data name="Fonts_None" xml:space="preserve"><value>Tài liệu không dùng phông nào (có thể là bản scan).</value></data>
+  <data name="Fonts_Summary" xml:space="preserve"><value>{0} phông: {1} nhúng đầy đủ, {2} nhúng một phần, {3} chưa nhúng.</value></data>
+  <data name="Fonts_NotEmbedded_Advice" xml:space="preserve"><value>Phông chưa nhúng được thay bằng phông khác trên máy mở tệp hoặc máy in: chữ có thể lệch hoặc mất dấu. Chuyển sang PDF/A để nhúng phông.</value></data>
+  <data name="Fonts_Error_Read" xml:space="preserve"><value>Không đọc được phông chữ của tài liệu.</value></data>
+  <data name="History_AddAttachments" xml:space="preserve"><value>Đính kèm {0} tệp</value></data>
+  <data name="History_RemoveAttachments" xml:space="preserve"><value>Xóa {0} tệp đính kèm</value></data>
+  <data name="History_EditAttachments" xml:space="preserve"><value>Sửa tệp đính kèm</value></data>
+  <data name="Stage_ExtractImages" xml:space="preserve"><value>Đang trích ảnh</value></data>
+  <data name="Stage_Attachments" xml:space="preserve"><value>Đang ghi tệp đính kèm</value></data>
 </root>

@@ -5,6 +5,7 @@ using PdfPro.Core.Organizing;
 using PdfPro.Core.Sessions;
 using PdfPro.Operations.Annotating;
 using PdfPro.Operations.Editing;
+using PdfPro.Operations.Extracting;
 using PdfPro.Operations.Forms;
 using PdfPro.Operations.Ocr;
 using PdfPro.Operations.Scanning;
@@ -58,6 +59,9 @@ internal static class HistoryDescriptions
             SetProtectionParams => Strings.History_SetProtection,
             RedactParams p => Format(Strings.History_Redact, p.Areas.Sum(a => a.Rects.Count)),
             SanitizeParams => Strings.History_Sanitize,
+            EditAttachmentsParams { Remove: null or { Count: 0 } } p => Format(Strings.History_AddAttachments, p.Add?.Count ?? 0),
+            EditAttachmentsParams { Add: null or { Count: 0 } } p => Format(Strings.History_RemoveAttachments, p.Remove?.Count ?? 0),
+            EditAttachmentsParams => Strings.History_EditAttachments,
             OcrParams { Pages: { } pages } => Format(Strings.History_OcrPages, pages.Count),
             OcrParams => Strings.History_Ocr,
             RemoveBlankPagesParams p => Format(Strings.History_RemoveBlankPages, Count(p.Pages, before)),

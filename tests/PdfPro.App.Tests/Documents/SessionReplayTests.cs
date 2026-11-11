@@ -245,6 +245,37 @@ public sealed class SessionReplayTests
     }
 
     [Fact]
+    public void AttachmentSteps_ComeBackFromTheManifest_AsTheyWere()
+    {
+        object[] steps =
+        [
+            new Operations.Extracting.EditAttachmentsParams([new Operations.Extracting.AttachmentToAdd("C:\\hồ sơ\\báo cáo.txt", "Báo cáo")]),
+            new Operations.Extracting.EditAttachmentsParams(Remove: ["báo cáo.txt", "0:2"]),
+        ];
+        var state = new SessionState(PagePlan.Identity(SourceIds.Original, 5, RandomPageKeys.Instance), SourceIds.Original, 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [Original],
+            State = state,
+            HistoryBase = state,
+            Undo = [.. steps.Select(p => new HistoryRecord(Operations.Extracting.EditAttachmentsOperation.OperationId, p, []))],
+            Redo = [],
+        };
+        var created = DateTimeOffset.UtcNow;
+
+        var json = Infrastructure.Sessions.SessionManifestSerializer.Serialize(Infrastructure.Sessions.SessionManifestSerializer.ToManifest(snapshot, created));
+        var restored = Infrastructure.Sessions.SessionManifestSerializer.ToSnapshot(Infrastructure.Sessions.SessionManifestSerializer.Deserialize(json), _operations.ParameterType);
+
+        var added = restored.Undo[0].Parameters.ShouldBeOfType<Operations.Extracting.EditAttachmentsParams>();
+        added.Add.ShouldNotBeNull().ShouldHaveSingleItem().ShouldBe(new Operations.Extracting.AttachmentToAdd("C:\\hồ sơ\\báo cáo.txt", "Báo cáo"));
+        added.Remove.ShouldBeNull();
+        var removed = restored.Undo[1].Parameters.ShouldBeOfType<Operations.Extracting.EditAttachmentsParams>();
+        removed.Add.ShouldBeNull();
+        removed.Remove.ShouldBe(["báo cáo.txt", "0:2"]);
+    }
+
+    [Fact]
     public void OcrSteps_ComeBackFromTheManifest_AsTheyWere()
     {
         object[] steps =
