@@ -39,6 +39,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly Services.Security.SigningServices? _signing;
     private readonly Services.Optimizing.OptimizingServices? _optimizing;
     private readonly Services.Scanning.ScanServices? _scan;
+    private readonly Services.Comparing.CompareServices? _compare;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -65,7 +66,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IBatesService? bates = null,
         Services.Security.SigningServices? signing = null,
         Services.Optimizing.OptimizingServices? optimizing = null,
-        Services.Scanning.ScanServices? scan = null)
+        Services.Scanning.ScanServices? scan = null,
+        Services.Comparing.CompareServices? compare = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _dialogs = dialogs;
@@ -88,6 +90,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _signing = signing;
         _optimizing = optimizing;
         _scan = scan;
+        _compare = compare;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -864,7 +867,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Tools,
                 [
                     new("ocr.run", Strings.Cmd_Ocr, SymbolRegular.ScanText24, OcrCommand, Strings.Cmd_Ocr_ToolTip),
-                    new("compare.documents", Strings.Cmd_Compare, SymbolRegular.ArrowSwap24),
+                    new("compare.documents", Strings.Cmd_Compare, SymbolRegular.ArrowSwap24, CompareDocumentsCommand, Strings.Cmd_Compare_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Scan,
                 [

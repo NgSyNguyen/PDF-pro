@@ -1769,4 +1769,64 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Stage_DetectOrientation" xml:space="preserve"><value>Looking at page orientation</value></data>
   <data name="Stage_Deskew" xml:space="preserve"><value>Straightening pages</value></data>
   <data name="Stage_CleanBorders" xml:space="preserve"><value>Cleaning borders</value></data>
+  <data name="Cmd_Compare_ToolTip" xml:space="preserve"><value>Compare the text and the pages of two documents, see the differences side by side and export a report</value></data>
+  <data name="Compare_Title" xml:space="preserve"><value>Compare documents</value></data>
+  <data name="Compare_Old" xml:space="preserve"><value>Old version</value></data>
+  <data name="Compare_New" xml:space="preserve"><value>New version</value></data>
+  <data name="Compare_Pick" xml:space="preserve"><value>Choose…</value></data>
+  <data name="Compare_PickOld" xml:space="preserve"><value>Choose the old version</value></data>
+  <data name="Compare_PickNew" xml:space="preserve"><value>Choose the new version</value></data>
+  <data name="Compare_NoFile" xml:space="preserve"><value>(none chosen)</value></data>
+  <data name="Compare_Swap" xml:space="preserve"><value>Swap the old and the new version</value></data>
+  <data name="Compare_IgnoreRunningLines" xml:space="preserve"><value>Ignore repeated headers and footers (page numbers…)</value></data>
+  <data name="Compare_IgnoreCase" xml:space="preserve"><value>Ignore letter case</value></data>
+  <data name="Compare_Visual" xml:space="preserve"><value>Also compare the pages as pictures</value></data>
+  <data name="Compare_Run" xml:space="preserve"><value>Compare</value></data>
+  <data name="Compare_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Compare_Progress_Opening" xml:space="preserve"><value>Opening the documents…</value></data>
+  <data name="Compare_Progress_Text" xml:space="preserve"><value>Comparing the text…</value></data>
+  <data name="Compare_Progress_Visual" xml:space="preserve"><value>Comparing the pages as pictures: pair {0} of {1}…</value></data>
+  <data name="Compare_Error_Open" xml:space="preserve"><value>“{0}” cannot be opened: it is missing, damaged or held by another program.</value></data>
+  <data name="Compare_Error_Read" xml:space="preserve"><value>The text of one of the documents cannot be read. If a file is damaged, use “Repair” first.</value></data>
+  <data name="Compare_Error_Report" xml:space="preserve"><value>The report could not be written. Choose another folder, or close the file of that name in the program holding it.</value></data>
+  <data name="Compare_Summary" xml:space="preserve"><value>{0} changes: {1} added, {2} deleted, {3} modified.</value></data>
+  <data name="Compare_Summary_Same" xml:space="preserve"><value>The two documents have the same text.</value></data>
+  <data name="Compare_Summary_Visual" xml:space="preserve"><value>{0} pairs of pages look different.</value></data>
+  <data name="Compare_Summary_VisualSame" xml:space="preserve"><value>The pages look the same.</value></data>
+  <data name="Compare_Stale" xml:space="preserve"><value>The files or options changed: click “Compare” to compare again.</value></data>
+  <data name="Compare_Changes" xml:space="preserve"><value>Changes</value></data>
+  <data name="Compare_Kind_Added" xml:space="preserve"><value>Added</value></data>
+  <data name="Compare_Kind_Deleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="Compare_Kind_Modified" xml:space="preserve"><value>Modified</value></data>
+  <data name="Compare_Change_Pages" xml:space="preserve"><value>page {0} – {1}</value></data>
+  <data name="Compare_NextChange" xml:space="preserve"><value>Next change (F8)</value></data>
+  <data name="Compare_PreviousChange" xml:space="preserve"><value>Previous change (Shift+F8)</value></data>
+  <data name="Compare_Pair" xml:space="preserve"><value>Pair {0} of {1}</value></data>
+  <data name="Compare_PairPages" xml:space="preserve"><value>Old: page {0} · New: page {1}</value></data>
+  <data name="Compare_PreviousPair" xml:space="preserve"><value>Previous pair of pages</value></data>
+  <data name="Compare_NextPair" xml:space="preserve"><value>Next pair of pages</value></data>
+  <data name="Compare_Mode_SideBySide" xml:space="preserve"><value>Side by side</value></data>
+  <data name="Compare_Mode_Overlay" xml:space="preserve"><value>Overlay</value></data>
+  <data name="Compare_Mode_Slider" xml:space="preserve"><value>Slider</value></data>
+  <data name="Compare_Opacity" xml:space="preserve"><value>New version opacity</value></data>
+  <data name="Compare_SliderPosition" xml:space="preserve"><value>Divider position</value></data>
+  <data name="Compare_Sync" xml:space="preserve"><value>Scroll and zoom together</value></data>
+  <data name="Compare_Zoom" xml:space="preserve"><value>Zoom</value></data>
+  <data name="Compare_Missing_Old" xml:space="preserve"><value>The old version has no such page: it was added.</value></data>
+  <data name="Compare_Missing_New" xml:space="preserve"><value>The new version has no such page: it was deleted.</value></data>
+  <data name="Compare_Legend" xml:space="preserve"><value>Green: added · Red: deleted · Yellow: modified · Purple: looks different</value></data>
+  <data name="Compare_Export" xml:space="preserve"><value>Export report…</value></data>
+  <data name="Compare_Exported" xml:space="preserve"><value>Report “{0}” saved.</value></data>
+  <data name="Compare_OpenReport" xml:space="preserve"><value>Open report</value></data>
+  <data name="Compare_Report_FileName" xml:space="preserve"><value>{0} - comparison report</value></data>
+  <data name="Compare_Report_Title" xml:space="preserve"><value>DOCUMENT COMPARISON REPORT</value></data>
+  <data name="Compare_Report_OldFile" xml:space="preserve"><value>Old version: {0} ({1} pages)</value></data>
+  <data name="Compare_Report_NewFile" xml:space="preserve"><value>New version: {0} ({1} pages)</value></data>
+  <data name="Compare_Report_Date" xml:space="preserve"><value>Compared on: {0}</value></data>
+  <data name="Compare_Report_Summary" xml:space="preserve"><value>{0} changes: {1} added, {2} deleted, {3} modified</value></data>
+  <data name="Compare_Report_Pages" xml:space="preserve"><value>page {0} – {1}</value></data>
+  <data name="Compare_Report_Visual" xml:space="preserve"><value>Look different: {0}</value></data>
+  <data name="Compare_Report_Footer" xml:space="preserve"><value>Page {0} of {1}</value></data>
+  <data name="Stage_CompareText" xml:space="preserve"><value>Comparing the text</value></data>
+  <data name="Stage_CompareVisual" xml:space="preserve"><value>Comparing the pages as pictures</value></data>
 </root>

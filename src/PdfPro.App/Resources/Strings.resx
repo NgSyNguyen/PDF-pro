@@ -1769,4 +1769,64 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Stage_DetectOrientation" xml:space="preserve"><value>Đang xem hướng trang</value></data>
   <data name="Stage_Deskew" xml:space="preserve"><value>Đang làm thẳng trang</value></data>
   <data name="Stage_CleanBorders" xml:space="preserve"><value>Đang xóa viền đen</value></data>
+  <data name="Cmd_Compare_ToolTip" xml:space="preserve"><value>So sánh chữ và hình ảnh của hai tài liệu, xem khác biệt hai bên và xuất báo cáo</value></data>
+  <data name="Compare_Title" xml:space="preserve"><value>So sánh tài liệu</value></data>
+  <data name="Compare_Old" xml:space="preserve"><value>Bản cũ</value></data>
+  <data name="Compare_New" xml:space="preserve"><value>Bản mới</value></data>
+  <data name="Compare_Pick" xml:space="preserve"><value>Chọn…</value></data>
+  <data name="Compare_PickOld" xml:space="preserve"><value>Chọn bản cũ</value></data>
+  <data name="Compare_PickNew" xml:space="preserve"><value>Chọn bản mới</value></data>
+  <data name="Compare_NoFile" xml:space="preserve"><value>(chưa chọn)</value></data>
+  <data name="Compare_Swap" xml:space="preserve"><value>Đổi chỗ bản cũ và bản mới</value></data>
+  <data name="Compare_IgnoreRunningLines" xml:space="preserve"><value>Bỏ qua đầu trang, chân trang lặp lại (số trang…)</value></data>
+  <data name="Compare_IgnoreCase" xml:space="preserve"><value>Không phân biệt chữ hoa, chữ thường</value></data>
+  <data name="Compare_Visual" xml:space="preserve"><value>So sánh cả hình ảnh trang</value></data>
+  <data name="Compare_Run" xml:space="preserve"><value>So sánh</value></data>
+  <data name="Compare_Stop" xml:space="preserve"><value>Dừng</value></data>
+  <data name="Compare_Progress_Opening" xml:space="preserve"><value>Đang mở tài liệu…</value></data>
+  <data name="Compare_Progress_Text" xml:space="preserve"><value>Đang so sánh chữ…</value></data>
+  <data name="Compare_Progress_Visual" xml:space="preserve"><value>Đang so sánh hình ảnh: cặp trang {0}/{1}…</value></data>
+  <data name="Compare_Error_Open" xml:space="preserve"><value>Không mở được “{0}”: tệp không có, bị hỏng hoặc đang bị chương trình khác giữ.</value></data>
+  <data name="Compare_Error_Read" xml:space="preserve"><value>Không đọc được chữ của một trong hai tài liệu. Nếu tệp bị hỏng, hãy dùng “Sửa tệp hỏng” trước.</value></data>
+  <data name="Compare_Error_Report" xml:space="preserve"><value>Không ghi được báo cáo. Hãy chọn thư mục khác, hoặc đóng tệp cùng tên đang mở trong chương trình khác.</value></data>
+  <data name="Compare_Summary" xml:space="preserve"><value>{0} thay đổi: {1} thêm, {2} xóa, {3} sửa.</value></data>
+  <data name="Compare_Summary_Same" xml:space="preserve"><value>Chữ của hai tài liệu giống nhau.</value></data>
+  <data name="Compare_Summary_Visual" xml:space="preserve"><value>{0} cặp trang khác về hình ảnh.</value></data>
+  <data name="Compare_Summary_VisualSame" xml:space="preserve"><value>Các trang trông giống nhau.</value></data>
+  <data name="Compare_Stale" xml:space="preserve"><value>Tệp hoặc tùy chọn đã đổi: bấm “So sánh” để so sánh lại.</value></data>
+  <data name="Compare_Changes" xml:space="preserve"><value>Thay đổi</value></data>
+  <data name="Compare_Kind_Added" xml:space="preserve"><value>Thêm</value></data>
+  <data name="Compare_Kind_Deleted" xml:space="preserve"><value>Xóa</value></data>
+  <data name="Compare_Kind_Modified" xml:space="preserve"><value>Sửa</value></data>
+  <data name="Compare_Change_Pages" xml:space="preserve"><value>trang {0} – {1}</value></data>
+  <data name="Compare_NextChange" xml:space="preserve"><value>Thay đổi sau (F8)</value></data>
+  <data name="Compare_PreviousChange" xml:space="preserve"><value>Thay đổi trước (Shift+F8)</value></data>
+  <data name="Compare_Pair" xml:space="preserve"><value>Cặp trang {0}/{1}</value></data>
+  <data name="Compare_PairPages" xml:space="preserve"><value>Bản cũ: trang {0} · Bản mới: trang {1}</value></data>
+  <data name="Compare_PreviousPair" xml:space="preserve"><value>Cặp trang trước</value></data>
+  <data name="Compare_NextPair" xml:space="preserve"><value>Cặp trang sau</value></data>
+  <data name="Compare_Mode_SideBySide" xml:space="preserve"><value>Hai bên</value></data>
+  <data name="Compare_Mode_Overlay" xml:space="preserve"><value>Lớp chồng</value></data>
+  <data name="Compare_Mode_Slider" xml:space="preserve"><value>Thanh trượt</value></data>
+  <data name="Compare_Opacity" xml:space="preserve"><value>Độ đậm bản mới</value></data>
+  <data name="Compare_SliderPosition" xml:space="preserve"><value>Vị trí đường chia</value></data>
+  <data name="Compare_Sync" xml:space="preserve"><value>Cuộn và thu phóng cùng nhau</value></data>
+  <data name="Compare_Zoom" xml:space="preserve"><value>Thu phóng</value></data>
+  <data name="Compare_Missing_Old" xml:space="preserve"><value>Bản cũ không có trang này: trang được thêm vào.</value></data>
+  <data name="Compare_Missing_New" xml:space="preserve"><value>Bản mới không có trang này: trang đã bị xóa.</value></data>
+  <data name="Compare_Legend" xml:space="preserve"><value>Xanh lá: thêm · Đỏ: xóa · Vàng: sửa · Tím: khác về hình ảnh</value></data>
+  <data name="Compare_Export" xml:space="preserve"><value>Xuất báo cáo…</value></data>
+  <data name="Compare_Exported" xml:space="preserve"><value>Đã lưu báo cáo “{0}”.</value></data>
+  <data name="Compare_OpenReport" xml:space="preserve"><value>Mở báo cáo</value></data>
+  <data name="Compare_Report_FileName" xml:space="preserve"><value>{0} - báo cáo so sánh</value></data>
+  <data name="Compare_Report_Title" xml:space="preserve"><value>BÁO CÁO SO SÁNH TÀI LIỆU</value></data>
+  <data name="Compare_Report_OldFile" xml:space="preserve"><value>Bản cũ: {0} ({1} trang)</value></data>
+  <data name="Compare_Report_NewFile" xml:space="preserve"><value>Bản mới: {0} ({1} trang)</value></data>
+  <data name="Compare_Report_Date" xml:space="preserve"><value>Ngày so sánh: {0}</value></data>
+  <data name="Compare_Report_Summary" xml:space="preserve"><value>{0} thay đổi: {1} thêm, {2} xóa, {3} sửa</value></data>
+  <data name="Compare_Report_Pages" xml:space="preserve"><value>trang {0} – {1}</value></data>
+  <data name="Compare_Report_Visual" xml:space="preserve"><value>Khác về hình ảnh: {0}</value></data>
+  <data name="Compare_Report_Footer" xml:space="preserve"><value>Trang {0}/{1}</value></data>
+  <data name="Stage_CompareText" xml:space="preserve"><value>Đang so sánh chữ</value></data>
+  <data name="Stage_CompareVisual" xml:space="preserve"><value>Đang so sánh hình ảnh</value></data>
 </root>

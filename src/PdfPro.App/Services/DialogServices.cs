@@ -437,6 +437,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new ToTextWindow(viewModel));
     }
 
+    public bool ShowCompare(ViewModels.Comparing.CompareViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new CompareWindow(viewModel));
+    }
+
     public bool ShowOcr(ViewModels.Ocr.OcrViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);

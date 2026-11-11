@@ -250,4 +250,7 @@ public interface IPageDialogService
     bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel);
 
     bool ShowPdfA(ViewModels.Converting.PdfAViewModel viewModel);
+
+    /// <summary>"So sánh tài liệu": two documents compared and shown side by side; true when it closed to open its report.</summary>
+    bool ShowCompare(ViewModels.Comparing.CompareViewModel viewModel);
 }

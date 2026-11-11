@@ -178,6 +178,12 @@ internal static class AppHost
             sp.GetRequiredService<Operations.Scanning.DeskewOperation>(),
             sp.GetRequiredService<Operations.Scanning.CleanBordersOperation>(),
             sp.GetRequiredService<PdfPro.Core.Ocr.IOcrEngine>()));
+        services.AddSingleton<Services.Comparing.IDocumentComparison>(sp => new Services.Comparing.DocumentComparison(sp.GetRequiredService<PdfPro.Pdfium.PdfiumGate>()));
+        services.AddSingleton(sp => new Services.Comparing.CompareServices(
+            sp.GetRequiredService<Services.Comparing.IDocumentComparison>(),
+            sp.GetRequiredService<PdfPro.Pdfium.IPdfDocumentLoader>(),
+            sp.GetRequiredService<Services.Rendering.IPageImageRenderer>(),
+            sp.GetRequiredService<IPasswordPrompt>()));
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),
