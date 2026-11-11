@@ -45,7 +45,9 @@ public sealed class CompareViewModelTests : IDisposable
         dialog.NewPage!.Image.ShouldNotBeNull();
         dialog.NewPage.Width.ShouldBe(595 * CompareViewModel.DipPerPoint, 1);
         dialog.OldPage.Marks.Where(m => m.IsSelected).ShouldNotBeEmpty();
-        dialog.NewPage.Marks.Where(m => m.IsSelected).ShouldAllBe(m => m.Kind == CompareMarkKind.Modified);
+        var selected = dialog.NewPage.Marks.Where(m => m.IsSelected).ToList();
+        selected.ShouldContain(m => m.Kind == CompareMarkKind.Modified, "the price is replaced (words added within the change are green)");
+        selected.ShouldNotContain(m => m.Kind == CompareMarkKind.Deleted || m.Kind == CompareMarkKind.Visual);
         reveals.ShouldNotBeEmpty();
 
         dialog.SelectedChange = dialog.Changes[1];
