@@ -111,6 +111,31 @@ public sealed partial class MainWindowViewModelTests
         call.GetArguments()[2].ShouldBeOfType<PdfPro.Operations.Extracting.EditAttachmentsParams>().Add.ShouldNotBeNull().ShouldHaveSingleItem().Path.ShouldBe(note);
     }
 
+    [Fact]
+    public async Task Bookmarks_EditedInTheDialog_BecomeOneContentChange()
+    {
+        var path = _fixture.CreateFile("văn bản.pdf", File.ReadAllBytes(Samples.Basic));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        _pageDialogs.ShowBookmarks(Arg.Do<PdfPro.App.ViewModels.Structure.BookmarksEditorViewModel>(d =>
+        {
+            d.AddCommand.Execute(null);
+            d.ApplyCommand.Execute(null);
+        })).Returns(true);
+
+        await viewModel.BookmarksCommand.ExecuteAsync(null);
+
+        for (var i = 0; i < 250 && !_contentChanger.ReceivedCalls().Any(c => c.GetMethodInfo().Name == nameof(PdfPro.App.Services.Documents.IContentChanger.ApplyAsync)); i++)
+        {
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+
+        var call = _contentChanger.ReceivedCalls().Single(c => c.GetMethodInfo().Name == nameof(PdfPro.App.Services.Documents.IContentChanger.ApplyAsync));
+        call.GetArguments()[1].ShouldBeOfType<PdfPro.Operations.Structure.SetBookmarksOperation>();
+        call.GetArguments()[2].ShouldBeOfType<PdfPro.Operations.Structure.SetBookmarksParams>().Bookmarks.ShouldHaveSingleItem().Title.ShouldBe(PdfPro.App.Resources.Strings.Bookmarks_NewTitle);
+    }
+
     private PdfPro.App.Services.Extracting.ExtractingServices Extracting()
         => new(new PdfPro.Operations.Extracting.ExtractTablesOperation(), Substitute.For<IPdfDocumentLoader>(), new FakePageImageRenderer(), new PdfPro.Operations.Extracting.ExtractImagesOperation(TestOperations.PdfiumGate));
 

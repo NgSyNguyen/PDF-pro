@@ -47,6 +47,80 @@ public static class DocumentStructureReader
             document.PageCount);
     }
 
+    /// <summary>The page labels of a document (cheap: nothing else is read).</summary>
+    /// <exception cref="InvalidDataException">The document cannot be read.</exception>
+    public static IReadOnlyList<PageLabelRange> ReadLabels(string path, string? password = null)
+    {
+        using var document = Attachments.Open(path, password);
+        return Labels(document);
+    }
+
+    /// <summary>
+    /// The bookmark tree of a document as <see cref="BookmarkNode"/>s — titles (NFC), pages and heights (/Dest or a
+    /// GoTo action, named destinations resolved), bold, italics, colour and which are open — for the bookmark editor.
+    /// A bookmark that opens no page of the document opens the page of its first child that does, or page 1.
+    /// </summary>
+    /// <exception cref="InvalidDataException">The document cannot be read.</exception>
+    public static IReadOnlyList<BookmarkNode> ReadBookmarks(string path, string? password = null)
+    {
+        using var document = Attachments.Open(path, password);
+        var names = new NamedDestinations(document);
+        var count = 0;
+        var root = AsDictionary(document.Internals.Catalog.Elements["/Outlines"]);
+        return root is null ? [] : Items(root, 0);
+
+        List<BookmarkNode> Items(PdfDictionary parent, int depth)
+        {
+            var nodes = new List<BookmarkNode>();
+            if (depth >= OutlineItems.MaxDepth)
+            {
+                return nodes;
+            }
+
+            foreach (var item in OutlineItems.Children(parent))
+            {
+                if (++count > OutlineItems.MaxItems)
+                {
+                    break;
+                }
+
+                var children = Items(item, depth + 1);
+                int? page = null;
+                double? top = null;
+                if (Destinations.Of(item, names) is { Elements.Count: >= 1 } destination)
+                {
+                    page = PageIndex(document, destination.Elements[0]);
+                    if (Resolve(destination.Elements.ElementAtOrDefault(1)) is PdfName { Value: "/XYZ" } && destination.Elements.Count >= 4)
+                    {
+                        top = Number(destination.Elements[3]);
+                    }
+                }
+
+                var flags = Resolve(item.Elements["/F"]) is PdfInteger f ? f.Value : 0;
+                string? color = null;
+                if (AsArray(item.Elements["/C"]) is { Elements.Count: 3 } c && c.Elements.Select(Number).ToList() is [{ } r, { } g, { } b] && (r, g, b) != (0, 0, 0))
+                {
+                    color = string.Create(CultureInfo.InvariantCulture, $"#{Byte(r):X2}{Byte(g):X2}{Byte(b):X2}");
+                }
+
+                var open = Resolve(item.Elements["/Count"]) is PdfInteger { Value: > 0 };
+                nodes.Add(new BookmarkNode(
+                    TextNormalizer.ToNfc(Attachments.Text(item.Elements["/Title"]) ?? string.Empty),
+                    page ?? children.FirstOrDefault()?.Page ?? 0,
+                    page is null ? null : top,
+                    children.Count == 0 ? null : children,
+                    (flags & 2) != 0,
+                    (flags & 1) != 0,
+                    color,
+                    open && children.Count > 0));
+            }
+
+            return nodes;
+        }
+
+        static int Byte(double value) => (int)Math.Round(Math.Clamp(value, 0, 1) * 255);
+    }
+
     /// <summary>The page labels of an open document, in page order.</summary>
     internal static IReadOnlyList<PageLabelRange> Labels(PdfDocument document)
     {
@@ -170,7 +244,7 @@ public static class DocumentStructureReader
         _ => null,
     };
 
-    private static int? PageIndex(PdfDocument document, PdfItem item)
+    internal static int? PageIndex(PdfDocument document, PdfItem item)
     {
         if (Resolve(item) is PdfInteger { Value: >= 0 } number && number.Value < document.PageCount)
         {

@@ -484,6 +484,30 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new ToTextWindow(viewModel));
     }
 
+    public bool ShowBookmarks(ViewModels.Structure.BookmarksEditorViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new BookmarksEditorWindow(viewModel));
+    }
+
+    public bool ShowDocumentDescription(ViewModels.Structure.DocumentDescriptionViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new DocumentDescriptionWindow(viewModel));
+    }
+
+    public bool ShowPageLabels(ViewModels.Structure.PageLabelsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new PageLabelsWindow(viewModel));
+    }
+
+    public bool ShowLinks(ViewModels.Structure.LinksViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new LinksWindow(viewModel));
+    }
+
     public bool ShowExtractImages(ViewModels.Extracting.ExtractImagesViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);

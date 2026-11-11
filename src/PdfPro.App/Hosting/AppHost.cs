@@ -187,6 +187,10 @@ internal static class AppHost
         services.AddOperation<Operations.Extracting.ExtractTablesOperation>();
         services.AddOperation<Operations.Extracting.ExtractImagesOperation>();
         services.AddOperation<Operations.Extracting.EditAttachmentsOperation>();
+        services.AddOperation<Operations.Structure.SetBookmarksOperation>();
+        services.AddOperation<Operations.Structure.SetMetadataOperation>();
+        services.AddOperation<Operations.Structure.SetPageLabelsOperation>();
+        services.AddOperation<Operations.Structure.EditLinksOperation>();
         services.AddSingleton(sp => new Services.Extracting.ExtractingServices(
             sp.GetRequiredService<Operations.Extracting.ExtractTablesOperation>(),
             sp.GetRequiredService<PdfPro.Pdfium.IPdfDocumentLoader>(),

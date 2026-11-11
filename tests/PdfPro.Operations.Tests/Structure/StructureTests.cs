@@ -54,6 +54,8 @@ public sealed class StructureTests(PdfiumFixture pdfium)
         AsArray(first.Elements["/C"])!.Elements.Count.ShouldBe(3);
         AsDictionary(first.Elements["/Next"])!.Elements.GetInteger("/F").ShouldBe(1);
 
+        Flat(DocumentStructureReader.ReadBookmarks(output)).ShouldBe(Flat(tree), "read back as written, look included");
+
         var none = temp.Combine("none.pdf");
         await Apply(new SetBookmarksOperation(), output, none, new SetBookmarksParams([]));
         using var empty = PdfReader.Open(none, PdfDocumentOpenMode.Import);
@@ -187,6 +189,9 @@ public sealed class StructureTests(PdfiumFixture pdfium)
         await using var stream = File.Create(output);
         await operation.ApplyToFileAsync(input, stream, parameters, new RecordingProgress(), Token);
     }
+
+    private static List<string> Flat(IReadOnlyList<BookmarkNode> nodes, int depth = 0)
+        => [.. nodes.SelectMany(n => (IEnumerable<string>)[$"{depth}|{n.Title}|{n.Page}|{n.Top}|{n.Bold}|{n.Italic}|{n.Color}|{n.Open}", .. Flat(n.Children ?? [], depth + 1)])];
 
     private static string Xmp(string path)
     {

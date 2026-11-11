@@ -96,6 +96,10 @@ internal static class TestOperations
             new Operations.Scanning.DeskewOperation(),
             new Operations.Scanning.CleanBordersOperation(),
             new Operations.Extracting.EditAttachmentsOperation(),
+            new Operations.Structure.SetBookmarksOperation(),
+            new Operations.Structure.SetMetadataOperation(),
+            new Operations.Structure.SetPageLabelsOperation(),
+            new Operations.Structure.EditLinksOperation(),
         ]);
     }
 }

@@ -6,6 +6,7 @@ using PdfPro.Core.Sessions;
 using PdfPro.Operations.Annotating;
 using PdfPro.Operations.Editing;
 using PdfPro.Operations.Extracting;
+using PdfPro.Operations.Structure;
 using PdfPro.Operations.Forms;
 using PdfPro.Operations.Ocr;
 using PdfPro.Operations.Scanning;
@@ -62,6 +63,13 @@ internal static class HistoryDescriptions
             EditAttachmentsParams { Remove: null or { Count: 0 } } p => Format(Strings.History_AddAttachments, p.Add?.Count ?? 0),
             EditAttachmentsParams { Add: null or { Count: 0 } } p => Format(Strings.History_RemoveAttachments, p.Remove?.Count ?? 0),
             EditAttachmentsParams => Strings.History_EditAttachments,
+            SetBookmarksParams => Strings.History_Bookmarks,
+            SetMetadataParams { Description: null } => Strings.History_OpenSettings,
+            SetMetadataParams => Strings.History_Metadata,
+            SetPageLabelsParams => Strings.History_PageLabels,
+            EditLinksParams { Remove: null or { Count: 0 } } p => Format(Strings.History_AddLinks, p.Add?.Count ?? 0),
+            EditLinksParams { Add: null or { Count: 0 } } p => Format(Strings.History_RemoveLinks, p.Remove?.Count ?? 0),
+            EditLinksParams => Strings.History_EditLinks,
             OcrParams { Pages: { } pages } => Format(Strings.History_OcrPages, pages.Count),
             OcrParams => Strings.History_Ocr,
             RemoveBlankPagesParams p => Format(Strings.History_RemoveBlankPages, Count(p.Pages, before)),

@@ -1943,4 +1943,100 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="History_EditAttachments" xml:space="preserve"><value>Change attachments</value></data>
   <data name="Stage_ExtractImages" xml:space="preserve"><value>Extracting images</value></data>
   <data name="Stage_Attachments" xml:space="preserve"><value>Writing attachments</value></data>
+  <data name="Ribbon_Group_Structure" xml:space="preserve"><value>Structure</value></data>
+  <data name="Cmd_Bookmarks" xml:space="preserve"><value>Bookmarks</value></data>
+  <data name="Cmd_Bookmarks_ToolTip" xml:space="preserve"><value>Edit the bookmark tree (add, rename, reorder, change level, colour) or make it from headings by font size or by patterns such as “Chapter I”</value></data>
+  <data name="Cmd_DocumentDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="Cmd_DocumentDescription_ToolTip" xml:space="preserve"><value>Edit the title, author, subject and keywords (Info and XMP alike) and how the document opens: page, zoom, side panel, window title</value></data>
+  <data name="Cmd_PageLabels" xml:space="preserve"><value>Page labels</value></data>
+  <data name="Cmd_PageLabels_ToolTip" xml:space="preserve"><value>Label the pages: i, ii, iii for the front matter, 1, 2, 3 for the body, prefixes such as “A-”</value></data>
+  <data name="Cmd_Links" xml:space="preserve"><value>Links</value></data>
+  <data name="Cmd_Links_ToolTip" xml:space="preserve"><value>See and remove links, and make links from the web and e-mail addresses in the text</value></data>
+  <data name="Bookmarks_Title" xml:space="preserve"><value>Bookmarks</value></data>
+  <data name="Bookmarks_Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Bookmarks_AddChild" xml:space="preserve"><value>Add under</value></data>
+  <data name="Bookmarks_Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Bookmarks_MoveUp" xml:space="preserve"><value>Move up</value></data>
+  <data name="Bookmarks_MoveDown" xml:space="preserve"><value>Move down</value></data>
+  <data name="Bookmarks_Indent" xml:space="preserve"><value>Indent ›</value></data>
+  <data name="Bookmarks_Outdent" xml:space="preserve"><value>‹ Outdent</value></data>
+  <data name="Bookmarks_TitleLabel" xml:space="preserve"><value>Title</value></data>
+  <data name="Bookmarks_Page" xml:space="preserve"><value>Opens page</value></data>
+  <data name="Bookmarks_PageOf" xml:space="preserve"><value>page {0}</value></data>
+  <data name="Bookmarks_Bold" xml:space="preserve"><value>Bold</value></data>
+  <data name="Bookmarks_Italic" xml:space="preserve"><value>Italic</value></data>
+  <data name="Bookmarks_Color" xml:space="preserve"><value>Colour</value></data>
+  <data name="Bookmarks_Color_None" xml:space="preserve"><value>Default</value></data>
+  <data name="Bookmarks_Color_Red" xml:space="preserve"><value>Red</value></data>
+  <data name="Bookmarks_Color_Blue" xml:space="preserve"><value>Blue</value></data>
+  <data name="Bookmarks_Color_Green" xml:space="preserve"><value>Green</value></data>
+  <data name="Bookmarks_Color_Orange" xml:space="preserve"><value>Orange</value></data>
+  <data name="Bookmarks_NewTitle" xml:space="preserve"><value>New bookmark</value></data>
+  <data name="Bookmarks_Generate_Title" xml:space="preserve"><value>Make from headings</value></data>
+  <data name="Bookmarks_BySize" xml:space="preserve"><value>By font size (text larger than the body is a heading)</value></data>
+  <data name="Bookmarks_ByPattern" xml:space="preserve"><value>By patterns, one level per line</value></data>
+  <data name="Bookmarks_Generate" xml:space="preserve"><value>Make</value></data>
+  <data name="Bookmarks_Generate_Note" xml:space="preserve"><value>The tree shown is replaced by the new one; click Cancel to keep things as they were.</value></data>
+  <data name="Bookmarks_Generated" xml:space="preserve"><value>{0} bookmarks made from headings.</value></data>
+  <data name="Bookmarks_NoHeadings" xml:space="preserve"><value>No heading was found.</value></data>
+  <data name="Bookmarks_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Bookmarks_Error_Page" xml:space="preserve"><value>Enter a page from 1 to {0}.</value></data>
+  <data name="Bookmarks_Error_Title" xml:space="preserve"><value>Every bookmark needs a title.</value></data>
+  <data name="Bookmarks_Error_Pattern" xml:space="preserve"><value>A pattern is not a valid regular expression.</value></data>
+  <data name="Bookmarks_Error_Read" xml:space="preserve"><value>The text of the document cannot be read to look for headings.</value></data>
+  <data name="DocInfo_Title" xml:space="preserve"><value>Document description</value></data>
+  <data name="DocInfo_DocumentTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="DocInfo_Author" xml:space="preserve"><value>Author</value></data>
+  <data name="DocInfo_Subject" xml:space="preserve"><value>Subject</value></data>
+  <data name="DocInfo_Keywords" xml:space="preserve"><value>Keywords</value></data>
+  <data name="DocInfo_Creator" xml:space="preserve"><value>Created with</value></data>
+  <data name="DocInfo_Producer" xml:space="preserve"><value>PDF producer</value></data>
+  <data name="DocInfo_Created" xml:space="preserve"><value>Created:</value></data>
+  <data name="DocInfo_Modified" xml:space="preserve"><value>Modified:</value></data>
+  <data name="DocInfo_OpenTitle" xml:space="preserve"><value>When the document opens</value></data>
+  <data name="DocInfo_OpenPage" xml:space="preserve"><value>Page</value></data>
+  <data name="DocInfo_Zoom" xml:space="preserve"><value>Zoom</value></data>
+  <data name="DocInfo_Zoom_Default" xml:space="preserve"><value>As the reader likes</value></data>
+  <data name="DocInfo_Zoom_FitPage" xml:space="preserve"><value>Fit page</value></data>
+  <data name="DocInfo_Zoom_FitWidth" xml:space="preserve"><value>Fit width</value></data>
+  <data name="DocInfo_Zoom_Actual" xml:space="preserve"><value>Actual size</value></data>
+  <data name="DocInfo_Zoom_Percent" xml:space="preserve"><value>Percent</value></data>
+  <data name="DocInfo_Panel" xml:space="preserve"><value>Side panel</value></data>
+  <data name="DocInfo_Panel_Default" xml:space="preserve"><value>As the reader likes</value></data>
+  <data name="DocInfo_Panel_None" xml:space="preserve"><value>None</value></data>
+  <data name="DocInfo_Panel_Bookmarks" xml:space="preserve"><value>Bookmarks</value></data>
+  <data name="DocInfo_Panel_Thumbnails" xml:space="preserve"><value>Thumbnails</value></data>
+  <data name="DocInfo_Panel_FullScreen" xml:space="preserve"><value>Full screen</value></data>
+  <data name="DocInfo_ShowTitle" xml:space="preserve"><value>The window shows the document title instead of the file name</value></data>
+  <data name="DocInfo_Error_Percent" xml:space="preserve"><value>The zoom must be from 10 to 6400 %.</value></data>
+  <data name="Labels_Title" xml:space="preserve"><value>Page labels</value></data>
+  <data name="Labels_Note" xml:space="preserve"><value>Each range starts at a page and numbers the pages up to the next range. PDF readers show the labels instead of page numbers.</value></data>
+  <data name="Labels_Add" xml:space="preserve"><value>Add a range</value></data>
+  <data name="Labels_From" xml:space="preserve"><value>From page</value></data>
+  <data name="Labels_Style" xml:space="preserve"><value>Numbering</value></data>
+  <data name="Labels_Style_None" xml:space="preserve"><value>No number (prefix only)</value></data>
+  <data name="Labels_Prefix" xml:space="preserve"><value>Prefix</value></data>
+  <data name="Labels_Start" xml:space="preserve"><value>Start at</value></data>
+  <data name="Labels_Preview" xml:space="preserve"><value>page {0} → {1}</value></data>
+  <data name="Labels_None" xml:space="preserve"><value>No labels: pages are numbered 1, 2, 3…</value></data>
+  <data name="Labels_Error" xml:space="preserve"><value>Enter first pages from 1 to {0} and start numbers of 1 or more.</value></data>
+  <data name="Links_Title" xml:space="preserve"><value>Links</value></data>
+  <data name="Links_Detect" xml:space="preserve"><value>Find addresses</value></data>
+  <data name="Links_Detect_ToolTip" xml:space="preserve"><value>Find web addresses (https://…, www.…) and e-mail addresses in the text that have no link, to make links of them</value></data>
+  <data name="Links_Page" xml:space="preserve"><value>Page</value></data>
+  <data name="Links_Text" xml:space="preserve"><value>Text</value></data>
+  <data name="Links_Target" xml:space="preserve"><value>Goes to</value></data>
+  <data name="Links_Other" xml:space="preserve"><value>(another action)</value></data>
+  <data name="Links_None" xml:space="preserve"><value>The document has no links.</value></data>
+  <data name="Links_Found" xml:space="preserve"><value>{0} addresses without a link found (in italics); click Apply to make their links.</value></data>
+  <data name="Links_NoneFound" xml:space="preserve"><value>No address is without a link.</value></data>
+  <data name="Links_Error_Read" xml:space="preserve"><value>The text of the document cannot be read.</value></data>
+  <data name="History_Bookmarks" xml:space="preserve"><value>Edit bookmarks</value></data>
+  <data name="History_Metadata" xml:space="preserve"><value>Edit the description</value></data>
+  <data name="History_OpenSettings" xml:space="preserve"><value>Change how the document opens</value></data>
+  <data name="History_PageLabels" xml:space="preserve"><value>Set page labels</value></data>
+  <data name="History_AddLinks" xml:space="preserve"><value>Make {0} links</value></data>
+  <data name="History_RemoveLinks" xml:space="preserve"><value>Remove {0} links</value></data>
+  <data name="History_EditLinks" xml:space="preserve"><value>Edit links</value></data>
+  <data name="Stage_Structure" xml:space="preserve"><value>Writing the document structure</value></data>
 </root>

@@ -272,6 +272,18 @@ public interface IPageDialogService
     /// <summary>"Phông chữ": the fonts of the document and whether they are embedded.</summary>
     bool ShowFonts(ViewModels.Extracting.FontsViewModel viewModel);
 
+    /// <summary>"Bookmark": the bookmark tree edited or made from headings; true when applied.</summary>
+    bool ShowBookmarks(ViewModels.Structure.BookmarksEditorViewModel viewModel);
+
+    /// <summary>"Thuộc tính tài liệu": description and how the document opens; true when something changed.</summary>
+    bool ShowDocumentDescription(ViewModels.Structure.DocumentDescriptionViewModel viewModel);
+
+    /// <summary>"Nhãn trang": label ranges; true when applied.</summary>
+    bool ShowPageLabels(ViewModels.Structure.PageLabelsViewModel viewModel);
+
+    /// <summary>"Liên kết": links listed, removed, found in the text; true when applied.</summary>
+    bool ShowLinks(ViewModels.Structure.LinksViewModel viewModel);
+
     /// <summary>"Trích bảng": the tables found, checked and written; true when something was written.</summary>
     bool ShowTables(ViewModels.Extracting.TablesViewModel viewModel);
 

@@ -1943,4 +1943,100 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="History_EditAttachments" xml:space="preserve"><value>Sửa tệp đính kèm</value></data>
   <data name="Stage_ExtractImages" xml:space="preserve"><value>Đang trích ảnh</value></data>
   <data name="Stage_Attachments" xml:space="preserve"><value>Đang ghi tệp đính kèm</value></data>
+  <data name="Ribbon_Group_Structure" xml:space="preserve"><value>Cấu trúc</value></data>
+  <data name="Cmd_Bookmarks" xml:space="preserve"><value>Bookmark</value></data>
+  <data name="Cmd_Bookmarks_ToolTip" xml:space="preserve"><value>Sửa cây bookmark (thêm, đổi tên, sắp xếp, đổi cấp, màu) hoặc tự tạo từ tiêu đề theo cỡ chữ hay mẫu như “Chương I”, “Điều 1”</value></data>
+  <data name="Cmd_DocumentDescription" xml:space="preserve"><value>Thuộc tính</value></data>
+  <data name="Cmd_DocumentDescription_ToolTip" xml:space="preserve"><value>Sửa tiêu đề, tác giả, chủ đề, từ khóa (đồng bộ Info và XMP) và cách tài liệu mở: trang, mức phóng, bảng bên, tiêu đề cửa sổ</value></data>
+  <data name="Cmd_PageLabels" xml:space="preserve"><value>Nhãn trang</value></data>
+  <data name="Cmd_PageLabels_ToolTip" xml:space="preserve"><value>Đánh nhãn trang: i, ii, iii cho phần mở đầu, 1, 2, 3 cho nội dung, tiền tố như “PL-”</value></data>
+  <data name="Cmd_Links" xml:space="preserve"><value>Liên kết</value></data>
+  <data name="Cmd_Links_ToolTip" xml:space="preserve"><value>Xem và xóa liên kết, tự tạo liên kết từ địa chỉ web và email trong chữ</value></data>
+  <data name="Bookmarks_Title" xml:space="preserve"><value>Bookmark</value></data>
+  <data name="Bookmarks_Add" xml:space="preserve"><value>Thêm</value></data>
+  <data name="Bookmarks_AddChild" xml:space="preserve"><value>Thêm mục con</value></data>
+  <data name="Bookmarks_Remove" xml:space="preserve"><value>Xóa</value></data>
+  <data name="Bookmarks_MoveUp" xml:space="preserve"><value>Lên trên</value></data>
+  <data name="Bookmarks_MoveDown" xml:space="preserve"><value>Xuống dưới</value></data>
+  <data name="Bookmarks_Indent" xml:space="preserve"><value>Lùi vào ›</value></data>
+  <data name="Bookmarks_Outdent" xml:space="preserve"><value>‹ Lùi ra</value></data>
+  <data name="Bookmarks_TitleLabel" xml:space="preserve"><value>Tiêu đề</value></data>
+  <data name="Bookmarks_Page" xml:space="preserve"><value>Mở trang</value></data>
+  <data name="Bookmarks_PageOf" xml:space="preserve"><value>trang {0}</value></data>
+  <data name="Bookmarks_Bold" xml:space="preserve"><value>Đậm</value></data>
+  <data name="Bookmarks_Italic" xml:space="preserve"><value>Nghiêng</value></data>
+  <data name="Bookmarks_Color" xml:space="preserve"><value>Màu</value></data>
+  <data name="Bookmarks_Color_None" xml:space="preserve"><value>Mặc định</value></data>
+  <data name="Bookmarks_Color_Red" xml:space="preserve"><value>Đỏ</value></data>
+  <data name="Bookmarks_Color_Blue" xml:space="preserve"><value>Xanh dương</value></data>
+  <data name="Bookmarks_Color_Green" xml:space="preserve"><value>Xanh lá</value></data>
+  <data name="Bookmarks_Color_Orange" xml:space="preserve"><value>Cam</value></data>
+  <data name="Bookmarks_NewTitle" xml:space="preserve"><value>Bookmark mới</value></data>
+  <data name="Bookmarks_Generate_Title" xml:space="preserve"><value>Tự tạo từ tiêu đề</value></data>
+  <data name="Bookmarks_BySize" xml:space="preserve"><value>Theo cỡ chữ (chữ lớn hơn thân bài là tiêu đề)</value></data>
+  <data name="Bookmarks_ByPattern" xml:space="preserve"><value>Theo mẫu, mỗi dòng một cấp</value></data>
+  <data name="Bookmarks_Generate" xml:space="preserve"><value>Tạo</value></data>
+  <data name="Bookmarks_Generate_Note" xml:space="preserve"><value>Cây bookmark hiện tại được thay bằng cây mới; bấm Hủy để giữ nguyên.</value></data>
+  <data name="Bookmarks_Generated" xml:space="preserve"><value>Đã tạo {0} bookmark từ tiêu đề.</value></data>
+  <data name="Bookmarks_NoHeadings" xml:space="preserve"><value>Không tìm thấy tiêu đề nào.</value></data>
+  <data name="Bookmarks_Apply" xml:space="preserve"><value>Áp dụng</value></data>
+  <data name="Bookmarks_Error_Page" xml:space="preserve"><value>Hãy nhập trang từ 1 đến {0}.</value></data>
+  <data name="Bookmarks_Error_Title" xml:space="preserve"><value>Mỗi bookmark cần có tiêu đề.</value></data>
+  <data name="Bookmarks_Error_Pattern" xml:space="preserve"><value>Một mẫu không phải biểu thức chính quy hợp lệ.</value></data>
+  <data name="Bookmarks_Error_Read" xml:space="preserve"><value>Không đọc được chữ của tài liệu để tìm tiêu đề.</value></data>
+  <data name="DocInfo_Title" xml:space="preserve"><value>Thuộc tính tài liệu</value></data>
+  <data name="DocInfo_DocumentTitle" xml:space="preserve"><value>Tiêu đề</value></data>
+  <data name="DocInfo_Author" xml:space="preserve"><value>Tác giả</value></data>
+  <data name="DocInfo_Subject" xml:space="preserve"><value>Chủ đề</value></data>
+  <data name="DocInfo_Keywords" xml:space="preserve"><value>Từ khóa</value></data>
+  <data name="DocInfo_Creator" xml:space="preserve"><value>Ứng dụng tạo</value></data>
+  <data name="DocInfo_Producer" xml:space="preserve"><value>Bộ tạo PDF</value></data>
+  <data name="DocInfo_Created" xml:space="preserve"><value>Tạo:</value></data>
+  <data name="DocInfo_Modified" xml:space="preserve"><value>Sửa:</value></data>
+  <data name="DocInfo_OpenTitle" xml:space="preserve"><value>Khi mở tài liệu</value></data>
+  <data name="DocInfo_OpenPage" xml:space="preserve"><value>Trang</value></data>
+  <data name="DocInfo_Zoom" xml:space="preserve"><value>Phóng</value></data>
+  <data name="DocInfo_Zoom_Default" xml:space="preserve"><value>Theo trình đọc</value></data>
+  <data name="DocInfo_Zoom_FitPage" xml:space="preserve"><value>Vừa trang</value></data>
+  <data name="DocInfo_Zoom_FitWidth" xml:space="preserve"><value>Vừa chiều rộng</value></data>
+  <data name="DocInfo_Zoom_Actual" xml:space="preserve"><value>Kích thước thật</value></data>
+  <data name="DocInfo_Zoom_Percent" xml:space="preserve"><value>Tỉ lệ %</value></data>
+  <data name="DocInfo_Panel" xml:space="preserve"><value>Bảng bên</value></data>
+  <data name="DocInfo_Panel_Default" xml:space="preserve"><value>Theo trình đọc</value></data>
+  <data name="DocInfo_Panel_None" xml:space="preserve"><value>Không hiện</value></data>
+  <data name="DocInfo_Panel_Bookmarks" xml:space="preserve"><value>Bookmark</value></data>
+  <data name="DocInfo_Panel_Thumbnails" xml:space="preserve"><value>Ảnh thu nhỏ</value></data>
+  <data name="DocInfo_Panel_FullScreen" xml:space="preserve"><value>Toàn màn hình</value></data>
+  <data name="DocInfo_ShowTitle" xml:space="preserve"><value>Thanh tiêu đề cửa sổ hiện tiêu đề tài liệu thay cho tên tệp</value></data>
+  <data name="DocInfo_Error_Percent" xml:space="preserve"><value>Tỉ lệ phóng phải từ 10 đến 6400 %.</value></data>
+  <data name="Labels_Title" xml:space="preserve"><value>Nhãn trang</value></data>
+  <data name="Labels_Note" xml:space="preserve"><value>Mỗi khoảng bắt đầu từ một trang và đánh số tới khoảng sau. Trình đọc PDF hiện nhãn thay cho số trang.</value></data>
+  <data name="Labels_Add" xml:space="preserve"><value>Thêm khoảng</value></data>
+  <data name="Labels_From" xml:space="preserve"><value>Từ trang</value></data>
+  <data name="Labels_Style" xml:space="preserve"><value>Kiểu số</value></data>
+  <data name="Labels_Style_None" xml:space="preserve"><value>Không số (chỉ tiền tố)</value></data>
+  <data name="Labels_Prefix" xml:space="preserve"><value>Tiền tố</value></data>
+  <data name="Labels_Start" xml:space="preserve"><value>Bắt đầu từ</value></data>
+  <data name="Labels_Preview" xml:space="preserve"><value>trang {0} → {1}</value></data>
+  <data name="Labels_None" xml:space="preserve"><value>Không có nhãn: trang được đánh số 1, 2, 3…</value></data>
+  <data name="Labels_Error" xml:space="preserve"><value>Hãy nhập trang bắt đầu từ 1 đến {0} và số bắt đầu từ 1 trở lên.</value></data>
+  <data name="Links_Title" xml:space="preserve"><value>Liên kết</value></data>
+  <data name="Links_Detect" xml:space="preserve"><value>Tự nhận địa chỉ</value></data>
+  <data name="Links_Detect_ToolTip" xml:space="preserve"><value>Tìm địa chỉ web (https://…, www.…) và email trong chữ chưa có liên kết, để tạo liên kết cho chúng</value></data>
+  <data name="Links_Page" xml:space="preserve"><value>Trang</value></data>
+  <data name="Links_Text" xml:space="preserve"><value>Chữ</value></data>
+  <data name="Links_Target" xml:space="preserve"><value>Đi tới</value></data>
+  <data name="Links_Other" xml:space="preserve"><value>(hành động khác)</value></data>
+  <data name="Links_None" xml:space="preserve"><value>Tài liệu không có liên kết.</value></data>
+  <data name="Links_Found" xml:space="preserve"><value>Tìm thấy {0} địa chỉ chưa có liên kết (in nghiêng); bấm Áp dụng để tạo liên kết.</value></data>
+  <data name="Links_NoneFound" xml:space="preserve"><value>Không có địa chỉ nào chưa có liên kết.</value></data>
+  <data name="Links_Error_Read" xml:space="preserve"><value>Không đọc được chữ của tài liệu.</value></data>
+  <data name="History_Bookmarks" xml:space="preserve"><value>Sửa bookmark</value></data>
+  <data name="History_Metadata" xml:space="preserve"><value>Sửa thuộc tính tài liệu</value></data>
+  <data name="History_OpenSettings" xml:space="preserve"><value>Đổi cách mở tài liệu</value></data>
+  <data name="History_PageLabels" xml:space="preserve"><value>Đặt nhãn trang</value></data>
+  <data name="History_AddLinks" xml:space="preserve"><value>Tạo {0} liên kết</value></data>
+  <data name="History_RemoveLinks" xml:space="preserve"><value>Xóa {0} liên kết</value></data>
+  <data name="History_EditLinks" xml:space="preserve"><value>Sửa liên kết</value></data>
+  <data name="Stage_Structure" xml:space="preserve"><value>Đang ghi cấu trúc tài liệu</value></data>
 </root>
