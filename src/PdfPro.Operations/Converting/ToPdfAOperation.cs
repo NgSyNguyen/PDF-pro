@@ -88,7 +88,7 @@ public sealed class ToPdfAOperation(PdfiumGate gate, FontLibrary? fonts = null) 
     private static PdfAReport Write(string input, string? password, string temporary, string output, PdfALevel level, FontLibrary library, CancellationToken cancellationToken)
     {
         var changes = new PdfAChanges();
-        if (IsEncrypted(input))
+        if (EncryptionWriter.LooksEncrypted(input))
         {
             changes.Add(PdfAFix.Decrypted);
         }
@@ -238,19 +238,5 @@ public sealed class ToPdfAOperation(PdfiumGate gate, FontLibrary? fonts = null) 
         {
             throw new InvalidDataException("The converted document does not read back.", ex);
         }
-    }
-
-    /// <summary>Whether a trailer of the file names an /Encrypt dictionary (looked for at both ends of the file).</summary>
-    private static bool IsEncrypted(string path)
-    {
-        const int Window = 1024 * 1024;
-        using var file = File.OpenRead(path);
-        var head = new byte[(int)Math.Min(file.Length, 64 * 1024)];
-        file.ReadExactly(head);
-        var tail = new byte[(int)Math.Min(file.Length, Window)];
-        file.Position = file.Length - tail.Length;
-        file.ReadExactly(tail);
-        var marker = "/Encrypt"u8;
-        return head.AsSpan().IndexOf(marker) >= 0 || tail.AsSpan().IndexOf(marker) >= 0;
     }
 }

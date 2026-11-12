@@ -26,6 +26,23 @@ public enum DocumentPasswordProblem
 /// </summary>
 public static class EncryptionWriter
 {
+    /// <summary>
+    /// Whether a file looks protected: "/Encrypt" in its first 64 KB or last 1 MB, where the trailer is (a cheap test;
+    /// a file that only mentions the word is copied unprotected for nothing).
+    /// </summary>
+    public static bool LooksEncrypted(string path)
+    {
+        const int Window = 1024 * 1024;
+        using var file = File.OpenRead(path);
+        var head = new byte[(int)Math.Min(file.Length, 64 * 1024)];
+        file.ReadExactly(head);
+        var tail = new byte[(int)Math.Min(file.Length, Window)];
+        file.Position = file.Length - tail.Length;
+        file.ReadExactly(tail);
+        var marker = "/Encrypt"u8;
+        return head.AsSpan().IndexOf(marker) >= 0 || tail.AsSpan().IndexOf(marker) >= 0;
+    }
+
     /// <summary>Encrypts the document when it is saved.</summary>
     public static void Protect(PdfDocument document, DocumentSecurity security)
     {
