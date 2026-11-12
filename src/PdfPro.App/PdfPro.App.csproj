@@ -34,6 +34,8 @@
     <ProjectReference Include="..\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
     <ProjectReference Include="..\PdfPro.Operations\PdfPro.Operations.csproj" />
     <ProjectReference Include="..\PdfPro.Ocr\PdfPro.Ocr.csproj" />
+    <!-- The licenses, shown in "Giới thiệu" and shipped next to PdfPro.exe. -->
+    <None Include="..\..\THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <!-- PdfPro.Worker.exe goes next to PdfPro.exe; the app only starts it (no types are used). -->
     <ProjectReference Include="..\PdfPro.Worker\PdfPro.Worker.csproj" />
   </ItemGroup>

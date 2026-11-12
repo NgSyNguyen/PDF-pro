@@ -116,6 +116,9 @@ public sealed record AppSettings
     /// </summary>
     public bool IsolateOperations { get; init; } = true;
 
+    /// <summary>The quick-start guide of the start page was put away ("Ẩn hướng dẫn").</summary>
+    public bool GuideHidden { get; init; }
+
     /// <summary>Memory the worker process may use, in megabytes (Windows; applied when the app starts).</summary>
     public int WorkerMemoryMegabytes { get; init; } = DefaultWorkerMemoryMegabytes;
 

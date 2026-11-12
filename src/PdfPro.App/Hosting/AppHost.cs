@@ -65,6 +65,7 @@ internal static class AppHost
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IAppLifetime, AppLifetime>();
         services.AddSingleton<IShellLauncher, ShellLauncher>();
+        services.AddSingleton<IClipboardService, WpfClipboardService>();
         services.AddSingleton<IMessageService, MessageService>();
         services.AddSingleton<IFileDialogService, FileDialogService>();
         services.AddSingleton<IPageDialogService, PageDialogService>();

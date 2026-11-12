@@ -21,7 +21,12 @@ public sealed class AppThemeService : IAppThemeService
     public void Apply(AppThemeMode mode)
     {
         Mode = mode;
-        if (mode == AppThemeMode.System)
+        if (ApplicationThemeManager.IsSystemHighContrast())
+        {
+            // A high-contrast Windows theme is a need, not a taste: it wins over the app's own choice.
+            ApplicationThemeManager.Apply(ApplicationTheme.HighContrast, Backdrop, updateAccent: true);
+        }
+        else if (mode == AppThemeMode.System)
         {
             ApplicationThemeManager.ApplySystemTheme(updateAccent: true);
         }

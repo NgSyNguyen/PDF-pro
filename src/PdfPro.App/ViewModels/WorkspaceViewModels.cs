@@ -46,11 +46,33 @@ public sealed class HomeTabViewModel : WorkspaceTabViewModel
 
     public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = [];
 
+    /// <summary>The four steps of the quick-start guide (SPEC Phase 13).</summary>
+    public IReadOnlyList<GuideStep> GuideSteps { get; } =
+    [
+        new(1, Strings.Guide_Open_Title, Strings.Guide_Open_Text, SymbolRegular.FolderOpen24),
+        new(2, Strings.Guide_Pages_Title, Strings.Guide_Pages_Text, SymbolRegular.GridDots24),
+        new(3, Strings.Guide_Tools_Title, Strings.Guide_Tools_Text, SymbolRegular.Search24),
+        new(4, Strings.Guide_Save_Title, Strings.Guide_Save_Text, SymbolRegular.Save24),
+    ];
+
+    /// <summary>Whether the guide shows (until "Ẩn hướng dẫn"; "Hướng dẫn nhanh" brings it back).</summary>
+    public bool ShowsGuide
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    /// <summary>"Ẩn hướng dẫn"; set by the main window, which remembers the choice.</summary>
+    public ICommand? HideGuideCommand { get; set; }
+
     public bool HasNoRecentFiles => RecentFiles.Count == 0;
 
     private void OnRecentFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
         => OnPropertyChanged(nameof(HasNoRecentFiles));
 }
+
+/// <summary>A step of the quick-start guide.</summary>
+public sealed record GuideStep(int Number, string Title, string Text, SymbolRegular Icon);
 
 /// <summary>An entry of the recent files list.</summary>
 public sealed record RecentFileViewModel(string Path)

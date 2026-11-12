@@ -2349,4 +2349,62 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Settings_Worker_Hint" xml:space="preserve"><value>OCR, redaction, sanitizing, straightening pages and removing dark borders run apart from the window: if a badly damaged file crashes the operation, PDF_Pro keeps running and the document loses no changes.</value></data>
   <data name="Settings_Worker_Memory" xml:space="preserve"><value>Memory limit (MB)</value></data>
   <data name="Settings_Worker_Memory_Hint" xml:space="preserve"><value>Applies the next time PDF_Pro starts.</value></data>
+  <data name="Ribbon_Group_Help" xml:space="preserve"><value>Help</value></data>
+  <data name="Cmd_Shortcuts" xml:space="preserve"><value>Keyboard shortcuts</value></data>
+  <data name="Cmd_Guide" xml:space="preserve"><value>Quick start</value></data>
+  <data name="Cmd_About" xml:space="preserve"><value>About</value></data>
+  <data name="Shortcuts_Title" xml:space="preserve"><value>Keyboard shortcuts</value></data>
+  <data name="Shortcuts_Group_File" xml:space="preserve"><value>File</value></data>
+  <data name="Shortcuts_Group_View" xml:space="preserve"><value>View</value></data>
+  <data name="Shortcuts_Group_Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Shortcuts_Group_Text" xml:space="preserve"><value>Text and search</value></data>
+  <data name="Shortcuts_Group_Tools" xml:space="preserve"><value>Tools</value></data>
+  <data name="Shortcuts_ZoomKeys" xml:space="preserve"><value>Ctrl++, Ctrl+−, Ctrl+mouse wheel</value></data>
+  <data name="Shortcuts_Zoom" xml:space="preserve"><value>Zoom in, zoom out</value></data>
+  <data name="Shortcuts_FitPage" xml:space="preserve"><value>Fit page</value></data>
+  <data name="Shortcuts_ActualSize" xml:space="preserve"><value>Actual size</value></data>
+  <data name="Shortcuts_FitWidth" xml:space="preserve"><value>Fit width</value></data>
+  <data name="Shortcuts_GoToPage" xml:space="preserve"><value>Go to page…</value></data>
+  <data name="Shortcuts_PreviousNextPage" xml:space="preserve"><value>Previous page, next page</value></data>
+  <data name="Shortcuts_FirstLastPage" xml:space="preserve"><value>First page, last page</value></data>
+  <data name="Shortcuts_Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="Shortcuts_Redo" xml:space="preserve"><value>Redo</value></data>
+  <data name="Shortcuts_Rotate" xml:space="preserve"><value>Rotate pages right, left</value></data>
+  <data name="Shortcuts_MarkSplit" xml:space="preserve"><value>Mark where to split</value></data>
+  <data name="Shortcuts_Delete" xml:space="preserve"><value>Delete the selection</value></data>
+  <data name="Shortcuts_Escape" xml:space="preserve"><value>Clear the selection, leave the current tool</value></data>
+  <data name="Shortcuts_FinishComment" xml:space="preserve"><value>Finish the comment being typed</value></data>
+  <data name="Shortcuts_Find" xml:space="preserve"><value>Find in the document</value></data>
+  <data name="Shortcuts_FindNextPrevious" xml:space="preserve"><value>Next result, previous result</value></data>
+  <data name="Shortcuts_SelectAll" xml:space="preserve"><value>Select all text</value></data>
+  <data name="Shortcuts_Copy" xml:space="preserve"><value>Copy the selected text</value></data>
+  <data name="Shortcuts_Palette" xml:space="preserve"><value>Find a command by name</value></data>
+  <data name="Shortcuts_Sheet" xml:space="preserve"><value>This shortcut sheet</value></data>
+  <data name="Shortcuts_Tab" xml:space="preserve"><value>Next or previous field or button</value></data>
+  <data name="About_Title" xml:space="preserve"><value>About PDF_Pro</value></data>
+  <data name="About_NoTelemetry" xml:space="preserve"><value>PDF_Pro sends no usage data anywhere. To get help, send the details below with the log files.</value></data>
+  <data name="About_Details" xml:space="preserve"><value>Version details</value></data>
+  <data name="About_Copy" xml:space="preserve"><value>Copy details</value></data>
+  <data name="About_Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
+  <data name="About_CopyFailed" xml:space="preserve"><value>Could not copy: the clipboard is busy, try again.</value></data>
+  <data name="About_Licenses" xml:space="preserve"><value>Licenses of the components</value></data>
+  <data name="About_NoticesMissing" xml:space="preserve"><value>THIRD_PARTY_NOTICES.md was not found next to the program.</value></data>
+  <data name="Error_CopyDetails" xml:space="preserve"><value>Copy error details</value></data>
+  <data name="Diagnostics_Version" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="Diagnostics_Incident" xml:space="preserve"><value>Incident: {0}</value></data>
+  <data name="Diagnostics_Time" xml:space="preserve"><value>Time: {0}</value></data>
+  <data name="Diagnostics_System" xml:space="preserve"><value>Operating system: {0} ({1})</value></data>
+  <data name="Diagnostics_Runtime" xml:space="preserve"><value>.NET: {0} ({1})</value></data>
+  <data name="Diagnostics_Language" xml:space="preserve"><value>Display language: {0}</value></data>
+  <data name="Guide_Title" xml:space="preserve"><value>Quick start</value></data>
+  <data name="Guide_Hide" xml:space="preserve"><value>Hide the guide</value></data>
+  <data name="Guide_Hide_ToolTip" xml:space="preserve"><value>Hide this; File › Quick start shows it again</value></data>
+  <data name="Guide_Open_Title" xml:space="preserve"><value>Open a document</value></data>
+  <data name="Guide_Open_Text" xml:space="preserve"><value>Click “Open file” (Ctrl+O), drop a PDF onto the window, or pick one of the recent files.</value></data>
+  <data name="Guide_Pages_Title" xml:space="preserve"><value>Arrange pages</value></data>
+  <data name="Guide_Pages_Text" xml:space="preserve"><value>Page › Organize: drag to reorder, rotate, delete, insert pages. Every change can be undone (Ctrl+Z).</value></data>
+  <data name="Guide_Tools_Title" xml:space="preserve"><value>Find every tool</value></data>
+  <data name="Guide_Tools_Text" xml:space="preserve"><value>Tools are on the ribbon by group; or press Ctrl+K and type the name of a command. F1 shows the keyboard shortcuts.</value></data>
+  <data name="Guide_Save_Title" xml:space="preserve"><value>Save safely</value></data>
+  <data name="Guide_Save_Text" xml:space="preserve"><value>The original file is written only when you save (Ctrl+S). If the computer stops suddenly, unsaved changes come back the next time.</value></data>
 </root>

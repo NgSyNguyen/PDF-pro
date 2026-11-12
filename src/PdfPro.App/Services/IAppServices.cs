@@ -289,6 +289,12 @@ public interface IPageDialogService
     /// <summary>"Chạy lô": files run through a workflow, a table of how each went.</summary>
     void ShowBatch(ViewModels.Automation.BatchViewModel viewModel);
 
+    /// <summary>"Phím tắt" (F1).</summary>
+    void ShowShortcuts(ViewModels.ShortcutsViewModel viewModel);
+
+    /// <summary>"Giới thiệu": version, details, licenses.</summary>
+    void ShowAbout(ViewModels.AboutViewModel viewModel);
+
     /// <summary>"Bookmark": the bookmark tree edited or made from headings; true when applied.</summary>
     bool ShowBookmarks(ViewModels.Structure.BookmarksEditorViewModel viewModel);
 

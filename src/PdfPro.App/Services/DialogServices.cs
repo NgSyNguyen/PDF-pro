@@ -600,6 +600,18 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new PdfAWindow(viewModel));
     }
 
+    public void ShowShortcuts(ViewModels.ShortcutsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        Show(new ShortcutsWindow(viewModel));
+    }
+
+    public void ShowAbout(ViewModels.AboutViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        Show(new AboutWindow(viewModel));
+    }
+
     private static bool Show(Window window)
     {
         if (Application.Current?.MainWindow is { IsVisible: true } owner)

@@ -2349,4 +2349,62 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Settings_Worker_Hint" xml:space="preserve"><value>OCR, xóa vĩnh viễn, làm sạch, làm thẳng trang và xóa viền đen chạy tách khỏi cửa sổ: nếu một tệp hỏng nặng làm thao tác sập, PDF_Pro vẫn chạy và tài liệu không mất thay đổi nào.</value></data>
   <data name="Settings_Worker_Memory" xml:space="preserve"><value>Bộ nhớ tối đa (MB)</value></data>
   <data name="Settings_Worker_Memory_Hint" xml:space="preserve"><value>Áp dụng từ lần mở PDF_Pro sau.</value></data>
+  <data name="Ribbon_Group_Help" xml:space="preserve"><value>Trợ giúp</value></data>
+  <data name="Cmd_Shortcuts" xml:space="preserve"><value>Phím tắt</value></data>
+  <data name="Cmd_Guide" xml:space="preserve"><value>Hướng dẫn nhanh</value></data>
+  <data name="Cmd_About" xml:space="preserve"><value>Giới thiệu</value></data>
+  <data name="Shortcuts_Title" xml:space="preserve"><value>Phím tắt</value></data>
+  <data name="Shortcuts_Group_File" xml:space="preserve"><value>Tệp</value></data>
+  <data name="Shortcuts_Group_View" xml:space="preserve"><value>Xem</value></data>
+  <data name="Shortcuts_Group_Edit" xml:space="preserve"><value>Chỉnh sửa</value></data>
+  <data name="Shortcuts_Group_Text" xml:space="preserve"><value>Chữ và tìm kiếm</value></data>
+  <data name="Shortcuts_Group_Tools" xml:space="preserve"><value>Công cụ</value></data>
+  <data name="Shortcuts_ZoomKeys" xml:space="preserve"><value>Ctrl++, Ctrl+−, Ctrl+con lăn chuột</value></data>
+  <data name="Shortcuts_Zoom" xml:space="preserve"><value>Phóng to, thu nhỏ</value></data>
+  <data name="Shortcuts_FitPage" xml:space="preserve"><value>Vừa trang</value></data>
+  <data name="Shortcuts_ActualSize" xml:space="preserve"><value>Kích thước thật</value></data>
+  <data name="Shortcuts_FitWidth" xml:space="preserve"><value>Vừa chiều rộng</value></data>
+  <data name="Shortcuts_GoToPage" xml:space="preserve"><value>Đến trang…</value></data>
+  <data name="Shortcuts_PreviousNextPage" xml:space="preserve"><value>Trang trước, trang sau</value></data>
+  <data name="Shortcuts_FirstLastPage" xml:space="preserve"><value>Trang đầu, trang cuối</value></data>
+  <data name="Shortcuts_Undo" xml:space="preserve"><value>Hoàn tác</value></data>
+  <data name="Shortcuts_Redo" xml:space="preserve"><value>Làm lại</value></data>
+  <data name="Shortcuts_Rotate" xml:space="preserve"><value>Xoay trang sang phải, sang trái</value></data>
+  <data name="Shortcuts_MarkSplit" xml:space="preserve"><value>Đánh dấu chỗ tách tệp</value></data>
+  <data name="Shortcuts_Delete" xml:space="preserve"><value>Xóa phần đang chọn</value></data>
+  <data name="Shortcuts_Escape" xml:space="preserve"><value>Bỏ chọn, thoát công cụ đang dùng</value></data>
+  <data name="Shortcuts_FinishComment" xml:space="preserve"><value>Xong bình luận đang gõ</value></data>
+  <data name="Shortcuts_Find" xml:space="preserve"><value>Tìm kiếm trong tài liệu</value></data>
+  <data name="Shortcuts_FindNextPrevious" xml:space="preserve"><value>Kết quả sau, kết quả trước</value></data>
+  <data name="Shortcuts_SelectAll" xml:space="preserve"><value>Chọn toàn bộ chữ</value></data>
+  <data name="Shortcuts_Copy" xml:space="preserve"><value>Chép chữ đang chọn</value></data>
+  <data name="Shortcuts_Palette" xml:space="preserve"><value>Tìm lệnh theo tên</value></data>
+  <data name="Shortcuts_Sheet" xml:space="preserve"><value>Bảng phím tắt này</value></data>
+  <data name="Shortcuts_Tab" xml:space="preserve"><value>Đi tới ô, nút kế tiếp hoặc trước đó</value></data>
+  <data name="About_Title" xml:space="preserve"><value>Giới thiệu PDF_Pro</value></data>
+  <data name="About_NoTelemetry" xml:space="preserve"><value>PDF_Pro không gửi dữ liệu sử dụng nào ra ngoài. Khi cần hỗ trợ, hãy gửi thông tin dưới đây cùng tệp nhật ký.</value></data>
+  <data name="About_Details" xml:space="preserve"><value>Thông tin phiên bản</value></data>
+  <data name="About_Copy" xml:space="preserve"><value>Sao chép thông tin</value></data>
+  <data name="About_Copied" xml:space="preserve"><value>Đã chép vào bộ nhớ tạm.</value></data>
+  <data name="About_CopyFailed" xml:space="preserve"><value>Không chép được: bộ nhớ tạm đang bận, hãy thử lại.</value></data>
+  <data name="About_Licenses" xml:space="preserve"><value>Giấy phép của các thành phần</value></data>
+  <data name="About_NoticesMissing" xml:space="preserve"><value>Không tìm thấy tệp THIRD_PARTY_NOTICES.md cạnh chương trình.</value></data>
+  <data name="Error_CopyDetails" xml:space="preserve"><value>Sao chép thông tin lỗi</value></data>
+  <data name="Diagnostics_Version" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="Diagnostics_Incident" xml:space="preserve"><value>Mã sự cố: {0}</value></data>
+  <data name="Diagnostics_Time" xml:space="preserve"><value>Thời điểm: {0}</value></data>
+  <data name="Diagnostics_System" xml:space="preserve"><value>Hệ điều hành: {0} ({1})</value></data>
+  <data name="Diagnostics_Runtime" xml:space="preserve"><value>.NET: {0} ({1})</value></data>
+  <data name="Diagnostics_Language" xml:space="preserve"><value>Ngôn ngữ giao diện: {0}</value></data>
+  <data name="Guide_Title" xml:space="preserve"><value>Bắt đầu nhanh</value></data>
+  <data name="Guide_Hide" xml:space="preserve"><value>Ẩn hướng dẫn</value></data>
+  <data name="Guide_Hide_ToolTip" xml:space="preserve"><value>Ẩn phần này; mở lại bằng Tệp › Hướng dẫn nhanh</value></data>
+  <data name="Guide_Open_Title" xml:space="preserve"><value>Mở tài liệu</value></data>
+  <data name="Guide_Open_Text" xml:space="preserve"><value>Bấm “Mở tệp” (Ctrl+O), kéo thả tệp PDF vào cửa sổ, hoặc chọn trong danh sách tệp gần đây.</value></data>
+  <data name="Guide_Pages_Title" xml:space="preserve"><value>Sắp xếp trang</value></data>
+  <data name="Guide_Pages_Text" xml:space="preserve"><value>Tab Trang › Sắp xếp: kéo thả để đổi thứ tự, xoay, xóa, chèn trang. Mọi thay đổi đều hoàn tác được (Ctrl+Z).</value></data>
+  <data name="Guide_Tools_Title" xml:space="preserve"><value>Tìm mọi công cụ</value></data>
+  <data name="Guide_Tools_Text" xml:space="preserve"><value>Công cụ nằm trên ribbon theo nhóm; hoặc nhấn Ctrl+K rồi gõ tên lệnh, không cần dấu. F1 mở bảng phím tắt.</value></data>
+  <data name="Guide_Save_Title" xml:space="preserve"><value>Lưu an toàn</value></data>
+  <data name="Guide_Save_Text" xml:space="preserve"><value>Tệp gốc chỉ được ghi khi bạn lưu (Ctrl+S). Nếu máy tắt đột ngột, thay đổi chưa lưu được khôi phục ở lần mở sau.</value></data>
 </root>

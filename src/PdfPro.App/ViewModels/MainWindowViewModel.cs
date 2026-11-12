@@ -23,6 +23,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IAppLifetime _lifetime;
     private readonly IShellLauncher _shell;
     private readonly AppPaths _paths;
+    private readonly AppBuildInfo _buildInfo;
+    private readonly IClipboardService? _clipboard;
     private readonly IDocumentWorkspaceService _workspaces;
     private readonly IDocumentTabFactory _tabFactory;
     private readonly ISettingsService _settings;
@@ -71,9 +73,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Services.Scanning.ScanServices? scan = null,
         Services.Comparing.CompareServices? compare = null,
         Services.Extracting.ExtractingServices? extracting = null,
-        Services.Automation.AutomationServices? automation = null)
+        Services.Automation.AutomationServices? automation = null,
+        IClipboardService? clipboard = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
+        _buildInfo = buildInfo;
+        _clipboard = clipboard;
         _dialogs = dialogs;
         _lifetime = lifetime;
         _shell = shell;
@@ -150,7 +155,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         FlattenAnnotationsCommand = new ActiveDocumentCommand(d => d.FlattenAnnotationsCommand);
         FindNextCommand = new ActiveDocumentCommand(d => d.Search.NextCommand);
         FindPreviousCommand = new ActiveDocumentCommand(d => d.Search.PreviousCommand);
-        Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
+        Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand)
+        {
+            ShowsGuide = !settings.Current.GuideHidden,
+            HideGuideCommand = HideGuideCommand,
+        };
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
         Tabs = [Home];
@@ -730,6 +739,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("app.settings", Strings.Cmd_Settings, SymbolRegular.Settings24, OpenSettingsCommand),
                     new("app.exit", Strings.Cmd_Exit, SymbolRegular.SignOut24, ExitCommand),
+                ]),
+                new(Strings.Ribbon_Group_Help,
+                [
+                    new("help.shortcuts", Strings.Cmd_Shortcuts, SymbolRegular.Keyboard24, ShowShortcutsCommand),
+                    new("help.guide", Strings.Cmd_Guide, SymbolRegular.Lightbulb24, ShowGuideCommand),
+                    new("help.about", Strings.Cmd_About, SymbolRegular.Info24, ShowAboutCommand),
                 ]),
             ]),
             new("page", Strings.Ribbon_Tab_Page,

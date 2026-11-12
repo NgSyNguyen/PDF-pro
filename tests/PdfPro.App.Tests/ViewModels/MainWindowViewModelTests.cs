@@ -1,4 +1,5 @@
 using System.Globalization;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using PdfPro.App.Hosting;
@@ -98,7 +99,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette", "workflow.open", "batch.run",
+            ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "help.shortcuts", "help.guide", "help.about", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette", "workflow.open", "batch.run",
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
@@ -435,13 +436,14 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         var document = viewModel.ActiveDocument.ShouldNotBeNull();
         document.Title.ShouldBe("a.pdf *");
         undo.Command.CanExecute(null).ShouldBeTrue();
-        undo.ToolTip.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Cmd_UndoWith, string.Format(CultureInfo.CurrentCulture, Strings.History_Rotate, 1)));
+        undo.ToolTip.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Cmd_UndoWith, string.Format(CultureInfo.CurrentCulture, Strings.History_Rotate, 1)) + " (Ctrl+Z)");
 
         viewModel.UndoCommand.Execute(null);
 
         document.IsDirty.ShouldBeFalse();
         viewModel.RedoCommand.CanExecute(null).ShouldBeTrue();
-        undo.ToolTip.ShouldBe(Strings.Cmd_Undo);
+        undo.ToolTip.ShouldBe(Strings.Cmd_Undo + " (Ctrl+Z)");
+        undo.Shortcut.ShouldBe("Ctrl+Z");
     }
 
     [Fact]
@@ -569,6 +571,50 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         _shell.Received(1).OpenFolder(_paths.LogsDirectory);
         _settings.Current.RecentCommands.ShouldBe(["tools.openLogFolder"]);
         viewModel.PaletteEntries().Single(e => e.Id == "file.open").Shortcut.ShouldBe("Ctrl+O");
+    }
+
+    [Fact]
+    public async Task TheQuickStartGuide_ShowsUntilPutAway_AndComesBackFromTheRibbon()
+    {
+        var viewModel = Create(isDebugBuild: false);
+        viewModel.Home.ShowsGuide.ShouldBeTrue("a first start shows the guide");
+
+        await ((IAsyncRelayCommand)viewModel.Home.HideGuideCommand!).ExecuteAsync(null);
+
+        viewModel.Home.ShowsGuide.ShouldBeFalse();
+        _settings.Current.GuideHidden.ShouldBeTrue();
+        Create(isDebugBuild: false).Home.ShowsGuide.ShouldBeFalse("the choice is remembered");
+
+        await viewModel.ShowGuideCommand.ExecuteAsync(null);
+
+        viewModel.Home.ShowsGuide.ShouldBeTrue();
+        viewModel.SelectedTab.ShouldBe(viewModel.Home);
+        _settings.Current.GuideHidden.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void F1_AndAbout_OpenTheirWindows()
+    {
+        var viewModel = Create(isDebugBuild: false);
+
+        viewModel.ShowShortcutsCommand.Execute(null);
+        Command(viewModel, "help.about").Command.Execute(null);
+
+        _pageDialogs.Received(1).ShowShortcuts(Arg.Is<ShortcutsViewModel>(s => s.Groups.Count > 0));
+        _pageDialogs.Received(1).ShowAbout(Arg.Is<AboutViewModel>(a => a.Version == "1.0.0"));
+    }
+
+    [Fact]
+    public void EveryRibbonShortcut_IsOnTheSheet_AndInTheTooltip()
+    {
+        var viewModel = Create(isDebugBuild: false);
+        var sheet = KeyboardShortcuts.Sheet().SelectMany(g => g.Entries).Select(e => e.Keys).ToList();
+
+        foreach (var command in AllCommands(viewModel).Where(c => c.Shortcut is not null))
+        {
+            command.ToolTip.ShouldEndWith($"({command.Shortcut})");
+            sheet.ShouldContain(keys => keys.Split(", ").Contains(command.Shortcut), $"{command.Id} {command.Shortcut}");
+        }
     }
 
     private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true)

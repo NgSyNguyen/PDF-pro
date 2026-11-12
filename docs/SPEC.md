@@ -741,6 +741,16 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Giới hạn: phần **đo** của công cụ scan (trang trắng, nghiêng, viền, hướng), các thao tác xuất (nén, chuyển đổi, sửa tệp hỏng…), chạy lô/workflow/hot folder và việc **vẽ trang** của trình xem vẫn chạy trong App (Chế độ an toàn cho tệp từ Internet chưa làm).
 - Test `tests/PdfPro.Worker.Tests` (chạy Worker thật, cả trên Linux): chạy đánh số trang có tiến độ; báo cáo làm sạch quay về; tham số sai → `OperationValidationException`; **giết Worker giữa lúc xóa vĩnh viễn 1.000 trang** → chỉ lần đó lỗi, lần sau Worker mới chạy được; hủy → Worker vẫn sống; quá giờ → Worker bị dừng; thiếu chương trình → `NotStarted`. App: `ContentChangerTests` (thao tác cô lập không chạy trong App; Worker chết/quá giờ → tài liệu nguyên vẹn), `WorkerIsolationTests`, `SettingsViewModelTests` (tắt, giới hạn bộ nhớ trong khoảng).
 
+**Trải nghiệm & trợ năng (lát 4)**
+- **Phím tắt ở một chỗ** (`ViewModels/KeyboardShortcuts.cs`): bảng lệnh ribbon → phím (tooltip "Mở tệp (Ctrl+O)", Command Palette, `AutomationProperties.AcceleratorKey`) và **bảng phím tắt F1** (Tệp, Xem, Chỉnh sửa, Chữ và tìm kiếm, Công cụ; cửa sổ `ShortcutsWindow`, Esc/F1 đóng). Test canh: mọi phím của ribbon có trong bảng và trong tooltip.
+- Nút ribbon: `AutomationProperties.Name` (nhãn), `HelpText` (tooltip), `AcceleratorKey` (phím tắt) cho trình đọc màn hình; tooltip của Hoàn tác/Làm lại vẫn giữ phím khi đổi mô tả.
+- Tệp › nhóm **Trợ giúp**: Phím tắt (F1), **Hướng dẫn nhanh**, **Giới thiệu**. Màn hình chính có phần "Bắt đầu nhanh" 4 bước (Mở tài liệu / Sắp xếp trang / Tìm mọi công cụ / Lưu an toàn) cho tới khi bấm "Ẩn hướng dẫn" (`AppSettings.GuideHidden`); "Hướng dẫn nhanh" hiện lại — **không phải hộp thoại chặn** để không cản người dùng (và test FlaUI).
+- **Giới thiệu** (`AboutWindow`): phiên bản (`AssemblyInformationalVersion`), "PDF_Pro không gửi dữ liệu sử dụng nào ra ngoài", thông tin phiên bản/Windows/.NET/ngôn ngữ + "Sao chép thông tin", "Mở thư mục nhật ký", toàn văn `THIRD_PARTY_NOTICES.md` (chép cạnh `PdfPro.exe`).
+- Hộp "lỗi không mong muốn": thêm **"Sao chép thông tin lỗi"** — mã sự cố, thời điểm, phiên bản, Windows, .NET, ngôn ngữ (`AppDiagnostics.Describe`); **không** đường dẫn, tên tệp, nội dung tài liệu, tên người dùng/máy (có test).
+- **Tương phản cao**: khi Windows bật chủ đề tương phản cao, ứng dụng dùng `ApplicationTheme.HighContrast` của WPF-UI, bất kể lựa chọn Sáng/Tối. DPI: `app.manifest` khai `PerMonitorV2` (có từ Phase 1).
+- Không telemetry: báo lỗi = "Mở thư mục nhật ký" + "Sao chép thông tin lỗi".
+- Kịch bản FlaUI `Phase13AcceptanceTests` (chạy tay): F1 mở bảng phím tắt; Giới thiệu có phiên bản và giấy phép PDFsharp; ẩn rồi hiện lại hướng dẫn nhanh.
+
 **Hiệu năng (lát 2)** — `benchmarks/PdfPro.Benchmarks` (BenchmarkDotNet 0.15.8, chạy tay, mọi benchmark `[InProcess]`):
 ```powershell
 dotnet run -c Release --project benchmarks/PdfPro.Benchmarks -- budgets       # ngân sách, đo một lần trong tiến trình mới
