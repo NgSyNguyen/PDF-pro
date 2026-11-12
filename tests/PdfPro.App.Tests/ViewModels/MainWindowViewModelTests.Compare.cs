@@ -133,7 +133,10 @@ public sealed partial class MainWindowViewModelTests
 
         var call = _contentChanger.ReceivedCalls().Single(c => c.GetMethodInfo().Name == nameof(PdfPro.App.Services.Documents.IContentChanger.ApplyAsync));
         call.GetArguments()[1].ShouldBeOfType<PdfPro.Operations.Structure.SetBookmarksOperation>();
-        call.GetArguments()[2].ShouldBeOfType<PdfPro.Operations.Structure.SetBookmarksParams>().Bookmarks.ShouldHaveSingleItem().Title.ShouldBe(PdfPro.App.Resources.Strings.Bookmarks_NewTitle);
+        // basic-vi.pdf has four bookmarks of its own; the new one comes after them.
+        var bookmarks = call.GetArguments()[2].ShouldBeOfType<PdfPro.Operations.Structure.SetBookmarksParams>().Bookmarks;
+        bookmarks.Select(b => b.Title).ShouldBe(["Trang bìa", "Chương I. Quy định chung", "Chương II. Tổ chức thực hiện", "Phụ lục", PdfPro.App.Resources.Strings.Bookmarks_NewTitle]);
+        bookmarks[1].Children.ShouldNotBeEmpty();
     }
 
     private PdfPro.App.Services.Extracting.ExtractingServices Extracting()
