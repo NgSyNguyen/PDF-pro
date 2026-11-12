@@ -35,7 +35,8 @@ public sealed class HotFolderServiceTests : IDisposable
 
         service.Status.ShouldBe(oneDone);
         File.Exists(Path.Combine(watched, HotFolderNames.Done, "sổ tay.pdf")).ShouldBeTrue();
-        File.Exists(Path.Combine(watched, HotFolderNames.Output, "sổ tay.pdf")).ShouldBeTrue();
+        // The booklet step names its result after the file: "sổ tay-booklet.pdf".
+        Path.GetFileName(Directory.GetFiles(Path.Combine(watched, HotFolderNames.Output), "*.pdf").ShouldHaveSingleItem()).ShouldStartWith("sổ tay");
 
         await service.ApplyAsync(settings.Current with { HotFolderEnabled = false });
         service.IsRunning.ShouldBeFalse();
