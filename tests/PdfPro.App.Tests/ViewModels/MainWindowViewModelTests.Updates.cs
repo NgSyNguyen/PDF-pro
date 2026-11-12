@@ -16,7 +16,7 @@ public sealed partial class MainWindowViewModelTests
         updates.CanUpdate.Returns(true);
         var found = new AvailableUpdate("1.0.1", new object());
         updates.CheckAsync(Arg.Any<CancellationToken>()).Returns(found);
-        _messages.AskAsync(Strings.Update_Title, Arg.Any<string>(), Strings.Update_Download, null, Strings.Update_Later).Returns(DialogChoice.Primary);
+        _messages.AskAsync(Strings.Update_Title, Arg.Any<string>(), Strings.Update_Download, Arg.Is<string?>(p => p == null), Strings.Update_Later).Returns(DialogChoice.Primary);
         var viewModel = Create(isDebugBuild: false, updates: updates);
 
         await viewModel.CheckForUpdatesAsync(manual: false);
@@ -31,7 +31,7 @@ public sealed partial class MainWindowViewModelTests
         var updates = Substitute.For<IUpdateService>();
         updates.CanUpdate.Returns(true);
         updates.CheckAsync(Arg.Any<CancellationToken>()).Returns(new AvailableUpdate("1.0.1", new object()));
-        _messages.AskAsync(Strings.Update_Title, Arg.Any<string>(), Strings.Update_Download, null, Strings.Update_Later).Returns(DialogChoice.Cancel);
+        _messages.AskAsync(Strings.Update_Title, Arg.Any<string>(), Strings.Update_Download, Arg.Is<string?>(p => p == null), Strings.Update_Later).Returns(DialogChoice.Cancel);
         var viewModel = Create(isDebugBuild: false, updates: updates);
 
         await viewModel.CheckForUpdatesAsync(manual: true);
