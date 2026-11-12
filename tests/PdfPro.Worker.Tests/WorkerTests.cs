@@ -52,7 +52,9 @@ public sealed class WorkerTests : IAsyncDisposable
         document.NumberOfPages.ShouldBe(original.NumberOfPages);
         document.GetPage(2).Text.Length.ShouldBeGreaterThan(original.GetPage(2).Text.Length, "the page number was added");
         progress.Reports.ShouldNotBeEmpty();
-        _client.ProcessId.ShouldNotBeNull().ShouldNotBe(Environment.ProcessId);
+        var worker = Process.GetProcessById(_client.ProcessId.ShouldNotBeNull());
+        worker.Id.ShouldNotBe(Environment.ProcessId);
+        worker.PriorityClass.ShouldBe(ProcessPriorityClass.BelowNormal, "heavy work leaves the processor to the window first");
     }
 
     [Fact]

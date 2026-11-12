@@ -189,6 +189,7 @@ public sealed class WorkerClient(WorkerOptions options, ILogger<WorkerClient> lo
         try
         {
             process = Start(name);
+            LowerPriority(process);
             if (job is not null && !job.Add(process))
             {
                 logger.LogWarning("Worker runs without its memory limit (the job object refused it)");
@@ -262,6 +263,22 @@ public sealed class WorkerClient(WorkerOptions options, ILogger<WorkerClient> lo
         }
 
         return Process.Start(start) ?? throw new InvalidOperationException("The worker did not start.");
+    }
+
+    /// <summary>
+    /// Heavy work runs below normal priority, so the app's window (and anything else the user does) keeps the
+    /// processor first: OCR of a long document must not make scrolling stutter.
+    /// </summary>
+    private void LowerPriority(Process process)
+    {
+        try
+        {
+            process.PriorityClass = ProcessPriorityClass.BelowNormal;
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or PlatformNotSupportedException)
+        {
+            logger.LogDebug("Worker priority left as it is: {ErrorType}", ex.GetType().Name);
+        }
     }
 
     private async Task StopAsync(Connection connection)
