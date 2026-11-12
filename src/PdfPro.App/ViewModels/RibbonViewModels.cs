@@ -63,7 +63,9 @@ public sealed partial class RibbonCommandViewModel : ObservableObject
         }
     }
 
-    private string WithShortcut(string toolTip) => Shortcut is { } keys ? $"{toolTip} ({keys})" : toolTip;
+    /// <summary>The tooltip with its shortcut, unless the tooltip already names it.</summary>
+    private string WithShortcut(string toolTip)
+        => Shortcut is { } keys && !toolTip.Contains(keys, StringComparison.Ordinal) ? $"{toolTip} ({keys})" : toolTip;
 }
 
 /// <summary>Command of a feature that ships in a later phase: never executable.</summary>

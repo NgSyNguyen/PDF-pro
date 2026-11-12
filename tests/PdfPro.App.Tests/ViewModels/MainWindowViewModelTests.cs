@@ -612,7 +612,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
 
         foreach (var command in AllCommands(viewModel).Where(c => c.Shortcut is not null))
         {
-            command.ToolTip.ShouldEndWith($"({command.Shortcut})");
+            command.ToolTip.ShouldContain(command.Shortcut!);
+            command.ToolTip.IndexOf(command.Shortcut!, StringComparison.Ordinal).ShouldBe(command.ToolTip.LastIndexOf(command.Shortcut!, StringComparison.Ordinal), "named once");
             sheet.ShouldContain(keys => keys.Split(", ").Contains(command.Shortcut), $"{command.Id} {command.Shortcut}");
         }
     }
