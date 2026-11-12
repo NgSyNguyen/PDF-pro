@@ -5,8 +5,12 @@ using System.Globalization;
 namespace PdfPro.Infrastructure.Instances;
 
 /// <summary>Command line of PdfPro.exe: files to open ("PdfPro.exe a.pdf b.pdf") and internal options.</summary>
-public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForProcessId)
+/// <param name="Background">"--background": started with Windows for the hot folder — the window starts minimized.</param>
+public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForProcessId, bool Background = false)
 {
+    /// <summary>"--background": started with Windows to watch the hot folder.</summary>
+    public const string BackgroundOption = "--background";
+
     /// <summary>"--wait-for-pid 1234": wait for that process (the instance being restarted) to exit first.</summary>
     public const string WaitForProcessOption = "--wait-for-pid";
 
@@ -21,6 +25,7 @@ public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForP
 
         var files = new List<string>();
         int? waitFor = null;
+        var background = false;
         for (var i = 0; i < args.Count; i++)
         {
             var arg = args[i];
@@ -40,6 +45,7 @@ public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForP
                     i++;
                 }
 
+                background |= string.Equals(arg, BackgroundOption, StringComparison.OrdinalIgnoreCase);
                 continue;
             }
 
@@ -49,7 +55,7 @@ public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForP
             }
         }
 
-        return new StartupArguments(files, waitFor);
+        return new StartupArguments(files, waitFor, background);
     }
 
     /// <summary>

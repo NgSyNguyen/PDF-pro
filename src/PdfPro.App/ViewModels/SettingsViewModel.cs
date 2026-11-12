@@ -47,7 +47,10 @@ public sealed partial class SettingsViewModel : ObservableObject
         ILibreOfficeLocator? libreOffice = null,
         IFileDialogService? files = null,
         IVeraPdfLocator? veraPdf = null,
-        PdfPro.Ocr.ITesseractLocator? tesseract = null)
+        PdfPro.Ocr.ITesseractLocator? tesseract = null,
+        Services.Automation.IHotFolderService? hotFolder = null,
+        Services.Automation.IStartupRegistration? startup = null,
+        Services.Automation.IWorkflowLibrary? workflows = null)
     {
         _settings = settings;
         _theme = theme;
@@ -91,6 +94,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         SelectedOcrData = settings.Current.OcrData;
         TesseractStatus = DescribeTesseract(TesseractPath, SelectedOcrData);
         DiskCacheSize = Strings.Settings_Measuring;
+        InitializeHotFolder(settings.Current, hotFolder, startup, workflows);
         _isInitialized = true;
     }
 

@@ -2324,4 +2324,23 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Batch_Error_Folder" xml:space="preserve"><value>Không đọc được thư mục.</value></data>
   <data name="Batch_Error_Log" xml:space="preserve"><value>Không ghi được nhật ký.</value></data>
   <data name="Batch_Error_NoOutput" xml:space="preserve"><value>Chọn thư mục kết quả (workflow này không nói kết quả đi đâu).</value></data>
+  <data name="HotFolder_Status_Off" xml:space="preserve"><value>Thư mục theo dõi đang tắt.</value></data>
+  <data name="HotFolder_Status_NoFolder" xml:space="preserve"><value>Chọn một thư mục có sẵn để theo dõi.</value></data>
+  <data name="HotFolder_Status_NoWorkflow" xml:space="preserve"><value>Chọn workflow chạy trên các tệp.</value></data>
+  <data name="HotFolder_Status_Invalid" xml:space="preserve"><value>Không bật được: workflow không hợp lệ hoặc không mở được thư mục.</value></data>
+  <data name="HotFolder_Status_Running" xml:space="preserve"><value>Đang theo dõi — xong {0} tệp, lỗi {1}.</value></data>
+  <data name="HotFolder_Status_StartupFailed" xml:space="preserve"><value>Không đặt được khởi động cùng Windows.</value></data>
+  <data name="Settings_HotFolder" xml:space="preserve"><value>Thư mục theo dõi (hot folder)</value></data>
+  <data name="Settings_HotFolder_Hint" xml:space="preserve"><value>Tệp thả vào thư mục này được chạy qua workflow khi đã chép xong; tệp gốc chuyển sang _done hoặc _error, kết quả vào thư mục kết quả.</value></data>
+  <data name="Settings_HotFolder_Folder" xml:space="preserve"><value>Thư mục</value></data>
+  <data name="Settings_HotFolder_Pick_Title" xml:space="preserve"><value>Chọn thư mục theo dõi</value></data>
+  <data name="Settings_HotFolder_Workflow" xml:space="preserve"><value>Workflow</value></data>
+  <data name="Settings_HotFolder_Output" xml:space="preserve"><value>Kết quả vào</value></data>
+  <data name="Settings_HotFolder_Output_Placeholder" xml:space="preserve"><value>Để trống = _output trong thư mục theo dõi</value></data>
+  <data name="Settings_HotFolder_Output_Pick_Title" xml:space="preserve"><value>Chọn thư mục kết quả</value></data>
+  <data name="Settings_HotFolder_MinimizeToTray" xml:space="preserve"><value>Thu nhỏ xuống khay hệ thống khi đang theo dõi</value></data>
+  <data name="Settings_HotFolder_StartWithWindows" xml:space="preserve"><value>Khởi động cùng Windows (thu nhỏ, chỉ theo dõi)</value></data>
+  <data name="Tray_Text" xml:space="preserve"><value>PDF_Pro</value></data>
+  <data name="Tray_Open" xml:space="preserve"><value>Mở PDF_Pro</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Thoát</value></data>
 </root>

@@ -2324,4 +2324,23 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Batch_Error_Folder" xml:space="preserve"><value>The folder cannot be read.</value></data>
   <data name="Batch_Error_Log" xml:space="preserve"><value>The log cannot be written.</value></data>
   <data name="Batch_Error_NoOutput" xml:space="preserve"><value>Choose a result folder (this workflow does not say where results go).</value></data>
+  <data name="HotFolder_Status_Off" xml:space="preserve"><value>The hot folder is off.</value></data>
+  <data name="HotFolder_Status_NoFolder" xml:space="preserve"><value>Choose an existing folder to watch.</value></data>
+  <data name="HotFolder_Status_NoWorkflow" xml:space="preserve"><value>Choose the workflow to run on the files.</value></data>
+  <data name="HotFolder_Status_Invalid" xml:space="preserve"><value>It cannot start: the workflow is invalid or the folder cannot be opened.</value></data>
+  <data name="HotFolder_Status_Running" xml:space="preserve"><value>Watching — {0} done, {1} failed.</value></data>
+  <data name="HotFolder_Status_StartupFailed" xml:space="preserve"><value>Starting with Windows could not be set.</value></data>
+  <data name="Settings_HotFolder" xml:space="preserve"><value>Hot folder</value></data>
+  <data name="Settings_HotFolder_Hint" xml:space="preserve"><value>Files dropped into this folder go through the workflow once copied; the originals move to _done or _error, results go to the output folder.</value></data>
+  <data name="Settings_HotFolder_Folder" xml:space="preserve"><value>Folder</value></data>
+  <data name="Settings_HotFolder_Pick_Title" xml:space="preserve"><value>Choose the folder to watch</value></data>
+  <data name="Settings_HotFolder_Workflow" xml:space="preserve"><value>Workflow</value></data>
+  <data name="Settings_HotFolder_Output" xml:space="preserve"><value>Results into</value></data>
+  <data name="Settings_HotFolder_Output_Placeholder" xml:space="preserve"><value>Empty = _output in the watched folder</value></data>
+  <data name="Settings_HotFolder_Output_Pick_Title" xml:space="preserve"><value>Choose the result folder</value></data>
+  <data name="Settings_HotFolder_MinimizeToTray" xml:space="preserve"><value>Minimize to the notification area while watching</value></data>
+  <data name="Settings_HotFolder_StartWithWindows" xml:space="preserve"><value>Start with Windows (minimized, just watching)</value></data>
+  <data name="Tray_Text" xml:space="preserve"><value>PDF_Pro</value></data>
+  <data name="Tray_Open" xml:space="preserve"><value>Open PDF_Pro</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
 </root>

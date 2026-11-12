@@ -91,6 +91,21 @@ public sealed record AppSettings
     /// <summary>The commands last run from the command palette (ribbon ids), most recent first.</summary>
     public IReadOnlyList<string> RecentCommands { get; init; } = [];
 
+    /// <summary>The hot folder watches <see cref="HotFolderPath"/> while the app runs.</summary>
+    public bool HotFolderEnabled { get; init; }
+
+    /// <summary>The folder files are dropped into.</summary>
+    public string HotFolderPath { get; init; } = string.Empty;
+
+    /// <summary>The workflow run on them: a built-in one's id ("digitize") or a .pdfflow file.</summary>
+    public string HotFolderWorkflow { get; init; } = string.Empty;
+
+    /// <summary>Where the results go; empty = "_output" in the hot folder.</summary>
+    public string HotFolderOutput { get; init; } = string.Empty;
+
+    /// <summary>Minimizing the window while the hot folder runs puts it in the notification area.</summary>
+    public bool MinimizeToTray { get; init; } = true;
+
     /// <summary>A free public time-stamping authority (DigiCert).</summary>
     public const string DefaultTimestampServer = "http://timestamp.digicert.com";
 }

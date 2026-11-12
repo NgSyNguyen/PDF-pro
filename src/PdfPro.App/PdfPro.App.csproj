@@ -4,10 +4,19 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- Windows Forms only for the notification area icon (NotifyIcon); its namespaces are not imported globally. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- WFO0003 asks Windows Forms apps to set DPI awareness in code; this is a WPF app, its manifest sets it. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
     <RootNamespace>PdfPro.App</RootNamespace>
     <AssemblyName>PdfPro</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />

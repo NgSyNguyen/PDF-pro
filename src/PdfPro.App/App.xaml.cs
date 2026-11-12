@@ -68,7 +68,17 @@ public partial class App : Application
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
             theme.AttachMainWindow(mainWindow);
+            if (startup.Background)
+            {
+                // Started with Windows for the hot folder: out of the way, in the notification area when it runs.
+                mainWindow.WindowState = WindowState.Minimized;
+            }
+
             mainWindow.Show();
+            if (startup.Background && mainWindow.RunsInTray)
+            {
+                mainWindow.HideToTray();
+            }
 
             _ = OpenStartupFilesAsync(_host.Services.GetRequiredService<MainWindowViewModel>(), startup.Files);
         }

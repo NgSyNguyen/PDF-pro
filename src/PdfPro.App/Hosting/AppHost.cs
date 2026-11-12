@@ -220,6 +220,11 @@ internal static class AppHost
             sp.GetRequiredService<OperationCatalog>(),
             new Operations.Automation.WorkflowRunner(sp.GetRequiredService<OperationCatalog>(), sp.GetRequiredService<PdfPro.Pdfium.PdfiumGate>(), sp.GetRequiredService<PdfPro.Core.Ocr.IOcrEngine>()),
             new Services.Automation.WorkflowLibrary(sp.GetRequiredService<AppPaths>().WorkflowsDirectory)));
+        services.AddSingleton<Services.Automation.IWorkflowLibrary>(sp => sp.GetRequiredService<Services.Automation.AutomationServices>().Library);
+        services.AddSingleton<Services.Automation.HotFolderService>();
+        services.AddSingleton<Services.Automation.IHotFolderService>(sp => sp.GetRequiredService<Services.Automation.HotFolderService>());
+        services.AddHostedService(sp => sp.GetRequiredService<Services.Automation.HotFolderService>());
+        services.AddSingleton<Services.Automation.IStartupRegistration, Services.Automation.WindowsStartupRegistration>();
         services.AddSingleton<IRecoveryDialog, RecoveryDialog>();
         services.AddSingleton<IRecoveryService, RecoveryService>();
 
