@@ -180,6 +180,9 @@ public sealed class WorkflowRunner(OperationCatalog catalog, PdfiumGate gate, IO
     /// <summary>The language a turned page is read in when nothing else is said.</summary>
     public const string DefaultLanguage = "vie";
 
+    /// <summary>The operations the steps are found in.</summary>
+    public OperationCatalog Catalog => catalog;
+
     /// <exception cref="WorkflowFailedException">The workflow is invalid, or the input, a step or the output failed.</exception>
     /// <exception cref="OperationCanceledException">The run was cancelled.</exception>
     public async Task<WorkflowRunResult> RunAsync(Workflow workflow, WorkflowRunRequest request, IProgress<WorkflowProgress>? progress, CancellationToken cancellationToken)
@@ -446,9 +449,19 @@ public sealed class WorkflowRunner(OperationCatalog catalog, PdfiumGate gate, IO
 /// <summary>Puts the result of a workflow where it goes.</summary>
 internal static class WorkflowOutputs
 {
+    // Runs of a batch finish at the same time: a name is chosen and taken in one go.
+    private static readonly Lock Placing = new();
     /// <summary>Moves the files of the last step to their place; the files written.</summary>
     /// <exception cref="WorkflowFailedException">No folder was given, or a file could not be written.</exception>
     public static IReadOnlyList<string> Place(WorkflowOutput output, string input, IReadOnlyList<string> produced, string? folderGiven)
+    {
+        lock (Placing)
+        {
+            return PlaceUnlocked(output, input, produced, folderGiven);
+        }
+    }
+
+    private static IReadOnlyList<string> PlaceUnlocked(WorkflowOutput output, string input, IReadOnlyList<string> produced, string? folderGiven)
     {
         try
         {
