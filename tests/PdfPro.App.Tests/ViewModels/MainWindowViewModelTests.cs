@@ -618,7 +618,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         }
     }
 
-    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true)
+    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true, PdfPro.App.Services.Updates.IUpdateService? updates = null)
         => new(
             _dialogs,
             _lifetime,
@@ -656,7 +656,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             Scan(),
             Compare(),
             Extracting(),
-            Automation());
+            Automation(),
+            updates: updates);
 
     private PdfPro.App.Services.Automation.AutomationServices Automation()
     {

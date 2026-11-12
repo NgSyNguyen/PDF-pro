@@ -50,6 +50,13 @@
       <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
         <ui:Button AutomationProperties.AutomationId="AboutCopy" Command="{Binding CopyDetailsCommand}" Content="{loc:Tr About_Copy}" Icon="{ui:SymbolIcon Copy24}" />
         <ui:Button Margin="8,0,0,0" Command="{Binding OpenLogFolderCommand}" Content="{loc:Tr Error_OpenLogFolder}" Icon="{ui:SymbolIcon DocumentBulletList24}" />
+        <ui:Button
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="AboutCheckUpdates"
+          Command="{Binding CheckForUpdatesCommand}"
+          Content="{loc:Tr Update_Check}"
+          Icon="{ui:SymbolIcon ArrowSync24}"
+          Visibility="{Binding CanCheckForUpdates, Converter={StaticResource BoolToVisibility}}" />
         <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" Text="{Binding CopyStatus}" />
       </StackPanel>
       <TextBlock Margin="0,16,0,6" FontWeight="SemiBold" Text="{loc:Tr About_Licenses}" />

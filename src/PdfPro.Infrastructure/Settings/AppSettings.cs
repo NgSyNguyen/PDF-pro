@@ -116,6 +116,12 @@ public sealed record AppSettings
     /// </summary>
     public bool IsolateOperations { get; init; } = true;
 
+    /// <summary>Look for a newer version when the app starts (an installed copy only; nothing is sent but the request).</summary>
+    public bool CheckForUpdates { get; init; } = true;
+
+    /// <summary>"stable" or "beta" (pre-releases too).</summary>
+    public string UpdateChannel { get; init; } = "stable";
+
     /// <summary>The quick-start guide of the start page was put away ("Ẩn hướng dẫn").</summary>
     public bool GuideHidden { get; init; }
 

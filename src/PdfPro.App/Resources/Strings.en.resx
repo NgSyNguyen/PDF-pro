@@ -2407,4 +2407,24 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Guide_Tools_Text" xml:space="preserve"><value>Tools are on the ribbon by group; or press Ctrl+K and type the name of a command. F1 shows the keyboard shortcuts.</value></data>
   <data name="Guide_Save_Title" xml:space="preserve"><value>Save safely</value></data>
   <data name="Guide_Save_Text" xml:space="preserve"><value>The original file is written only when you save (Ctrl+S). If the computer stops suddenly, unsaved changes come back the next time.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Update PDF_Pro</value></data>
+  <data name="Update_Check" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Update_NotInstalled" xml:space="preserve"><value>This copy of PDF_Pro was not installed with the installer, so it cannot update itself. Download the new version from the project’s releases page.</value></data>
+  <data name="Update_Error_Check" xml:space="preserve"><value>Could not check for a new version (the computer may be offline). Try again later.</value></data>
+  <data name="Update_UpToDate" xml:space="preserve"><value>You have the latest version ({0}).</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>PDF_Pro {0} is available (you have {1}). Download it now? It is installed when you close PDF_Pro; your work is not interrupted.</value></data>
+  <data name="Update_Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Update_Later" xml:space="preserve"><value>Later</value></data>
+  <data name="Update_Downloading" xml:space="preserve"><value>Downloading PDF_Pro {0}…</value></data>
+  <data name="Update_Ready" xml:space="preserve"><value>PDF_Pro {0} downloaded: it is installed when you close the app.</value></data>
+  <data name="Update_Cancelled" xml:space="preserve"><value>The update download was cancelled.</value></data>
+  <data name="Update_Error_Download" xml:space="preserve"><value>Could not download the update. Try again later; this PDF_Pro keeps working as it is.</value></data>
+  <data name="Settings_Update" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Settings_Update_Hint" xml:space="preserve"><value>Each time it starts, PDF_Pro asks the GitHub releases page whether there is a new version (only the request is sent, nothing of yours). You decide whether to download it.</value></data>
+  <data name="Settings_Update_Channel" xml:space="preserve"><value>Channel</value></data>
+  <data name="Settings_Update_Stable" xml:space="preserve"><value>Stable</value></data>
+  <data name="Settings_Update_Beta" xml:space="preserve"><value>Beta (pre-releases)</value></data>
+  <data name="Settings_ExplorerMenu" xml:space="preserve"><value>Add "Open with PDF_Pro" to the right-click menu of PDF files</value></data>
+  <data name="Shell_OpenWithPdfPro" xml:space="preserve"><value>Open with PDF_Pro</value></data>
+  <data name="Shell_DocumentType" xml:space="preserve"><value>PDF document (PDF_Pro)</value></data>
 </root>

@@ -2407,4 +2407,24 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Guide_Tools_Text" xml:space="preserve"><value>Công cụ nằm trên ribbon theo nhóm; hoặc nhấn Ctrl+K rồi gõ tên lệnh, không cần dấu. F1 mở bảng phím tắt.</value></data>
   <data name="Guide_Save_Title" xml:space="preserve"><value>Lưu an toàn</value></data>
   <data name="Guide_Save_Text" xml:space="preserve"><value>Tệp gốc chỉ được ghi khi bạn lưu (Ctrl+S). Nếu máy tắt đột ngột, thay đổi chưa lưu được khôi phục ở lần mở sau.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Cập nhật PDF_Pro</value></data>
+  <data name="Update_Check" xml:space="preserve"><value>Kiểm tra cập nhật</value></data>
+  <data name="Update_NotInstalled" xml:space="preserve"><value>Bản PDF_Pro này không được cài bằng bộ cài nên không tự cập nhật được. Hãy tải bản mới từ trang phát hành của dự án.</value></data>
+  <data name="Update_Error_Check" xml:space="preserve"><value>Không kiểm tra được bản mới (máy có thể đang không có mạng). Hãy thử lại sau.</value></data>
+  <data name="Update_UpToDate" xml:space="preserve"><value>Bạn đang dùng bản mới nhất ({0}).</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>Đã có PDF_Pro {0} (bạn đang dùng {1}). Tải về ngay? Bản mới sẽ được cài khi bạn đóng PDF_Pro, công việc đang làm không bị gián đoạn.</value></data>
+  <data name="Update_Download" xml:space="preserve"><value>Tải về</value></data>
+  <data name="Update_Later" xml:space="preserve"><value>Để sau</value></data>
+  <data name="Update_Downloading" xml:space="preserve"><value>Đang tải PDF_Pro {0}…</value></data>
+  <data name="Update_Ready" xml:space="preserve"><value>Đã tải PDF_Pro {0}: sẽ cài khi bạn đóng ứng dụng.</value></data>
+  <data name="Update_Cancelled" xml:space="preserve"><value>Đã hủy tải bản cập nhật.</value></data>
+  <data name="Update_Error_Download" xml:space="preserve"><value>Không tải được bản cập nhật. Hãy thử lại sau; PDF_Pro hiện tại vẫn dùng bình thường.</value></data>
+  <data name="Settings_Update" xml:space="preserve"><value>Tự kiểm tra cập nhật</value></data>
+  <data name="Settings_Update_Hint" xml:space="preserve"><value>Mỗi lần mở, PDF_Pro hỏi trang phát hành trên GitHub xem có bản mới không (chỉ gửi yêu cầu, không gửi dữ liệu nào của bạn). Bạn quyết định có tải hay không.</value></data>
+  <data name="Settings_Update_Channel" xml:space="preserve"><value>Kênh</value></data>
+  <data name="Settings_Update_Stable" xml:space="preserve"><value>Ổn định</value></data>
+  <data name="Settings_Update_Beta" xml:space="preserve"><value>Thử nghiệm (beta)</value></data>
+  <data name="Settings_ExplorerMenu" xml:space="preserve"><value>Thêm "Mở bằng PDF_Pro" vào menu chuột phải của tệp PDF</value></data>
+  <data name="Shell_OpenWithPdfPro" xml:space="preserve"><value>Mở bằng PDF_Pro</value></data>
+  <data name="Shell_DocumentType" xml:space="preserve"><value>Tài liệu PDF (PDF_Pro)</value></data>
 </root>

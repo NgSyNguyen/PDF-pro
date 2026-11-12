@@ -33,7 +33,8 @@ public sealed partial class MainWindowViewModel
             _buildInfo,
             Path.Combine(AppContext.BaseDirectory, "THIRD_PARTY_NOTICES.md"),
             _clipboard ?? new WpfClipboardService(),
-            () => _shell.OpenFolder(_paths.LogsDirectory)));
+            () => _shell.OpenFolder(_paths.LogsDirectory),
+            _updates is null ? null : CheckForUpdatesCommand));
 
     private async Task RememberGuideAsync(bool hidden)
     {

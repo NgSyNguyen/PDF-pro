@@ -142,6 +142,10 @@ public partial class App : Application
         }
 
         await viewModel.RemoveMissingRecentFilesAsync();
+
+        // An installed copy looks for a newer version once things have settled (SPEC Phase 13).
+        await Task.Delay(TimeSpan.FromSeconds(20));
+        await viewModel.CheckForUpdatesAsync(manual: false);
     }
 
     /// <summary>

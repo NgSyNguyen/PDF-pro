@@ -210,6 +210,26 @@ public sealed class SettingsViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task Updates_AndTheExplorerMenu_AreSavedAndApplied()
+    {
+        var shell = Substitute.For<PdfPro.App.Services.IShellIntegration>();
+        var viewModel = CreateViewModel(shell: shell);
+        viewModel.CheckForUpdates.ShouldBeTrue("on by default");
+        viewModel.UpdateChannel.ShouldBe(PdfPro.App.Services.Updates.UpdateChannels.Stable);
+        viewModel.HasShellIntegration.ShouldBeTrue();
+
+        viewModel.CheckForUpdates = false;
+        await viewModel.PendingSave;
+        viewModel.UpdateChannel = PdfPro.App.Services.Updates.UpdateChannels.Beta;
+        await viewModel.PendingSave;
+        viewModel.ExplorerContextMenu = true;
+
+        _settings.Current.CheckForUpdates.ShouldBeFalse();
+        _settings.Current.UpdateChannel.ShouldBe(PdfPro.App.Services.Updates.UpdateChannels.Beta);
+        shell.Received(1).SetContextMenu(true);
+    }
+
+    [Fact]
     public void RenderCache_ClearedOrUnchanged_DoesNotSave()
     {
         var viewModel = CreateViewModel();
@@ -341,6 +361,6 @@ public sealed class SettingsViewModelTests : IDisposable
         viewModel.TesseractStatus.ShouldBe(Strings.Settings_Tesseract_NotThere);
     }
 
-    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null, IVeraPdfLocator? veraPdf = null, PdfPro.Ocr.ITesseractLocator? tesseract = null)
-        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files, veraPdf, tesseract);
+    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null, IVeraPdfLocator? veraPdf = null, PdfPro.Ocr.ITesseractLocator? tesseract = null, PdfPro.App.Services.IShellIntegration? shell = null)
+        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files, veraPdf, tesseract, shell: shell);
 }

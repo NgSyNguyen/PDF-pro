@@ -722,7 +722,8 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 
 ### Hoàn thiện, hiệu năng, bảo mật & phát hành (Phase 13)
 
-> Đang làm (xem `docs/PROGRESS.md`, bảng "Phase 13 — các lát"). Mục này ghi phần đã xong.
+> Xong về code (lát 1–5, xem `docs/PROGRESS.md`). Việc của máy Windows: chạy `Phase13AcceptanceTests`, phát hành thử
+> `v1.0.0-beta.1` → `v1.0.0` và các bước "Kiểm tra trước khi phát hành" của `docs/RELEASE.md`.
 
 **Chống chịu tệp độc hại (lát 1).** Mục tiêu: không tệp nào làm **sập**, **treo** hay **tràn bộ nhớ** tiến trình — hoặc chạy được, hoặc báo lỗi có lý do.
 - **PDFsharp 6.2.4 đệ quy không giới hạn** khi đọc cây trang/bookmark vòng lại chính nó hoặc mảng/từ điển lồng hàng chục nghìn tầng → tràn ngăn xếp, **không bắt được**, cả tiến trình chết. Mọi lần đọc bằng PDFsharp trong `src` đi qua `Materializing/PdfSafeReader` (có test canh: không tệp nào gọi `PdfReader.Open` trực tiếp): `PdfStructureGuard` xem cấu trúc bằng PdfPig trước (đọc lười, lồng tối đa 256 tầng; duyệt cây trang và bookmark nhớ các nút trên đường đi; phân tích mọi đối tượng một lần) và từ chối tệp nguy hiểm bằng `InvalidDataException` (`PdfStructureGuard.IsRefusal`); kết quả nhớ theo (đường dẫn, cỡ, giờ ghi). Tệp PdfPig không đọc được để PDFsharp tự báo.
@@ -771,6 +772,17 @@ Số đo (12/11/2026, container Linux, Xeon 2,1 GHz 4 nhân, .NET 10.0.13):
 
 - Bộ nhớ của **ứng dụng** khi xem `big-1000.pdf` đo trên Windows ở Phase 2 (~730 MB với cache render 512 MB — xem mục Trình xem) là do ngân sách cache, không phải engine. **Khởi động < 1,5 s** đo trên Windows (chưa có số).
 - Tối ưu đã làm: `JpegCodec` giải/mã JPEG qua bộ đệm RGBA thuê từ `ArrayPool` (ảnh scan một trang ~35 MB) và chép kênh bằng vòng lặp gọn thay vì một lệnh chép cho mỗi điểm ảnh. Bitmap trang của PDFium nằm ở bộ nhớ native (không phải mảng quản lý) nên không cần pool; không thấy vẽ thừa hay giữ `PdfiumGate` lâu trong các phép đo này.
+
+**Phát hành (lát 5)** — chi tiết vận hành: `docs/RELEASE.md`.
+- **Velopack 1.2.161** (MIT): `Program.Main` (StartupObject) chạy `VelopackApp.Build()` trước WPF — hook cài/cập nhật đăng ký PDF_Pro trong "Mở bằng" của `.pdf` (`HKCU\Software\Classes\PdfPro.Document` + `.pdf\OpenWithProgids`, **không** chiếm ứng dụng mặc định), hook gỡ xóa mọi khóa đó và menu chuột phải (`Services/ShellIntegration.cs`, chỉ HKCU, `SHChangeNotify`). Cài đặt: "Thêm Mở bằng PDF_Pro vào menu chuột phải" (`SystemFileAssociations\.pdf\shell\PdfPro.Open`).
+- **packId `PDF_Pro`** → thư mục cài `%LocalAppData%\PDF_Pro`, **khác** thư mục dữ liệu `%LOCALAPPDATA%\PdfPro` (Velopack xóa nguyên thư mục cài khi gỡ — trùng tên sẽ mất cài đặt và phiên chưa lưu).
+- **Cập nhật** (`Services/Updates/UpdateService.cs`, `MainWindowViewModel.Updates.cs`): bản đã cài kiểm GitHub Releases 20 s sau khi mở (Cài đặt "Tự kiểm tra cập nhật", mặc định bật; chỉ gửi yêu cầu), hỏi "Tải về", tải ở thanh trạng thái, **cài khi người dùng đóng app** (`WaitExitThenApplyUpdates`); Giới thiệu › "Kiểm tra cập nhật" báo mọi kết quả. Kênh `win`/`win-arm64` (ổn định) và `beta`/`beta-arm64` (thẻ có `-`, pre-release) — `UpdateChannels.Of`.
+- **Publish**: self-contained `win-x64` + `win-arm64`, ReadyToRun, không trimming; `PdfPro.Worker.exe` cùng thư mục dùng chung runtime (RID truyền xuống dự án tham chiếu); `THIRD_PARTY_NOTICES.md` + `licenses/` (toàn văn giấy phép) chép cạnh exe. CLI `pdfpro` là zip riêng (`pdfpro.exe` trùng tên `PdfPro.exe` trên Windows).
+- **`.github/workflows/release.yml`** (thẻ `v*` hoặc chạy tay): `fetch-tools.ps1` → build + test → publish → ký nếu có secret `SIGNING_CERTIFICATE_PFX`/`_PASSWORD` (`vpk pack --signParams`, signtool SHA-256 + dấu thời gian DigiCert) → `vpk download github` (delta) → `vpk pack` → `vpk upload github --publish` → đính kèm zip CLI. Tùy chọn của `vpk` đã đối chiếu trong chính gói 1.2.161.
+- `CHANGELOG.md` (ghi chú phát hành của bộ cài), `README.md` (tính năng, cài đặt, build từ nguồn), `docs/RELEASE.md`.
+- Chưa làm: biểu tượng `.ico`, "Gộp bằng PDF_Pro" trong menu chuột phải, ảnh chụp màn hình; Worker chưa nhận phần đo/thao tác xuất (xem lát 3).
+
+**Nghiệm thu (Phase 13)** — test tự động: `RobustnessTests` (tệp độc hại + fuzz), `PdfPro.Worker.Tests`, test App của Worker/UX/cập nhật; FlaUI `Phase13AcceptanceTests` (chạy tay). **Kiểm tay** (chủ dự án, `docs/RELEASE.md`): cài `Setup.exe` trên Windows sạch (chưa có .NET) và dùng các luồng chính 15 phút; cập nhật tự động 1.0.0 → 1.0.1; gỡ cài đặt không để lại gì ngoài dữ liệu người dùng; mở một tệp độc hại của bộ torture (ghi ra bằng `HostileFiles`) trong app — báo lỗi, không sập; đo khởi động < 1,5 s.
 
 ### Hệ tọa độ — nguồn bug số một
 

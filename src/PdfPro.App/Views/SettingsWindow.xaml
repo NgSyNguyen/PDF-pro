@@ -128,6 +128,37 @@
         <ui:ToggleSwitch AutomationProperties.AutomationId="SettingsHotFolderEnabled" AutomationProperties.Name="{loc:Tr Settings_HotFolder}" IsChecked="{Binding HotFolderEnabled}" />
       </ui:CardControl>
 
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowSync24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_Update}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_Update_Hint}"
+              TextWrapping="Wrap" />
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+              <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="{loc:Tr Settings_Update_Channel}" />
+              <ComboBox
+                MinWidth="200"
+                AutomationProperties.AutomationId="SettingsUpdateChannel"
+                AutomationProperties.Name="{loc:Tr Settings_Update_Channel}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding UpdateChannelOptions}"
+                SelectedValue="{Binding UpdateChannel}"
+                SelectedValuePath="Value" />
+            </StackPanel>
+            <CheckBox
+              Margin="0,8,0,0"
+              AutomationProperties.AutomationId="SettingsExplorerMenu"
+              Content="{loc:Tr Settings_ExplorerMenu}"
+              IsChecked="{Binding ExplorerContextMenu}"
+              Visibility="{Binding HasShellIntegration, Converter={StaticResource BoolToVisibility}}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch AutomationProperties.AutomationId="SettingsCheckForUpdates" AutomationProperties.Name="{loc:Tr Settings_Update}" IsChecked="{Binding CheckForUpdates}" />
+      </ui:CardControl>
+
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ShieldTask24}">
         <ui:CardControl.Header>
           <StackPanel>

@@ -11,8 +11,13 @@ namespace PdfPro.App.ViewModels;
 /// "Giới thiệu" (SPEC Phase 13): the version, what it runs on, and the licenses of what PDF_Pro is built with
 /// (THIRD_PARTY_NOTICES.md, shipped next to PdfPro.exe). No telemetry: problems are reported by copying the details.
 /// </summary>
-public sealed partial class AboutViewModel(AppBuildInfo build, string noticesPath, IClipboardService clipboard, Action openLogFolder) : ObservableObject
+public sealed partial class AboutViewModel(AppBuildInfo build, string noticesPath, IClipboardService clipboard, Action openLogFolder, System.Windows.Input.ICommand? checkForUpdates = null) : ObservableObject
 {
+    /// <summary>"Kiểm tra cập nhật" (the window closes first), or null.</summary>
+    public System.Windows.Input.ICommand? CheckForUpdatesCommand { get; } = checkForUpdates;
+
+    public bool CanCheckForUpdates => CheckForUpdatesCommand is not null;
+
     public string Product => Strings.App_Title;
 
     public string Version => build.Version;

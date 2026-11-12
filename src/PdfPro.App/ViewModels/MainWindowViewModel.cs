@@ -25,6 +25,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly AppPaths _paths;
     private readonly AppBuildInfo _buildInfo;
     private readonly IClipboardService? _clipboard;
+    private readonly Services.Updates.IUpdateService? _updates;
     private readonly IDocumentWorkspaceService _workspaces;
     private readonly IDocumentTabFactory _tabFactory;
     private readonly ISettingsService _settings;
@@ -74,11 +75,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Services.Comparing.CompareServices? compare = null,
         Services.Extracting.ExtractingServices? extracting = null,
         Services.Automation.AutomationServices? automation = null,
-        IClipboardService? clipboard = null)
+        IClipboardService? clipboard = null,
+        Services.Updates.IUpdateService? updates = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _buildInfo = buildInfo;
         _clipboard = clipboard;
+        _updates = updates;
         _dialogs = dialogs;
         _lifetime = lifetime;
         _shell = shell;

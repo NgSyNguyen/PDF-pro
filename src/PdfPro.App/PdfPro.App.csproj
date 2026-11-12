@@ -11,6 +11,8 @@
     <RootNamespace>PdfPro.App</RootNamespace>
     <AssemblyName>PdfPro</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Program.Main runs Velopack's install/update hooks before WPF starts. -->
+    <StartupObject>PdfPro.App.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +30,7 @@
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Serilog.Sinks.Debug" />
+    <PackageReference Include="Velopack" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +39,7 @@
     <ProjectReference Include="..\PdfPro.Ocr\PdfPro.Ocr.csproj" />
     <!-- The licenses, shown in "Giới thiệu" and shipped next to PdfPro.exe. -->
     <None Include="..\..\THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\..\licenses\**\*" LinkBase="licenses" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <!-- PdfPro.Worker.exe goes next to PdfPro.exe; the app only starts it (no types are used). -->
     <ProjectReference Include="..\PdfPro.Worker\PdfPro.Worker.csproj" />
   </ItemGroup>

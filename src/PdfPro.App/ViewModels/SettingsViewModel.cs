@@ -50,7 +50,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         PdfPro.Ocr.ITesseractLocator? tesseract = null,
         Services.Automation.IHotFolderService? hotFolder = null,
         Services.Automation.IStartupRegistration? startup = null,
-        Services.Automation.IWorkflowLibrary? workflows = null)
+        Services.Automation.IWorkflowLibrary? workflows = null,
+        Services.IShellIntegration? shell = null)
     {
         _settings = settings;
         _theme = theme;
@@ -96,6 +97,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         DiskCacheSize = Strings.Settings_Measuring;
         InitializeHotFolder(settings.Current, hotFolder, startup, workflows);
         InitializeWorker(settings.Current);
+        InitializeRelease(settings.Current, shell);
         _isInitialized = true;
     }
 
