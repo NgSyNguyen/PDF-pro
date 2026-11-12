@@ -65,8 +65,10 @@ public sealed class CommandPaletteViewModelTests
 
         palette.Query = string.Empty;
         palette.Selected.ShouldBe(Open, "the first command that can run is selected");
-        palette.MoveDownCommand.Execute(null);
         palette.MoveUpCommand.Execute(null);
+        palette.Selected.ShouldBe(Save);
+        palette.MoveDownCommand.Execute(null);
+        palette.Selected.ShouldBe(Open);
         palette.RunCommand.Execute(null);
         (closed, palette.Chosen).ShouldBe((true, Open));
     }
