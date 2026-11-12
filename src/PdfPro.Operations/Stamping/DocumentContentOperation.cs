@@ -3,6 +3,7 @@ using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Stamping;
 
@@ -35,7 +36,7 @@ public abstract class DocumentContentOperation<TParams> : FileContentOperation<T
     {
         try
         {
-            return PdfReader.Open(path, PdfDocumentOpenMode.Modify);
+            return PdfSafeReader.Open(path, PdfDocumentOpenMode.Modify);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not IOException and not UnauthorizedAccessException)
         {

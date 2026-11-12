@@ -4,6 +4,7 @@ using PdfPro.Core.Splitting;
 using PdfPro.Core.Stamping;
 using PdfPro.Operations.Organizing;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Stamping;
 
@@ -76,7 +77,7 @@ public sealed class BatesOperation : PdfOperation<BatesParams>
         {
             try
             {
-                using var document = PdfReader.Open(inputs[i], PdfDocumentOpenMode.Import);
+                using var document = PdfSafeReader.Open(inputs[i], PdfDocumentOpenMode.Import);
                 counts[i] = document.PageCount;
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

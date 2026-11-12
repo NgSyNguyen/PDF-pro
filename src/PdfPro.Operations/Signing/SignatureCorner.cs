@@ -32,7 +32,7 @@ public static class SignatureCorner
         PdfDocument document;
         try
         {
-            document = PdfReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
+            document = PdfSafeReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {

@@ -2,6 +2,7 @@ using System.IO;
 using PdfPro.Core.Forms;
 using PdfPro.Operations.Forms;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.App.Services.Forms;
 
@@ -27,7 +28,7 @@ internal sealed class PdfFormSource : IFormSource
             {
                 try
                 {
-                    using var document = PdfReader.Open(path, PdfDocumentOpenMode.Import);
+                    using var document = PdfSafeReader.Open(path, PdfDocumentOpenMode.Import);
                     var type = FormReader.TypeOf(document);
                     return type == FormType.None ? FormSnapshot.None : new FormSnapshot(type, FormReader.Read(document));
                 }

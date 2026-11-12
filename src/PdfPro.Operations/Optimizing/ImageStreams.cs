@@ -104,7 +104,8 @@ internal static class ImageStreams
         var height = StreamData.Integer(image, "/Height") ?? 0;
         var stencil = Resolve(image.Elements["/ImageMask"]) is PdfBoolean { Value: true };
         var bits = stencil ? 1 : StreamData.Integer(image, "/BitsPerComponent") ?? 0;
-        if (width <= 0 || height <= 0 || image.Stream?.Value is not { } encoded || image.Elements.ContainsKey("/F"))
+        // Larger images are never recompressed: they are not even decoded (a few KB can decode to gigabytes).
+        if (width <= 0 || height <= 0 || (long)width * height > ImageRecompressor.MaxPixels || image.Stream?.Value is not { } encoded || image.Elements.ContainsKey("/F"))
         {
             return null;
         }

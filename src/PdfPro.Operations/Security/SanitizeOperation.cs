@@ -241,7 +241,7 @@ public sealed class SanitizeOperation(PdfiumGate gate) : FileContentOperation<Sa
     {
         try
         {
-            return PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Modify);
+            return PdfSafeReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Modify);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not IOException)
         {

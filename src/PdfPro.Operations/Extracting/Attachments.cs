@@ -10,6 +10,7 @@ using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 using PdfDate = PdfPro.Core.Documents.PdfDate;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Extracting;
 
@@ -135,7 +136,7 @@ public static class Attachments
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         try
         {
-            return string.IsNullOrEmpty(password) ? PdfReader.Open(path, PdfDocumentOpenMode.Import) : PdfReader.Open(path, password, PdfDocumentOpenMode.Import);
+            return string.IsNullOrEmpty(password) ? PdfSafeReader.Open(path, PdfDocumentOpenMode.Import) : PdfSafeReader.Open(path, password, PdfDocumentOpenMode.Import);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not IOException and not UnauthorizedAccessException)
         {

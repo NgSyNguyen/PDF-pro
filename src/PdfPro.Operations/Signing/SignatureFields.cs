@@ -5,6 +5,7 @@ using PdfPro.Operations.Forms;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Signing;
 
@@ -19,7 +20,7 @@ internal static class SignatureFields
     {
         try
         {
-            using var document = PdfReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
+            using var document = PdfSafeReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
             var result = new List<SignatureFieldInfo>();
             foreach (var (field, dictionary, _) in FormReader.Fields(document))
             {

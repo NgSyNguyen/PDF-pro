@@ -6,6 +6,7 @@ using PdfSharp.Pdf.IO;
 using UglyToad.PdfPig.Writer;
 using PigDocument = UglyToad.PdfPig.PdfDocument;
 using PigOptions = UglyToad.PdfPig.ParsingOptions;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Optimizing;
 
@@ -224,7 +225,7 @@ public sealed class RepairOperation(PdfiumGate gate, Qpdf? qpdf = null) : PdfOpe
     {
         try
         {
-            using var document = PdfReader.Open(path, PdfDocumentOpenMode.Import);
+            using var document = PdfSafeReader.Open(path, PdfDocumentOpenMode.Import);
             return document.PageCount > 0;
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)

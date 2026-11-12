@@ -70,8 +70,15 @@ internal static class StreamData
     /// left (an image codec and what follows it). Null when the data cannot be decoded.
     /// </summary>
     public static byte[]? Decode(PdfDictionary stream, out IReadOnlyList<(string Name, PdfDictionary? Parameters)> remaining)
+        => Decode(stream, out remaining, out _);
+
+    /// <summary>The most bytes a stream is decoded to (a "decompression bomb" of a few KB can claim gigabytes).</summary>
+    public const int MaxDecodedBytes = 512 * 1024 * 1024;
+
+    private static byte[]? Decode(PdfDictionary stream, out IReadOnlyList<(string Name, PdfDictionary? Parameters)> remaining, out bool tooLarge)
     {
         remaining = [];
+        tooLarge = false;
         if (stream.Stream?.Value is not { } data || Filters(stream) is not { } filters)
         {
             return null;
@@ -93,9 +100,17 @@ internal static class StreamData
                 }
                 else
                 {
-                    data = name == "/RunLengthDecode"
-                        ? RunLength(data)
-                        : Filtering.GetFilter(name)?.Decode(data, parameters is null ? new FilterParms(null) : new FilterParms(parameters));
+                    data = name switch
+                    {
+                        "/RunLengthDecode" => RunLength(data),
+                        "/FlateDecode" => Flate(data, parameters),
+                        _ => Filtering.GetFilter(name)?.Decode(data, parameters is null ? new FilterParms(null) : new FilterParms(parameters)),
+                    };
+                }
+
+                if (data is { Length: > MaxDecodedBytes })
+                {
+                    throw new StreamTooLargeException();
                 }
 
                 if (data is null)
@@ -103,6 +118,11 @@ internal static class StreamData
                     return null;
                 }
             }
+        }
+        catch (StreamTooLargeException)
+        {
+            tooLarge = true;
+            return null; // left as it is
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -120,7 +140,67 @@ internal static class StreamData
     /// A stream's data decoded (content, CMaps, appearances): by <see cref="Decode(PdfDictionary)"/>, else as PDFsharp
     /// undoes it (which may throw on damaged data, as before). PDFsharp alone is not trusted with LZW.
     /// </summary>
-    public static byte[] Bytes(PdfDictionary stream) => Decode(stream) ?? stream.Stream?.UnfilteredValue ?? [];
+    /// <exception cref="InvalidDataException">The stream decodes to more than <see cref="MaxDecodedBytes"/>.</exception>
+    public static byte[] Bytes(PdfDictionary stream)
+    {
+        var data = Decode(stream, out var remaining, out var tooLarge);
+        if (tooLarge)
+        {
+            throw new InvalidDataException("A stream of the file decodes to more than PDF_Pro reads.");
+        }
+
+        return data is not null && remaining.Count == 0 ? data : stream.Stream?.UnfilteredValue ?? [];
+    }
+
+    /// <summary>
+    /// FlateDecode undone with a limit on the size (zlib, then raw deflate when the header is damaged, then PDFsharp's
+    /// lenient inflater), then its predictor.
+    /// </summary>
+    private static byte[]? Flate(byte[] data, PdfDictionary? parameters)
+    {
+        byte[] inflated;
+        try
+        {
+            inflated = Inflate(new System.IO.Compression.ZLibStream(new MemoryStream(data, writable: false), System.IO.Compression.CompressionMode.Decompress));
+        }
+        catch (InvalidDataException)
+        {
+            try
+            {
+                inflated = data.Length > 2
+                    ? Inflate(new System.IO.Compression.DeflateStream(new MemoryStream(data, 2, data.Length - 2, writable: false), System.IO.Compression.CompressionMode.Decompress))
+                    : [];
+            }
+            catch (InvalidDataException)
+            {
+                return Filtering.GetFilter("/FlateDecode")?.Decode(data, parameters is null ? new FilterParms(null) : new FilterParms(parameters));
+            }
+        }
+
+        return Predict(inflated, parameters);
+    }
+
+    /// <summary>Reads a decompressing stream to its end, refusing more than <see cref="MaxDecodedBytes"/>.</summary>
+    private static byte[] Inflate(Stream source)
+    {
+        using (source)
+        {
+            var output = new MemoryStream();
+            var buffer = new byte[81920];
+            int read;
+            while ((read = source.Read(buffer)) > 0)
+            {
+                if (output.Length + read > MaxDecodedBytes)
+                {
+                    throw new StreamTooLargeException();
+                }
+
+                output.Write(buffer, 0, read);
+            }
+
+            return output.ToArray();
+        }
+    }
 
     /// <summary>
     /// LZWDecode (7.4.4) undone by PDF_Pro's own decoder — PDFsharp 6.2.4 loses bytes of some LZW data — then its
@@ -129,7 +209,12 @@ internal static class StreamData
     private static byte[]? Lzw(byte[] data, PdfDictionary? parameters)
     {
         var earlyChange = parameters is null || Integer(parameters, "/EarlyChange") is not 0;
-        var decoded = PdfPro.Core.Imaging.TiffLzw.Decode(data, earlyChange);
+        return Predict(PdfPro.Core.Imaging.TiffLzw.Decode(data, earlyChange), parameters);
+    }
+
+    /// <summary>The predictor of LZW or Flate data undone: PNG (10–15) or TIFF 2 (8 bits); null when it cannot be.</summary>
+    private static byte[]? Predict(byte[] decoded, PdfDictionary? parameters)
+    {
         var predictor = parameters is null ? 1 : Integer(parameters, "/Predictor") ?? 1;
         if (predictor <= 1)
         {
@@ -240,5 +325,14 @@ internal static class StreamData
         }
 
         return output.ToArray();
+    }
+}
+
+/// <summary>A stream decodes to more than <see cref="StreamData.MaxDecodedBytes"/>.</summary>
+internal sealed class StreamTooLargeException : Exception
+{
+    public StreamTooLargeException()
+        : base("The stream decodes to more than PDF_Pro reads.")
+    {
     }
 }

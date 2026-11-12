@@ -243,6 +243,7 @@ public sealed class CompressOperation(Qpdf? qpdf = null) : PdfOperation<Compress
             cancellationToken.ThrowIfCancellationRequested();
             if (item is not PdfDictionary { Stream.Value: { Length: > 0 } raw } stream || handled.Contains(stream)
                 || Name(stream, "/Type") is { } type && KeptTypes.Contains(type) || stream.Elements.ContainsKey("/F")
+                || (long)(StreamData.Integer(stream, "/Width") ?? 0) * (StreamData.Integer(stream, "/Height") ?? 0) > ImageRecompressor.MaxPixels
                 || StreamData.Decode(stream) is not { } data)
             {
                 continue;
@@ -288,7 +289,7 @@ public sealed class CompressOperation(Qpdf? qpdf = null) : PdfOperation<Compress
     {
         try
         {
-            return PdfReader.Open(new MemoryStream(data, writable: false), mode);
+            return PdfSafeReader.Open(new MemoryStream(data, writable: false), mode);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not OutOfMemoryException)
         {

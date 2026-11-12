@@ -5,6 +5,7 @@ using PdfPro.Operations.Fonts;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Signing;
 
@@ -40,7 +41,7 @@ public static class IncrementalAnnotations
         PdfDocument original;
         try
         {
-            original = PdfReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
+            original = PdfSafeReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -54,7 +55,7 @@ public static class IncrementalAnnotations
                 throw new InvalidDataException("A page of the annotations is not in the file.");
             }
 
-            using var scratch = PdfReader.Open(new MemoryStream(Scratch(changed)), PdfDocumentOpenMode.Import);
+            using var scratch = PdfSafeReader.Open(new MemoryStream(Scratch(changed)), PdfDocumentOpenMode.Import);
             var next = trailer.Size;
             var originalNames = new PdfObjectWriter(r => $"{r.ObjectNumber} {r.GenerationNumber} R");
 

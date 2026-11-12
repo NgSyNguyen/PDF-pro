@@ -4,6 +4,7 @@ using PdfPro.Core.ExternalTools;
 using PdfPro.Core.Operations;
 using PdfPro.Operations.Optimizing;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Converting;
 
@@ -192,7 +193,7 @@ public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOffic
     {
         try
         {
-            using var document = PdfReader.Open(path, PdfDocumentOpenMode.Import);
+            using var document = PdfSafeReader.Open(path, PdfDocumentOpenMode.Import);
             return document.PageCount > 0 ? document.PageCount : throw new OfficeConversionException(OfficeConversionFailure.Failed);
         }
         catch (Exception ex) when (ex is not OfficeConversionException and not OutOfMemoryException and not IOException)

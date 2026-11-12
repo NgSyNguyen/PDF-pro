@@ -12,6 +12,7 @@ using PdfPro.Core.Splitting;
 using PdfPro.Operations.Forms;
 using PdfPro.Operations.Signing;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.App.ViewModels;
 
@@ -179,7 +180,7 @@ public sealed partial class MainWindowViewModel
     {
         try
         {
-            using var document = PdfReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
+            using var document = PdfSafeReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
             return FormReader.Read(document);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)

@@ -7,6 +7,7 @@ using PdfPro.Operations.Fonts;
 using PdfPro.Pdfium;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Editing;
 
@@ -147,7 +148,7 @@ public sealed class EditContentOperation(PdfiumGate gate) : FileContentOperation
     {
         try
         {
-            return PdfReader.Open(path, PdfDocumentOpenMode.Import);
+            return PdfSafeReader.Open(path, PdfDocumentOpenMode.Import);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not IOException and not UnauthorizedAccessException)
         {

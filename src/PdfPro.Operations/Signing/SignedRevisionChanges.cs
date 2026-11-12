@@ -4,6 +4,7 @@ using PdfPro.Operations.Forms;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Signing;
 
@@ -52,8 +53,8 @@ public static class SignedRevisionChanges
 
         try
         {
-            using var signed = PdfReader.Open(new MemoryStream(file, 0, (int)signedLength, writable: false), PdfDocumentOpenMode.Import);
-            using var now = PdfReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
+            using var signed = PdfSafeReader.Open(new MemoryStream(file, 0, (int)signedLength, writable: false), PdfDocumentOpenMode.Import);
+            using var now = PdfSafeReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
             return Fields(signed, now) | Pages(signed, now);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)

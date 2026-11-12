@@ -133,5 +133,5 @@ public abstract class ImpositionOperation<TParams>(ISourceRepairer repairer) : P
     }
 
     private static PdfDocument Open(string path, string? password)
-        => password is null ? PdfReader.Open(path, PdfDocumentOpenMode.Import) : PdfReader.Open(path, password, PdfDocumentOpenMode.Import);
+        => password is null ? PdfSafeReader.Open(path, PdfDocumentOpenMode.Import) : PdfSafeReader.Open(path, password, PdfDocumentOpenMode.Import);
 }

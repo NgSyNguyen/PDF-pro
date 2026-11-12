@@ -7,6 +7,7 @@ using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Signing;
 
@@ -46,7 +47,7 @@ internal static class SignatureAppearanceBuilder
             saved = stream.ToArray();
         }
 
-        using var read = PdfReader.Open(new MemoryStream(saved), PdfDocumentOpenMode.Import);
+        using var read = PdfSafeReader.Open(new MemoryStream(saved), PdfDocumentOpenMode.Import);
         var root = read.Internals.Catalog.Elements[Key] as PdfReference ?? throw new InvalidOperationException("The appearance was not written.");
 
         // Everything the form uses, each with a number of the update.

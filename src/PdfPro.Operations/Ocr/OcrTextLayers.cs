@@ -35,7 +35,7 @@ internal sealed class OcrTextLayers(PdfDocument document)
         PdfDocument source;
         try
         {
-            source = PdfReader.Open(new MemoryStream(textLayer, writable: false), PdfDocumentOpenMode.Import);
+            source = PdfSafeReader.Open(new MemoryStream(textLayer, writable: false), PdfDocumentOpenMode.Import);
         }
         catch (Exception ex) when (ex is PdfReaderException or InvalidOperationException)
         {

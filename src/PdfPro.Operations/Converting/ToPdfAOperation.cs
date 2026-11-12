@@ -140,7 +140,7 @@ public sealed class ToPdfAOperation(PdfiumGate gate, FontLibrary? fonts = null) 
                 PdfDocument document;
                 try
                 {
-                    document = PdfReader.Open(new MemoryStream(File.ReadAllBytes(file), writable: false), PdfDocumentOpenMode.Modify);
+                    document = PdfSafeReader.Open(new MemoryStream(File.ReadAllBytes(file), writable: false), PdfDocumentOpenMode.Modify);
                 }
                 catch (Exception ex) when (ex is PdfReaderException or InvalidOperationException)
                 {
@@ -228,7 +228,7 @@ public sealed class ToPdfAOperation(PdfiumGate gate, FontLibrary? fonts = null) 
 
         try
         {
-            using var written = PdfReader.Open(path, PdfDocumentOpenMode.Import);
+            using var written = PdfSafeReader.Open(path, PdfDocumentOpenMode.Import);
             if (written.PageCount != pages)
             {
                 throw new InvalidDataException("The converted document lost pages.");

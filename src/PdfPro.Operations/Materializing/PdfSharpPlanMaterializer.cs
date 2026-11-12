@@ -206,7 +206,7 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
 
     private static PdfDocument Open(string sourceId, string path, PdfDocumentOpenMode mode, string? password)
     {
-        var document = password is null ? PdfReader.Open(path, mode) : PdfReader.Open(path, password, mode);
+        var document = password is null ? PdfSafeReader.Open(path, mode) : PdfSafeReader.Open(path, password, mode);
         if (document.SecuritySettings.IsEncrypted && password is null)
         {
             document.Dispose();

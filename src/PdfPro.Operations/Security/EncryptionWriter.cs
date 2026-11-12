@@ -1,6 +1,7 @@
 using PdfPro.Core.Security;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Security;
 
@@ -93,7 +94,7 @@ public static class EncryptionWriter
         PdfDocument document;
         try
         {
-            document = password is null ? PdfReader.Open(path, PdfDocumentOpenMode.Modify) : PdfReader.Open(path, password, PdfDocumentOpenMode.Modify);
+            document = password is null ? PdfSafeReader.Open(path, PdfDocumentOpenMode.Modify) : PdfSafeReader.Open(path, password, PdfDocumentOpenMode.Modify);
         }
         catch (PdfReaderException ex) when (ex.Message.Contains("owner password", StringComparison.OrdinalIgnoreCase))
         {

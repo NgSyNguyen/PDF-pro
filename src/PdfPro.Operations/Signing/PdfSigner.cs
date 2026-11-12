@@ -8,6 +8,7 @@ using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Signing;
 
@@ -107,7 +108,7 @@ public static class PdfSigner
         PdfDocument pdf;
         try
         {
-            pdf = PdfReader.Open(new MemoryStream(document, writable: false), PdfDocumentOpenMode.Import);
+            pdf = PdfSafeReader.Open(new MemoryStream(document, writable: false), PdfDocumentOpenMode.Import);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

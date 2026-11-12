@@ -275,7 +275,7 @@ public sealed class GrayscaleOperation(PdfiumGate gate) : PdfOperation<Grayscale
     {
         try
         {
-            return PdfReader.Open(new MemoryStream(data, writable: false), mode);
+            return PdfSafeReader.Open(new MemoryStream(data, writable: false), mode);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not OutOfMemoryException)
         {

@@ -4,7 +4,7 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 12/11/2026 — **Phase 12 (tự động hóa: palette, workflow, chạy lô, hot folder, CLI `pdfpro`) xong về code**. Phase 11 xong về code (cloud: lát 1–7; CI xanh tới `481b1d6`). Việc của máy Windows: như P10 (`tools/fetch-tools.ps1`, `Phase10AcceptanceTests`, kiểm tay P9/P10) + `Phase11AcceptanceTests` và kiểm tay P11 (mục SPEC Phase 11). Kế tiếp: P12. Xem "Lời nhắn bàn giao" ngay dưới.
+Cập nhật lần cuối: 12/11/2026 — **Phase 12 (tự động hóa: palette, workflow, chạy lô, hot folder, CLI `pdfpro`) xong về code**. Phase 11 xong về code (cloud: lát 1–7; CI xanh tới `481b1d6`). Việc của máy Windows: như P10 (`tools/fetch-tools.ps1`, `Phase10AcceptanceTests`, kiểm tay P9/P10) + `Phase11AcceptanceTests`, `Phase12AcceptanceTests` và kiểm tay P11/P12 (mục SPEC). Kế tiếp: P13. Xem "Lời nhắn bàn giao" ngay dưới.
 
 ## 0. Lời nhắn bàn giao (12/11/2026, cập nhật lần 6)
 
@@ -12,7 +12,7 @@ Cập nhật lần cuối: 12/11/2026 — **Phase 12 (tự động hóa: palette
 
 **Trên Windows thêm:** `$env:PDFPRO_UI_TESTS=1` chạy `Phase12AcceptanceTests` (cần Tesseract cho kịch bản 50 tệp; build cả `PdfPro.Cli` để có `pdfpro.exe`); kiểm tay theo SPEC mục Phase 12 (hot folder khi đang chép tệp lớn, khay hệ thống, khởi động cùng Windows, `pdfpro info --json` + `%ERRORLEVEL%`, xuất/nhập `.pdfflow`).
 
-**Đang làm:** P13 (hoàn thiện, hiệu năng, bảo mật, phát hành) — xem `docs/PROMPTS.md` mục P13.
+**Đang làm:** P13 (hoàn thiện, hiệu năng, bảo mật, phát hành) — xem `docs/PROMPTS.md` mục P13 và bảng "Phase 13 — các lát" (lát 1: tệp độc hại + fuzz xong).
 
 ### Lời nhắn lần 5 (11/11/2026)
 
@@ -47,7 +47,7 @@ Cập nhật lần cuối: 12/11/2026 — **Phase 12 (tự động hóa: palette
 | Nhánh làm việc | `claude/laughing-pasteur-x9yt44` |
 | PR | NgSyNguyen/PDF-pro#1 (draft → `main`) — gom toàn bộ phần còn lại của Phase 5 |
 | CI | `.github/workflows/build.yml`, `windows-latest`; chạy khi push vào `main` hoặc trên pull request (nhánh không có PR thì **không** chạy CI) |
-| CI gần nhất | `9917944`, `2b564c4`, `c3b5de7`: **xanh**. `7cd50ec`, `4a7b68e`, `c03ae19` **đỏ** do một test App kỳ vọng sai (`Bookmarks_EditedInTheDialog_BecomeOneContentChange`: `basic-vi` có sẵn 4 bookmark; sửa ở `9917944`). Trước đó `481b1d6` (P11 lát 3–5b + sửa test so sánh): **xanh** (cả `ab5433d`, `871cf63`, `53a929a`, `f3045de`, `64b7024`, `f70f09c`, `9d6e79a`, `630d861`, `2a5be01`, `d325333`, `f9d5dc8`, `0c6658c`, `a4b6f55`, `0e51f6a`, `6ce96c5`, `cea9fb0`, `39dfd96`, `7f538c4`, `84d3efb`, `22e6489`, `77af225`, `f376296`, `7cae483`, `8fa89df`, `d028948`, `f366110`). `1520dac`…`813ed15` đỏ do một kỳ vọng sai của `CompareViewModelTests` (thay đổi "Sửa" cũng có ô xanh của từ thêm; sửa ở `481b1d6`); `db2c98f` đỏ do `Pages_AreReadInParallel_WithProgress` (render 300 DPI trên CI chậm hơn độ trễ giả → không thấy đọc chồng; sửa ở `ab5433d`: lần đọc chờ lần thứ hai bắt đầu); `ea46071` đỏ do test named pipe chập chờn (sửa ở `f376296`, xem mục 6); `5282022` đỏ do đặc tả NSubstitute mơ hồ (sửa ở `40439cf`) |
+| CI gần nhất | `9917944`, `2b564c4`, `c3b5de7`, `7c3bb9c`, `793eda6`: **xanh**. `17c41cb` đỏ do test palette đi phím mũi tên sai thứ tự (sửa ở `7216518`); `861531f` đỏ do `HotFolderServiceTests` kỳ vọng tên kết quả "sổ tay.pdf" — bước sổ gập đặt "sổ tay-booklet.pdf" (sửa ở `a6fb34a`). `7cd50ec`, `4a7b68e`, `c03ae19` **đỏ** do một test App kỳ vọng sai (`Bookmarks_EditedInTheDialog_BecomeOneContentChange`: `basic-vi` có sẵn 4 bookmark; sửa ở `9917944`). Trước đó `481b1d6` (P11 lát 3–5b + sửa test so sánh): **xanh** (cả `ab5433d`, `871cf63`, `53a929a`, `f3045de`, `64b7024`, `f70f09c`, `9d6e79a`, `630d861`, `2a5be01`, `d325333`, `f9d5dc8`, `0c6658c`, `a4b6f55`, `0e51f6a`, `6ce96c5`, `cea9fb0`, `39dfd96`, `7f538c4`, `84d3efb`, `22e6489`, `77af225`, `f376296`, `7cae483`, `8fa89df`, `d028948`, `f366110`). `1520dac`…`813ed15` đỏ do một kỳ vọng sai của `CompareViewModelTests` (thay đổi "Sửa" cũng có ô xanh của từ thêm; sửa ở `481b1d6`); `db2c98f` đỏ do `Pages_AreReadInParallel_WithProgress` (render 300 DPI trên CI chậm hơn độ trễ giả → không thấy đọc chồng; sửa ở `ab5433d`: lần đọc chờ lần thứ hai bắt đầu); `ea46071` đỏ do test named pipe chập chờn (sửa ở `f376296`, xem mục 6); `5282022` đỏ do đặc tả NSubstitute mơ hồ (sửa ở `40439cf`) |
 
 - Trên máy chủ dự án có `README.md` chưa track (không rõ nguồn) — **chưa commit**; README chính thức để tới P13.
 - Máy chủ dự án cần `git config user.name/user.email` trong repo (đã từng thiếu → commit thất bại im lặng).
@@ -80,7 +80,7 @@ $env:PDFPRO_UI_TESTS=1; dotnet test --project tests/PdfPro.App.UiTests -c Releas
 | P2 PDFium + Viewer | Xong (`6c0456e` … `e4541a1`) |
 | P3 Phiên tài liệu & tổ chức trang | Xong (`4ff9664` … `c1bbc4c`), có nghiệm thu FlaUI |
 | P4 Gộp, tách & bố cục | Xong (`b541fcd` … `1b0a5c2`), có nghiệm thu FlaUI và mục SPEC |
-| **P5 Chèn & đóng dấu** | **Đang làm** — xem bảng lát dưới |
+| P5 Chèn & đóng dấu | Xong về code (lát 1–10), có mục SPEC và `Phase5AcceptanceTests` (chưa chạy tay) |
 | P6 Chú thích & tìm kiếm | Xong về code (`66c9fc5` … lát 9e), có mục SPEC và `Phase6AcceptanceTests` (chưa chạy tay) |
 | P7 Sửa nội dung gốc & biểu mẫu | Xong về code (`d5d3523` … lát 9), có mục SPEC và `Phase7AcceptanceTests` (chưa chạy tay) |
 | P8 Bảo mật, xóa vĩnh viễn & chữ ký số | Xong về code (lát 1–9), có mục SPEC và `Phase8AcceptanceTests` (chưa chạy tay) |
@@ -287,6 +287,16 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 | 4d-2 | Hot folder — App: `Services/Automation/HotFolderService.cs` (`IHotFolderService` + `IHostedService`: bật/khởi động lại/tắt theo cài đặt, workflow = id mẫu dựng sẵn hoặc tệp .pdfflow của thư viện, thư mục làm việc `cache\automation`, trạng thái "Đang theo dõi — xong n, lỗi m" / thiếu thư mục / thiếu workflow / không bật được; log chỉ ghi số đếm — tên tệp có thể là dữ liệu cá nhân), `WindowsStartupRegistration` (khóa `HKCU\…\Run` "PDF_Pro" = `PdfPro.exe --background`); `StartupArguments.Background` (`--background`: cửa sổ mở thu nhỏ, vào khay khi hot folder chạy); `AppSettings.HotFolderEnabled/Path/Workflow/Output/MinimizeToTray`; Cài đặt: thẻ "Thư mục theo dõi (hot folder)" (`SettingsViewModel.HotFolder.cs`: bật/tắt, thư mục, workflow, kết quả, thu nhỏ xuống khay, khởi động cùng Windows — mỗi thay đổi lưu **cả nhóm** rồi áp dụng ngay); `MainWindow`: biểu tượng khay hệ thống (`NotifyIcon` của Windows Forms — `UseWindowsForms` nhưng **không** import namespace toàn cục; `NoWarn WFO0003` vì DPI đặt trong manifest của app WPF) khi thu nhỏ lúc hot folder chạy, đúp chuột/"Mở" để hiện lại, "Thoát", chữ gợi ý theo trạng thái; `BringToFront` hiện lại cửa sổ đang ẩn; 19 chuỗi vi/en. Test: `HotFolderServiceTests` (3: cài đặt bật → tệp thả vào chạy workflow "print" → `_done` + `_output`, tắt; thiếu thư mục/workflow; cửa sổ Cài đặt lưu + áp dụng + khởi động cùng Windows) | commit `feat(app): the hot folder runs in the background, from the notification area and with Windows` | Xong (App test chỉ chạy trên CI; khay hệ thống và khởi động cùng Windows **chưa kiểm tay**) |
 | 5 | Mục SPEC "Tự động hóa (Phase 12)" (nguyên tắc, mô tả thao tác, workflow, chạy lô, hot folder, App, CLI, quyết định/giới hạn, nghiệm thu, kiểm tay); `Phase12AcceptanceTests` (FlaUI: palette tìm "Thuộc tính" → Enter; "Số hóa hồ sơ" trên 50 tệp có 1 hỏng → 49 xong + `pdfpro run-workflow digitize` cho cùng trang/chữ — cần Tesseract); `PdfPro.Cli` chép `tools\qpdf`, `tools\tesseract` cạnh `pdfpro.exe` như App | commit `docs: Phase 12 in the SPEC, and its acceptance tests` | Xong — **chưa chạy tay trên Windows** |
 
+### Phase 13 — các lát (kế hoạch do agent tự quyết, 12/11/2026)
+
+| Lát | Nội dung | Commit | Trạng thái |
+|---|---|---|---|
+| 1 | Tệp độc hại không làm sập/treo/tràn bộ nhớ: `Materializing/PdfSafeReader.cs` — `PdfStructureGuard` (PdfPig đọc lười, giới hạn lồng 256: cây trang hoặc bookmark vòng lại chính nó (duyệt sâu nhớ nút trên đường đi), đối tượng lồng quá sâu → `InvalidDataException` có đánh dấu `IsRefusal`; tệp PdfPig không đọc được để PDFsharp tự báo; kết quả nhớ theo (đường dẫn, cỡ, giờ ghi)) + `PdfSafeReader.Open` (đường dẫn / mật khẩu / stream) thay **mọi** `PdfReader.Open` trong src (30 chỗ, 26 tệp) và sửa `/Count` của cây trang theo số trang thật; `StreamData`: Flate tự giải (ZLib → Deflate bỏ 2 byte → PDFsharp), **trần 512 MB** sau giải nén (`Bytes` ném `InvalidDataException`, `Decode` trả null); nén/thang xám bỏ qua ảnh quá `ImageRecompressor.MaxPixels` **trước khi** giải mã. Test `Robustness/HostileFiles.cs` (tạo từng byte: 0 trang, cây trang vòng (2 kiểu), bookmark vòng, mảng lồng 50.000 tầng, phông hỏng, tham chiếu vòng, trang 14.400 pt × `/UserUnit`, `/Count` 1 tỉ, ảnh 30.000² điểm (bom giải nén), tệp cụt; nội dung 700 MB; 10.000 trang) + `RobustnessTests.cs` (PDFium mở/vẽ/đọc chữ < 30 s; PDFsharp chỉ bị từ chối với tệp làm tràn ngăn xếp; xoay/đánh số/nén/làm sạch/thang xám xong hoặc báo lỗi có lý do < 60 s, **không bao giờ hết bộ nhớ**; bom giải nén bị từ chối; 10.000 trang mở < 10 s; **fuzz** đổi byte/nhân đoạn/cắt đuôi ba tệp mẫu, hạt giống cố định, 40 bản trên PR, `PDFPRO_FUZZ_ITERATIONS` cho bản đêm — 2.000 bản trên cloud: 27 s, không sập); `.github/workflows/fuzz.yml` (hằng đêm 19:17 UTC trên nhánh mặc định + chạy tay, 3.000 bản) | commit `fix: hostile files can no longer bring PDF_Pro down` | Xong |
+| 2 | `PdfPro.Benchmarks` (BenchmarkDotNet): mở 1.000 trang, vẽ 3 mức thu phóng, vật chất hóa plan 1.000 trang, nén 50 trang scan, OCR 10 trang; số đo vào SPEC | | Chưa làm |
+| 3 | `PdfPro.Worker`: chạy thao tác nặng trong tiến trình riêng (named pipe JSON), khởi động lại khi chết, giới hạn Job Object, tùy chọn trong Cài đặt | | Chưa làm |
+| 4 | UX/trợ năng: bảng phím tắt F1, tooltip, `AutomationProperties`, hướng dẫn lần đầu, Giới thiệu (phiên bản + giấy phép), chép thông tin lỗi | | Chưa làm |
+| 5 | Phát hành: Velopack, self-contained win-x64/arm64 ReadyToRun, cấu hình ký, workflow phát hành theo thẻ `v*`, CHANGELOG, README, mục SPEC Phase 13 | | Chưa làm |
+
 ## 5. Bản đồ mã Phase 5
 
 - **Core:** `Overlay/OverlayItems.cs` (đối tượng, `OverlayLimits`), `Overlay/OverlaySnapping.cs`, `Geometry/RotatedBox.cs`, `Geometry/PdfMatrix.cs`, `Text/TextLayout.cs`, `Text/FontFamilies.cs`, `Stamping/StampTemplate.cs` (`Parse`, `Render`, `Escape`), `Stamping/PageNumbering.cs`, `Stamping/BatesNumbering.cs`, `Stamping/StampPlacement.cs`, `Imaging/SignatureImages.cs`, `Imaging/ExifOrientation.cs`, `Organizing/MaterializedGeometry.cs`.
@@ -398,6 +408,11 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - **`Uri.AbsoluteUri` thêm "/" cuối** cho địa chỉ chỉ có tên miền ("https://www.example.com/") — liên kết ghi dạng này (ASCII, đã escape).
 - **Record có tham số `string?` không mặc định** (như `DocumentSecurity.UserPassword`) là *bắt buộc có mặt* khi đọc JSON (`RespectRequiredConstructorParameters`) dù giá trị null — JSON bỏ null khi ghi nên mật khẩu bị gỡ khỏi workflow phải được điền lại `null` trước khi đọc (`WorkflowValidator.FillSecrets`).
 - Tiến độ của một thao tác có thể **lùi về 0** khi sang giai đoạn khác (vật chất hóa, nén…) — tiến độ tổng của workflow giữ giá trị lớn nhất từng bước.
+- **PDFsharp 6.2.4 đệ quy không giới hạn** khi đọc cây trang/bookmark vòng hoặc mảng/từ điển lồng hàng chục nghìn tầng → **tràn ngăn xếp, không bắt được, cả tiến trình chết**. Mọi lần đọc bằng PDFsharp phải qua `PdfSafeReader.Open` (có test canh: `PdfSharp_IsNeverHandedAFileThatWouldOverflowItsStack`). **Không** gọi `PdfReader.Open` trực tiếp trong src.
+- **PDFsharp ở chế độ Import trả `/Count` của tệp cho `PageCount`** (tệp khai 1 tỉ trang → vòng lặp trên trang cấp phát 7,6 GB rồi hết bộ nhớ); `Pages.Count` mới đếm thật. `PdfSafeReader` sửa `/Count` ngay khi mở.
+- PdfPig đọc lười, `PdfDocumentStackDepthException` (namespace `UglyToad.PdfPig.Core`) khi lồng quá 256 tầng; `PdfDocument.Structure` cho `Catalog`, `CrossReferenceTable.ObjectOffsets`, `GetObject`. Tên `Structure` đụng namespace `PdfPro.Operations.Structure` → viết đầy đủ `UglyToad.PdfPig.Structure`.
+- `InvalidDataException` là `sealed` → đánh dấu lỗi riêng bằng `Exception.Data`.
+- Còn mở: PdfPig trích chữ trên trang có content stream giải nén cực lớn (bom nội dung) dùng tới ~5 GB (Sang văn bản, So sánh, Trích bảng…) — lát 3 (Worker trong tiến trình riêng, giới hạn bộ nhớ) giảm thiểu.
 - `PdfOperation.ExecuteAsync` **chỉ kiểm DataAnnotations**, không gọi `ValidateCore` — thao tác tự gọi `Validate` trong `ExecuteCoreAsync` khi cần (như `BatesOperation`, `ProtectDocumentOperation`).
 
 ## 7. Rủi ro / nợ đang mở

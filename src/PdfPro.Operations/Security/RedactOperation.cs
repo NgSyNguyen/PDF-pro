@@ -14,6 +14,7 @@ using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 using PigDocument = UglyToad.PdfPig.PdfDocument;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Security;
 
@@ -344,7 +345,7 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
     {
         try
         {
-            return PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Modify);
+            return PdfSafeReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Modify);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not IOException)
         {

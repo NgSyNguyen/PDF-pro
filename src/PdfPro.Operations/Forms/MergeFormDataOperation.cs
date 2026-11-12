@@ -6,6 +6,7 @@ using PdfPro.Core.Operations;
 using PdfPro.Core.Splitting;
 using PdfPro.Core.Tables;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Forms;
 
@@ -116,7 +117,7 @@ public sealed class MergeFormDataOperation : PdfOperation<MergeFormParams>
         try
         {
             // Read from memory: whatever goes wrong now is the document's content, not the disk.
-            using var document = PdfReader.Open(new MemoryStream(template), PdfDocumentOpenMode.Import);
+            using var document = PdfSafeReader.Open(new MemoryStream(template), PdfDocumentOpenMode.Import);
             fields = FormReader.Read(document);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -175,7 +176,7 @@ public sealed class MergeFormDataOperation : PdfOperation<MergeFormParams>
 
                 var temp = Path.Combine(folder, $".{names[r]}.{Guid.NewGuid():N}.pdfpro-merge.tmp");
                 temps.Add(temp);
-                using (var document = PdfReader.Open(new MemoryStream(template), PdfDocumentOpenMode.Modify))
+                using (var document = PdfSafeReader.Open(new MemoryStream(template), PdfDocumentOpenMode.Modify))
                 {
                     FormWriter.SetValues(document, [.. values.DistinctBy(v => v.Name)]);
                     if (parameters.Flatten)
