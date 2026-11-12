@@ -99,7 +99,9 @@ PdfPro/
    ├─ PdfPro.App.UiTests/        // (P3, P4) nghiệm thu trên app thật bằng FlaUI; chỉ chạy tay (PDFPRO_UI_TESTS=1)
    ├─ PdfPro.SampleGenerator/    // sinh lại samples/ (PDFsharp), không phải project test
    ├─ PdfPro.TestTools.FakeTool/ // exe giả lập công cụ ngoài, chỉ dùng cho test
-   └─ PdfPro.Benchmarks/
+   ├─ PdfPro.Cli.Tests/          // (P12) pdfpro chạy trong tiến trình: lệnh, mã thoát, JSON
+benchmarks/
+   └─ PdfPro.Benchmarks/         // (P13) BenchmarkDotNet + "budgets", chạy tay
 ```
 
 Quy tắc phụ thuộc một chiều: **App / Cli → Operations, Ocr, Infrastructure → Pdfium → Core**. `PdfPro.Core` không biết gì về WPF hay thư viện PDF, nên test cực nhanh và dùng lại được cho CLI.
@@ -716,6 +718,39 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Test tự động: workflow 4 bước trên `basic-vi` (xoay, xóa, đánh số, nén) — tệp vào không đổi, thư mục tạm sạch, tiến độ không lùi; `.pdfflow` không chứa mật khẩu; kiểm chuỗi từng loại lỗi; **"Số hóa hồ sơ" với Tesseract thật** trên `scan-vi` → 14 trang, có "ủy ban", `pdfaid:part` 2, nhỏ hơn; mật khẩu khi chạy → tệp mở bằng mật khẩu mở có đúng quyền; tệp có mật khẩu + mật khẩu chủ; xóa theo mẫu CCCD + email; lô 11 tệp + 1 hỏng → 11 xong, 1 lỗi đúng bước, CSV, chạy lại chỉ tệp lỗi; hot folder: tệp đang ghi không bị lấy, hợp lệ → `_done` + kết quả, hỏng → `_error`; CLI: `info --json` hợp lệ + mã 3/4, lô có tệp hỏng → mã 1, encrypt/decrypt từ biến môi trường, `run-workflow publish --secrets`, ký bằng `.pfx`, **digitize bằng CLI cho cùng số trang và chữ như `WorkflowRunner`**.
 - Kịch bản FlaUI `Phase12AcceptanceTests` (chạy tay, `PDFPRO_UI_TESTS=1`): Command Palette tìm "Thuộc tính" → Enter mở hộp thoại; **"Số hóa hồ sơ" trên thư mục 50 tệp có 1 tệp hỏng → 49 xong, 1 lỗi**, rồi `pdfpro run-workflow digitize` trên một tệp cho cùng số trang và chữ như bản của App (cần Tesseract).
 - Kiểm tay (chủ dự án): chép 10 tệp lớn vào hot folder trong khi đang chép — không tệp nào bị xử lý trước khi chép xong; thu nhỏ khi hot folder chạy → biểu tượng ở khay, đúp chuột mở lại; bật "Khởi động cùng Windows", đăng nhập lại → app chạy thu nhỏ và theo dõi; `pdfpro info tệp.pdf --json` trả JSON hợp lệ, `echo %ERRORLEVEL%` khác 0 khi tệp không tồn tại; xuất một workflow ra `.pdfflow`, nhập trên máy khác → chạy y hệt.
+
+### Hoàn thiện, hiệu năng, bảo mật & phát hành (Phase 13)
+
+> Đang làm (xem `docs/PROGRESS.md`, bảng "Phase 13 — các lát"). Mục này ghi phần đã xong.
+
+**Chống chịu tệp độc hại (lát 1).** Mục tiêu: không tệp nào làm **sập**, **treo** hay **tràn bộ nhớ** tiến trình — hoặc chạy được, hoặc báo lỗi có lý do.
+- **PDFsharp 6.2.4 đệ quy không giới hạn** khi đọc cây trang/bookmark vòng lại chính nó hoặc mảng/từ điển lồng hàng chục nghìn tầng → tràn ngăn xếp, **không bắt được**, cả tiến trình chết. Mọi lần đọc bằng PDFsharp trong `src` đi qua `Materializing/PdfSafeReader` (có test canh: không tệp nào gọi `PdfReader.Open` trực tiếp): `PdfStructureGuard` xem cấu trúc bằng PdfPig trước (đọc lười, lồng tối đa 256 tầng; duyệt cây trang và bookmark nhớ các nút trên đường đi; phân tích mọi đối tượng một lần) và từ chối tệp nguy hiểm bằng `InvalidDataException` (`PdfStructureGuard.IsRefusal`); kết quả nhớ theo (đường dẫn, cỡ, giờ ghi). Tệp PdfPig không đọc được để PDFsharp tự báo.
+- PDFsharp ở chế độ Import trả `/Count` của tệp cho `PageCount` (tệp khai 1 tỉ trang làm vòng lặp trên trang hết bộ nhớ) → `PdfSafeReader` đặt lại `/Count` theo số trang thật.
+- **Bom giải nén:** `StreamData` tự giải Flate với **trần 512 MB** sau giải nén (`Bytes` ném `InvalidDataException`, `Decode` trả null); nén/thang xám bỏ qua ảnh quá `ImageRecompressor.MaxPixels` **trước khi** giải mã (ảnh 30.000 × 30.000: đỉnh bộ nhớ 2,4 GB → 113 MB).
+- Bộ test `Operations.Tests/Robustness`: tệp tạo từng byte — 0 trang, cây trang vòng (2 kiểu), bookmark vòng, mảng lồng 50.000 tầng, phông hỏng, tham chiếu vòng, trang 14.400 pt với `/UserUnit`, `/Count` 1 tỉ, ảnh 30.000² (bom giải nén), tệp cụt, nội dung 700 MB, 10.000 trang. PDFium mở/vẽ/đọc chữ < 30 s; xoay, đánh số, nén, làm sạch, thang xám xong hoặc báo lỗi có lý do < 60 s, không bao giờ `OutOfMemoryException`; 10.000 trang mở < 10 s.
+- **Fuzz nhẹ**: đổi byte ngẫu nhiên / nhân một đoạn / cắt đuôi ba tệp mẫu (hạt giống cố định), mỗi bản mở + vẽ + đọc chữ bằng PDFium, mở + lưu bằng PDFsharp, đọc chữ bằng PdfPig. 40 bản trong mỗi lần build; `.github/workflows/fuzz.yml` chạy 3.000 bản hằng đêm trên nhánh mặc định (2.000 bản trên máy cloud: 27 s, không sập).
+- Còn mở: PdfPig trích chữ trên trang có content stream giải nén cực lớn dùng nhiều GB (Sang văn bản, So sánh, Trích bảng) — chạy thao tác trong tiến trình Worker (lát 3) giới hạn được.
+
+**Hiệu năng (lát 2)** — `benchmarks/PdfPro.Benchmarks` (BenchmarkDotNet 0.15.8, chạy tay, mọi benchmark `[InProcess]`):
+```powershell
+dotnet run -c Release --project benchmarks/PdfPro.Benchmarks -- budgets       # ngân sách, đo một lần trong tiến trình mới
+dotnet run -c Release --project benchmarks/PdfPro.Benchmarks -- --filter '*'  # mọi benchmark (OCR khi có Tesseract tiếng Việt)
+```
+Số đo (12/11/2026, container Linux, Xeon 2,1 GHz 4 nhân, .NET 10.0.13):
+
+| Đo | Kết quả | Ngân sách |
+|---|---|---|
+| Mở `big-1000.pdf` (số trang + khổ trang 1) | 17 ms (lần đầu trong tiến trình: 40–60 ms) | — |
+| Trang đầu của tệp 1.000 trang hiện ra (mở + vẽ 100 %) | 25 ms (lần đầu: 55–77 ms) | < 2 s |
+| Vẽ một trang chữ (`vanban-vi`) ở 50 / 100 / 200 % | 0,33 / 0,88 / 2,6 ms | — |
+| Vẽ một trang scan (`scan-vi`) ở 50 / 100 / 200 % | 2,8 / 5,1 / 12 ms | — |
+| Vật chất hóa plan 1.000 trang (xoay 1/3 số trang, dời 100, xóa 10) | 59 ms, cấp phát 34 MB | — |
+| Nén 50 trang scan A4 300 DPI (JPEG màu) mức eBook | 2,56 s, cấp phát 1,6 GB (trước khi tối ưu: 3,30 s, 3,64 GB) | — |
+| OCR 10 trang `scan-vi` tiếng Việt: tuần tự / 3 luồng | 17,3 s / 6,2 s | — |
+| Bộ nhớ engine khi xem tệp 1.000 trang (mở, 6 trang 100 % + 40 thumbnail giữ lại) | 60 MB | < 800 MB |
+
+- Bộ nhớ của **ứng dụng** khi xem `big-1000.pdf` đo trên Windows ở Phase 2 (~730 MB với cache render 512 MB — xem mục Trình xem) là do ngân sách cache, không phải engine. **Khởi động < 1,5 s** đo trên Windows (chưa có số).
+- Tối ưu đã làm: `JpegCodec` giải/mã JPEG qua bộ đệm RGBA thuê từ `ArrayPool` (ảnh scan một trang ~35 MB) và chép kênh bằng vòng lặp gọn thay vì một lệnh chép cho mỗi điểm ảnh. Bitmap trang của PDFium nằm ở bộ nhớ native (không phải mảng quản lý) nên không cần pool; không thấy vẽ thừa hay giữ `PdfiumGate` lâu trong các phép đo này.
 
 ### Hệ tọa độ — nguồn bug số một
 

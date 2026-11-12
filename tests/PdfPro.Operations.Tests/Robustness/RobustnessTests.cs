@@ -39,7 +39,7 @@ public sealed class RobustnessTests(PdfiumFixture pdfium) : IDisposable
                 try
                 {
                     using var document = PdfiumDocument.Open(pdfium.Gate, path);
-                    var bitmap = document.RenderPage(0, new PageRenderOptions { Scale = 50 / 72.0 });
+                    using var bitmap = document.RenderPage(0, new PageRenderOptions { Scale = 50 / 72.0 });
                     document.GetPageTextLayer(0);
                     return $"{document.PageCount} page(s), {bitmap.Width}×{bitmap.Height}";
                 }
@@ -158,7 +158,7 @@ public sealed class RobustnessTests(PdfiumFixture pdfium) : IDisposable
             () =>
             {
                 using var document = PdfiumDocument.Open(pdfium.Gate, path);
-                document.RenderPage(9_999, new PageRenderOptions { Scale = 0.2 });
+                using var last = document.RenderPage(9_999, new PageRenderOptions { Scale = 0.2 });
                 return document.PageCount;
             },
             PdfiumPriority.Normal,
@@ -199,7 +199,7 @@ public sealed class RobustnessTests(PdfiumFixture pdfium) : IDisposable
                     try
                     {
                         using var document = PdfiumDocument.Open(pdfium.Gate, path);
-                        document.RenderPage(0, new PageRenderOptions { Scale = 30 / 72.0 });
+                        using var bitmap = document.RenderPage(0, new PageRenderOptions { Scale = 30 / 72.0 });
                         document.GetPageTextLayer(0);
                     }
                     catch (Exception ex) when (ex is not OutOfMemoryException)

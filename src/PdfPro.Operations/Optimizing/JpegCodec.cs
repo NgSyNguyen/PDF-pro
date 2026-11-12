@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Runtime.InteropServices;
 using SkiaSharp;
 
@@ -32,22 +33,36 @@ internal static class JpegCodec
 
         var (width, height) = (codec.Info.Width, codec.Info.Height);
         var info = new SKImageInfo(width, height, components == 1 ? SKColorType.Gray8 : SKColorType.Rgba8888, SKAlphaType.Opaque);
-        var pixels = new byte[info.BytesSize64];
-        var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+        var size = checked((int)info.BytesSize64);
+
+        // Grey is decoded straight into the image; RGB into a pooled RGBA buffer (Skia has no 3-byte format) — a scan
+        // page is about 35 MB of it, so renting it saves the large-object heap a page's worth of garbage each time.
+        var pixels = components == 1 ? new byte[size] : ArrayPool<byte>.Shared.Rent(size);
         try
         {
-            var result = codec.GetPixels(info, handle.AddrOfPinnedObject());
-            if (result is not (SKCodecResult.Success or SKCodecResult.IncompleteInput))
+            var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+            try
             {
-                return null;
+                var result = codec.GetPixels(info, handle.AddrOfPinnedObject());
+                if (result is not (SKCodecResult.Success or SKCodecResult.IncompleteInput))
+                {
+                    return null;
+                }
             }
+            finally
+            {
+                handle.Free();
+            }
+
+            return components == 1 ? new PixelImage(pixels, width, height, 1) : new PixelImage(Channels.Drop(pixels.AsSpan(0, size), 4, 3), width, height, 3);
         }
         finally
         {
-            handle.Free();
+            if (components != 1)
+            {
+                ArrayPool<byte>.Shared.Return(pixels);
+            }
         }
-
-        return components == 1 ? new PixelImage(pixels, width, height, 1) : new PixelImage(Channels.Drop(pixels, 4, 3), width, height, 3);
     }
 
     /// <summary>A baseline JPEG of a grey (1 sample) or RGB (3 samples) image at <paramref name="quality"/> (IJG scale).</summary>
@@ -59,19 +74,36 @@ internal static class JpegCodec
         }
 
         var gray = image.Channels == 1;
-        var samples = gray ? image.Samples : Channels.AddOpaque(image.Samples);
         var info = new SKImageInfo(image.Width, image.Height, gray ? SKColorType.Gray8 : SKColorType.Rgba8888, SKAlphaType.Opaque);
-        var handle = GCHandle.Alloc(samples, GCHandleType.Pinned);
+
+        // RGB goes through a pooled RGBA buffer, as in Decode.
+        var samples = gray ? image.Samples : ArrayPool<byte>.Shared.Rent(checked((int)info.BytesSize64));
         try
         {
-            using var pixmap = new SKPixmap(info, handle.AddrOfPinnedObject(), info.RowBytes);
-            using var encoded = pixmap.Encode(new SKJpegEncoderOptions(Math.Clamp(quality, 1, 100), SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore))
-                ?? throw new InvalidOperationException("Skia could not encode the image as JPEG.");
-            return encoded.ToArray();
+            if (!gray)
+            {
+                Channels.AddOpaque(image.Samples, samples);
+            }
+
+            var handle = GCHandle.Alloc(samples, GCHandleType.Pinned);
+            try
+            {
+                using var pixmap = new SKPixmap(info, handle.AddrOfPinnedObject(), info.RowBytes);
+                using var encoded = pixmap.Encode(new SKJpegEncoderOptions(Math.Clamp(quality, 1, 100), SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore))
+                    ?? throw new InvalidOperationException("Skia could not encode the image as JPEG.");
+                return encoded.ToArray();
+            }
+            finally
+            {
+                handle.Free();
+            }
         }
         finally
         {
-            handle.Free();
+            if (!gray)
+            {
+                ArrayPool<byte>.Shared.Return(samples);
+            }
         }
     }
 }
@@ -80,31 +112,39 @@ internal static class JpegCodec
 internal static class Channels
 {
     /// <summary>The first <paramref name="kept"/> samples of each pixel of <paramref name="from"/> samples.</summary>
-    public static byte[] Drop(byte[] samples, int from, int kept)
+    public static byte[] Drop(ReadOnlySpan<byte> samples, int from, int kept)
     {
         var pixels = samples.Length / from;
         var result = new byte[pixels * kept];
+        if (from == 4 && kept == 3)
+        {
+            for (int i = 0, o = 0, end = pixels * 4; i < end; i += 4, o += 3)
+            {
+                result[o] = samples[i];
+                result[o + 1] = samples[i + 1];
+                result[o + 2] = samples[i + 2];
+            }
+
+            return result;
+        }
+
         for (var i = 0; i < pixels; i++)
         {
-            Buffer.BlockCopy(samples, i * from, result, i * kept, kept);
+            samples.Slice(i * from, kept).CopyTo(result.AsSpan(i * kept, kept));
         }
 
         return result;
     }
 
-    /// <summary>RGB samples with an opaque alpha sample after each pixel.</summary>
-    public static byte[] AddOpaque(byte[] rgb)
+    /// <summary>RGB samples into <paramref name="rgba"/> (at least 4/3 as long) with an opaque alpha sample after each pixel.</summary>
+    public static void AddOpaque(ReadOnlySpan<byte> rgb, Span<byte> rgba)
     {
-        var pixels = rgb.Length / 3;
-        var result = new byte[pixels * 4];
-        for (var i = 0; i < pixels; i++)
+        for (int i = 0, o = 0, end = rgb.Length / 3 * 3; i < end; i += 3, o += 4)
         {
-            result[i * 4] = rgb[i * 3];
-            result[(i * 4) + 1] = rgb[(i * 3) + 1];
-            result[(i * 4) + 2] = rgb[(i * 3) + 2];
-            result[(i * 4) + 3] = 255;
+            rgba[o] = rgb[i];
+            rgba[o + 1] = rgb[i + 1];
+            rgba[o + 2] = rgb[i + 2];
+            rgba[o + 3] = 255;
         }
-
-        return result;
     }
 }

@@ -13,6 +13,9 @@
     <File Path="docs/PROMPTS.md" />
     <File Path="docs/SPEC.md" />
   </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/PdfPro.Benchmarks/PdfPro.Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/PdfPro.App/PdfPro.App.csproj" />
     <Project Path="src/PdfPro.Cli/PdfPro.Cli.csproj" />

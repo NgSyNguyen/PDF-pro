@@ -65,6 +65,7 @@ The complete license texts will be collected in this file before the first relea
 | [FlaUI.UIA3 / FlaUI.Core](https://github.com/FlaUI/FlaUI) | 5.0.0 | MIT | UI acceptance tests that drive the built app through UI Automation (`tests/PdfPro.App.UiTests`, run by hand) |
 | [Interop.UIAutomationClient](https://github.com/Roemer/UIAutomation-Interop) | 10.19041.0 | MIT | UI Automation COM interop (dependency of FlaUI.UIA3) |
 | [SkiaSharp.NativeAssets.Linux.NoDependencies](https://github.com/mono/SkiaSharp) | 4.153.1 | MIT; Skia: BSD-3-Clause | Skia's native library for running `pdfpro` (`PdfPro.Cli`) on Linux and `PdfPro.Operations.Tests` / `PdfPro.Cli.Tests` in Linux containers |
+| [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) | 0.15.8 | MIT | Performance measurements (`benchmarks/PdfPro.Benchmarks`, run by hand); brings Perfolizer, Pragmastat, Iced, Gee.External.Capstone, CommandLineParser, Microsoft.Diagnostics.Runtime and TraceEvent (all MIT) |
 | Arial, Times New Roman (Windows fonts) | — | Monotype (embedding allowed) | Subsets embedded in the generated sample PDFs only |
 
 Fonts installed on the user's computer are embedded (as subsets) into documents only when the font's own license
@@ -78,4 +79,5 @@ bits (OS/2 `fsType`) allow editable embedding; PDF_Pro never ships them.
 
 ## Planned (added in later phases, listed here once added)
 
-DiffPlex, tabula-sharp, ClosedXML, Velopack, BenchmarkDotNet.
+Velopack (installer and updates). DiffPlex and ClosedXML were planned and left out: PDF_Pro compares texts and
+writes .xlsx files with code of its own (Phase 11).
