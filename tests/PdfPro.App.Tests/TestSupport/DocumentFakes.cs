@@ -42,6 +42,13 @@ internal static class TestOperations
     /// <summary>The shared PDFium thread, for operations a test runs for real.</summary>
     public static PdfiumGate PdfiumGate => Gate.Value;
 
+    private static readonly Lazy<OperationCatalog> Standard = new(() => Operations.Automation.StandardOperations.Create(new Operations.Automation.StandardOperationServices(
+        Gate.Value,
+        new Infrastructure.ExternalTools.ExternalToolRunner(NullLogger<Infrastructure.ExternalTools.ExternalToolRunner>.Instance))));
+
+    /// <summary>Every operation for real (as pdfpro builds them), on the shared PDFium thread: for workflows and batches.</summary>
+    public static OperationCatalog All() => Standard.Value;
+
     /// <summary>The page operations as the app registers them (their file-based execution is not used by view models).</summary>
     public static OperationCatalog Catalog()
     {

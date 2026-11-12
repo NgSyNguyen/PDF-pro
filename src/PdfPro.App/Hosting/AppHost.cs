@@ -216,6 +216,10 @@ internal static class AppHost
             sp.GetRequiredService<ITimestampClient>(),
             new PdfFormSource(),
             sp.GetRequiredService<SignatureLibrary>()));
+        services.AddSingleton(sp => new Services.Automation.AutomationServices(
+            sp.GetRequiredService<OperationCatalog>(),
+            new Operations.Automation.WorkflowRunner(sp.GetRequiredService<OperationCatalog>(), sp.GetRequiredService<PdfPro.Pdfium.PdfiumGate>(), sp.GetRequiredService<PdfPro.Core.Ocr.IOcrEngine>()),
+            new Services.Automation.WorkflowLibrary(sp.GetRequiredService<AppPaths>().WorkflowsDirectory)));
         services.AddSingleton<IRecoveryDialog, RecoveryDialog>();
         services.AddSingleton<IRecoveryService, RecoveryService>();
 

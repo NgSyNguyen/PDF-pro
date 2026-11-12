@@ -2046,4 +2046,282 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Palette_Placeholder" xml:space="preserve"><value>Type a command's name: "delete blank", "compress", "ocr"…</value></data>
   <data name="Palette_NoResult" xml:space="preserve"><value>No command matches.</value></data>
   <data name="Palette_Hint" xml:space="preserve"><value>↑↓ to choose · Enter to run · Esc to close. Faded commands need an open document.</value></data>
+  <data name="Op_annotate_add" xml:space="preserve"><value>Add comments</value></data>
+  <data name="Op_annotate_delete" xml:space="preserve"><value>Delete comments</value></data>
+  <data name="Op_annotate_editFile" xml:space="preserve"><value>Edit existing comments</value></data>
+  <data name="Op_annotate_flatten" xml:space="preserve"><value>Flatten comments</value></data>
+  <data name="Op_annotate_update" xml:space="preserve"><value>Update comments</value></data>
+  <data name="Op_attachments_edit" xml:space="preserve"><value>Edit attachments</value></data>
+  <data name="Op_convert_fromImages" xml:space="preserve"><value>Pictures to PDF</value></data>
+  <data name="Op_convert_officeToPdf" xml:space="preserve"><value>Office to PDF</value></data>
+  <data name="Op_convert_toImages" xml:space="preserve"><value>To pictures</value></data>
+  <data name="Op_convert_toPdfA" xml:space="preserve"><value>To PDF/A</value></data>
+  <data name="Op_convert_toText" xml:space="preserve"><value>To text</value></data>
+  <data name="Op_edit_content" xml:space="preserve"><value>Edit content</value></data>
+  <data name="Op_edit_overlay" xml:space="preserve"><value>Add text, pictures, shapes</value></data>
+  <data name="Op_extract_images" xml:space="preserve"><value>Extract pictures</value></data>
+  <data name="Op_extract_tables" xml:space="preserve"><value>Extract tables</value></data>
+  <data name="Op_forms_design" xml:space="preserve"><value>Design a form</value></data>
+  <data name="Op_forms_fill" xml:space="preserve"><value>Fill a form</value></data>
+  <data name="Op_forms_flatten" xml:space="preserve"><value>Flatten a form</value></data>
+  <data name="Op_forms_merge" xml:space="preserve"><value>Merge form data</value></data>
+  <data name="Op_forms_reset" xml:space="preserve"><value>Reset a form</value></data>
+  <data name="Op_layout_booklet" xml:space="preserve"><value>Booklet</value></data>
+  <data name="Op_layout_nup" xml:space="preserve"><value>Pages per sheet</value></data>
+  <data name="Op_layout_tile" xml:space="preserve"><value>Tile a large page</value></data>
+  <data name="Op_ocr_run" xml:space="preserve"><value>Recognise text (OCR)</value></data>
+  <data name="Op_optimize_compress" xml:space="preserve"><value>Compress</value></data>
+  <data name="Op_optimize_grayscale" xml:space="preserve"><value>Grayscale</value></data>
+  <data name="Op_optimize_linearize" xml:space="preserve"><value>Optimize for the web</value></data>
+  <data name="Op_optimize_repair" xml:space="preserve"><value>Repair</value></data>
+  <data name="Op_organize_crop" xml:space="preserve"><value>Crop pages</value></data>
+  <data name="Op_organize_delete" xml:space="preserve"><value>Delete pages</value></data>
+  <data name="Op_organize_duplicate" xml:space="preserve"><value>Duplicate pages</value></data>
+  <data name="Op_organize_extract" xml:space="preserve"><value>Extract pages</value></data>
+  <data name="Op_organize_insertBlank" xml:space="preserve"><value>Insert blank pages</value></data>
+  <data name="Op_organize_insertPages" xml:space="preserve"><value>Insert pages from a file</value></data>
+  <data name="Op_organize_interleave" xml:space="preserve"><value>Interleave</value></data>
+  <data name="Op_organize_markSplit" xml:space="preserve"><value>Mark a split</value></data>
+  <data name="Op_organize_merge" xml:space="preserve"><value>Merge files</value></data>
+  <data name="Op_organize_move" xml:space="preserve"><value>Move pages</value></data>
+  <data name="Op_organize_pageSize" xml:space="preserve"><value>Change the page size</value></data>
+  <data name="Op_organize_rotate" xml:space="preserve"><value>Rotate pages</value></data>
+  <data name="Op_organize_setSplitMarks" xml:space="preserve"><value>Set split marks</value></data>
+  <data name="Op_organize_split" xml:space="preserve"><value>Split</value></data>
+  <data name="Op_scan_autoRotate" xml:space="preserve"><value>Turn pages upright</value></data>
+  <data name="Op_scan_cleanBorders" xml:space="preserve"><value>Clean dark borders</value></data>
+  <data name="Op_scan_deskew" xml:space="preserve"><value>Straighten pages</value></data>
+  <data name="Op_scan_removeBlankPages" xml:space="preserve"><value>Remove blank pages</value></data>
+  <data name="Op_security_decrypt" xml:space="preserve"><value>Remove the password</value></data>
+  <data name="Op_security_encrypt" xml:space="preserve"><value>Protect with a password</value></data>
+  <data name="Op_security_protection" xml:space="preserve"><value>Protect the open document</value></data>
+  <data name="Op_security_redact" xml:space="preserve"><value>Redact by pattern</value></data>
+  <data name="Op_security_sanitize" xml:space="preserve"><value>Sanitize</value></data>
+  <data name="Op_security_sign" xml:space="preserve"><value>Sign</value></data>
+  <data name="Op_stamp_background" xml:space="preserve"><value>Background</value></data>
+  <data name="Op_stamp_bates" xml:space="preserve"><value>Bates numbers</value></data>
+  <data name="Op_stamp_headerFooter" xml:space="preserve"><value>Header and footer</value></data>
+  <data name="Op_stamp_pageNumbers" xml:space="preserve"><value>Page numbers</value></data>
+  <data name="Op_stamp_remove" xml:space="preserve"><value>Remove stamps</value></data>
+  <data name="Op_stamp_watermark" xml:space="preserve"><value>Watermark</value></data>
+  <data name="Op_structure_bookmarks" xml:space="preserve"><value>Bookmarks</value></data>
+  <data name="Op_structure_links" xml:space="preserve"><value>Links</value></data>
+  <data name="Op_structure_metadata" xml:space="preserve"><value>Document description</value></data>
+  <data name="Op_structure_pageLabels" xml:space="preserve"><value>Page labels</value></data>
+  <data name="Param_pages" xml:space="preserve"><value>Pages</value></data>
+  <data name="Param_degrees" xml:space="preserve"><value>Degrees</value></data>
+  <data name="Param_preset" xml:space="preserve"><value>Preset</value></data>
+  <data name="Param_dpi" xml:space="preserve"><value>Resolution (DPI)</value></data>
+  <data name="Param_jpegQuality" xml:space="preserve"><value>JPEG quality</value></data>
+  <data name="Param_languages" xml:space="preserve"><value>Languages (JSON: ["vie"])</value></data>
+  <data name="Param_existingText" xml:space="preserve"><value>Pages with text</value></data>
+  <data name="Param_parallelism" xml:space="preserve"><value>At once (0 = automatic)</value></data>
+  <data name="Param_autoRotate" xml:space="preserve"><value>Turn upright</value></data>
+  <data name="Param_deskew" xml:space="preserve"><value>Straighten to read</value></data>
+  <data name="Param_straightenPages" xml:space="preserve"><value>Straighten the pages</value></data>
+  <data name="Param_confidenceThreshold" xml:space="preserve"><value>Confidence threshold</value></data>
+  <data name="Param_hocr" xml:space="preserve"><value>Keep hOCR</value></data>
+  <data name="Param_text" xml:space="preserve"><value>Text</value></data>
+  <data name="Param_opacity" xml:space="preserve"><value>Opacity (0–1)</value></data>
+  <data name="Param_rotation" xml:space="preserve"><value>Angle</value></data>
+  <data name="Param_anchor" xml:space="preserve"><value>Position</value></data>
+  <data name="Param_marginX" xml:space="preserve"><value>Side margin (pt)</value></data>
+  <data name="Param_marginY" xml:space="preserve"><value>Top/bottom margin (pt)</value></data>
+  <data name="Param_tile" xml:space="preserve"><value>Tile</value></data>
+  <data name="Param_tileGap" xml:space="preserve"><value>Tile gap (pt)</value></data>
+  <data name="Param_behindContent" xml:space="preserve"><value>Behind the content</value></data>
+  <data name="Param_imagePath" xml:space="preserve"><value>Picture</value></data>
+  <data name="Param_imageScale" xml:space="preserve"><value>Picture size (page width)</value></data>
+  <data name="Param_style" xml:space="preserve"><value>Text style (JSON)</value></data>
+  <data name="Param_textStyle" xml:space="preserve"><value>Text style (JSON)</value></data>
+  <data name="Param_pattern" xml:space="preserve"><value>Pattern</value></data>
+  <data name="Param_numberStyle" xml:space="preserve"><value>Number style</value></data>
+  <data name="Param_firstPage" xml:space="preserve"><value>First numbered page</value></data>
+  <data name="Param_startNumber" xml:space="preserve"><value>Start number</value></data>
+  <data name="Param_fileName" xml:space="preserve"><value>Name for {filename}</value></data>
+  <data name="Param_topLeft" xml:space="preserve"><value>Header left</value></data>
+  <data name="Param_topCenter" xml:space="preserve"><value>Header centre</value></data>
+  <data name="Param_topRight" xml:space="preserve"><value>Header right</value></data>
+  <data name="Param_bottomLeft" xml:space="preserve"><value>Footer left</value></data>
+  <data name="Param_bottomCenter" xml:space="preserve"><value>Footer centre</value></data>
+  <data name="Param_bottomRight" xml:space="preserve"><value>Footer right</value></data>
+  <data name="Param_skipFirstPage" xml:space="preserve"><value>Skip the first page</value></data>
+  <data name="Param_date" xml:space="preserve"><value>Date</value></data>
+  <data name="Param_prefix" xml:space="preserve"><value>Prefix</value></data>
+  <data name="Param_suffix" xml:space="preserve"><value>Suffix</value></data>
+  <data name="Param_digits" xml:space="preserve"><value>Digits</value></data>
+  <data name="Param_overwrite" xml:space="preserve"><value>Replace files of the same name</value></data>
+  <data name="Param_level" xml:space="preserve"><value>PDF/A level</value></data>
+  <data name="Param_format" xml:space="preserve"><value>Format</value></data>
+  <data name="Param_mode" xml:space="preserve"><value>Mode</value></data>
+  <data name="Param_thresholdPercent" xml:space="preserve"><value>Blank threshold (%)</value></data>
+  <data name="Param_minDegrees" xml:space="preserve"><value>Smallest tilt (degrees)</value></data>
+  <data name="Param_patterns" xml:space="preserve"><value>Patterns (JSON: ["nationalId"])</value></data>
+  <data name="Param_label" xml:space="preserve"><value>Label</value></data>
+  <data name="Param_expression" xml:space="preserve"><value>Regular expression</value></data>
+  <data name="Param_fill" xml:space="preserve"><value>Colour (JSON)</value></data>
+  <data name="Param_metadata" xml:space="preserve"><value>Metadata</value></data>
+  <data name="Param_scripts" xml:space="preserve"><value>JavaScript</value></data>
+  <data name="Param_attachments" xml:space="preserve"><value>Attachments</value></data>
+  <data name="Param_riskyActions" xml:space="preserve"><value>Risky actions</value></data>
+  <data name="Param_externalLinks" xml:space="preserve"><value>External links</value></data>
+  <data name="Param_hiddenLayers" xml:space="preserve"><value>Hidden layers</value></data>
+  <data name="Param_outsideVisibleArea" xml:space="preserve"><value>Objects outside the page</value></data>
+  <data name="Param_thumbnails" xml:space="preserve"><value>Thumbnails</value></data>
+  <data name="Param_privateData" xml:space="preserve"><value>Private data</value></data>
+  <data name="Param_security" xml:space="preserve"><value>Protection (JSON)</value></data>
+  <data name="Param_width" xml:space="preserve"><value>Width (pt)</value></data>
+  <data name="Param_height" xml:space="preserve"><value>Height (pt)</value></data>
+  <data name="Param_fit" xml:space="preserve"><value>Fit</value></data>
+  <data name="Param_matchOrientation" xml:space="preserve"><value>Match orientation</value></data>
+  <data name="Param_paperWidth" xml:space="preserve"><value>Paper width (pt)</value></data>
+  <data name="Param_paperHeight" xml:space="preserve"><value>Paper height (pt)</value></data>
+  <data name="Param_binding" xml:space="preserve"><value>Binding</value></data>
+  <data name="Param_margin" xml:space="preserve"><value>Margin (pt)</value></data>
+  <data name="Param_gutter" xml:space="preserve"><value>Gutter (pt)</value></data>
+  <data name="Param_pagesPerSheet" xml:space="preserve"><value>Pages per sheet</value></data>
+  <data name="Param_order" xml:space="preserve"><value>Order</value></data>
+  <data name="Param_border" xml:space="preserve"><value>Border</value></data>
+  <data name="Param_rasterDpi" xml:space="preserve"><value>Picture DPI</value></data>
+  <data name="Param_transparent" xml:space="preserve"><value>Transparent</value></data>
+  <data name="Param_tiffColor" xml:space="preserve"><value>TIFF colour</value></data>
+  <data name="Param_oneTiff" xml:space="preserve"><value>One TIFF file</value></data>
+  <data name="Param_split" xml:space="preserve"><value>Split</value></data>
+  <data name="Param_ranges" xml:space="preserve"><value>Ranges</value></data>
+  <data name="Param_pagesPerFile" xml:space="preserve"><value>Pages per file</value></data>
+  <data name="Param_bookmarkLevel" xml:space="preserve"><value>Bookmark level</value></data>
+  <data name="Param_maxMegabytes" xml:space="preserve"><value>Largest size (MB)</value></data>
+  <data name="Param_blankThresholdPercent" xml:space="preserve"><value>Blank threshold (%)</value></data>
+  <data name="Param_textPattern" xml:space="preserve"><value>Text pattern</value></data>
+  <data name="Param_matchCase" xml:space="preserve"><value>Match case</value></data>
+  <data name="Param_firstPages" xml:space="preserve"><value>First pages</value></data>
+  <data name="Param_skipBlankPages" xml:space="preserve"><value>Skip blank pages</value></data>
+  <data name="Param_namePattern" xml:space="preserve"><value>File name pattern</value></data>
+  <data name="Param_minSide" xml:space="preserve"><value>Smallest side (pixels)</value></data>
+  <data name="Param_skipDuplicates" xml:space="preserve"><value>Skip duplicates</value></data>
+  <data name="Param_timeoutSeconds" xml:space="preserve"><value>Time limit (s)</value></data>
+  <data name="Param_pageSize" xml:space="preserve"><value>Page size</value></data>
+  <data name="Param_marginMillimetres" xml:space="preserve"><value>Margin (mm)</value></data>
+  <data name="Param_defaultDpi" xml:space="preserve"><value>Default DPI</value></data>
+  <data name="Param_groups" xml:space="preserve"><value>Comment kinds</value></data>
+  <data name="Param_title" xml:space="preserve"><value>Title</value></data>
+  <data name="Param_keepBookmarks" xml:space="preserve"><value>Keep bookmarks</value></data>
+  <data name="Param_bookmarkPerFile" xml:space="preserve"><value>A bookmark per file</value></data>
+  <data name="Param_tableOfContents" xml:space="preserve"><value>Table of contents</value></data>
+  <data name="Param_count" xml:space="preserve"><value>Count</value></data>
+  <data name="Param_insertBefore" xml:space="preserve"><value>Insert before page</value></data>
+  <data name="Cmd_Workflow_ToolTip" xml:space="preserve"><value>Make, edit and run chains of operations (workflows) on the open document or many files</value></data>
+  <data name="Cmd_Batch_ToolTip" xml:space="preserve"><value>Run a workflow or an operation on many files and folders</value></data>
+  <data name="Workflow_Title" xml:space="preserve"><value>Workflows</value></data>
+  <data name="Workflow_New" xml:space="preserve"><value>New</value></data>
+  <data name="Workflow_Duplicate" xml:space="preserve"><value>Duplicate</value></data>
+  <data name="Workflow_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Workflow_Import" xml:space="preserve"><value>Import…</value></data>
+  <data name="Workflow_Export" xml:space="preserve"><value>Export…</value></data>
+  <data name="Workflow_BuiltIn" xml:space="preserve"><value>(built-in)</value></data>
+  <data name="Workflow_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Workflow_Description" xml:space="preserve"><value>Description</value></data>
+  <data name="Workflow_Steps" xml:space="preserve"><value>Steps</value></data>
+  <data name="Workflow_StepEnabled" xml:space="preserve"><value>Turn this step on or off</value></data>
+  <data name="Workflow_StepUp" xml:space="preserve"><value>Up</value></data>
+  <data name="Workflow_StepDown" xml:space="preserve"><value>Down</value></data>
+  <data name="Workflow_StepRemove" xml:space="preserve"><value>Remove step</value></data>
+  <data name="Workflow_AddStep" xml:space="preserve"><value>Add step</value></data>
+  <data name="Workflow_AsksWhenRun" xml:space="preserve"><value>This step's passwords or certificate are asked when it runs, never kept in the workflow.</value></data>
+  <data name="Workflow_Range" xml:space="preserve"><value>From {0} to {1}</value></data>
+  <data name="Workflow_Output" xml:space="preserve"><value>Result</value></data>
+  <data name="Workflow_Output_Folder" xml:space="preserve"><value>Into a folder</value></data>
+  <data name="Workflow_Output_Suffix" xml:space="preserve"><value>Next to the file, with a suffix</value></data>
+  <data name="Workflow_Output_Replace" xml:space="preserve"><value>Replace the file itself</value></data>
+  <data name="Workflow_OutputFolder" xml:space="preserve"><value>Folder (relative to the file, e.g. "Done"; empty = asked when it runs)</value></data>
+  <data name="Workflow_OutputSuffix" xml:space="preserve"><value>Suffix, e.g. " (done)"</value></data>
+  <data name="Workflow_ReplaceExisting" xml:space="preserve"><value>Replace results of the same name (never the original)</value></data>
+  <data name="Workflow_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Workflow_RunOnDocument" xml:space="preserve"><value>Run on the open document</value></data>
+  <data name="Workflow_RunBatch" xml:space="preserve"><value>Run on many files…</value></data>
+  <data name="Workflow_NewName" xml:space="preserve"><value>New workflow</value></data>
+  <data name="Workflow_CopyName" xml:space="preserve"><value>{0} (copy)</value></data>
+  <data name="Workflow_Error_Save" xml:space="preserve"><value>The workflow cannot be written.</value></data>
+  <data name="Workflow_Error_Delete" xml:space="preserve"><value>The workflow cannot be deleted.</value></data>
+  <data name="Workflow_Error_NotAWorkflow" xml:space="preserve"><value>This file is not a PDF_Pro workflow (or one from a later version).</value></data>
+  <data name="Workflow_Error_Read" xml:space="preserve"><value>The file cannot be read.</value></data>
+  <data name="Workflow_Exported" xml:space="preserve"><value>{0} exported.</value></data>
+  <data name="Workflow_ImportDialog_Title" xml:space="preserve"><value>Import a workflow</value></data>
+  <data name="Workflow_ExportDialog_Title" xml:space="preserve"><value>Export a workflow</value></data>
+  <data name="Workflow_Dialog_Filter" xml:space="preserve"><value>PDF_Pro workflows (*.pdfflow)|*.pdfflow</value></data>
+  <data name="Workflow_Folder_Title" xml:space="preserve"><value>Choose the result folder</value></data>
+  <data name="Workflow_Progress" xml:space="preserve"><value>Running the workflow "{0}"…</value></data>
+  <data name="Workflow_Done" xml:space="preserve"><value>The workflow "{0}" is done.</value></data>
+  <data name="Workflow_Error_Title" xml:space="preserve"><value>The workflow cannot run</value></data>
+  <data name="Workflow_Failure_AtStep" xml:space="preserve"><value>Step {0} ({1}): {2}</value></data>
+  <data name="Workflow_Failure_Input" xml:space="preserve"><value>the file does not exist or cannot be read.</value></data>
+  <data name="Workflow_Failure_Password" xml:space="preserve"><value>the file is protected: its owner password is needed.</value></data>
+  <data name="Workflow_Failure_Secrets" xml:space="preserve"><value>a password or certificate for this step is missing.</value></data>
+  <data name="Workflow_Failure_Parameters" xml:space="preserve"><value>the parameters do not fit the file ({0}).</value></data>
+  <data name="Workflow_Failure_Output" xml:space="preserve"><value>the result cannot be written to the folder.</value></data>
+  <data name="Workflow_Failure_NoOcr" xml:space="preserve"><value>Tesseract or its language data is not installed (see Settings).</value></data>
+  <data name="Workflow_Failure_Unreadable" xml:space="preserve"><value>the file is damaged or not a readable PDF (try "Repair").</value></data>
+  <data name="Workflow_Failure_Step" xml:space="preserve"><value>the operation failed ({0}).</value></data>
+  <data name="Workflow_Issue_Step" xml:space="preserve"><value>Step {0}:</value></data>
+  <data name="Workflow_Issue_NoSteps" xml:space="preserve"><value>the workflow has no enabled step.</value></data>
+  <data name="Workflow_Issue_TooManySteps" xml:space="preserve"><value>the workflow has too many steps.</value></data>
+  <data name="Workflow_Issue_UnknownOperation" xml:space="preserve"><value>the operation is not in this version.</value></data>
+  <data name="Workflow_Issue_NotForFiles" xml:space="preserve"><value>the operation only works in an open document.</value></data>
+  <data name="Workflow_Issue_NeedsSeveralFiles" xml:space="preserve"><value>the operation takes several files at once and cannot be a step.</value></data>
+  <data name="Workflow_Issue_OnlyFirst" xml:space="preserve"><value>this operation reads Office documents or pictures, so it must come first.</value></data>
+  <data name="Workflow_Issue_OnlyLast" xml:space="preserve"><value>this operation does not write one PDF, so it must come last.</value></data>
+  <data name="Workflow_Issue_ProtectionNotLast" xml:space="preserve"><value>protecting with a password must be the last step.</value></data>
+  <data name="Workflow_Issue_BreaksSignature" xml:space="preserve"><value>this step comes after signing and breaks the signature.</value></data>
+  <data name="Workflow_Issue_InvalidParameters" xml:space="preserve"><value>the parameters are not valid.</value></data>
+  <data name="Workflow_Issue_ReplaceNeedsOnePdf" xml:space="preserve"><value>replacing the file needs a workflow that writes one PDF.</value></data>
+  <data name="Workflow_Issue_AsksWhenRun" xml:space="preserve"><value>its password or certificate will be asked when it runs.</value></data>
+  <data name="Workflow_Template_Digitize" xml:space="preserve"><value>Digitize records</value></data>
+  <data name="Workflow_Template_Publish" xml:space="preserve"><value>Publish a document</value></data>
+  <data name="Workflow_Template_Print" xml:space="preserve"><value>Prepare for print</value></data>
+  <data name="Workflow_Template_Watermark" xml:space="preserve"><value>RELEASED</value></data>
+  <data name="Workflow_Template_PageNumbers" xml:space="preserve"><value>Page {page}/{pages}</value></data>
+  <data name="Batch_Title" xml:space="preserve"><value>Batch run</value></data>
+  <data name="Batch_Job" xml:space="preserve"><value>Run</value></data>
+  <data name="Batch_Job_Operation" xml:space="preserve"><value>Operation: {0}</value></data>
+  <data name="Batch_AddFiles" xml:space="preserve"><value>Add files…</value></data>
+  <data name="Batch_AddFolder" xml:space="preserve"><value>Add a folder…</value></data>
+  <data name="Batch_AddFolder_Title" xml:space="preserve"><value>Choose a folder of files to process</value></data>
+  <data name="Batch_Recursive" xml:space="preserve"><value>Subfolders too</value></data>
+  <data name="Batch_Pattern" xml:space="preserve"><value>Name pattern</value></data>
+  <data name="Batch_Clear" xml:space="preserve"><value>Clear the list</value></data>
+  <data name="Batch_Output" xml:space="preserve"><value>Results into</value></data>
+  <data name="Batch_Output_Placeholder" xml:space="preserve"><value>Empty = as the workflow says</value></data>
+  <data name="Batch_Output_Title" xml:space="preserve"><value>Choose the result folder</value></data>
+  <data name="Batch_Browse" xml:space="preserve"><value>Browse…</value></data>
+  <data name="Batch_Parallel" xml:space="preserve"><value>At once</value></data>
+  <data name="Batch_Column_File" xml:space="preserve"><value>File</value></data>
+  <data name="Batch_Column_Folder" xml:space="preserve"><value>Folder</value></data>
+  <data name="Batch_Column_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Batch_Column_Detail" xml:space="preserve"><value>Detail</value></data>
+  <data name="Batch_Status_Waiting" xml:space="preserve"><value>Waiting</value></data>
+  <data name="Batch_Status_Running" xml:space="preserve"><value>Running</value></data>
+  <data name="Batch_Status_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Batch_Status_Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="Batch_Status_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="Batch_Step" xml:space="preserve"><value>Step {0}/{1}: {2}</value></data>
+  <data name="Batch_Running" xml:space="preserve"><value>Processing {0} files…</value></data>
+  <data name="Batch_Done" xml:space="preserve"><value>{0} done, {1} failed, {2} cancelled.</value></data>
+  <data name="Batch_Start" xml:space="preserve"><value>Start</value></data>
+  <data name="Batch_Pause" xml:space="preserve"><value>Pause / resume</value></data>
+  <data name="Batch_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Batch_RerunFailed" xml:space="preserve"><value>Run the failed again</value></data>
+  <data name="Batch_ExportLog" xml:space="preserve"><value>Export the log…</value></data>
+  <data name="Batch_Log_FileName" xml:space="preserve"><value>batch log</value></data>
+  <data name="Batch_Log_Written" xml:space="preserve"><value>Log {0} written.</value></data>
+  <data name="Batch_Log_File" xml:space="preserve"><value>File</value></data>
+  <data name="Batch_Log_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Batch_Log_Outputs" xml:space="preserve"><value>Outputs</value></data>
+  <data name="Batch_Log_Failure" xml:space="preserve"><value>Failure</value></data>
+  <data name="Batch_Log_Step" xml:space="preserve"><value>Step</value></data>
+  <data name="Batch_Log_Operation" xml:space="preserve"><value>Operation</value></data>
+  <data name="Batch_Log_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Batch_Log_Seconds" xml:space="preserve"><value>Seconds</value></data>
+  <data name="Batch_Error_Folder" xml:space="preserve"><value>The folder cannot be read.</value></data>
+  <data name="Batch_Error_Log" xml:space="preserve"><value>The log cannot be written.</value></data>
+  <data name="Batch_Error_NoOutput" xml:space="preserve"><value>Choose a result folder (this workflow does not say where results go).</value></data>
 </root>

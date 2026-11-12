@@ -98,7 +98,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette",
+            ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette", "workflow.open", "batch.run",
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
@@ -528,6 +528,31 @@ public sealed partial class MainWindowViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task AWorkflow_RunsOnTheOpenDocument_AndItsResultOpens()
+    {
+        var path = _fixture.CreateFile("công văn.pdf", File.ReadAllBytes(Samples.Basic));
+        var output = Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(path)!, "kết quả")).FullName;
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
+        _fileDialogs.PickFolder(Arg.Any<string>(), Arg.Any<string?>()).Returns(output);
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        _pageDialogs.ShowWorkflows(Arg.Do<PdfPro.App.ViewModels.Automation.WorkflowsViewModel>(w =>
+        {
+            w.NewCommand.Execute(null);
+            w.Editor!.OperationToAdd = w.Editor.Operations.Single(o => o.Id == "stamp.pageNumbers");
+            w.Editor.AddStepCommand.Execute(null);
+            w.RunOnDocumentCommand.Execute(null);
+        })).Returns(true);
+
+        await viewModel.WorkflowsCommand.ExecuteAsync(null);
+
+        var written = Path.Combine(output, "công văn.pdf");
+        File.Exists(written).ShouldBeTrue();
+        await _workspaces.Received(1).OpenAsync(written, Arg.Any<CancellationToken>());
+        File.ReadAllBytes(path).ShouldBe(File.ReadAllBytes(Samples.Basic), "the document's own file is never written");
+    }
+
+    [Fact]
     public async Task ThePalette_RunsTheChosenCommand_AndRemembersIt()
     {
         var viewModel = Create(isDebugBuild: false);
@@ -583,5 +608,12 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 VeraPdfLocator: _veraPdf),
             Scan(),
             Compare(),
-            Extracting());
+            Extracting(),
+            Automation());
+
+    private PdfPro.App.Services.Automation.AutomationServices Automation()
+    {
+        var catalog = TestOperations.All();
+        return new(catalog, new PdfPro.Operations.Automation.WorkflowRunner(catalog, TestOperations.PdfiumGate), new PdfPro.App.Services.Automation.WorkflowLibrary(Path.Combine(_paths.DataRoot, "workflows")));
+    }
 }

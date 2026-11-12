@@ -178,6 +178,14 @@ public interface IFileDialogService
     /// <returns>The chosen file, or null when cancelled.</returns>
     string? PickFormDataFile();
 
+    /// <summary>Asks for a shared workflow (.pdfflow) to import.</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickWorkflowFile();
+
+    /// <summary>Asks where to export a workflow (.pdfflow); overwriting asks for confirmation.</summary>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickWorkflowSavePath(string suggestedFileName);
+
     /// <summary>Asks for a table to merge into the form (CSV, Excel workbook).</summary>
     /// <returns>The chosen file, or null when cancelled.</returns>
     string? PickTableFile();
@@ -274,6 +282,12 @@ public interface IPageDialogService
 
     /// <summary>"Tìm lệnh" (Ctrl+K): true when a command was chosen (<see cref="ViewModels.CommandPaletteViewModel.Chosen"/>).</summary>
     bool ShowCommandPalette(ViewModels.CommandPaletteViewModel viewModel);
+
+    /// <summary>"Workflow": the library and the designer; true when a workflow was chosen to run.</summary>
+    bool ShowWorkflows(ViewModels.Automation.WorkflowsViewModel viewModel);
+
+    /// <summary>"Chạy lô": files run through a workflow, a table of how each went.</summary>
+    void ShowBatch(ViewModels.Automation.BatchViewModel viewModel);
 
     /// <summary>"Bookmark": the bookmark tree edited or made from headings; true when applied.</summary>
     bool ShowBookmarks(ViewModels.Structure.BookmarksEditorViewModel viewModel);

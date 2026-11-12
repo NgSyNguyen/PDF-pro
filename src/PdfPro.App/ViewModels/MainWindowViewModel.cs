@@ -41,6 +41,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly Services.Scanning.ScanServices? _scan;
     private readonly Services.Comparing.CompareServices? _compare;
     private readonly Services.Extracting.ExtractingServices? _extracting;
+    private readonly Services.Automation.AutomationServices? _automation;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -69,7 +70,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Services.Optimizing.OptimizingServices? optimizing = null,
         Services.Scanning.ScanServices? scan = null,
         Services.Comparing.CompareServices? compare = null,
-        Services.Extracting.ExtractingServices? extracting = null)
+        Services.Extracting.ExtractingServices? extracting = null,
+        Services.Automation.AutomationServices? automation = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _dialogs = dialogs;
@@ -94,6 +96,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _scan = scan;
         _compare = compare;
         _extracting = extracting;
+        _automation = automation;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -897,8 +900,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Automation,
                 [
                     new("tools.commandPalette", Strings.Cmd_CommandPalette, SymbolRegular.Search24, CommandPaletteCommand, Strings.Cmd_CommandPalette_ToolTip),
-                    new("workflow.open", Strings.Cmd_Workflow, SymbolRegular.Flow24),
-                    new("batch.run", Strings.Cmd_Batch, SymbolRegular.TaskListLtr24),
+                    new("workflow.open", Strings.Cmd_Workflow, SymbolRegular.Flow24, _automation is null ? null : WorkflowsCommand, Strings.Cmd_Workflow_ToolTip),
+                    new("batch.run", Strings.Cmd_Batch, SymbolRegular.TaskListLtr24, _automation is null ? null : BatchCommand, Strings.Cmd_Batch_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_App,
                 [

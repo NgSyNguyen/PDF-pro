@@ -260,6 +260,32 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickWorkflowFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.Workflow_ImportDialog_Title,
+            Filter = Strings.Workflow_Dialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickWorkflowSavePath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Workflow_ExportDialog_Title,
+            Filter = Strings.Workflow_Dialog_Filter,
+            FileName = PdfPro.Core.Splitting.FileNames.Sanitize(suggestedFileName),
+            DefaultExt = PdfPro.Operations.Automation.WorkflowFile.Extension,
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickFormDataFile()
     {
         var dialog = new OpenFileDialog
@@ -530,6 +556,18 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new CommandPaletteWindow(viewModel));
+    }
+
+    public bool ShowWorkflows(ViewModels.Automation.WorkflowsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new WorkflowsWindow(viewModel));
+    }
+
+    public void ShowBatch(ViewModels.Automation.BatchViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        Show(new BatchWindow(viewModel));
     }
 
     public bool ShowTables(ViewModels.Extracting.TablesViewModel viewModel)

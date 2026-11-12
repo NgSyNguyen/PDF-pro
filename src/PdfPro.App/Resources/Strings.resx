@@ -2046,4 +2046,282 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Palette_Placeholder" xml:space="preserve"><value>Gõ tên lệnh, không cần dấu: "xoa trang trang", "nen", "ocr"…</value></data>
   <data name="Palette_NoResult" xml:space="preserve"><value>Không có lệnh nào khớp.</value></data>
   <data name="Palette_Hint" xml:space="preserve"><value>↑↓ để chọn · Enter để chạy · Esc để đóng. Lệnh mờ cần một tài liệu đang mở.</value></data>
+  <data name="Op_annotate_add" xml:space="preserve"><value>Thêm chú thích</value></data>
+  <data name="Op_annotate_delete" xml:space="preserve"><value>Xóa chú thích</value></data>
+  <data name="Op_annotate_editFile" xml:space="preserve"><value>Sửa chú thích có sẵn</value></data>
+  <data name="Op_annotate_flatten" xml:space="preserve"><value>Làm phẳng chú thích</value></data>
+  <data name="Op_annotate_update" xml:space="preserve"><value>Sửa chú thích</value></data>
+  <data name="Op_attachments_edit" xml:space="preserve"><value>Sửa tệp đính kèm</value></data>
+  <data name="Op_convert_fromImages" xml:space="preserve"><value>Ảnh sang PDF</value></data>
+  <data name="Op_convert_officeToPdf" xml:space="preserve"><value>Office sang PDF</value></data>
+  <data name="Op_convert_toImages" xml:space="preserve"><value>Sang ảnh</value></data>
+  <data name="Op_convert_toPdfA" xml:space="preserve"><value>Sang PDF/A</value></data>
+  <data name="Op_convert_toText" xml:space="preserve"><value>Sang văn bản</value></data>
+  <data name="Op_edit_content" xml:space="preserve"><value>Sửa nội dung</value></data>
+  <data name="Op_edit_overlay" xml:space="preserve"><value>Thêm chữ, ảnh, hình</value></data>
+  <data name="Op_extract_images" xml:space="preserve"><value>Trích ảnh</value></data>
+  <data name="Op_extract_tables" xml:space="preserve"><value>Trích bảng</value></data>
+  <data name="Op_forms_design" xml:space="preserve"><value>Thiết kế biểu mẫu</value></data>
+  <data name="Op_forms_fill" xml:space="preserve"><value>Điền biểu mẫu</value></data>
+  <data name="Op_forms_flatten" xml:space="preserve"><value>Làm phẳng biểu mẫu</value></data>
+  <data name="Op_forms_merge" xml:space="preserve"><value>Trộn dữ liệu biểu mẫu</value></data>
+  <data name="Op_forms_reset" xml:space="preserve"><value>Xóa dữ liệu biểu mẫu</value></data>
+  <data name="Op_layout_booklet" xml:space="preserve"><value>Sổ gập</value></data>
+  <data name="Op_layout_nup" xml:space="preserve"><value>Nhiều trang trên một tờ</value></data>
+  <data name="Op_layout_tile" xml:space="preserve"><value>In ghép khổ lớn</value></data>
+  <data name="Op_ocr_run" xml:space="preserve"><value>Nhận dạng chữ (OCR)</value></data>
+  <data name="Op_optimize_compress" xml:space="preserve"><value>Nén</value></data>
+  <data name="Op_optimize_grayscale" xml:space="preserve"><value>Thang xám</value></data>
+  <data name="Op_optimize_linearize" xml:space="preserve"><value>Tối ưu cho web</value></data>
+  <data name="Op_optimize_repair" xml:space="preserve"><value>Sửa tệp hỏng</value></data>
+  <data name="Op_organize_crop" xml:space="preserve"><value>Cắt lề trang</value></data>
+  <data name="Op_organize_delete" xml:space="preserve"><value>Xóa trang</value></data>
+  <data name="Op_organize_duplicate" xml:space="preserve"><value>Nhân bản trang</value></data>
+  <data name="Op_organize_extract" xml:space="preserve"><value>Trích trang</value></data>
+  <data name="Op_organize_insertBlank" xml:space="preserve"><value>Chèn trang trắng</value></data>
+  <data name="Op_organize_insertPages" xml:space="preserve"><value>Chèn trang từ tệp</value></data>
+  <data name="Op_organize_interleave" xml:space="preserve"><value>Trộn trang chẵn lẻ</value></data>
+  <data name="Op_organize_markSplit" xml:space="preserve"><value>Đánh dấu tách</value></data>
+  <data name="Op_organize_merge" xml:space="preserve"><value>Gộp tệp</value></data>
+  <data name="Op_organize_move" xml:space="preserve"><value>Di chuyển trang</value></data>
+  <data name="Op_organize_pageSize" xml:space="preserve"><value>Đổi khổ giấy</value></data>
+  <data name="Op_organize_rotate" xml:space="preserve"><value>Xoay trang</value></data>
+  <data name="Op_organize_setSplitMarks" xml:space="preserve"><value>Đặt dấu tách</value></data>
+  <data name="Op_organize_split" xml:space="preserve"><value>Tách tệp</value></data>
+  <data name="Op_scan_autoRotate" xml:space="preserve"><value>Xoay đúng chiều</value></data>
+  <data name="Op_scan_cleanBorders" xml:space="preserve"><value>Xóa viền đen</value></data>
+  <data name="Op_scan_deskew" xml:space="preserve"><value>Làm thẳng trang</value></data>
+  <data name="Op_scan_removeBlankPages" xml:space="preserve"><value>Xóa trang trắng</value></data>
+  <data name="Op_security_decrypt" xml:space="preserve"><value>Gỡ mật khẩu</value></data>
+  <data name="Op_security_encrypt" xml:space="preserve"><value>Đặt mật khẩu</value></data>
+  <data name="Op_security_protection" xml:space="preserve"><value>Bảo vệ tài liệu đang mở</value></data>
+  <data name="Op_security_redact" xml:space="preserve"><value>Xóa vĩnh viễn theo mẫu</value></data>
+  <data name="Op_security_sanitize" xml:space="preserve"><value>Làm sạch</value></data>
+  <data name="Op_security_sign" xml:space="preserve"><value>Ký số</value></data>
+  <data name="Op_stamp_background" xml:space="preserve"><value>Nền trang</value></data>
+  <data name="Op_stamp_bates" xml:space="preserve"><value>Số Bates</value></data>
+  <data name="Op_stamp_headerFooter" xml:space="preserve"><value>Đầu và chân trang</value></data>
+  <data name="Op_stamp_pageNumbers" xml:space="preserve"><value>Đánh số trang</value></data>
+  <data name="Op_stamp_remove" xml:space="preserve"><value>Gỡ dấu</value></data>
+  <data name="Op_stamp_watermark" xml:space="preserve"><value>Hình mờ</value></data>
+  <data name="Op_structure_bookmarks" xml:space="preserve"><value>Bookmark</value></data>
+  <data name="Op_structure_links" xml:space="preserve"><value>Liên kết</value></data>
+  <data name="Op_structure_metadata" xml:space="preserve"><value>Thuộc tính tài liệu</value></data>
+  <data name="Op_structure_pageLabels" xml:space="preserve"><value>Nhãn trang</value></data>
+  <data name="Param_pages" xml:space="preserve"><value>Trang</value></data>
+  <data name="Param_degrees" xml:space="preserve"><value>Góc xoay</value></data>
+  <data name="Param_preset" xml:space="preserve"><value>Mức nén</value></data>
+  <data name="Param_dpi" xml:space="preserve"><value>Độ phân giải (DPI)</value></data>
+  <data name="Param_jpegQuality" xml:space="preserve"><value>Chất lượng JPEG</value></data>
+  <data name="Param_languages" xml:space="preserve"><value>Ngôn ngữ (JSON: ["vie"])</value></data>
+  <data name="Param_existingText" xml:space="preserve"><value>Trang đã có chữ</value></data>
+  <data name="Param_parallelism" xml:space="preserve"><value>Số trang/tệp cùng lúc (0 = tự chọn)</value></data>
+  <data name="Param_autoRotate" xml:space="preserve"><value>Tự xoay đúng chiều</value></data>
+  <data name="Param_deskew" xml:space="preserve"><value>Làm thẳng ảnh để đọc</value></data>
+  <data name="Param_straightenPages" xml:space="preserve"><value>Làm thẳng cả trang</value></data>
+  <data name="Param_confidenceThreshold" xml:space="preserve"><value>Ngưỡng tin cậy</value></data>
+  <data name="Param_hocr" xml:space="preserve"><value>Giữ hOCR</value></data>
+  <data name="Param_text" xml:space="preserve"><value>Chữ</value></data>
+  <data name="Param_opacity" xml:space="preserve"><value>Độ đậm (0–1)</value></data>
+  <data name="Param_rotation" xml:space="preserve"><value>Góc nghiêng</value></data>
+  <data name="Param_anchor" xml:space="preserve"><value>Vị trí</value></data>
+  <data name="Param_marginX" xml:space="preserve"><value>Lề ngang (pt)</value></data>
+  <data name="Param_marginY" xml:space="preserve"><value>Lề dọc (pt)</value></data>
+  <data name="Param_tile" xml:space="preserve"><value>Lặp kín trang</value></data>
+  <data name="Param_tileGap" xml:space="preserve"><value>Khoảng lặp (pt)</value></data>
+  <data name="Param_behindContent" xml:space="preserve"><value>Dưới nội dung</value></data>
+  <data name="Param_imagePath" xml:space="preserve"><value>Ảnh</value></data>
+  <data name="Param_imageScale" xml:space="preserve"><value>Cỡ ảnh (theo bề rộng trang)</value></data>
+  <data name="Param_style" xml:space="preserve"><value>Kiểu chữ (JSON)</value></data>
+  <data name="Param_textStyle" xml:space="preserve"><value>Kiểu chữ (JSON)</value></data>
+  <data name="Param_pattern" xml:space="preserve"><value>Mẫu</value></data>
+  <data name="Param_numberStyle" xml:space="preserve"><value>Kiểu số</value></data>
+  <data name="Param_firstPage" xml:space="preserve"><value>Trang bắt đầu đánh số</value></data>
+  <data name="Param_startNumber" xml:space="preserve"><value>Số bắt đầu</value></data>
+  <data name="Param_fileName" xml:space="preserve"><value>Tên tệp cho {filename}</value></data>
+  <data name="Param_topLeft" xml:space="preserve"><value>Đầu trang trái</value></data>
+  <data name="Param_topCenter" xml:space="preserve"><value>Đầu trang giữa</value></data>
+  <data name="Param_topRight" xml:space="preserve"><value>Đầu trang phải</value></data>
+  <data name="Param_bottomLeft" xml:space="preserve"><value>Chân trang trái</value></data>
+  <data name="Param_bottomCenter" xml:space="preserve"><value>Chân trang giữa</value></data>
+  <data name="Param_bottomRight" xml:space="preserve"><value>Chân trang phải</value></data>
+  <data name="Param_skipFirstPage" xml:space="preserve"><value>Bỏ trang đầu</value></data>
+  <data name="Param_date" xml:space="preserve"><value>Ngày</value></data>
+  <data name="Param_prefix" xml:space="preserve"><value>Tiền tố</value></data>
+  <data name="Param_suffix" xml:space="preserve"><value>Hậu tố</value></data>
+  <data name="Param_digits" xml:space="preserve"><value>Số chữ số</value></data>
+  <data name="Param_overwrite" xml:space="preserve"><value>Ghi đè tệp trùng tên</value></data>
+  <data name="Param_level" xml:space="preserve"><value>Mức PDF/A</value></data>
+  <data name="Param_format" xml:space="preserve"><value>Định dạng</value></data>
+  <data name="Param_mode" xml:space="preserve"><value>Cách làm</value></data>
+  <data name="Param_thresholdPercent" xml:space="preserve"><value>Ngưỡng trang trắng (%)</value></data>
+  <data name="Param_minDegrees" xml:space="preserve"><value>Nghiêng tối thiểu (độ)</value></data>
+  <data name="Param_patterns" xml:space="preserve"><value>Mẫu (JSON: ["nationalId"])</value></data>
+  <data name="Param_label" xml:space="preserve"><value>Chữ trong ô xóa</value></data>
+  <data name="Param_expression" xml:space="preserve"><value>Biểu thức chính quy</value></data>
+  <data name="Param_fill" xml:space="preserve"><value>Màu (JSON)</value></data>
+  <data name="Param_metadata" xml:space="preserve"><value>Thông tin tài liệu</value></data>
+  <data name="Param_scripts" xml:space="preserve"><value>JavaScript</value></data>
+  <data name="Param_attachments" xml:space="preserve"><value>Tệp đính kèm</value></data>
+  <data name="Param_riskyActions" xml:space="preserve"><value>Hành động nguy hiểm</value></data>
+  <data name="Param_externalLinks" xml:space="preserve"><value>Liên kết ngoài</value></data>
+  <data name="Param_hiddenLayers" xml:space="preserve"><value>Lớp ẩn</value></data>
+  <data name="Param_outsideVisibleArea" xml:space="preserve"><value>Đối tượng ngoài vùng hiển thị</value></data>
+  <data name="Param_thumbnails" xml:space="preserve"><value>Ảnh thu nhỏ</value></data>
+  <data name="Param_privateData" xml:space="preserve"><value>Dữ liệu riêng của chương trình</value></data>
+  <data name="Param_security" xml:space="preserve"><value>Bảo vệ (JSON)</value></data>
+  <data name="Param_width" xml:space="preserve"><value>Rộng (pt)</value></data>
+  <data name="Param_height" xml:space="preserve"><value>Cao (pt)</value></data>
+  <data name="Param_fit" xml:space="preserve"><value>Cách đặt</value></data>
+  <data name="Param_matchOrientation" xml:space="preserve"><value>Theo hướng trang</value></data>
+  <data name="Param_paperWidth" xml:space="preserve"><value>Rộng giấy (pt)</value></data>
+  <data name="Param_paperHeight" xml:space="preserve"><value>Cao giấy (pt)</value></data>
+  <data name="Param_binding" xml:space="preserve"><value>Gáy</value></data>
+  <data name="Param_margin" xml:space="preserve"><value>Lề (pt)</value></data>
+  <data name="Param_gutter" xml:space="preserve"><value>Khe gáy (pt)</value></data>
+  <data name="Param_pagesPerSheet" xml:space="preserve"><value>Số trang mỗi tờ</value></data>
+  <data name="Param_order" xml:space="preserve"><value>Thứ tự</value></data>
+  <data name="Param_border" xml:space="preserve"><value>Viền</value></data>
+  <data name="Param_rasterDpi" xml:space="preserve"><value>DPI khi thành ảnh</value></data>
+  <data name="Param_transparent" xml:space="preserve"><value>Nền trong suốt</value></data>
+  <data name="Param_tiffColor" xml:space="preserve"><value>Màu TIFF</value></data>
+  <data name="Param_oneTiff" xml:space="preserve"><value>Một tệp TIFF</value></data>
+  <data name="Param_split" xml:space="preserve"><value>Tách trang</value></data>
+  <data name="Param_ranges" xml:space="preserve"><value>Khoảng trang</value></data>
+  <data name="Param_pagesPerFile" xml:space="preserve"><value>Số trang mỗi tệp</value></data>
+  <data name="Param_bookmarkLevel" xml:space="preserve"><value>Cấp bookmark</value></data>
+  <data name="Param_maxMegabytes" xml:space="preserve"><value>Dung lượng tối đa (MB)</value></data>
+  <data name="Param_blankThresholdPercent" xml:space="preserve"><value>Ngưỡng trang trắng (%)</value></data>
+  <data name="Param_textPattern" xml:space="preserve"><value>Mẫu chữ</value></data>
+  <data name="Param_matchCase" xml:space="preserve"><value>Phân biệt hoa thường</value></data>
+  <data name="Param_firstPages" xml:space="preserve"><value>Trang đầu mỗi tệp</value></data>
+  <data name="Param_skipBlankPages" xml:space="preserve"><value>Bỏ trang trắng</value></data>
+  <data name="Param_namePattern" xml:space="preserve"><value>Mẫu tên tệp</value></data>
+  <data name="Param_minSide" xml:space="preserve"><value>Cạnh nhỏ nhất (điểm ảnh)</value></data>
+  <data name="Param_skipDuplicates" xml:space="preserve"><value>Bỏ ảnh trùng</value></data>
+  <data name="Param_timeoutSeconds" xml:space="preserve"><value>Giới hạn thời gian (giây)</value></data>
+  <data name="Param_pageSize" xml:space="preserve"><value>Khổ trang</value></data>
+  <data name="Param_marginMillimetres" xml:space="preserve"><value>Lề (mm)</value></data>
+  <data name="Param_defaultDpi" xml:space="preserve"><value>DPI mặc định</value></data>
+  <data name="Param_groups" xml:space="preserve"><value>Loại chú thích</value></data>
+  <data name="Param_title" xml:space="preserve"><value>Tiêu đề</value></data>
+  <data name="Param_keepBookmarks" xml:space="preserve"><value>Giữ bookmark</value></data>
+  <data name="Param_bookmarkPerFile" xml:space="preserve"><value>Bookmark theo tệp</value></data>
+  <data name="Param_tableOfContents" xml:space="preserve"><value>Mục lục</value></data>
+  <data name="Param_count" xml:space="preserve"><value>Số trang</value></data>
+  <data name="Param_insertBefore" xml:space="preserve"><value>Chèn trước trang</value></data>
+  <data name="Cmd_Workflow_ToolTip" xml:space="preserve"><value>Tạo, sửa và chạy chuỗi thao tác (workflow) trên tài liệu đang mở hoặc nhiều tệp</value></data>
+  <data name="Cmd_Batch_ToolTip" xml:space="preserve"><value>Chạy một workflow hoặc một thao tác trên nhiều tệp, thư mục</value></data>
+  <data name="Workflow_Title" xml:space="preserve"><value>Workflow</value></data>
+  <data name="Workflow_New" xml:space="preserve"><value>Mới</value></data>
+  <data name="Workflow_Duplicate" xml:space="preserve"><value>Nhân bản</value></data>
+  <data name="Workflow_Delete" xml:space="preserve"><value>Xóa</value></data>
+  <data name="Workflow_Import" xml:space="preserve"><value>Nhập…</value></data>
+  <data name="Workflow_Export" xml:space="preserve"><value>Xuất…</value></data>
+  <data name="Workflow_BuiltIn" xml:space="preserve"><value>(dựng sẵn)</value></data>
+  <data name="Workflow_Name" xml:space="preserve"><value>Tên</value></data>
+  <data name="Workflow_Description" xml:space="preserve"><value>Mô tả</value></data>
+  <data name="Workflow_Steps" xml:space="preserve"><value>Các bước</value></data>
+  <data name="Workflow_StepEnabled" xml:space="preserve"><value>Bật/tắt bước này</value></data>
+  <data name="Workflow_StepUp" xml:space="preserve"><value>Lên</value></data>
+  <data name="Workflow_StepDown" xml:space="preserve"><value>Xuống</value></data>
+  <data name="Workflow_StepRemove" xml:space="preserve"><value>Xóa bước</value></data>
+  <data name="Workflow_AddStep" xml:space="preserve"><value>Thêm bước</value></data>
+  <data name="Workflow_AsksWhenRun" xml:space="preserve"><value>Mật khẩu hoặc chứng thư của bước này được hỏi khi chạy, không bao giờ lưu trong workflow.</value></data>
+  <data name="Workflow_Range" xml:space="preserve"><value>Từ {0} đến {1}</value></data>
+  <data name="Workflow_Output" xml:space="preserve"><value>Kết quả</value></data>
+  <data name="Workflow_Output_Folder" xml:space="preserve"><value>Vào một thư mục</value></data>
+  <data name="Workflow_Output_Suffix" xml:space="preserve"><value>Cạnh tệp gốc, thêm hậu tố vào tên</value></data>
+  <data name="Workflow_Output_Replace" xml:space="preserve"><value>Thay chính tệp gốc</value></data>
+  <data name="Workflow_OutputFolder" xml:space="preserve"><value>Thư mục (tương đối với tệp gốc, ví dụ "Đã xử lý"; để trống = hỏi khi chạy)</value></data>
+  <data name="Workflow_OutputSuffix" xml:space="preserve"><value>Hậu tố, ví dụ " (đã xử lý)"</value></data>
+  <data name="Workflow_ReplaceExisting" xml:space="preserve"><value>Ghi đè kết quả trùng tên (không bao giờ ghi đè tệp gốc)</value></data>
+  <data name="Workflow_Save" xml:space="preserve"><value>Lưu</value></data>
+  <data name="Workflow_RunOnDocument" xml:space="preserve"><value>Chạy trên tài liệu đang mở</value></data>
+  <data name="Workflow_RunBatch" xml:space="preserve"><value>Chạy lô…</value></data>
+  <data name="Workflow_NewName" xml:space="preserve"><value>Workflow mới</value></data>
+  <data name="Workflow_CopyName" xml:space="preserve"><value>{0} (bản sao)</value></data>
+  <data name="Workflow_Error_Save" xml:space="preserve"><value>Không ghi được workflow.</value></data>
+  <data name="Workflow_Error_Delete" xml:space="preserve"><value>Không xóa được workflow.</value></data>
+  <data name="Workflow_Error_NotAWorkflow" xml:space="preserve"><value>Tệp này không phải workflow của PDF_Pro (hoặc của phiên bản mới hơn).</value></data>
+  <data name="Workflow_Error_Read" xml:space="preserve"><value>Không đọc được tệp.</value></data>
+  <data name="Workflow_Exported" xml:space="preserve"><value>Đã xuất {0}.</value></data>
+  <data name="Workflow_ImportDialog_Title" xml:space="preserve"><value>Nhập workflow</value></data>
+  <data name="Workflow_ExportDialog_Title" xml:space="preserve"><value>Xuất workflow</value></data>
+  <data name="Workflow_Dialog_Filter" xml:space="preserve"><value>Workflow PDF_Pro (*.pdfflow)|*.pdfflow</value></data>
+  <data name="Workflow_Folder_Title" xml:space="preserve"><value>Chọn thư mục kết quả</value></data>
+  <data name="Workflow_Progress" xml:space="preserve"><value>Đang chạy workflow "{0}"…</value></data>
+  <data name="Workflow_Done" xml:space="preserve"><value>Đã chạy xong workflow "{0}".</value></data>
+  <data name="Workflow_Error_Title" xml:space="preserve"><value>Không chạy được workflow</value></data>
+  <data name="Workflow_Failure_AtStep" xml:space="preserve"><value>Bước {0} ({1}): {2}</value></data>
+  <data name="Workflow_Failure_Input" xml:space="preserve"><value>tệp không có hoặc không đọc được.</value></data>
+  <data name="Workflow_Failure_Password" xml:space="preserve"><value>tệp có mật khẩu: cần mật khẩu chủ.</value></data>
+  <data name="Workflow_Failure_Secrets" xml:space="preserve"><value>thiếu mật khẩu hoặc chứng thư cho bước này.</value></data>
+  <data name="Workflow_Failure_Parameters" xml:space="preserve"><value>tham số không hợp với tệp ({0}).</value></data>
+  <data name="Workflow_Failure_Output" xml:space="preserve"><value>không ghi được kết quả vào thư mục đích.</value></data>
+  <data name="Workflow_Failure_NoOcr" xml:space="preserve"><value>chưa cài Tesseract hoặc thiếu dữ liệu ngôn ngữ (xem Cài đặt).</value></data>
+  <data name="Workflow_Failure_Unreadable" xml:space="preserve"><value>tệp hỏng hoặc không phải PDF đọc được (thử "Sửa tệp hỏng").</value></data>
+  <data name="Workflow_Failure_Step" xml:space="preserve"><value>thao tác thất bại ({0}).</value></data>
+  <data name="Workflow_Issue_Step" xml:space="preserve"><value>Bước {0}:</value></data>
+  <data name="Workflow_Issue_NoSteps" xml:space="preserve"><value>workflow chưa có bước nào được bật.</value></data>
+  <data name="Workflow_Issue_TooManySteps" xml:space="preserve"><value>workflow có quá nhiều bước.</value></data>
+  <data name="Workflow_Issue_UnknownOperation" xml:space="preserve"><value>thao tác không có trong phiên bản này.</value></data>
+  <data name="Workflow_Issue_NotForFiles" xml:space="preserve"><value>thao tác chỉ dùng được trong tài liệu đang mở.</value></data>
+  <data name="Workflow_Issue_NeedsSeveralFiles" xml:space="preserve"><value>thao tác cần nhiều tệp cùng lúc, không làm bước được.</value></data>
+  <data name="Workflow_Issue_OnlyFirst" xml:space="preserve"><value>thao tác này đọc tệp Office hoặc ảnh nên phải là bước đầu.</value></data>
+  <data name="Workflow_Issue_OnlyLast" xml:space="preserve"><value>thao tác này không ra một PDF nên phải là bước cuối.</value></data>
+  <data name="Workflow_Issue_ProtectionNotLast" xml:space="preserve"><value>đặt mật khẩu phải là bước cuối.</value></data>
+  <data name="Workflow_Issue_BreaksSignature" xml:space="preserve"><value>bước này đứng sau bước ký số nên làm mất hiệu lực chữ ký.</value></data>
+  <data name="Workflow_Issue_InvalidParameters" xml:space="preserve"><value>tham số chưa hợp lệ.</value></data>
+  <data name="Workflow_Issue_ReplaceNeedsOnePdf" xml:space="preserve"><value>thay tệp gốc cần workflow ra đúng một PDF.</value></data>
+  <data name="Workflow_Issue_AsksWhenRun" xml:space="preserve"><value>mật khẩu hoặc chứng thư sẽ được hỏi khi chạy.</value></data>
+  <data name="Workflow_Template_Digitize" xml:space="preserve"><value>Số hóa hồ sơ</value></data>
+  <data name="Workflow_Template_Publish" xml:space="preserve"><value>Phát hành tài liệu</value></data>
+  <data name="Workflow_Template_Print" xml:space="preserve"><value>Chuẩn bị in</value></data>
+  <data name="Workflow_Template_Watermark" xml:space="preserve"><value>BẢN PHÁT HÀNH</value></data>
+  <data name="Workflow_Template_PageNumbers" xml:space="preserve"><value>Trang {page}/{pages}</value></data>
+  <data name="Batch_Title" xml:space="preserve"><value>Chạy lô</value></data>
+  <data name="Batch_Job" xml:space="preserve"><value>Chạy</value></data>
+  <data name="Batch_Job_Operation" xml:space="preserve"><value>Thao tác: {0}</value></data>
+  <data name="Batch_AddFiles" xml:space="preserve"><value>Thêm tệp…</value></data>
+  <data name="Batch_AddFolder" xml:space="preserve"><value>Thêm thư mục…</value></data>
+  <data name="Batch_AddFolder_Title" xml:space="preserve"><value>Chọn thư mục có các tệp cần xử lý</value></data>
+  <data name="Batch_Recursive" xml:space="preserve"><value>Cả thư mục con</value></data>
+  <data name="Batch_Pattern" xml:space="preserve"><value>Mẫu tên</value></data>
+  <data name="Batch_Clear" xml:space="preserve"><value>Xóa danh sách</value></data>
+  <data name="Batch_Output" xml:space="preserve"><value>Kết quả vào</value></data>
+  <data name="Batch_Output_Placeholder" xml:space="preserve"><value>Để trống = theo cài đặt của workflow</value></data>
+  <data name="Batch_Output_Title" xml:space="preserve"><value>Chọn thư mục kết quả</value></data>
+  <data name="Batch_Browse" xml:space="preserve"><value>Chọn…</value></data>
+  <data name="Batch_Parallel" xml:space="preserve"><value>Cùng lúc</value></data>
+  <data name="Batch_Column_File" xml:space="preserve"><value>Tệp</value></data>
+  <data name="Batch_Column_Folder" xml:space="preserve"><value>Thư mục</value></data>
+  <data name="Batch_Column_Status" xml:space="preserve"><value>Trạng thái</value></data>
+  <data name="Batch_Column_Detail" xml:space="preserve"><value>Chi tiết</value></data>
+  <data name="Batch_Status_Waiting" xml:space="preserve"><value>Chờ</value></data>
+  <data name="Batch_Status_Running" xml:space="preserve"><value>Đang chạy</value></data>
+  <data name="Batch_Status_Done" xml:space="preserve"><value>Xong</value></data>
+  <data name="Batch_Status_Failed" xml:space="preserve"><value>Lỗi</value></data>
+  <data name="Batch_Status_Cancelled" xml:space="preserve"><value>Đã hủy</value></data>
+  <data name="Batch_Step" xml:space="preserve"><value>Bước {0}/{1}: {2}</value></data>
+  <data name="Batch_Running" xml:space="preserve"><value>Đang xử lý {0} tệp…</value></data>
+  <data name="Batch_Done" xml:space="preserve"><value>Xong {0} tệp, lỗi {1}, hủy {2}.</value></data>
+  <data name="Batch_Start" xml:space="preserve"><value>Bắt đầu</value></data>
+  <data name="Batch_Pause" xml:space="preserve"><value>Tạm dừng / tiếp tục</value></data>
+  <data name="Batch_Cancel" xml:space="preserve"><value>Hủy</value></data>
+  <data name="Batch_RerunFailed" xml:space="preserve"><value>Chạy lại tệp lỗi</value></data>
+  <data name="Batch_ExportLog" xml:space="preserve"><value>Xuất nhật ký…</value></data>
+  <data name="Batch_Log_FileName" xml:space="preserve"><value>nhật ký chạy lô</value></data>
+  <data name="Batch_Log_Written" xml:space="preserve"><value>Đã ghi nhật ký {0}.</value></data>
+  <data name="Batch_Log_File" xml:space="preserve"><value>Tệp</value></data>
+  <data name="Batch_Log_Status" xml:space="preserve"><value>Trạng thái</value></data>
+  <data name="Batch_Log_Outputs" xml:space="preserve"><value>Kết quả</value></data>
+  <data name="Batch_Log_Failure" xml:space="preserve"><value>Lỗi</value></data>
+  <data name="Batch_Log_Step" xml:space="preserve"><value>Bước</value></data>
+  <data name="Batch_Log_Operation" xml:space="preserve"><value>Thao tác</value></data>
+  <data name="Batch_Log_Error" xml:space="preserve"><value>Loại lỗi</value></data>
+  <data name="Batch_Log_Seconds" xml:space="preserve"><value>Giây</value></data>
+  <data name="Batch_Error_Folder" xml:space="preserve"><value>Không đọc được thư mục.</value></data>
+  <data name="Batch_Error_Log" xml:space="preserve"><value>Không ghi được nhật ký.</value></data>
+  <data name="Batch_Error_NoOutput" xml:space="preserve"><value>Chọn thư mục kết quả (workflow này không nói kết quả đi đâu).</value></data>
 </root>
