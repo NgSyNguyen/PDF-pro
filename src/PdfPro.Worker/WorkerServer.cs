@@ -1,0 +1,161 @@
+using System.Collections.Concurrent;
+using System.Text.Json;
+using PdfPro.Core.Ocr;
+using PdfPro.Core.Operations;
+using PdfPro.Core.Organizing;
+using PdfPro.Operations;
+using PdfPro.Operations.Automation;
+
+namespace PdfPro.Worker;
+
+/// <summary>
+/// The worker's side of the pipe: each "Run" message runs a content operation from the input file into the output
+/// file, sending its progress and then its result (with the report of an <see cref="IReportingOperation"/>); "Cancel"
+/// stops a run. When the app closes the pipe, every run is cancelled and the worker ends.
+/// </summary>
+internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog)
+{
+    /// <summary>Progress is sent at most this often (the last report of a stage always goes).</summary>
+    private static readonly TimeSpan ProgressInterval = TimeSpan.FromMilliseconds(100);
+
+    private readonly SemaphoreSlim _sending = new(1, 1);
+    private readonly ConcurrentDictionary<int, CancellationTokenSource> _runs = new();
+
+    public async Task ServeAsync()
+    {
+        var running = new List<Task>();
+        try
+        {
+            while (await WorkerFraming.ReadAsync(pipe, CancellationToken.None).ConfigureAwait(false) is { } message)
+            {
+                switch (message.Kind)
+                {
+                    case WorkerMessageKind.Run:
+                        running.RemoveAll(t => t.IsCompleted);
+                        running.Add(Task.Run(() => RunAsync(message)));
+                        break;
+                    case WorkerMessageKind.Cancel when _runs.TryGetValue(message.Id, out var run):
+                        await run.CancelAsync().ConfigureAwait(false);
+                        break;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or ObjectDisposedException)
+        {
+            // The app is gone.
+        }
+
+        foreach (var run in _runs.Values)
+        {
+            await run.CancelAsync().ConfigureAwait(false);
+        }
+
+        await Task.WhenAll(running).ConfigureAwait(false);
+    }
+
+    private async Task RunAsync(WorkerMessage request)
+    {
+        using var cancel = new CancellationTokenSource();
+        _runs[request.Id] = cancel;
+        WorkerMessage reply;
+        try
+        {
+            var report = await ApplyAsync(request, cancel.Token).ConfigureAwait(false);
+            reply = new WorkerMessage(WorkerMessageKind.Result, request.Id) { Outcome = WorkerOutcome.Succeeded, Report = report };
+        }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+        {
+            reply = new WorkerMessage(WorkerMessageKind.Result, request.Id) { Outcome = WorkerOutcome.Cancelled };
+        }
+        catch (Exception ex)
+        {
+            reply = new WorkerMessage(WorkerMessageKind.Result, request.Id)
+            {
+                Outcome = WorkerOutcome.Failed,
+                ErrorType = ex.GetType().FullName,
+                ErrorMessage = ex.Message,
+                ErrorDetail = ex switch
+                {
+                    OperationValidationException validation => JsonSerializer.Serialize(validation.Errors),
+                    OcrException ocr => ocr.Detail is null ? ocr.Failure.ToString() : $"{ocr.Failure}\n{ocr.Detail}",
+                    _ => null,
+                },
+            };
+        }
+        finally
+        {
+            _runs.TryRemove(request.Id, out _);
+        }
+
+        await SendAsync(reply).ConfigureAwait(false);
+    }
+
+    /// <summary>Runs the operation; its report as JSON, or null.</summary>
+    private async Task<string?> ApplyAsync(WorkerMessage request, CancellationToken cancellationToken)
+    {
+        if (request is not { Operation: { } id, Parameters: { } json, Input: { } input, Output: { } output })
+        {
+            throw new InvalidDataException("A run needs an operation, its parameters, an input and an output.");
+        }
+
+        if (catalog.Find(id) is not IContentOperation operation || catalog.ParameterType(id) is not { } type)
+        {
+            throw new NotSupportedException($"'{id}' does not run in the worker.");
+        }
+
+        var parameters = JsonSerializer.Deserialize(json, type, ParameterSchema.Json) ?? throw new InvalidDataException("The parameters are missing.");
+        var progress = new SentProgress(this, request.Id);
+        await using (var stream = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            await operation.ApplyToFileAsync(input, stream, parameters, progress, cancellationToken).ConfigureAwait(false);
+            await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            stream.Flush(flushToDisk: true);
+        }
+
+        return operation is IReportingOperation reporting && reporting.ReportOf(parameters) is { } report
+            ? JsonSerializer.Serialize(report, reporting.ReportType, ParameterSchema.Json)
+            : null;
+    }
+
+    private async Task SendAsync(WorkerMessage message)
+    {
+        await _sending.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await WorkerFraming.WriteAsync(pipe, message, CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+        {
+            // The app is gone; the reading loop ends the worker.
+        }
+        finally
+        {
+            _sending.Release();
+        }
+    }
+
+    /// <summary>Progress sent to the app, at most every <see cref="ProgressInterval"/> within a stage.</summary>
+    private sealed class SentProgress(WorkerServer server, int id) : IProgress<OperationProgress>
+    {
+        private readonly Lock _gate = new();
+        private DateTime _last = DateTime.MinValue;
+        private string? _stage;
+
+        public void Report(OperationProgress value)
+        {
+            lock (_gate)
+            {
+                var now = DateTime.UtcNow;
+                if (value.StageKey == _stage && value.Completed < value.Total && now - _last < ProgressInterval)
+                {
+                    return;
+                }
+
+                _last = now;
+                _stage = value.StageKey;
+            }
+
+            _ = server.SendAsync(new WorkerMessage(WorkerMessageKind.Progress, id) { Done = value.Completed, Total = value.Total, Stage = value.StageKey });
+        }
+    }
+}

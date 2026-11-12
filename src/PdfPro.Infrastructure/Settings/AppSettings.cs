@@ -35,6 +35,10 @@ public sealed record AppSettings
     public const int MinRenderCacheMegabytes = 128;
     public const int MaxRenderCacheMegabytes = 4096;
 
+    public const int DefaultWorkerMemoryMegabytes = 4096;
+    public const int MinWorkerMemoryMegabytes = 512;
+    public const int MaxWorkerMemoryMegabytes = 65536;
+
     public static AppSettings Default { get; } = new();
 
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
@@ -105,6 +109,15 @@ public sealed record AppSettings
 
     /// <summary>Minimizing the window while the hot folder runs puts it in the notification area.</summary>
     public bool MinimizeToTray { get; init; } = true;
+
+    /// <summary>
+    /// Heavy operations a damaged or hostile file could crash (OCR, redaction, sanitizing, scan tools) run in the
+    /// worker process (SPEC Phase 13), so a crash costs only that operation.
+    /// </summary>
+    public bool IsolateOperations { get; init; } = true;
+
+    /// <summary>Memory the worker process may use, in megabytes (Windows; applied when the app starts).</summary>
+    public int WorkerMemoryMegabytes { get; init; } = DefaultWorkerMemoryMegabytes;
 
     /// <summary>A free public time-stamping authority (DigiCert).</summary>
     public const string DefaultTimestampServer = "http://timestamp.digicert.com";

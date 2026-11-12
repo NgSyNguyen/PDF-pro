@@ -22,7 +22,7 @@ namespace PdfPro.Operations.Ocr;
 /// straighten pages, which turns their content). The report (<see cref="ReportOf"/>) gives every page's outcome, mean
 /// confidence, text and, when asked, hOCR. Cancelled, nothing is written.
 /// </summary>
-public sealed class OcrOperation(PdfiumGate gate, IOcrEngine engine) : FileContentOperation<OcrParams>
+public sealed class OcrOperation(PdfiumGate gate, IOcrEngine engine) : FileContentOperation<OcrParams>, IReportingOperation
 {
     public const string OperationId = "ocr.run";
 
@@ -44,6 +44,12 @@ public sealed class OcrOperation(PdfiumGate gate, IOcrEngine engine) : FileConte
         ArgumentNullException.ThrowIfNull(parameters);
         return Reports.TryGetValue(parameters, out var report) ? report : null;
     }
+
+    Type IReportingOperation.ReportType => typeof(OcrReport);
+
+    object? IReportingOperation.ReportOf(object parameters) => ReportOf((OcrParams)parameters);
+
+    void IReportingOperation.Remember(object parameters, object report) => Reports.AddOrUpdate((OcrParams)parameters, (OcrReport)report);
 
     public override async Task ApplyToFileAsync(string inputPath, Stream output, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
     {

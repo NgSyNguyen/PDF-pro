@@ -2343,4 +2343,10 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Tray_Text" xml:space="preserve"><value>PDF_Pro</value></data>
   <data name="Tray_Open" xml:space="preserve"><value>Open PDF_Pro</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Content_Error_WorkerStopped" xml:space="preserve"><value>The separate process doing the work stopped unexpectedly on this document (the file may be badly damaged, or the work needed more memory than Settings allow). The document is unchanged; you can try again.</value></data>
+  <data name="Content_Error_WorkerTimedOut" xml:space="preserve"><value>The operation ran too long and was stopped. The document is unchanged.</value></data>
+  <data name="Settings_Worker" xml:space="preserve"><value>Run heavy operations in a separate process</value></data>
+  <data name="Settings_Worker_Hint" xml:space="preserve"><value>OCR, redaction, sanitizing, straightening pages and removing dark borders run apart from the window: if a badly damaged file crashes the operation, PDF_Pro keeps running and the document loses no changes.</value></data>
+  <data name="Settings_Worker_Memory" xml:space="preserve"><value>Memory limit (MB)</value></data>
+  <data name="Settings_Worker_Memory_Hint" xml:space="preserve"><value>Applies the next time PDF_Pro starts.</value></data>
 </root>

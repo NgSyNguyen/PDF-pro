@@ -138,6 +138,10 @@ public sealed class SettingsService : ISettingsService
             settings.RenderCacheMegabytes,
             AppSettings.MinRenderCacheMegabytes,
             AppSettings.MaxRenderCacheMegabytes),
+        WorkerMemoryMegabytes = Math.Clamp(
+            settings.WorkerMemoryMegabytes,
+            AppSettings.MinWorkerMemoryMegabytes,
+            AppSettings.MaxWorkerMemoryMegabytes),
     };
 
     private void MoveAside(string reason)

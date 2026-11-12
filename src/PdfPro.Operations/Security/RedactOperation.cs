@@ -80,7 +80,7 @@ public sealed record RedactionReport(
 /// a picture page stops the operation, and nothing is written. Labels are drawn last. The parameters hold only
 /// rectangles, never the removed text.
 /// </summary>
-public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<RedactParams>
+public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<RedactParams>, IReportingOperation
 {
     public const string OperationId = "security.redact";
 
@@ -146,6 +146,12 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
         ArgumentNullException.ThrowIfNull(parameters);
         return Reports.TryGetValue(parameters, out var report) ? report : null;
     }
+
+    Type IReportingOperation.ReportType => typeof(RedactionReport);
+
+    object? IReportingOperation.ReportOf(object parameters) => ReportOf((RedactParams)parameters);
+
+    void IReportingOperation.Remember(object parameters, object report) => Reports.AddOrUpdate((RedactParams)parameters, (RedactionReport)report);
 
     public override async Task ApplyToFileAsync(string inputPath, Stream output, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
     {

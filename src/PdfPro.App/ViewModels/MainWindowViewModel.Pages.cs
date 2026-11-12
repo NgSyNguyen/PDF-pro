@@ -154,6 +154,8 @@ public sealed partial class MainWindowViewModel
             {
                 ContentChangeFailure.SourceUnreadable => Strings.Content_Error_SourceUnreadable,
                 ContentChangeFailure.DiskFull => Strings.Content_Error_DiskFull,
+                ContentChangeFailure.WorkerStopped => Strings.Content_Error_WorkerStopped,
+                ContentChangeFailure.WorkerTimedOut => Strings.Content_Error_WorkerTimedOut,
                 _ => Strings.Content_Error_Failed,
             };
         }

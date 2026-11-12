@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The worker process started for real: runs, reports, cancelling, a worker killed mid-run, time limits. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PdfPro.Worker\PdfPro.Worker.csproj" />
+    <ProjectReference Include="..\..\src\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\PdfPro.Operations\PdfPro.Operations.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PdfPig" />
+  </ItemGroup>
+
+</Project>

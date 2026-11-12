@@ -72,7 +72,7 @@ public sealed record SanitizeReport(
 /// anything after %%EOF. Pages whose look would change by removing hidden or outside content are left as they were and
 /// reported. <see cref="ReportOf"/> tells what went.
 /// </summary>
-public sealed class SanitizeOperation(PdfiumGate gate) : FileContentOperation<SanitizeParams>
+public sealed class SanitizeOperation(PdfiumGate gate) : FileContentOperation<SanitizeParams>, IReportingOperation
 {
     public const string OperationId = "security.sanitize";
 
@@ -88,6 +88,12 @@ public sealed class SanitizeOperation(PdfiumGate gate) : FileContentOperation<Sa
         ArgumentNullException.ThrowIfNull(parameters);
         return Reports.TryGetValue(parameters, out var report) ? report : null;
     }
+
+    Type IReportingOperation.ReportType => typeof(SanitizeReport);
+
+    object? IReportingOperation.ReportOf(object parameters) => ReportOf((SanitizeParams)parameters);
+
+    void IReportingOperation.Remember(object parameters, object report) => Reports.AddOrUpdate((SanitizeParams)parameters, (SanitizeReport)report);
 
     public override async Task ApplyToFileAsync(string inputPath, Stream output, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
     {

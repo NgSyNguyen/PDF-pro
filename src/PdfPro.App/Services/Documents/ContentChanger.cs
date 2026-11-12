@@ -15,6 +15,12 @@ public enum ContentChangeFailure
 
     DiskFull,
 
+    /// <summary>The worker process running the operation stopped (the file crashed it or it ran out of memory).</summary>
+    WorkerStopped,
+
+    /// <summary>The operation went over its time limit in the worker process and was stopped.</summary>
+    WorkerTimedOut,
+
     Failed,
 }
 
@@ -45,7 +51,7 @@ public interface IContentChanger
 /// open the revision and record a <see cref="Core.Sessions.RevisionCommand"/>. Undo goes back to the previous
 /// state; the revision file stays for redo and crash recovery. Logs name the session and operation only.
 /// </summary>
-internal sealed class ContentChanger(IPlanMaterializer materializer, IPdfDocumentLoader loader, ILogger<ContentChanger> logger) : IContentChanger
+internal sealed class ContentChanger(IPlanMaterializer materializer, IPdfDocumentLoader loader, ILogger<ContentChanger> logger, IOperationIsolation? isolation = null) : IContentChanger
 {
     private const int ErrorHandleDiskFull = unchecked((int)0x80070027);
     private const int ErrorDiskFull = unchecked((int)0x80070070);
@@ -92,7 +98,15 @@ internal sealed class ContentChanger(IPlanMaterializer materializer, IPdfDocumen
 
             await using (var stream = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                await operation.ApplyToFileAsync(pages, stream, parameters, Part(progress, 1), cancellationToken);
+                if (isolation?.Isolates(operation) == true)
+                {
+                    await isolation.ApplyAsync(operation, pages, stream, parameters, Part(progress, 1), cancellationToken);
+                }
+                else
+                {
+                    await operation.ApplyToFileAsync(pages, stream, parameters, Part(progress, 1), cancellationToken);
+                }
+
                 await stream.FlushAsync(cancellationToken);
                 stream.Flush(flushToDisk: true);
             }
@@ -150,6 +164,8 @@ internal sealed class ContentChanger(IPlanMaterializer materializer, IPdfDocumen
     {
         MaterializationException => ContentChangeFailure.SourceUnreadable,
         IOException { HResult: ErrorDiskFull or ErrorHandleDiskFull } => ContentChangeFailure.DiskFull,
+        WorkerException { Failure: WorkerFailure.TimedOut } => ContentChangeFailure.WorkerTimedOut,
+        WorkerException => ContentChangeFailure.WorkerStopped,
         _ => ContentChangeFailure.Failed,
     };
 

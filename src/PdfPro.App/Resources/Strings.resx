@@ -2343,4 +2343,10 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Tray_Text" xml:space="preserve"><value>PDF_Pro</value></data>
   <data name="Tray_Open" xml:space="preserve"><value>Mở PDF_Pro</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Thoát</value></data>
+  <data name="Content_Error_WorkerStopped" xml:space="preserve"><value>Tiến trình xử lý riêng đã dừng bất thường khi làm việc với tài liệu này (tệp có thể hỏng nặng, hoặc thao tác cần nhiều bộ nhớ hơn mức cho phép trong Cài đặt). Tài liệu vẫn như cũ; bạn có thể thử lại.</value></data>
+  <data name="Content_Error_WorkerTimedOut" xml:space="preserve"><value>Thao tác chạy quá lâu nên đã bị dừng. Tài liệu vẫn như cũ.</value></data>
+  <data name="Settings_Worker" xml:space="preserve"><value>Chạy thao tác nặng trong tiến trình riêng</value></data>
+  <data name="Settings_Worker_Hint" xml:space="preserve"><value>OCR, xóa vĩnh viễn, làm sạch, làm thẳng trang và xóa viền đen chạy tách khỏi cửa sổ: nếu một tệp hỏng nặng làm thao tác sập, PDF_Pro vẫn chạy và tài liệu không mất thay đổi nào.</value></data>
+  <data name="Settings_Worker_Memory" xml:space="preserve"><value>Bộ nhớ tối đa (MB)</value></data>
+  <data name="Settings_Worker_Memory_Hint" xml:space="preserve"><value>Áp dụng từ lần mở PDF_Pro sau.</value></data>
 </root>

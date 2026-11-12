@@ -190,6 +190,25 @@ public sealed class SettingsViewModelTests : IDisposable
         _settings.Current.RenderCacheMegabytes.ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData(100, 512)]
+    [InlineData(2048.4, 2048)]
+    [InlineData(1_000_000, 65536)]
+    public async Task TheWorker_CanBeTurnedOff_AndItsMemoryLimitStaysInRange(double typed, int expected)
+    {
+        var viewModel = CreateViewModel();
+        viewModel.IsolateOperations.ShouldBeTrue("on by default");
+
+        viewModel.IsolateOperations = false;
+        await viewModel.PendingSave;
+        viewModel.WorkerMemoryMegabytes = typed;
+        await viewModel.PendingSave;
+
+        _settings.Current.IsolateOperations.ShouldBeFalse();
+        viewModel.WorkerMemoryMegabytes.ShouldBe(expected);
+        _settings.Current.WorkerMemoryMegabytes.ShouldBe(expected);
+    }
+
     [Fact]
     public void RenderCache_ClearedOrUnchanged_DoesNotSave()
     {

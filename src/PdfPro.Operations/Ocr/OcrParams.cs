@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace PdfPro.Operations.Ocr;
 
@@ -86,14 +87,18 @@ public sealed record OcrPageReport(int PageIndex, OcrPageOutcome Outcome, double
 /// <param name="Duration">How long the run took.</param>
 public sealed record OcrReport(IReadOnlyList<OcrPageReport> Pages, double ConfidenceThreshold, IReadOnlyList<int> RemovedHiddenText, IReadOnlyList<int> StraightenedPages, TimeSpan Duration)
 {
+    [JsonIgnore]
     public IEnumerable<OcrPageReport> Recognized => Pages.Where(p => p.Outcome == OcrPageOutcome.Recognized);
 
     /// <summary>Recognised pages whose mean confidence is below the threshold: worth checking.</summary>
+    [JsonIgnore]
     public IEnumerable<OcrPageReport> LowConfidence => Recognized.Where(p => p.MeanConfidence < ConfidenceThreshold);
 
     /// <summary>Pages read turned (their picture was upside down or sideways).</summary>
+    [JsonIgnore]
     public IEnumerable<OcrPageReport> Turned => Recognized.Where(p => p.Rotation != 0);
 
     /// <summary>The text of the recognised pages, a form feed between pages (as TXT export writes it).</summary>
+    [JsonIgnore]
     public string Text => string.Join("\f", Pages.Where(p => p.Outcome == OcrPageOutcome.Recognized).Select(p => p.Text));
 }

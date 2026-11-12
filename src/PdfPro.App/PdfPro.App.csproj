@@ -34,6 +34,8 @@
     <ProjectReference Include="..\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
     <ProjectReference Include="..\PdfPro.Operations\PdfPro.Operations.csproj" />
     <ProjectReference Include="..\PdfPro.Ocr\PdfPro.Ocr.csproj" />
+    <!-- PdfPro.Worker.exe goes next to PdfPro.exe; the app only starts it (no types are used). -->
+    <ProjectReference Include="..\PdfPro.Worker\PdfPro.Worker.csproj" />
   </ItemGroup>
 
   <!-- UI strings: Strings.resx is Vietnamese (neutral), Strings.en.resx is English. -->

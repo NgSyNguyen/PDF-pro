@@ -128,6 +128,40 @@
         <ui:ToggleSwitch AutomationProperties.AutomationId="SettingsHotFolderEnabled" AutomationProperties.Name="{loc:Tr Settings_HotFolder}" IsChecked="{Binding HotFolderEnabled}" />
       </ui:CardControl>
 
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ShieldTask24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_Worker}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_Worker_Hint}"
+              TextWrapping="Wrap" />
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+              <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="{loc:Tr Settings_Worker_Memory}" />
+              <ui:NumberBox
+                Width="140"
+                AutomationProperties.AutomationId="SettingsWorkerMemory"
+                AutomationProperties.Name="{loc:Tr Settings_Worker_Memory}"
+                ClearButtonEnabled="False"
+                LargeChange="1024"
+                MaxDecimalPlaces="0"
+                Maximum="{Binding MaxWorkerMemory}"
+                Minimum="{Binding MinWorkerMemory}"
+                SmallChange="512"
+                SpinButtonPlacementMode="Inline"
+                Value="{Binding WorkerMemoryMegabytes, UpdateSourceTrigger=LostFocus}" />
+            </StackPanel>
+            <TextBlock
+              Margin="0,4,0,0"
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_Worker_Memory_Hint}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch AutomationProperties.AutomationId="SettingsIsolateOperations" AutomationProperties.Name="{loc:Tr Settings_Worker}" IsChecked="{Binding IsolateOperations}" />
+      </ui:CardControl>
+
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon DocumentArrowDown24}">
         <ui:CardControl.Header>
           <StackPanel>

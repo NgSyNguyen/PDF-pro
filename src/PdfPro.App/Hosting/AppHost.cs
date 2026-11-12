@@ -139,6 +139,17 @@ internal static class AppHost
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
         services.AddSingleton<IDocumentSaver, DocumentSaver>();
         services.AddSingleton<IContentChanger, ContentChanger>();
+
+        // PdfPro.Worker (SPEC Phase 13): heavy operations run apart from the app, in a process limited in memory.
+        services.AddSingleton<PdfPro.Infrastructure.Worker.IWorkerClient>(sp =>
+        {
+            var settings = sp.GetRequiredService<PdfPro.Infrastructure.Settings.ISettingsService>().Current;
+            var program = System.IO.Path.Combine(AppContext.BaseDirectory, "PdfPro.Worker.exe");
+            return new PdfPro.Infrastructure.Worker.WorkerClient(
+                new PdfPro.Infrastructure.Worker.WorkerOptions(program, (long)settings.WorkerMemoryMegabytes << 20, TimeSpan.FromHours(4)) { DataRoot = sp.GetRequiredService<AppPaths>().DataRoot },
+                sp.GetRequiredService<ILogger<PdfPro.Infrastructure.Worker.WorkerClient>>());
+        });
+        services.AddSingleton<IOperationIsolation, WorkerIsolation>();
         services.AddSingleton<IMergeService, MergeService>();
         services.AddSingleton<IBatesService, BatesService>();
         services.AddSingleton<ICertificateStore, CertificateStore>();

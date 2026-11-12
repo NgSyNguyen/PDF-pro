@@ -89,7 +89,7 @@ PdfPro/
 │  ├─ PdfPro.Infrastructure/     // file, settings, tiến trình ngoài, font
 │  ├─ PdfPro.App/                // WPF + MVVM
 │  ├─ PdfPro.Cli/                // pdfpro.exe
-│  └─ PdfPro.Worker/             // (P13) process cô lập cho thao tác rủi ro
+│  └─ PdfPro.Worker/             // (P13) tiến trình riêng cho thao tác nặng (named pipe, Job Object)
 └─ tests/
    ├─ PdfPro.Core.Tests/
    ├─ PdfPro.Operations.Tests/   // golden-file trên samples/ + test chiều phụ thuộc
@@ -100,6 +100,7 @@ PdfPro/
    ├─ PdfPro.SampleGenerator/    // sinh lại samples/ (PDFsharp), không phải project test
    ├─ PdfPro.TestTools.FakeTool/ // exe giả lập công cụ ngoài, chỉ dùng cho test
    ├─ PdfPro.Cli.Tests/          // (P12) pdfpro chạy trong tiến trình: lệnh, mã thoát, JSON
+   ├─ PdfPro.Worker.Tests/       // (P13) Worker chạy thật: kết quả, báo cáo, hủy, chết giữa chừng, quá giờ
 benchmarks/
    └─ PdfPro.Benchmarks/         // (P13) BenchmarkDotNet + "budgets", chạy tay
 ```
@@ -729,7 +730,16 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - **Bom giải nén:** `StreamData` tự giải Flate với **trần 512 MB** sau giải nén (`Bytes` ném `InvalidDataException`, `Decode` trả null); nén/thang xám bỏ qua ảnh quá `ImageRecompressor.MaxPixels` **trước khi** giải mã (ảnh 30.000 × 30.000: đỉnh bộ nhớ 2,4 GB → 113 MB).
 - Bộ test `Operations.Tests/Robustness`: tệp tạo từng byte — 0 trang, cây trang vòng (2 kiểu), bookmark vòng, mảng lồng 50.000 tầng, phông hỏng, tham chiếu vòng, trang 14.400 pt với `/UserUnit`, `/Count` 1 tỉ, ảnh 30.000² (bom giải nén), tệp cụt, nội dung 700 MB, 10.000 trang. PDFium mở/vẽ/đọc chữ < 30 s; xoay, đánh số, nén, làm sạch, thang xám xong hoặc báo lỗi có lý do < 60 s, không bao giờ `OutOfMemoryException`; 10.000 trang mở < 10 s.
 - **Fuzz nhẹ**: đổi byte ngẫu nhiên / nhân một đoạn / cắt đuôi ba tệp mẫu (hạt giống cố định), mỗi bản mở + vẽ + đọc chữ bằng PDFium, mở + lưu bằng PDFsharp, đọc chữ bằng PdfPig. 40 bản trong mỗi lần build; `.github/workflows/fuzz.yml` chạy 3.000 bản hằng đêm trên nhánh mặc định (2.000 bản trên máy cloud: 27 s, không sập).
-- Còn mở: PdfPig trích chữ trên trang có content stream giải nén cực lớn dùng nhiều GB (Sang văn bản, So sánh, Trích bảng) — chạy thao tác trong tiến trình Worker (lát 3) giới hạn được.
+- Còn mở: PdfPig trích chữ trên trang có content stream giải nén cực lớn dùng nhiều GB (Sang văn bản, So sánh, Trích bảng) — các thao tác xuất này chưa chạy trong Worker.
+
+**Tiến trình Worker (lát 3)** — thao tác nặng chạy tách khỏi ứng dụng, để một tệp làm sập thư viện native (hay ăn hết bộ nhớ) chỉ làm hỏng **thao tác đó**:
+- `src/PdfPro.Worker` (`PdfPro.Worker.exe`, cạnh `PdfPro.exe`; App tham chiếu dự án chỉ để chép nó ra): `WorkerServer` đọc thông điệp từ named pipe, chạy `IContentOperation.ApplyToFileAsync` (tệp vào → tệp ra) của danh mục `StandardOperations` (đọc Cài đặt của App để tìm Tesseract), gửi tiến độ (≤ 10 lần/giây mỗi giai đoạn) rồi kết quả; "Cancel" hủy một lần chạy; App đóng pipe → mọi lần chạy bị hủy, Worker thoát.
+- Giao thức (`Core/Operations/WorkerProtocol.cs`): `WorkerMessage` (Run / Cancel / Progress / Result) đóng khung bằng độ dài 4 byte + JSON UTF-8 (≤ 256 MB); tham số và báo cáo là JSON của chính record thao tác (`ParameterSchema.Json`) — **có thể chứa mật khẩu và chữ của tài liệu nên không bao giờ được ghi log**; pipe tạo với `PipeOptions.CurrentUserOnly`. Không thêm package (không dùng StreamJsonRpc).
+- `Infrastructure/Worker/WorkerClient`: khởi động Worker ở lần chạy đầu (tên pipe ngẫu nhiên, thư mục dữ liệu của App làm tham số), một lần chạy mỗi lúc; **Job Object** trên Windows: giới hạn bộ nhớ mỗi tiến trình (Cài đặt, mặc định 4.096 MB, 512–65.536; áp dụng từ lần mở App sau), chết cùng App (`KILL_ON_JOB_CLOSE`), không hiện hộp thoại lỗi; quá giờ (4 giờ) → dừng Worker; hủy mà Worker không dừng sau 10 s → dừng Worker. Worker chết giữa chừng → `WorkerException(Crashed)`, lần chạy sau tự khởi động Worker mới. Lỗi của thao tác được dựng lại đúng kiểu App biết: `OperationValidationException` (kèm danh sách lỗi), `OcrException` (kèm loại + chi tiết), `InvalidDataException`…; còn lại `WorkerOperationException(ErrorType)`.
+- `IReportingOperation` (Core): OCR, xóa vĩnh viễn, làm sạch trả báo cáo về App (`Remember`) để `OcrOperation.ReportOf(params)`… dùng như khi chạy trong App.
+- App: `Services/Documents/OperationIsolation.cs` — `WorkerIsolation` gửi **`ocr.run`, `security.redact`, `security.sanitize`, `scan.deskew`, `scan.cleanBorders`** sang Worker khi Cài đặt "Chạy thao tác nặng trong tiến trình riêng" bật (mặc định) và có `PdfPro.Worker.exe` (không có thì chạy trong App như trước); `ContentChanger` dùng nó; Worker chết/quá giờ → `ContentChangeFailure.WorkerStopped/WorkerTimedOut` → thông báo tiếng Việt "…Tài liệu vẫn như cũ; bạn có thể thử lại." (thay đổi nội dung chỉ được nhận khi thành công nên không mất gì).
+- Giới hạn: phần **đo** của công cụ scan (trang trắng, nghiêng, viền, hướng), các thao tác xuất (nén, chuyển đổi, sửa tệp hỏng…), chạy lô/workflow/hot folder và việc **vẽ trang** của trình xem vẫn chạy trong App (Chế độ an toàn cho tệp từ Internet chưa làm).
+- Test `tests/PdfPro.Worker.Tests` (chạy Worker thật, cả trên Linux): chạy đánh số trang có tiến độ; báo cáo làm sạch quay về; tham số sai → `OperationValidationException`; **giết Worker giữa lúc xóa vĩnh viễn 1.000 trang** → chỉ lần đó lỗi, lần sau Worker mới chạy được; hủy → Worker vẫn sống; quá giờ → Worker bị dừng; thiếu chương trình → `NotStarted`. App: `ContentChangerTests` (thao tác cô lập không chạy trong App; Worker chết/quá giờ → tài liệu nguyên vẹn), `WorkerIsolationTests`, `SettingsViewModelTests` (tắt, giới hạn bộ nhớ trong khoảng).
 
 **Hiệu năng (lát 2)** — `benchmarks/PdfPro.Benchmarks` (BenchmarkDotNet 0.15.8, chạy tay, mọi benchmark `[InProcess]`):
 ```powershell

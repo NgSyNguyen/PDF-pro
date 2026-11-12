@@ -95,6 +95,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         TesseractStatus = DescribeTesseract(TesseractPath, SelectedOcrData);
         DiskCacheSize = Strings.Settings_Measuring;
         InitializeHotFolder(settings.Current, hotFolder, startup, workflows);
+        InitializeWorker(settings.Current);
         _isInitialized = true;
     }
 
