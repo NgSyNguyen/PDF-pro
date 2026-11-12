@@ -13,5 +13,146 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Argument_Input" xml:space="preserve"><value>Tệp PDF.</value></data>
+  <data name="Argument_Inputs" xml:space="preserve"><value>Tệp hoặc thư mục (thư mục: các tệp theo --pattern).</value></data>
+  <data name="Argument_Operation" xml:space="preserve"><value>Mã thao tác, ví dụ optimize.compress (xem list-ops).</value></data>
+  <data name="Argument_Workflow" xml:space="preserve"><value>Tệp .pdfflow, hoặc mẫu dựng sẵn: digitize, publish, print.</value></data>
+  <data name="Command_Compress" xml:space="preserve"><value>Nén PDF.</value></data>
+  <data name="Command_Convert" xml:space="preserve"><value>Chuyển đổi: sang ảnh, văn bản, PDF/A, thang xám, tối ưu web; ảnh hoặc Office sang PDF.</value></data>
+  <data name="Command_Decrypt" xml:space="preserve"><value>Gỡ bảo vệ (cần --password là mật khẩu chủ).</value></data>
+  <data name="Command_Encrypt" xml:space="preserve"><value>Đặt mật khẩu và quyền.</value></data>
+  <data name="Command_Info" xml:space="preserve"><value>Thông tin về một tệp PDF (số trang, khổ, bảo vệ, thuộc tính, phông…).</value></data>
+  <data name="Command_ListOps" xml:space="preserve"><value>Liệt kê mọi thao tác và tham số của chúng.</value></data>
+  <data name="Command_Merge" xml:space="preserve"><value>Gộp các tệp thành một PDF (-o tên.pdf).</value></data>
+  <data name="Command_Ocr" xml:space="preserve"><value>Nhận dạng chữ (OCR) cho bản quét.</value></data>
+  <data name="Command_Redact" xml:space="preserve"><value>Xóa vĩnh viễn theo mẫu (CCCD, điện thoại, email, số tài khoản, ngày, biểu thức).</value></data>
+  <data name="Command_Rotate" xml:space="preserve"><value>Xoay trang.</value></data>
+  <data name="Command_Run" xml:space="preserve"><value>Chạy một thao tác bất kỳ với tham số -p tên=giá trị hoặc --params JSON.</value></data>
+  <data name="Command_RunWorkflow" xml:space="preserve"><value>Chạy một workflow trên các tệp.</value></data>
+  <data name="Command_Sign" xml:space="preserve"><value>Ký số bằng chứng thư .pfx.</value></data>
+  <data name="Command_Split" xml:space="preserve"><value>Tách PDF theo khoảng trang, số trang, bookmark, dung lượng hoặc trang trắng.</value></data>
+  <data name="Command_Stamp" xml:space="preserve"><value>Đánh số trang, đầu/chân trang hoặc số Bates.</value></data>
+  <data name="Command_Watermark" xml:space="preserve"><value>Thêm hình mờ chữ.</value></data>
+  <data name="Error_BadPair" xml:space="preserve"><value>"{0}" không có dạng tên=giá trị.</value></data>
+  <data name="Error_Certificate" xml:space="preserve"><value>Không đọc được chứng thư .pfx (sai mật khẩu hoặc không phải tệp .pfx).</value></data>
+  <data name="Error_CertificateNoKey" xml:space="preserve"><value>Chứng thư không có khóa riêng để ký.</value></data>
+  <data name="Error_DecryptPassword" xml:space="preserve"><value>Cần mật khẩu chủ: --password hoặc biến môi trường PDFPRO_PASSWORD.</value></data>
+  <data name="Error_Exists" xml:space="preserve"><value>Tệp đã có: {0} (dùng --overwrite để ghi đè).</value></data>
+  <data name="Error_Log" xml:space="preserve"><value>Không ghi được tệp nhật ký.</value></data>
+  <data name="Error_NoFiles" xml:space="preserve"><value>Không có tệp nào để xử lý.</value></data>
+  <data name="Error_OwnerPassword" xml:space="preserve"><value>Cần mật khẩu chủ: --owner-password hoặc biến môi trường PDFPRO_OWNER_PASSWORD.</value></data>
+  <data name="Error_ParamsJson" xml:space="preserve"><value>--params phải là một đối tượng JSON hoặc tệp chứa nó.</value></data>
+  <data name="Error_Permission" xml:space="preserve"><value>"{0}" không phải tên quyền.</value></data>
+  <data name="Error_Pfx" xml:space="preserve"><value>Cần tệp chứng thư: --pfx tệp.pfx.</value></data>
+  <data name="Error_Prefix" xml:space="preserve"><value>Lỗi: {0}</value></data>
+  <data name="Error_RedactNothing" xml:space="preserve"><value>Chọn ít nhất một mẫu (--pattern) hoặc --regex.</value></data>
+  <data name="Error_RedactPattern" xml:space="preserve"><value>"{0}" không phải mẫu (cccd, phone, email, account, date).</value></data>
+  <data name="Error_SecretsFile" xml:space="preserve"><value>Tệp mật khẩu phải là một đối tượng JSON gồm các đối tượng.</value></data>
+  <data name="Error_SplitMode" xml:space="preserve"><value>Chọn cách tách: --ranges, --every, --bookmarks, --size hoặc --blank.</value></data>
+  <data name="Error_StampKind" xml:space="preserve"><value>Chọn --page-numbers, --header, --footer hoặc --bates.</value></data>
+  <data name="Error_UnknownOperation" xml:space="preserve"><value>Không có thao tác "{0}" (xem list-ops).</value></data>
+  <data name="Error_Workflow" xml:space="preserve"><value>Không đọc được workflow "{0}": {1}</value></data>
+  <data name="Failure_AtStep" xml:space="preserve"><value>bước {0} ({1}): {2}</value></data>
+  <data name="Failure_Input" xml:space="preserve"><value>tệp không có hoặc không đọc được</value></data>
+  <data name="Failure_Invalid" xml:space="preserve"><value>workflow không hợp lệ</value></data>
+  <data name="Failure_Output" xml:space="preserve"><value>không ghi được kết quả (thư mục ra?)</value></data>
+  <data name="Failure_Parameters" xml:space="preserve"><value>tham số không hợp với tệp: {0}</value></data>
+  <data name="Failure_Password" xml:space="preserve"><value>tệp có mật khẩu: cần đúng mật khẩu chủ (--password)</value></data>
+  <data name="Failure_Secrets" xml:space="preserve"><value>thiếu mật khẩu hoặc chứng thư cho bước này</value></data>
+  <data name="Failure_Step" xml:space="preserve"><value>thao tác thất bại ({0})</value></data>
+  <data name="Failure_ToolMissing" xml:space="preserve"><value>chưa cài {0}</value></data>
+  <data name="Failure_Unreadable" xml:space="preserve"><value>tệp hỏng hoặc không phải PDF đọc được</value></data>
+  <data name="Info_PageSize" xml:space="preserve"><value>{0} × {1} pt ({2} trang)</value></data>
+  <data name="Issue_InvalidParameters" xml:space="preserve"><value>tham số không hợp lệ</value></data>
+  <data name="Issue_NeedsSeveralFiles" xml:space="preserve"><value>thao tác cần nhiều tệp cùng lúc, không dùng làm bước được</value></data>
+  <data name="Issue_NoSteps" xml:space="preserve"><value>workflow không có bước nào được bật</value></data>
+  <data name="Issue_NotForFiles" xml:space="preserve"><value>thao tác chỉ dùng trong tài liệu đang mở</value></data>
+  <data name="Issue_OnlyFirst" xml:space="preserve"><value>thao tác này chỉ đứng đầu workflow được</value></data>
+  <data name="Issue_OnlyLast" xml:space="preserve"><value>thao tác này không ra một PDF nên chỉ đứng cuối được</value></data>
+  <data name="Issue_ProtectionNotLast" xml:space="preserve"><value>đặt mật khẩu phải là bước cuối</value></data>
+  <data name="Issue_ReplaceNeedsOnePdf" xml:space="preserve"><value>thay tệp vào cần workflow ra đúng một PDF</value></data>
+  <data name="Issue_Step" xml:space="preserve"><value>Bước {0}:</value></data>
+  <data name="Issue_TooManySteps" xml:space="preserve"><value>workflow có quá nhiều bước</value></data>
+  <data name="Issue_UnknownOperation" xml:space="preserve"><value>thao tác không tồn tại</value></data>
+  <data name="Log_Error" xml:space="preserve"><value>Loại lỗi</value></data>
+  <data name="Log_Failure" xml:space="preserve"><value>Lỗi</value></data>
+  <data name="Log_File" xml:space="preserve"><value>Tệp</value></data>
+  <data name="Log_Operation" xml:space="preserve"><value>Thao tác</value></data>
+  <data name="Log_Outputs" xml:space="preserve"><value>Kết quả</value></data>
+  <data name="Log_Seconds" xml:space="preserve"><value>Giây</value></data>
+  <data name="Log_Status" xml:space="preserve"><value>Trạng thái</value></data>
+  <data name="Log_Step" xml:space="preserve"><value>Bước</value></data>
+  <data name="Merge_TableOfContents" xml:space="preserve"><value>Mục lục</value></data>
+  <data name="Option_Aes128" xml:space="preserve"><value>Dùng AES-128 thay cho AES-256.</value></data>
+  <data name="Option_AllPages" xml:space="preserve"><value>Nhận dạng mọi trang, kể cả trang đã có chữ.</value></data>
+  <data name="Option_Allow" xml:space="preserve"><value>Quyền cho phép, cách bằng dấu phẩy: print, printHighQuality, modify, copy, annotate, fillForms, assemble.</value></data>
+  <data name="Option_Bates" xml:space="preserve"><value>Đánh số Bates với tiền tố này, nối tiếp qua các tệp.</value></data>
+  <data name="Option_Behind" xml:space="preserve"><value>Đặt dưới nội dung trang.</value></data>
+  <data name="Option_Contact" xml:space="preserve"><value>Thông tin liên hệ.</value></data>
+  <data name="Option_Degrees" xml:space="preserve"><value>Góc xoay: 90, 180, 270 (hoặc âm).</value></data>
+  <data name="Option_Digits" xml:space="preserve"><value>Số chữ số của số Bates.</value></data>
+  <data name="Option_Dpi" xml:space="preserve"><value>Độ phân giải (DPI).</value></data>
+  <data name="Option_Every" xml:space="preserve"><value>Mỗi tệp N trang.</value></data>
+  <data name="Option_Footer" xml:space="preserve"><value>Chữ chân trang (giữa).</value></data>
+  <data name="Option_Header" xml:space="preserve"><value>Chữ đầu trang (giữa).</value></data>
+  <data name="Option_InPlace" xml:space="preserve"><value>Thay chính tệp vào bằng kết quả.</value></data>
+  <data name="Option_Json" xml:space="preserve"><value>Kết quả dạng JSON trên stdout.</value></data>
+  <data name="Option_KeepText" xml:space="preserve"><value>Giữ chữ và hình vẽ còn lại của trang (nâng cao; mặc định trang thành ảnh).</value></data>
+  <data name="Option_Label" xml:space="preserve"><value>Chữ ghi trong ô đã xóa.</value></data>
+  <data name="Option_Languages" xml:space="preserve"><value>Ngôn ngữ, nối bằng +: vie, vie+eng.</value></data>
+  <data name="Option_Location" xml:space="preserve"><value>Nơi ký.</value></data>
+  <data name="Option_Log" xml:space="preserve"><value>Ghi nhật ký lô ra tệp CSV.</value></data>
+  <data name="Option_NoBookmarks" xml:space="preserve"><value>Không giữ bookmark và không tạo bookmark theo tệp.</value></data>
+  <data name="Option_Opacity" xml:space="preserve"><value>Độ đậm 0–1.</value></data>
+  <data name="Option_Out" xml:space="preserve"><value>Thư mục kết quả (mặc định: thư mục hiện tại; với merge: tên tệp .pdf).</value></data>
+  <data name="Option_Overwrite" xml:space="preserve"><value>Ghi đè kết quả trùng tên (không bao giờ ghi đè tệp vào).</value></data>
+  <data name="Option_OwnerPassword" xml:space="preserve"><value>Mật khẩu chủ (hoặc biến môi trường PDFPRO_OWNER_PASSWORD).</value></data>
+  <data name="Option_PageNumbers" xml:space="preserve"><value>Đánh số trang theo mẫu, ví dụ "Trang {page}/{pages}".</value></data>
+  <data name="Option_Pages" xml:space="preserve"><value>Trang: "1-3, 8", "lẻ", "chẵn", "all".</value></data>
+  <data name="Option_Parallel" xml:space="preserve"><value>Số tệp chạy cùng lúc (0 = nửa số nhân).</value></data>
+  <data name="Option_Param" xml:space="preserve"><value>Tham số thêm dạng tên=giá trị (lặp lại được).</value></data>
+  <data name="Option_Params" xml:space="preserve"><value>Tham số dạng JSON (chuỗi hoặc tệp).</value></data>
+  <data name="Option_Password" xml:space="preserve"><value>Mật khẩu chủ của tệp vào có bảo vệ (hoặc biến môi trường PDFPRO_PASSWORD).</value></data>
+  <data name="Option_Pattern" xml:space="preserve"><value>Mẫu tên tệp trong thư mục (mặc định *.pdf; nhiều mẫu cách bằng ;).</value></data>
+  <data name="Option_Pfx" xml:space="preserve"><value>Tệp chứng thư .pfx để ký.</value></data>
+  <data name="Option_PfxPassword" xml:space="preserve"><value>Mật khẩu tệp .pfx (hoặc biến môi trường PDFPRO_PFX_PASSWORD).</value></data>
+  <data name="Option_Preset" xml:space="preserve"><value>Mức nén: screen, ebook, print, archive, custom.</value></data>
+  <data name="Option_Quality" xml:space="preserve"><value>Chất lượng JPEG (10–100).</value></data>
+  <data name="Option_Quiet" xml:space="preserve"><value>Không ghi tiến độ ra stderr.</value></data>
+  <data name="Option_Ranges" xml:space="preserve"><value>Mỗi khoảng một tệp: "1-3, 4-10, 11-".</value></data>
+  <data name="Option_Reason" xml:space="preserve"><value>Lý do ký.</value></data>
+  <data name="Option_Recursive" xml:space="preserve"><value>Tìm cả trong thư mục con.</value></data>
+  <data name="Option_RedactPatterns" xml:space="preserve"><value>Mẫu cách bằng dấu phẩy: cccd, phone, email, account, date.</value></data>
+  <data name="Option_Redo" xml:space="preserve"><value>Nhận dạng lại các trang đã có lớp chữ ẩn cũ.</value></data>
+  <data name="Option_Regex" xml:space="preserve"><value>Biểu thức chính quy riêng.</value></data>
+  <data name="Option_Rotation" xml:space="preserve"><value>Góc nghiêng (độ, ngược chiều kim đồng hồ).</value></data>
+  <data name="Option_Secrets" xml:space="preserve"><value>Tệp JSON mật khẩu cho các bước cần (theo mã thao tác hoặc số bước).</value></data>
+  <data name="Option_SplitBlank" xml:space="preserve"><value>Theo tờ trắng phân cách.</value></data>
+  <data name="Option_SplitBookmarks" xml:space="preserve"><value>Theo bookmark đến cấp này.</value></data>
+  <data name="Option_SplitSize" xml:space="preserve"><value>Mỗi tệp tối đa bao nhiêu MB.</value></data>
+  <data name="Option_Start" xml:space="preserve"><value>Số Bates đầu tiên.</value></data>
+  <data name="Option_Straighten" xml:space="preserve"><value>Làm thẳng cả trang (không chỉ ảnh để đọc).</value></data>
+  <data name="Option_TableOfContents" xml:space="preserve"><value>Thêm trang mục lục.</value></data>
+  <data name="Option_To" xml:space="preserve"><value>Đích: pdf, png, jpeg, tiff, text, markdown, pdfa, pdfa1b, grayscale, web.</value></data>
+  <data name="Option_Tsa" xml:space="preserve"><value>Máy chủ dấu thời gian (RFC 3161).</value></data>
+  <data name="Option_UserPassword" xml:space="preserve"><value>Mật khẩu mở (hoặc PDFPRO_USER_PASSWORD); bỏ trống = ai cũng mở được.</value></data>
+  <data name="Option_Visible" xml:space="preserve"><value>Chữ ký hiện ở góc dưới phải của trang first hoặc last (mặc định: ẩn).</value></data>
+  <data name="Option_WatermarkText" xml:space="preserve"><value>Chữ của hình mờ.</value></data>
+  <data name="Progress_Done" xml:space="preserve"><value>[{0}/{1}] {2}: xong</value></data>
+  <data name="Progress_Failed" xml:space="preserve"><value>[{0}/{1}] {2}: lỗi — {3}</value></data>
+  <data name="Progress_Percent" xml:space="preserve"><value>{0}: {1}%</value></data>
+  <data name="Progress_Step" xml:space="preserve"><value>[{0}/{1}] {2}: bước {3}/{4} {5}</value></data>
+  <data name="Result_Failed" xml:space="preserve"><value>{0}: {1}</value></data>
   <data name="RootDescription" xml:space="preserve"><value>PDF_Pro: xử lý tài liệu PDF từ dòng lệnh.</value></data>
+  <data name="Sign_Date" xml:space="preserve"><value>Ngày: {0}</value></data>
+  <data name="Sign_SignedBy" xml:space="preserve"><value>Ký bởi: {0}</value></data>
+  <data name="Status_Cancelled" xml:space="preserve"><value>Đã hủy</value></data>
+  <data name="Status_Done" xml:space="preserve"><value>Xong</value></data>
+  <data name="Status_Failed" xml:space="preserve"><value>Lỗi</value></data>
+  <data name="Template_Digitize" xml:space="preserve"><value>Số hóa hồ sơ</value></data>
+  <data name="Template_PageNumbers" xml:space="preserve"><value>Trang {page}/{pages}</value></data>
+  <data name="Template_Print" xml:space="preserve"><value>Chuẩn bị in</value></data>
+  <data name="Template_Publish" xml:space="preserve"><value>Phát hành tài liệu</value></data>
+  <data name="Template_Watermark" xml:space="preserve"><value>BẢN PHÁT HÀNH</value></data>
+  <data name="Warning_BreaksSignature" xml:space="preserve"><value>Cảnh báo: bước {0} ({1}) đứng sau bước ký số nên làm mất hiệu lực chữ ký.</value></data>
 </root>

@@ -64,7 +64,7 @@ The complete license texts will be collected in this file before the first relea
 | [NSubstitute](https://github.com/nsubstitute/NSubstitute) | 6.2.0 | BSD-3-Clause | Test doubles |
 | [FlaUI.UIA3 / FlaUI.Core](https://github.com/FlaUI/FlaUI) | 5.0.0 | MIT | UI acceptance tests that drive the built app through UI Automation (`tests/PdfPro.App.UiTests`, run by hand) |
 | [Interop.UIAutomationClient](https://github.com/Roemer/UIAutomation-Interop) | 10.19041.0 | MIT | UI Automation COM interop (dependency of FlaUI.UIA3) |
-| [SkiaSharp.NativeAssets.Linux.NoDependencies](https://github.com/mono/SkiaSharp) | 4.153.1 | MIT; Skia: BSD-3-Clause | Skia's native library for running `PdfPro.Operations.Tests` in Linux containers |
+| [SkiaSharp.NativeAssets.Linux.NoDependencies](https://github.com/mono/SkiaSharp) | 4.153.1 | MIT; Skia: BSD-3-Clause | Skia's native library for running `pdfpro` (`PdfPro.Cli`) on Linux and `PdfPro.Operations.Tests` / `PdfPro.Cli.Tests` in Linux containers |
 | Arial, Times New Roman (Windows fonts) | — | Monotype (embedding allowed) | Subsets embedded in the generated sample PDFs only |
 
 Fonts installed on the user's computer are embedded (as subsets) into documents only when the font's own license

@@ -106,6 +106,7 @@ public enum BatchItemStatus
 /// <param name="ErrorType">The kind of error (the innermost exception's type), for the log.</param>
 /// <param name="Duration">How long it took.</param>
 /// <param name="Unprotected">It was protected and ran as an unprotected copy.</param>
+/// <param name="Error">What failed, in memory (for the caller to word; its message is never logged).</param>
 public sealed record BatchItemResult(
     BatchFile File,
     BatchItemStatus Status,
@@ -115,7 +116,8 @@ public sealed record BatchItemResult(
     string? Operation = null,
     string? ErrorType = null,
     TimeSpan Duration = default,
-    bool Unprotected = false)
+    bool Unprotected = false,
+    Exception? Error = null)
 {
     public static BatchItemResult Waiting(BatchFile file) => new(file, BatchItemStatus.Waiting, []);
 }
@@ -291,16 +293,30 @@ public sealed class BatchRunner(WorkflowRunner runner)
         }
         catch (WorkflowFailedException ex)
         {
-            return new BatchItemResult(file, BatchItemStatus.Failed, [], ex.Failure, ex.Step, ex.Operation, Innermost(ex).GetType().Name, clock.Elapsed);
+            return new BatchItemResult(file, BatchItemStatus.Failed, [], ex.Failure, ex.Step, ex.Operation, Innermost(ex).GetType().Name, clock.Elapsed, Error: ex);
         }
         catch (Exception ex)
         {
             // One file must never stop the others, whatever goes wrong with it.
-            return new BatchItemResult(file, BatchItemStatus.Failed, [], WorkflowFailure.Step, ErrorType: Innermost(ex).GetType().Name, Duration: clock.Elapsed);
+            return new BatchItemResult(file, BatchItemStatus.Failed, [], WorkflowFailure.Step, ErrorType: Innermost(ex).GetType().Name, Duration: clock.Elapsed, Error: ex);
         }
     }
 
-    private static Exception Innermost(Exception exception)
+    /// <summary>
+    /// Whether an error says the file is not a PDF the libraries can read (damaged, truncated, not a PDF): PDFium's and
+    /// PdfPig's format errors, PDFsharp's reader errors (some of them plain <see cref="Exception"/>s).
+    /// </summary>
+    public static bool IsUnreadableFile(Exception error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        var inner = Innermost(error);
+        return inner is Pdfium.PdfDocumentException or InvalidDataException or UglyToad.PdfPig.Core.PdfDocumentFormatException
+            || inner.GetType() == typeof(Exception)
+            || inner.GetType().Namespace?.StartsWith("PdfSharp.Pdf.IO", StringComparison.Ordinal) == true;
+    }
+
+    /// <summary>The exception at the bottom of a chain (the one that says what really went wrong).</summary>
+    public static Exception Innermost(Exception exception)
     {
         var inner = exception;
         while (inner.InnerException is { } next)

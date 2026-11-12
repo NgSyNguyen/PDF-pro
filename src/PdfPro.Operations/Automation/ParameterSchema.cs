@@ -153,6 +153,11 @@ public static class ParameterSchema
     /// </summary>
     /// <exception cref="OperationValidationException">A name is unknown, a value does not fit, or the record's rules are broken.</exception>
     public static object FromPairs(string operationId, Type parameters, IReadOnlyDictionary<string, string> values)
+        => FromJson(operationId, parameters, PairsToJson(operationId, parameters, values));
+
+    /// <summary>"name=value" pairs as the JSON of a parameter record (to merge with other values before reading it).</summary>
+    /// <exception cref="OperationValidationException">A name is unknown or a value does not fit.</exception>
+    public static JsonObject PairsToJson(string operationId, Type parameters, IReadOnlyDictionary<string, string> values)
     {
         ArgumentNullException.ThrowIfNull(values);
         var fields = Of(parameters);
@@ -182,7 +187,7 @@ public static class ParameterSchema
             throw new OperationValidationException(operationId, errors);
         }
 
-        return FromJson(operationId, parameters, json);
+        return json;
     }
 
     /// <summary>Checks a record's DataAnnotations.</summary>
@@ -282,7 +287,7 @@ public static class OperationDescriptors
     };
 
     /// <summary>Operations whose parameters are measured on each file in a workflow.</summary>
-    public static IReadOnlySet<string> MeasuredOperations { get; } = new HashSet<string>(StringComparer.Ordinal) { "scan.removeBlankPages", "scan.autoRotate", "scan.deskew", "scan.cleanBorders" };
+    public static IReadOnlySet<string> MeasuredOperations { get; } = new HashSet<string>(StringComparer.Ordinal) { "scan.removeBlankPages", "scan.autoRotate", "scan.deskew", "scan.cleanBorders", "security.redact" };
 
     public static OperationDescriptor Describe(IPdfOperation operation)
     {

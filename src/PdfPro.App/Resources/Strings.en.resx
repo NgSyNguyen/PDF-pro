@@ -1768,6 +1768,7 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Stage_FindBlankPages" xml:space="preserve"><value>Looking for blank pages</value></data>
   <data name="Stage_DetectOrientation" xml:space="preserve"><value>Looking at page orientation</value></data>
   <data name="Stage_Deskew" xml:space="preserve"><value>Straightening pages</value></data>
+  <data name="Stage_FindToRedact" xml:space="preserve"><value>Finding what to redact</value></data>
   <data name="Stage_CleanBorders" xml:space="preserve"><value>Cleaning borders</value></data>
   <data name="Cmd_Compare_ToolTip" xml:space="preserve"><value>Compare the text and the pages of two documents, see the differences side by side and export a report</value></data>
   <data name="Compare_Title" xml:space="preserve"><value>Compare documents</value></data>

@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using PdfPro.Core.Ocr;
 using PdfPro.Core.Operations;
+using PdfPro.Core.Redaction;
 using PdfPro.Core.Security;
 using PdfPro.Core.Text;
 using PdfPro.Ocr;
@@ -192,6 +193,33 @@ public sealed class WorkflowTests(PdfiumFixture pdfium) : IDisposable
         plain.Steps.ShouldHaveSingleItem().Outcome.ShouldBe(WorkflowStepOutcome.NothingToDo);
         plain.Outputs.ShouldBe([_temp.Combine("basic - gọn.pdf")]);
         File.ReadAllBytes(plain.Outputs[0]).ShouldBe(File.ReadAllBytes(text), "nothing to do: the file is copied as it was");
+    }
+
+    [Fact]
+    public async Task ARedactionByPattern_FindsWhatToRemoveInEachFile()
+    {
+        var workflow = new Workflow("x", [WorkflowSteps.Create(RedactOperation.OperationId, new RedactPatternsMeasure([RedactionPattern.NationalId, RedactionPattern.Email]))], new WorkflowOutput(WorkflowOutputMode.Folder, "đã xóa"));
+        var input = Copy(Samples.Pii, "hồ sơ.pdf");
+
+        var result = await Runner().RunAsync(workflow, new WorkflowRunRequest(input), null, Token);
+        var plain = await Runner().RunAsync(workflow, new WorkflowRunRequest(Copy(Samples.BasicVi, "không có.pdf")), null, Token);
+
+        result.Steps.ShouldHaveSingleItem().Outcome.ShouldBe(WorkflowStepOutcome.Done);
+        using (var pig = PigDocument.Open(result.Outputs.ShouldHaveSingleItem()))
+        {
+            var text = string.Concat(pig.GetPages().Select(p => p.Text)).Replace(" ", string.Empty, StringComparison.Ordinal);
+            text.ShouldNotContain("001203004567");
+            text.ShouldNotContain("minhanh.nguyen@example.com");
+        }
+
+        plain.Steps.ShouldHaveSingleItem().Outcome.ShouldBe(WorkflowStepOutcome.NothingToDo);
+        WorkflowValidator.Check(new Workflow("x", [WorkflowSteps.Create(RedactOperation.OperationId, new RedactPatternsMeasure([RedactionPattern.Custom], "(["))]), _catalog).ShouldBeEmpty("the expression is checked when it runs");
+        var bad = await Should.ThrowAsync<WorkflowFailedException>(() => Runner().RunAsync(
+            new Workflow("x", [WorkflowSteps.Create(RedactOperation.OperationId, new RedactPatternsMeasure([RedactionPattern.Custom], "(["))], new WorkflowOutput(WorkflowOutputMode.Folder, "x")),
+            new WorkflowRunRequest(input),
+            null,
+            Token));
+        bad.Failure.ShouldBe(WorkflowFailure.Parameters);
     }
 
     [Fact]

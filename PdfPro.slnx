@@ -8,6 +8,7 @@
     <File Path="THIRD_PARTY_NOTICES.md" />
   </Folder>
   <Folder Name="/docs/">
+    <File Path="docs/CLI.md" />
     <File Path="docs/PROGRESS.md" />
     <File Path="docs/PROMPTS.md" />
     <File Path="docs/SPEC.md" />
@@ -25,6 +26,7 @@
     <File Path="tests/Directory.Build.props" />
     <Project Path="tests/PdfPro.App.Tests/PdfPro.App.Tests.csproj" />
     <Project Path="tests/PdfPro.App.UiTests/PdfPro.App.UiTests.csproj" />
+    <Project Path="tests/PdfPro.Cli.Tests/PdfPro.Cli.Tests.csproj" />
     <Project Path="tests/PdfPro.Core.Tests/PdfPro.Core.Tests.csproj" />
     <Project Path="tests/PdfPro.Infrastructure.Tests/PdfPro.Infrastructure.Tests.csproj" />
     <Project Path="tests/PdfPro.Operations.Tests/PdfPro.Operations.Tests.csproj" />

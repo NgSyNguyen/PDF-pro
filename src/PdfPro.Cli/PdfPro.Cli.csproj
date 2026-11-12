@@ -9,10 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="System.CommandLine" />
+    <!-- pdfpro also runs on Linux servers (and its tests in Linux containers): Skia's native library for Linux. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
+    <ProjectReference Include="..\PdfPro.Ocr\PdfPro.Ocr.csproj" />
     <ProjectReference Include="..\PdfPro.Operations\PdfPro.Operations.csproj" />
   </ItemGroup>
 

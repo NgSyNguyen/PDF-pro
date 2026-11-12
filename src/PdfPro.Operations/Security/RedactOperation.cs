@@ -93,6 +93,52 @@ public sealed class RedactOperation(PdfiumGate gate) : FileContentOperation<Reda
 
     public override string Stage => "Stage_Redact";
 
+    /// <summary>
+    /// Where patterns match in a file (the document as displayed): one area per page with matches, the rectangles of
+    /// each match line by line (as "Tìm &amp; đánh dấu" marks them). The text matched is never kept.
+    /// </summary>
+    /// <exception cref="OperationValidationException"><paramref name="expression"/> is not a valid expression.</exception>
+    public static async Task<IReadOnlyList<RedactionArea>> FindAsync(PdfiumGate gate, string path, IReadOnlyCollection<Core.Redaction.RedactionPattern> patterns, string? expression, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(gate);
+        ArgumentNullException.ThrowIfNull(patterns);
+        ArgumentNullException.ThrowIfNull(progress);
+        TextSearch? custom = null;
+        if (patterns.Contains(Core.Redaction.RedactionPattern.Custom)
+            && !Core.Redaction.RedactionFinder.TryCreateCustom(expression ?? string.Empty, out custom, out var error))
+        {
+            throw new OperationValidationException(OperationId, [new OperationValidationError("Expression", error ?? "The expression is not valid.")]);
+        }
+
+        PdfiumDocument? document = null;
+        try
+        {
+            var count = await gate.RunAsync(() => (document = PdfiumDocument.Open(gate, path)).PageCount, PdfiumPriority.Normal, cancellationToken).ConfigureAwait(false);
+            var areas = new List<RedactionArea>();
+            for (var page = 0; page < count; page++)
+            {
+                progress.Report(new OperationProgress(page, count, "Stage_FindToRedact"));
+                var index = page;
+                var text = await gate.RunAsync(() => document!.GetPageTextLayer(index), PdfiumPriority.Normal, cancellationToken).ConfigureAwait(false);
+                var hits = Core.Redaction.RedactionFinder.Find(text, page, patterns, custom);
+                if (hits.Count > 0)
+                {
+                    areas.Add(new RedactionArea(page + 1, [.. hits.SelectMany(h => h.Rects)]));
+                }
+            }
+
+            progress.Report(new OperationProgress(count, count, "Stage_FindToRedact"));
+            return areas;
+        }
+        finally
+        {
+            if (document is { } opened)
+            {
+                await gate.RunAsync(opened.Dispose, PdfiumPriority.High, CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+    }
+
     /// <summary>The report of the last redaction made with these very parameters, or null.</summary>
     public static RedactionReport? ReportOf(RedactParams parameters)
     {

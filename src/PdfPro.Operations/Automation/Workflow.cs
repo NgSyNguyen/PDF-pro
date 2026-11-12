@@ -3,7 +3,10 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PdfPro.Core.Operations;
+using PdfPro.Core.Overlay;
+using PdfPro.Core.Redaction;
 using PdfPro.Operations.Scanning;
+using PdfPro.Operations.Security;
 using PdfPro.Operations.Splitting;
 
 namespace PdfPro.Operations.Automation;
@@ -35,7 +38,7 @@ public sealed record WorkflowOutput(
 /// <param name="Operation">The operation id ("optimize.compress").</param>
 /// <param name="Parameters">
 /// Its parameters; never a password (they are asked when the workflow runs). For a measured operation (blank pages,
-/// orientation, tilt, borders) these are how to measure (<see cref="WorkflowSteps.ParametersType"/>): the pages
+/// orientation, tilt, borders, redaction by pattern) these are how to measure (<see cref="WorkflowSteps.ParametersType"/>): the pages
 /// themselves are found in each file.
 /// </param>
 /// <param name="Enabled">A disabled step is skipped.</param>
@@ -80,6 +83,19 @@ public sealed record DeskewMeasure([property: Range(0.05, DeskewOperation.MaxDeg
 /// <summary>Dark borders are found without settings.</summary>
 public sealed record CleanBordersMeasure;
 
+/// <summary>What a measured redaction removes from each file: what its patterns find there.</summary>
+/// <param name="Patterns">CCCD numbers, phone numbers, e-mail addresses, bank accounts, dates, or the expression below.</param>
+/// <param name="Expression">The user's regular expression, for <see cref="RedactionPattern.Custom"/>.</param>
+/// <param name="Fill">The colour of the boxes (default black).</param>
+/// <param name="Label">Words written in every box, or null.</param>
+/// <param name="Mode">Pages as pictures (default, safest) or keeping their other text and drawings.</param>
+public sealed record RedactPatternsMeasure(
+    [property: Required, MinLength(1)] IReadOnlyList<RedactionPattern> Patterns,
+    string? Expression = null,
+    RgbColor? Fill = null,
+    [property: StringLength(RedactOperation.MaxLabelLength)] string? Label = null,
+    RedactionMode Mode = RedactionMode.Raster);
+
 /// <summary>What the steps of a workflow take.</summary>
 public static class WorkflowSteps
 {
@@ -89,6 +105,7 @@ public static class WorkflowSteps
         [AutoRotateOperation.OperationId] = typeof(AutoRotateMeasure),
         [DeskewOperation.OperationId] = typeof(DeskewMeasure),
         [CleanBordersOperation.OperationId] = typeof(CleanBordersMeasure),
+        [RedactOperation.OperationId] = typeof(RedactPatternsMeasure),
     };
 
     /// <summary>

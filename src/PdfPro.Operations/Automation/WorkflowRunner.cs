@@ -313,6 +313,11 @@ public sealed class WorkflowRunner(OperationCatalog catalog, PdfiumGate gate, IO
             {
                 throw new WorkflowFailedException(WorkflowFailure.Parameters, index, operation.Id, ex);
             }
+            catch (Exception ex) when (ex is not OperationCanceledException and not WorkflowFailedException)
+            {
+                // A certificate that does not load, a password that cannot be asked for…
+                throw new WorkflowFailedException(WorkflowFailure.Secrets, index, operation.Id, ex);
+            }
 
             return completed ?? throw new WorkflowFailedException(WorkflowFailure.Secrets, index, operation.Id);
         }
@@ -335,6 +340,10 @@ public sealed class WorkflowRunner(OperationCatalog catalog, PdfiumGate gate, IO
         try
         {
             return await MeasureAsync(operation.Id, parameters, current, progress, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationValidationException ex)
+        {
+            throw new WorkflowFailedException(WorkflowFailure.Parameters, index, operation.Id, ex);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not WorkflowFailedException)
         {
@@ -362,6 +371,9 @@ public sealed class WorkflowRunner(OperationCatalog catalog, PdfiumGate gate, IO
             case CleanBordersMeasure:
                 var borders = await CleanBordersOperation.MeasureAsync(gate, path, null, progress, cancellationToken).ConfigureAwait(false);
                 return borders.Count == 0 ? null : new CleanBordersParams(borders);
+            case RedactPatternsMeasure redact:
+                var areas = await RedactOperation.FindAsync(gate, path, redact.Patterns, redact.Expression, progress, cancellationToken).ConfigureAwait(false);
+                return areas.Count == 0 ? null : new RedactParams(areas, redact.Fill, redact.Label, redact.Mode);
             default:
                 throw new InvalidOperationException($"{operationId} is not measured.");
         }
