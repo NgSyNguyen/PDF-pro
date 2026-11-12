@@ -19,6 +19,14 @@
     <ProjectReference Include="..\PdfPro.Operations\PdfPro.Operations.csproj" />
   </ItemGroup>
 
+  <!-- External tools fetched by tools/fetch-tools.ps1 (never committed) go next to pdfpro.exe too, in tools\. -->
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)..\..\tools\qpdf\bin\qpdf.exe')">
+    <Content Include="..\..\tools\qpdf\**\*" LinkBase="tools\qpdf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)..\..\tools\tesseract\tesseract.exe')">
+    <Content Include="..\..\tools\tesseract\**\*" LinkBase="tools\tesseract" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Update="Resources\CliStrings.resx">
       <StronglyTypedFileName>$(IntermediateOutputPath)CliStrings.Designer.cs</StronglyTypedFileName>
