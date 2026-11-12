@@ -2040,4 +2040,10 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="History_RemoveLinks" xml:space="preserve"><value>Xóa {0} liên kết</value></data>
   <data name="History_EditLinks" xml:space="preserve"><value>Sửa liên kết</value></data>
   <data name="Stage_Structure" xml:space="preserve"><value>Đang ghi cấu trúc tài liệu</value></data>
+  <data name="Cmd_CommandPalette" xml:space="preserve"><value>Tìm lệnh</value></data>
+  <data name="Cmd_CommandPalette_ToolTip" xml:space="preserve"><value>Tìm và chạy mọi lệnh bằng cách gõ tên, không cần dấu (Ctrl+K)</value></data>
+  <data name="Palette_Title" xml:space="preserve"><value>Tìm lệnh</value></data>
+  <data name="Palette_Placeholder" xml:space="preserve"><value>Gõ tên lệnh, không cần dấu: "xoa trang trang", "nen", "ocr"…</value></data>
+  <data name="Palette_NoResult" xml:space="preserve"><value>Không có lệnh nào khớp.</value></data>
+  <data name="Palette_Hint" xml:space="preserve"><value>↑↓ để chọn · Enter để chạy · Esc để đóng. Lệnh mờ cần một tài liệu đang mở.</value></data>
 </root>

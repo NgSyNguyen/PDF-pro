@@ -98,7 +98,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException",
+            ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette",
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
@@ -525,6 +525,25 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         var viewModel = Create(isDebugBuild: false);
         await viewModel.OpenFilesAsync([@"C:\docs\a.pdf"]);
         return viewModel;
+    }
+
+    [Fact]
+    public async Task ThePalette_RunsTheChosenCommand_AndRemembersIt()
+    {
+        var viewModel = Create(isDebugBuild: false);
+        _pageDialogs.ShowCommandPalette(Arg.Do<CommandPaletteViewModel>(p =>
+        {
+            p.Results.ShouldNotContain(e => e.Id == "tools.commandPalette");
+            p.Results.Select(e => e.Command).Distinct().Count().ShouldBe(p.Results.Count, "a command in two places is listed once");
+            p.Query = Strings.Cmd_OpenLogFolder;
+            p.RunCommand.Execute(null);
+        })).Returns(true);
+
+        await viewModel.CommandPaletteCommand.ExecuteAsync(null);
+
+        _shell.Received(1).OpenFolder(_paths.LogsDirectory);
+        _settings.Current.RecentCommands.ShouldBe(["tools.openLogFolder"]);
+        viewModel.PaletteEntries().Single(e => e.Id == "file.open").Shortcut.ShouldBe("Ctrl+O");
     }
 
     private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true)

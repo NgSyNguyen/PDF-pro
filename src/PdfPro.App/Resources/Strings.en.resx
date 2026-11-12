@@ -2040,4 +2040,10 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="History_RemoveLinks" xml:space="preserve"><value>Remove {0} links</value></data>
   <data name="History_EditLinks" xml:space="preserve"><value>Edit links</value></data>
   <data name="Stage_Structure" xml:space="preserve"><value>Writing the document structure</value></data>
+  <data name="Cmd_CommandPalette" xml:space="preserve"><value>Find a command</value></data>
+  <data name="Cmd_CommandPalette_ToolTip" xml:space="preserve"><value>Find and run any command by typing its name (Ctrl+K)</value></data>
+  <data name="Palette_Title" xml:space="preserve"><value>Find a command</value></data>
+  <data name="Palette_Placeholder" xml:space="preserve"><value>Type a command's name: "delete blank", "compress", "ocr"…</value></data>
+  <data name="Palette_NoResult" xml:space="preserve"><value>No command matches.</value></data>
+  <data name="Palette_Hint" xml:space="preserve"><value>↑↓ to choose · Enter to run · Esc to close. Faded commands need an open document.</value></data>
 </root>

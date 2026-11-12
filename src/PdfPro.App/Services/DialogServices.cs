@@ -526,6 +526,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new FontsWindow(viewModel));
     }
 
+    public bool ShowCommandPalette(ViewModels.CommandPaletteViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new CommandPaletteWindow(viewModel));
+    }
+
     public bool ShowTables(ViewModels.Extracting.TablesViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);

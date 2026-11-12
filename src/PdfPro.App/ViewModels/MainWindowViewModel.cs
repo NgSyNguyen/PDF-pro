@@ -896,6 +896,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Automation,
                 [
+                    new("tools.commandPalette", Strings.Cmd_CommandPalette, SymbolRegular.Search24, CommandPaletteCommand, Strings.Cmd_CommandPalette_ToolTip),
                     new("workflow.open", Strings.Cmd_Workflow, SymbolRegular.Flow24),
                     new("batch.run", Strings.Cmd_Batch, SymbolRegular.TaskListLtr24),
                 ]),

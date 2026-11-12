@@ -88,6 +88,9 @@ public sealed record AppSettings
     /// <summary>How many pages OCR reads at once; 0: the number of processors less one.</summary>
     public int OcrParallelism { get; init; }
 
+    /// <summary>The commands last run from the command palette (ribbon ids), most recent first.</summary>
+    public IReadOnlyList<string> RecentCommands { get; init; } = [];
+
     /// <summary>A free public time-stamping authority (DigiCert).</summary>
     public const string DefaultTimestampServer = "http://timestamp.digicert.com";
 }

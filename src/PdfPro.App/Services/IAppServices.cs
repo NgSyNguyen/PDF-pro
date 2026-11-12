@@ -272,6 +272,9 @@ public interface IPageDialogService
     /// <summary>"Phông chữ": the fonts of the document and whether they are embedded.</summary>
     bool ShowFonts(ViewModels.Extracting.FontsViewModel viewModel);
 
+    /// <summary>"Tìm lệnh" (Ctrl+K): true when a command was chosen (<see cref="ViewModels.CommandPaletteViewModel.Chosen"/>).</summary>
+    bool ShowCommandPalette(ViewModels.CommandPaletteViewModel viewModel);
+
     /// <summary>"Bookmark": the bookmark tree edited or made from headings; true when applied.</summary>
     bool ShowBookmarks(ViewModels.Structure.BookmarksEditorViewModel viewModel);
 
