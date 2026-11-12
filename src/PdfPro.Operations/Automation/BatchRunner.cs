@@ -17,7 +17,7 @@ public static class BatchInputs
     /// <summary>
     /// Files given stay as they are (one that does not exist fails when it runs); folders give the files matching
     /// <paramref name="pattern"/> ("*.pdf"; several separated by ';'), hidden and temporary ones ("~$x.docx",
-    /// ".x.pdf") and the hot folder's "_done" and "_error" left out. Each file once, in natural order: a folder's own
+    /// ".x.pdf") and the hot folder's "_done", "_error" and "_output" left out. Each file once, in natural order: a folder's own
     /// files before those of its subfolders.
     /// </summary>
     public static IReadOnlyList<BatchFile> Expand(IEnumerable<string> paths, bool recursive, string? pattern = null)
@@ -75,7 +75,7 @@ public static class BatchInputs
 
         var relative = Path.GetRelativePath(root, Path.GetDirectoryName(file)!);
         return relative != "." && relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .Any(part => part.StartsWith('.') || string.Equals(part, HotFolderNames.Done, StringComparison.OrdinalIgnoreCase) || string.Equals(part, HotFolderNames.Error, StringComparison.OrdinalIgnoreCase));
+            .Any(part => part.StartsWith('.') || string.Equals(part, HotFolderNames.Done, StringComparison.OrdinalIgnoreCase) || string.Equals(part, HotFolderNames.Error, StringComparison.OrdinalIgnoreCase) || string.Equals(part, HotFolderNames.Output, StringComparison.OrdinalIgnoreCase));
     }
 }
 
@@ -85,6 +85,9 @@ public static class HotFolderNames
     public const string Done = "_done";
 
     public const string Error = "_error";
+
+    /// <summary>Where results go when no output folder is set.</summary>
+    public const string Output = "_output";
 }
 
 public enum BatchItemStatus
