@@ -5,6 +5,9 @@ internal static class Samples
 {
     private static readonly string RepositoryRoot = FindRepositoryRoot();
 
+    /// <summary>The folder of PdfPro.slnx (for tests that read the sources, such as the XAML).</summary>
+    public static string Repository => RepositoryRoot;
+
     /// <summary>AES-256, fake open password "test123", owner password "chu-so-huu-456"; printing and copying forbidden.</summary>
     public static string Encrypted => System.IO.Path.Combine(RepositoryRoot, "samples", "encrypted.pdf");
 

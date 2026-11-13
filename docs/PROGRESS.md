@@ -4,9 +4,19 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 12/11/2026 — **Phase 13 (hoàn thiện & phát hành) xong về code** — tức là **cả 13 phase xong về code**. Việc của máy Windows: chạy các `Phase5…Phase13AcceptanceTests`, `tools/fetch-tools.ps1` + ghim SHA-256, phát hành thử theo `docs/RELEASE.md`. Xem "Lời nhắn bàn giao" ngay dưới.
+Cập nhật lần cuối: 13/11/2026 — **máy Windows chạy nghiệm thu P4–P13**: 34/37 kịch bản FlaUI đạt (3 cần Tesseract/LibreOffice), sửa hộp thoại Hình mờ sập khi mở (`InverseBool` không tồn tại), hướng dẫn nhanh không có trong cây UIA, 2 kỳ vọng test cũ. Xem "Lời nhắn lần 8" ngay dưới.
 
-## 0. Lời nhắn bàn giao (12/11/2026, cập nhật lần 7)
+## 0. Lời nhắn bàn giao (13/11/2026, cập nhật lần 8 — máy Windows)
+
+**Kết quả trên máy Windows (13/11/2026, `ce6264c` + sửa):** build Release 0 cảnh báo; `dotnet test --solution` **3024 test, 0 lỗi, 50 bỏ qua** (37 FlaUI khi không đặt `PDFPRO_UI_TESTS` + 13 cần qpdf/Tesseract/LibreOffice/veraPDF). `PDFPRO_UI_TESTS=1`: **34/37 kịch bản P3–P13 đạt** (lần đầu chạy tay P5–P8, P10–P13), 3 bỏ qua (Tesseract ×2, LibreOffice). Lần chạy đầu có 4 lỗi, đã sửa:
+- **Hộp thoại Hình mờ sập ngay khi mở** (từ P5 lát 8): `StampWindow.xaml` dùng `{StaticResource InverseBool}` không được định nghĩa → `XamlParseException`. Giờ dùng `WatermarkDialogViewModel.UsesPosition`. Test mới `XamlResourceTests` (App.Tests) quét mọi `{StaticResource …}` của App phải có `x:Key` hoặc `Resources.Add` trong code-behind.
+- **Hướng dẫn nhanh không có trong cây UIA** (trình đọc màn hình không thấy tên nhóm): `AutomationId`/`Name` đặt trên `Border` (không có automation peer) → bọc trong `UserControl`.
+- Test cũ: chú thích nút Hoàn tác giờ có "(Ctrl+Z)" (P13); `PdfFile.PageTexts` ghép chữ không khoảng trắng → tìm "ĐàNẵng".
+- `Phase12AcceptanceTests` gõ Enter bằng **bàn phím thật** (`FlaUI Keyboard.Press`) → giờ `AppUnderTest.PressEnter(window)` (PostMessage). `UiTestEnvironment.LogProblems` kèm 15 dòng ngoại lệ dưới mỗi dòng `[ERR]`.
+
+**Còn trên Windows:** `tools/fetch-tools.ps1` (đang làm), ghim SHA-256; chạy test cần Tesseract/qpdf; phát hành thử (chủ dự án **chưa** cho đẩy thẻ — để sau).
+
+### 0. Lời nhắn bàn giao (12/11/2026, cập nhật lần 7)
 
 **Phase 13 xong về code** (lát 1–5): tệp độc hại + fuzz hằng đêm (`PdfSafeReader`, trần giải nén), benchmark (`benchmarks/PdfPro.Benchmarks`, nén nhanh hơn 22 %), tiến trình Worker (OCR/xóa vĩnh viễn/làm sạch/làm thẳng/xóa viền chạy tách, Job Object), trải nghiệm & trợ năng (F1, hướng dẫn nhanh, Giới thiệu, sao chép thông tin lỗi, tương phản cao), phát hành (Velopack, `release.yml`, `licenses/`, CHANGELOG, README, `docs/RELEASE.md`). Package mới: **BenchmarkDotNet 0.15.8** (chỉ khi phát triển), **Velopack 1.2.161** (MIT).
 
@@ -425,6 +435,10 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - Còn mở: PdfPig trích chữ trên trang có content stream giải nén cực lớn (bom nội dung) dùng tới ~5 GB (Sang văn bản, So sánh, Trích bảng…) — lát 3 (Worker trong tiến trình riêng, giới hạn bộ nhớ) giảm thiểu.
 - `PdfOperation.ExecuteAsync` **chỉ kiểm DataAnnotations**, không gọi `ValidateCore` — thao tác tự gọi `Validate` trong `ExecuteCoreAsync` khi cần (như `BatesOperation`, `ProtectDocumentOperation`).
 
+- **`{StaticResource}` thiếu chỉ lỗi lúc mở view** (test ViewModel không bắt được) → `XamlResourceTests` canh. Bộ chuyển đổi đảo bool không có: thêm thuộc tính bool vào ViewModel.
+- **`Border`, `Panel` không có automation peer**: `AutomationId`/`Name` đặt trên chúng không vào cây UIA (FlaUI không thấy, trình đọc màn hình cũng không) → đặt trên control (`UserControl`, `GroupBox`…).
+- **Test FlaUI không được dùng chuột/bàn phím thật** (`Keyboard.*`, `Mouse.*`, `.Click()`): dùng `Invoke`, `SetText`, `AppUnderTest.PressKey/PressEnter` (PostMessage).
+
 ## 7. Rủi ro / nợ đang mở
 
 - Gỡ dấu trên tài liệu lớn: không có tiến độ khi quét.
@@ -432,7 +446,7 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - SkiaSharp kéo theo `SkiaSharp.NativeAssets.macOS`: chỉ thư mục build (không RID) có `runtimes/osx*/`; bản publish theo RID `win-x64`/`win-arm64` không còn (đã kiểm).
 - Phát hành (P13): bộ cài, cập nhật tự động và hook "Mở bằng" **chưa chạy thử trên Windows**; chưa có biểu tượng `.ico`; Worker chưa nhận phần đo của công cụ scan, thao tác xuất, chạy lô/hot folder, vẽ trang tệp lạ.
 - `tools/fetch-tools.ps1` (tải qpdf) chưa chạy thử trên Windows: tên tệp zip/checksum của bản phát hành qpdf 12.2.0 là phỏng đoán theo quy ước của qpdf — chạy một lần, nếu khác thì sửa biến và ghim `-QpdfSha256`.
-- Các `Phase5…Phase8AcceptanceTests` (FlaUI) chưa chạy tay trên Windows; bản cài tạm trên Desktop của chủ dự án còn ở `464d0de` (rất cũ).
+- Bản cài tạm trên Desktop của chủ dự án còn ở `464d0de` (rất cũ) — thay bằng bản cài Velopack khi phát hành thử.
 - PDF/A: chưa kiểm bằng veraPDF (9a-3) — mọi quy tắc khác của ISO 19005 (giới hạn cài đặt, glyph phải có trong phông nhúng sẵn, `/Differences` ngoài AGL…) chưa được PDF_Pro tự kiểm; 1b biến trang có trong suốt thành ảnh (mất chữ chọn được, tệp lớn); phông thay thế làm chữ lệch; bản PDF/A làm mất hiệu lực chữ ký số; 2b: chú thích (trừ ghi chú) thiếu `/AP` được hình **rỗng** (không còn hiện); tệp PDFsharp không đọc được (như `broken.pdf`) phải Sửa tệp hỏng trước.
 - Tệp đã ký: chỉ "thêm chú thích" được lưu gia tăng; điền biểu mẫu, sửa/xóa chú thích có sẵn, thao tác trang sau khi ký vẫn ghi toàn bộ (cảnh báo trước). Chữ ký chứng nhận DocMDP P=1 chưa được kiểm trước khi lưu gia tăng.
 - OCR (P10): phần tải Tesseract/tessdata của `tools/fetch-tools.ps1` **chưa chạy thử trên Windows** (tên bộ cài UB Mannheim 5.5.0.20241111 và thẻ tessdata 4.1.0 theo quy ước đã biết; không có 7-Zip thì bộ cài chạy im lặng và có thể hỏi quyền quản trị), SHA-256 chưa ghim; CI Windows chưa có Tesseract nên test OCR thật chỉ chạy ở cloud (cân nhắc cho CI chạy `fetch-tools.ps1` để kiểm luôn script); trang quay 90° mà OSD báo 0° không được "Xoay đúng chiều"; "Xóa viền đen" có thể coi ảnh tối tràn lề là viền (có danh sách hỏi trước, hoàn tác được); xóa chữ ẩn cũ xử lý form một tầng.

@@ -173,13 +173,19 @@ internal sealed partial class AppUnderTest : IDisposable
     public TimeSpan WaitForStatus(string prefix, TimeSpan? timeout = null)
         => WaitUntil(() => Name("StatusTask").StartsWith(prefix, StringComparison.Ordinal), timeout ?? DefaultTimeout, $"the status '{prefix}…' (now '{Name("StatusTask")}')");
 
-    /// <summary>Presses a key in the app (WM_KEYDOWN/WM_KEYUP posted to the main window; WPF routes it to the focus).</summary>
-    public void PressKey(int virtualKey)
+    /// <summary>
+    /// Presses a key in the app: WM_KEYDOWN/WM_KEYUP posted to <paramref name="window"/> (the main window by default),
+    /// where WPF routes it to the focused element. The real keyboard is never used.
+    /// </summary>
+    public void PressKey(int virtualKey, AutomationElement? window = null)
     {
-        var window = Main.Properties.NativeWindowHandle.Value;
-        PostMessage(window, WmKeyDown, virtualKey, 1);
-        PostMessage(window, WmKeyUp, virtualKey, unchecked((nint)0xC0000001));
+        var handle = (window ?? Main).Properties.NativeWindowHandle.Value;
+        PostMessage(handle, WmKeyDown, virtualKey, 1);
+        PostMessage(handle, WmKeyUp, virtualKey, unchecked((nint)0xC0000001));
     }
+
+    /// <summary>Presses Enter in <paramref name="window"/> (the main window by default), as <see cref="PressKey"/>.</summary>
+    public void PressEnter(AutomationElement? window = null) => PressKey(VirtualKeyEnter, window);
 
     /// <summary>The names of the document tabs ("a.pdf *").</summary>
     public string[] DocumentTabs()

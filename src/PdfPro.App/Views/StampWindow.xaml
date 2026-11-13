@@ -180,7 +180,7 @@
           AutomationProperties.AutomationId="StampPosition"
           AutomationProperties.Name="{loc:Tr Stamp_Position}"
           DisplayMemberPath="Label"
-          IsEnabled="{Binding Tile, Converter={StaticResource InverseBool}}"
+          IsEnabled="{Binding UsesPosition}"
           ItemsSource="{Binding Anchors}"
           SelectedValue="{Binding Anchor}"
           SelectedValuePath="Value" />

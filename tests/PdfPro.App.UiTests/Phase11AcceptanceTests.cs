@@ -50,7 +50,7 @@ public sealed class Phase11AcceptanceTests(ITestOutputHelper output) : IDisposab
         AppUnderTest.WaitUntil(() => File.Exists(report), Long, "the report");
         var text = string.Join("\n", PdfFile.PageTexts(report));
         text.ShouldContain("120.000.000");
-        text.ShouldContain("Đà Nẵng");
+        text.ShouldContain("ĐàNẵng", customMessage: "PdfFile.PageTexts joins the letters without spaces");
         app.Invoke("CompareClose", window);
     }
 

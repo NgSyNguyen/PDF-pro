@@ -107,7 +107,10 @@ internal sealed class UiTestFolder : IDisposable
     public static string[] Leftovers(string path)
         => Directory.GetFiles(Path.GetDirectoryName(path)!, $".{Path.GetFileName(path)}.*");
 
-    /// <summary>Lines of the app's log at warning level or above.</summary>
+    /// <summary>
+    /// Errors of the app's log, each with the first lines of the exception logged under it, so that a failing scenario
+    /// says what went wrong.
+    /// </summary>
     public string[] LogProblems()
     {
         var logs = Path.Combine(DataDirectory, "logs");
@@ -116,8 +119,36 @@ internal sealed class UiTestFolder : IDisposable
             return [];
         }
 
-        return [.. Directory.GetFiles(logs, "*.log").SelectMany(ReadShared).Where(l => l.Contains("[ERR]", StringComparison.Ordinal) || l.Contains("[FTL]", StringComparison.Ordinal))];
+        var problems = new List<string>();
+        List<string>? current = null;
+        foreach (var line in Directory.GetFiles(logs, "*.log").SelectMany(ReadShared))
+        {
+            if (IsLogEntry(line))
+            {
+                Flush();
+                current = line.Contains("[ERR]", StringComparison.Ordinal) || line.Contains("[FTL]", StringComparison.Ordinal) ? [line] : null;
+            }
+            else if (current is { Count: < 15 })
+            {
+                current.Add(line);
+            }
+        }
+
+        Flush();
+        return [.. problems];
+
+        void Flush()
+        {
+            if (current is not null)
+            {
+                problems.Add(string.Join(Environment.NewLine, current));
+            }
+        }
     }
+
+    /// <summary>A line that starts an entry of the log ("2026-11-13 08:31:59.978 +07:00 [ERR] …").</summary>
+    private static bool IsLogEntry(string line)
+        => line.Length > 24 && char.IsAsciiDigit(line[0]) && line[4] == '-' && line[7] == '-' && line[10] == ' ' && line[13] == ':';
 
     public void Dispose()
     {

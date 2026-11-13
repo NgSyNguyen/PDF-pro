@@ -54,63 +54,70 @@
         Icon="{ui:SymbolIcon Merge24}"
         ToolTip="{loc:Tr Welcome_Merge_ToolTip}" />
 
-      <!-- Quick-start guide (SPEC Phase 13): four steps, until put away; Tệp › Hướng dẫn nhanh brings it back. -->
-      <Border
+      <!--
+        Quick-start guide (SPEC Phase 13): four steps, until put away; Tệp › Hướng dẫn nhanh brings it back.
+        A UserControl carries the name and id: a Border has no automation peer, so screen readers would not see the group.
+      -->
+      <UserControl
         Margin="0,24,0,0"
-        Padding="16"
         AutomationProperties.AutomationId="QuickStartGuide"
         AutomationProperties.Name="{loc:Tr Guide_Title}"
-        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-        BorderThickness="1"
-        CornerRadius="8"
+        Focusable="False"
+        IsTabStop="False"
         Visibility="{Binding ShowsGuide, Converter={StaticResource BoolToVisibility}}">
-        <StackPanel>
-          <Grid>
-            <TextBlock VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold" Text="{loc:Tr Guide_Title}" />
-            <ui:Button
-              HorizontalAlignment="Right"
-              Appearance="Transparent"
-              AutomationProperties.AutomationId="HideGuide"
-              Command="{Binding HideGuideCommand}"
-              Content="{loc:Tr Guide_Hide}"
-              ToolTip="{loc:Tr Guide_Hide_ToolTip}" />
-          </Grid>
-          <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding GuideSteps}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <UniformGrid Columns="2" />
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate DataType="{x:Type vm:GuideStep}">
-                <Grid Margin="0,6,12,6">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                  </Grid.ColumnDefinitions>
-                  <ui:SymbolIcon
-                    Margin="0,2,10,0"
-                    VerticalAlignment="Top"
-                    FontSize="24"
-                    Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
-                    Symbol="{Binding Icon}" />
-                  <StackPanel Grid.Column="1">
-                    <TextBlock FontWeight="SemiBold">
-                      <Run Text="{Binding Number, Mode=OneWay}" /><Run Text=". " /><Run Text="{Binding Title, Mode=OneWay}" />
-                    </TextBlock>
-                    <TextBlock
-                      Margin="0,2,0,0"
-                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                      Text="{Binding Text}"
-                      TextWrapping="Wrap" />
-                  </StackPanel>
-                </Grid>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </StackPanel>
-      </Border>
+        <Border
+          Padding="16"
+          Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+          BorderThickness="1"
+          CornerRadius="8">
+          <StackPanel>
+            <Grid>
+              <TextBlock VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold" Text="{loc:Tr Guide_Title}" />
+              <ui:Button
+                HorizontalAlignment="Right"
+                Appearance="Transparent"
+                AutomationProperties.AutomationId="HideGuide"
+                Command="{Binding HideGuideCommand}"
+                Content="{loc:Tr Guide_Hide}"
+                ToolTip="{loc:Tr Guide_Hide_ToolTip}" />
+            </Grid>
+            <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding GuideSteps}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <UniformGrid Columns="2" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:GuideStep}">
+                  <Grid Margin="0,6,12,6">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ui:SymbolIcon
+                      Margin="0,2,10,0"
+                      VerticalAlignment="Top"
+                      FontSize="24"
+                      Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                      Symbol="{Binding Icon}" />
+                    <StackPanel Grid.Column="1">
+                      <TextBlock FontWeight="SemiBold">
+                        <Run Text="{Binding Number, Mode=OneWay}" /><Run Text=". " /><Run Text="{Binding Title, Mode=OneWay}" />
+                      </TextBlock>
+                      <TextBlock
+                        Margin="0,2,0,0"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding Text}"
+                        TextWrapping="Wrap" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </UserControl>
 
       <!-- Drop zone: the whole window accepts dropped files; this area just invites the gesture. -->
       <Grid Height="160" Margin="0,24,0,0">

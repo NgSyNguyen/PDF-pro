@@ -82,7 +82,11 @@ public sealed partial class WatermarkDialogViewModel : StampDialogViewModel
     public partial StampAnchor Anchor { get; set; } = StampAnchor.Center;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UsesPosition))]
     public partial bool Tile { get; set; }
+
+    /// <summary>The position matters only for a single watermark: a tiled one covers the whole page.</summary>
+    public bool UsesPosition => !Tile;
 
     /// <summary>Width of a picture as a percentage of the page width.</summary>
     [ObservableProperty]

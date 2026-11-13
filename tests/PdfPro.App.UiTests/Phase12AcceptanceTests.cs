@@ -1,7 +1,5 @@
 using System.Diagnostics;
 using FlaUI.Core.AutomationElements;
-using FlaUI.Core.Input;
-using FlaUI.Core.WindowsAPI;
 using PdfPro.App.UiTests.TestSupport;
 using static PdfPro.App.UiTests.TestSupport.UiTestEnvironment;
 
@@ -37,7 +35,7 @@ public sealed class Phase12AcceptanceTests(ITestOutputHelper output) : IDisposab
         var palette = app.WaitForWindow(Text("Palette_Title"));
         app.SetText("CommandPaletteQuery", Text("Cmd_Properties"), palette);
         app.Find("CommandPaletteQuery", palette).Focus();
-        Keyboard.Press(VirtualKeyShort.ENTER);
+        app.PressEnter(palette);
 
         var properties = app.WaitForWindow(Text("DocProps_Title"));
         properties.Close();
