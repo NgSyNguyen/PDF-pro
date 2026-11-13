@@ -101,7 +101,7 @@ jobs:
             vpk download github --repoUrl $repo --token $env:GITHUB_TOKEN --channel $channel --outputDir $out @pre
             # The pack id names the install folder (%LocalAppData%\PDF_Pro), which uninstalling deletes: it must not be
             # the app's data folder (%LOCALAPPDATA%\PdfPro: settings, logs, unsaved sessions).
-            vpk pack --packId PDF_Pro --packVersion $version --packDir "publish/$rid" --mainExe PdfPro.exe --packTitle PDF_Pro --packAuthors PDF_Pro --runtime $rid --channel $channel --outputDir $out --releaseNotes CHANGELOG.md @sign
+            vpk pack --packId PDF_Pro --packVersion $version --packDir "publish/$rid" --mainExe PdfPro.exe --icon assets/icon/PdfPro.ico --packTitle PDF_Pro --packAuthors PDF_Pro --runtime $rid --channel $channel --outputDir $out --releaseNotes CHANGELOG.md @sign
             if ($LASTEXITCODE -ne 0) { throw "Packing $rid failed." }
             vpk upload github --repoUrl $repo --token $env:GITHUB_TOKEN --channel $channel --outputDir $out --tag "v$version" --releaseName "PDF_Pro $version" --publish --merge @pre
             if ($LASTEXITCODE -ne 0) { throw "Uploading $rid failed." }

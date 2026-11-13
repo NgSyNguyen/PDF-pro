@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>PdfPro.Cli</RootNamespace>
     <AssemblyName>pdfpro</AssemblyName>
+    <ApplicationIcon>..\..\assets\icon\PdfPro.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

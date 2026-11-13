@@ -11,6 +11,8 @@
     <RootNamespace>PdfPro.App</RootNamespace>
     <AssemblyName>PdfPro</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The icon of PdfPro.exe: its windows, the taskbar, the notification area, shortcuts and "Open with" use it. -->
+    <ApplicationIcon>..\..\assets\icon\PdfPro.ico</ApplicationIcon>
     <!-- Program.Main runs Velopack's install/update hooks before WPF starts. -->
     <StartupObject>PdfPro.App.Program</StartupObject>
   </PropertyGroup>

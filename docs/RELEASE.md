@@ -58,8 +58,14 @@ Tệp `.pfx` được xóa khỏi máy chạy ở bước cuối (`if: always()`
 4. `THIRD_PARTY_NOTICES.md` và thư mục `licenses`: không có thư viện AGPL/GPL (test `LicenseGuardTests` canh PDFsharp).
 5. Chạy tay các `Phase*AcceptanceTests` (`$env:PDFPRO_UI_TESTS=1`).
 
+## Biểu tượng
+
+`assets/icon/PdfPro.ico` (tự vẽ bằng SkiaSharp: trang giấy gấp góc, vài dòng chữ, dải đỏ chữ "PDF" bằng Noto Sans Bold;
+mỗi cỡ 16, 20, 24, 32, 40, 48, 64, 96, 128, 256 vẽ riêng, cạnh khớp điểm ảnh — dưới 24 px dải đỏ có một vạch trắng thay
+chữ) là biểu tượng của `PdfPro.exe` (`ApplicationIcon`: cửa sổ, thanh tác vụ, khay hệ thống, lối tắt, "Mở bằng"), của
+`pdfpro.exe` và của bộ cài (`vpk pack --icon`). `PdfPro-256.png` là bản xem trước.
+
 ## Chưa làm
 
-- Biểu tượng ứng dụng (`.ico`): thêm `ApplicationIcon` cho `PdfPro.App` và `--icon` cho `vpk pack`.
 - "Gộp bằng PDF_Pro" trong menu chuột phải (cần chuyển nhiều tệp cùng lúc qua kênh một phiên bản kèm lệnh gộp).
 - Ảnh chụp màn hình cho README.
