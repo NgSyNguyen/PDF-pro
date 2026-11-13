@@ -2463,4 +2463,12 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Merge_ProtectedNote" xml:space="preserve"><value>Có tệp được bảo vệ bằng mật khẩu: tệp gộp sẽ không có mật khẩu. Đặt lại bằng Bảo mật › Mật khẩu sau khi mở.</value></data>
   <data name="Signatures_DocumentTimestamp" xml:space="preserve"><value>Dấu thời gian tài liệu — {0}</value></data>
   <data name="Signatures_DocumentTimestamp_Note" xml:space="preserve"><value>Đóng dấu thời gian cả tài liệu, giữ dữ liệu xác minh đã nhúng kiểm được về sau (PAdES-B-LTA).</value></data>
+  <data name="Safety_Title" xml:space="preserve"><value>Tệp đang mở khi PDF_Pro dừng đột ngột</value></data>
+  <data name="Safety_Probing" xml:space="preserve"><value>Đang thử mở {0} trong tiến trình riêng…</value></data>
+  <data name="Safety_Cancelled" xml:space="preserve"><value>Đã hủy việc thử mở tệp.</value></data>
+  <data name="Safety_Crashed" xml:space="preserve"><value>Tệp "{0}" đang mở khi PDF_Pro dừng đột ngột lần trước, và khi thử trong tiến trình riêng nó cũng làm tiến trình đó dừng hoặc treo. Mở nó có thể làm PDF_Pro dừng lần nữa — bạn có thể thử Chuyển đổi › Sửa tệp hỏng trước.</value></data>
+  <data name="Safety_NotChecked" xml:space="preserve"><value>Tệp "{0}" đang mở khi PDF_Pro dừng đột ngột lần trước. Chưa thử được nó trong tiến trình riêng (tùy chọn "Chạy thao tác nặng trong tiến trình riêng" đang tắt hoặc thiếu PdfPro.Worker.exe). Vẫn mở?</value></data>
+  <data name="Safety_OpenAnyway" xml:space="preserve"><value>Vẫn mở</value></data>
+  <data name="Safety_DontOpen" xml:space="preserve"><value>Không mở</value></data>
+  <data name="Stage_Probe" xml:space="preserve"><value>Đang thử từng trang</value></data>
 </root>

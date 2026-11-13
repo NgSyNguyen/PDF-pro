@@ -256,6 +256,7 @@ internal static class AppHost
         services.AddSingleton<IRecoveryDialog, RecoveryDialog>();
         services.AddSingleton<IRecoveryService, RecoveryService>();
 
+        services.AddSingleton<PdfPro.Infrastructure.Instances.IOpenDocumentGuard, PdfPro.Infrastructure.Instances.OpenDocumentGuard>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton(sp => new MergeRequestCollector(
             sp.GetRequiredService<IDebouncerFactory>(),

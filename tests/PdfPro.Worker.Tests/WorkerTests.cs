@@ -124,6 +124,24 @@ public sealed class WorkerTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task AFileIsTriedInTheWorker_PageByPage_AndAProtectedOrDamagedOneIsNoCrash()
+    {
+        var parameters = JsonSerializer.Serialize(new PdfPro.Operations.Robustness.FileProbeParams(), ParameterSchema.Json);
+        WorkerRun Probe(string file) => new(PdfPro.Operations.Robustness.FileProbe.OperationId, parameters, file, string.Empty) { Measure = true };
+        var progress = new Recorded();
+
+        var tried = JsonSerializer.Deserialize<PdfPro.Operations.Robustness.FileProbeResult>((await _client.RunAsync(Probe(Sample("vanban-vi.pdf")), progress, Token)).ShouldNotBeNull(), ParameterSchema.ReportJson);
+        tried.ShouldBe(new PdfPro.Operations.Robustness.FileProbeResult(14, NeedsPassword: false));
+        progress.Reports.ShouldNotBeEmpty();
+
+        var locked = JsonSerializer.Deserialize<PdfPro.Operations.Robustness.FileProbeResult>((await _client.RunAsync(Probe(Sample("encrypted.pdf")), new Recorded(), Token)).ShouldNotBeNull(), ParameterSchema.ReportJson);
+        locked.ShouldNotBeNull().NeedsPassword.ShouldBeTrue();
+
+        (await Should.ThrowAsync<WorkerOperationException>(() => _client.RunAsync(Probe(Sample("broken.pdf")), new Recorded(), Token)))
+            .ErrorType.ShouldNotBeNull().ShouldStartWith("PdfPro.Pdfium.Pdf", customMessage: "PDFium refuses it: the app explains it as usual");
+    }
+
+    [Fact]
     public async Task AnExportsError_ComesBackWithWhatTheAppExplains()
     {
         var notAPicture = Path.Combine(_folder, "ảnh.png");

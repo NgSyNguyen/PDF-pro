@@ -2463,4 +2463,12 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Merge_ProtectedNote" xml:space="preserve"><value>Some files are protected by a password: the merged file will have none. Set one with Security › Password once it is open.</value></data>
   <data name="Signatures_DocumentTimestamp" xml:space="preserve"><value>Document timestamp — {0}</value></data>
   <data name="Signatures_DocumentTimestamp_Note" xml:space="preserve"><value>Timestamps the whole document so the embedded validation data stays verifiable later (PAdES-B-LTA).</value></data>
+  <data name="Safety_Title" xml:space="preserve"><value>A file open when PDF_Pro stopped</value></data>
+  <data name="Safety_Probing" xml:space="preserve"><value>Trying {0} in a separate process…</value></data>
+  <data name="Safety_Cancelled" xml:space="preserve"><value>Trying the file was cancelled.</value></data>
+  <data name="Safety_Crashed" xml:space="preserve"><value>The file "{0}" was open when PDF_Pro last stopped, and tried in a separate process it stopped or stalled that process too. Opening it may stop PDF_Pro again — you can try Convert › Repair first.</value></data>
+  <data name="Safety_NotChecked" xml:space="preserve"><value>The file "{0}" was open when PDF_Pro last stopped. It could not be tried in a separate process ("Run heavy operations in a separate process" is off, or PdfPro.Worker.exe is missing). Open it anyway?</value></data>
+  <data name="Safety_OpenAnyway" xml:space="preserve"><value>Open anyway</value></data>
+  <data name="Safety_DontOpen" xml:space="preserve"><value>Don't open</value></data>
+  <data name="Stage_Probe" xml:space="preserve"><value>Trying each page</value></data>
 </root>

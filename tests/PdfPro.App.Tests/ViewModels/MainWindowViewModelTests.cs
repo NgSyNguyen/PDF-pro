@@ -619,7 +619,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         }
     }
 
-    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true, PdfPro.App.Services.Updates.IUpdateService? updates = null)
+    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true, PdfPro.App.Services.Updates.IUpdateService? updates = null, PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null, PdfPro.App.Services.Optimizing.IExportRunner? exports = null)
         => new(
             _dialogs,
             _lifetime,
@@ -658,7 +658,9 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             Compare(),
             Extracting(),
             Automation(),
-            updates: updates);
+            updates: updates,
+            exports: exports,
+            openGuard: openGuard);
 
     private PdfPro.App.Services.Automation.AutomationServices Automation()
     {

@@ -27,6 +27,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IClipboardService? _clipboard;
     private readonly Services.Updates.IUpdateService? _updates;
     private readonly Services.Optimizing.IExportRunner? _exports;
+    private readonly PdfPro.Infrastructure.Instances.IOpenDocumentGuard? _openGuard;
     private readonly IDocumentWorkspaceService _workspaces;
     private readonly IDocumentTabFactory _tabFactory;
     private readonly ISettingsService _settings;
@@ -78,10 +79,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Services.Automation.AutomationServices? automation = null,
         IClipboardService? clipboard = null,
         Services.Updates.IUpdateService? updates = null,
-        Services.Optimizing.IExportRunner? exports = null)
+        Services.Optimizing.IExportRunner? exports = null,
+        PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
         _exports = exports;
+        _openGuard = openGuard;
         _buildInfo = buildInfo;
         _clipboard = clipboard;
         _updates = updates;
@@ -170,6 +173,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
         Tabs = [Home];
         SelectedTab = Home;
+        if (openGuard is not null)
+        {
+            GuardOpenDocuments(openGuard);
+        }
+
         StatusBar.PropertyChanged += OnStatusBarPropertyChanged;
         Sidebar.PropertyChanged += OnSidebarPropertyChanged;
     }
@@ -335,6 +343,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
             if (Documents.FirstOrDefault(d => d.IsSameFile(fullPath)) is { } open)
             {
                 SelectedTab = open;
+                continue;
+            }
+
+            if (_openGuard is { } guard && guard.IsSuspect(fullPath) && !await MayOpenSuspectAsync(guard, fullPath))
+            {
                 continue;
             }
 
