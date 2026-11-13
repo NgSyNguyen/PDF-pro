@@ -3,6 +3,19 @@
 Mọi thay đổi đáng kể của PDF_Pro. Định dạng theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), phiên bản
 theo [Semantic Versioning](https://semver.org/lang/vi/). Mục đầu tiên là ghi chú phát hành của bộ cài.
 
+## [1.0.0-beta.1] — 13/11/2026 (bản thử nghiệm)
+
+Bản phát hành thử đầu tiên (kênh thử nghiệm): mọi tính năng của 1.0.0 dưới đây, cộng thêm:
+
+- Chữ ký chứng nhận (DocMDP), chữ ký chuẩn PAdES, dấu thời gian, dữ liệu xác minh lâu dài (LTV: chứng thư, OCSP, CRL)
+  và dấu thời gian tài liệu (PAdES-B-LTA); điền biểu mẫu trên tệp đã ký vẫn giữ chữ ký.
+- Bản PDF/A-2b và PDF/A-1b đạt kiểm định veraPDF trên mọi tệp mẫu; Office sang PDF chạy được cả khi lưu vào thư mục sâu.
+- Thao tác nặng — OCR, nén, chuyển đổi, công cụ bản quét, trích bảng/ảnh, so sánh, chạy lô, hot folder, workflow — chạy
+  trong tiến trình riêng: tệp lạ làm sập nó không làm sập cửa sổ.
+- Chế độ an toàn: tệp đang mở khi ứng dụng dừng đột ngột được thử trong tiến trình riêng trước khi mở lại.
+- "Gộp bằng PDF_Pro" trong menu chuột phải của Explorer; vẽ liên kết lên trang; tài liệu có mật khẩu giữ bảo vệ khi
+  trích/tách trang; OCR lại các trang thành ảnh sau khi xóa vĩnh viễn.
+
 ## [1.0.0] — chưa phát hành
 
 Phiên bản đầu tiên.

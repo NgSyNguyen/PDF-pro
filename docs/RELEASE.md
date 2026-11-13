@@ -65,7 +65,6 @@ mỗi cỡ 16, 20, 24, 32, 40, 48, 64, 96, 128, 256 vẽ riêng, cạnh khớp �
 chữ) là biểu tượng của `PdfPro.exe` (`ApplicationIcon`: cửa sổ, thanh tác vụ, khay hệ thống, lối tắt, "Mở bằng"), của
 `pdfpro.exe` và của bộ cài (`vpk pack --icon`). `PdfPro-256.png` là bản xem trước.
 
-## Chưa làm
+## Lịch sử phát hành thử
 
-- "Gộp bằng PDF_Pro" trong menu chuột phải (cần chuyển nhiều tệp cùng lúc qua kênh một phiên bản kèm lệnh gộp).
-- Ảnh chụp màn hình cho README.
+- `v1.0.0-beta.1` (13/11/2026): bản phát hành thử đầu tiên, kênh `beta`/`beta-arm64` (pre-release).
