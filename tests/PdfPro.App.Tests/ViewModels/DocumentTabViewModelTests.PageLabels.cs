@@ -31,6 +31,9 @@ public sealed partial class DocumentTabViewModelTests
 
         tab.UndoCommand.Execute(null);
         tab.Viewer.PageLabels.ShouldNotBeEmpty();
+        tab.Viewer.CurrentPageIndex.ShouldBe(5, "the viewer stays on the page it showed, back in its place");
+        tab.Viewer.CurrentPageText.ShouldBe("5");
+        tab.Viewer.NavigateTo(0);
         tab.Viewer.CurrentPageText.ShouldBe("i");
     }
 
