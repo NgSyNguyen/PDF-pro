@@ -62,7 +62,7 @@ public sealed class WorkerTests : IAsyncDisposable
     {
         var report = await _client.RunAsync(Run(SanitizeOperation.OperationId, new SanitizeParams(), Sample("links-annots.pdf"), Path.Combine(_folder, "sạch.pdf")), new Recorded(), Token);
 
-        var read = JsonSerializer.Deserialize<SanitizeReport>(report.ShouldNotBeNull(), ParameterSchema.Json).ShouldNotBeNull();
+        var read = JsonSerializer.Deserialize<SanitizeReport>(report.ShouldNotBeNull(), ParameterSchema.ReportJson).ShouldNotBeNull();
         File.Exists(Path.Combine(_folder, "sạch.pdf")).ShouldBeTrue();
         read.ShouldNotBeNull();
     }
@@ -111,7 +111,10 @@ public sealed class WorkerTests : IAsyncDisposable
     [Fact]
     public async Task ARunOverItsTimeLimit_StopsTheWorker()
     {
-        await using var hurried = Client(TimeSpan.FromSeconds(1));
+        // Five seconds, not one: the limit also covers starting the worker, which took over a second on a busy Windows
+        // machine (the whole suite in parallel, an antivirus scanning fresh builds) and was then reported NotStarted.
+        // The run itself (1,000 pages redacted as pictures) takes far longer than five seconds.
+        await using var hurried = Client(TimeSpan.FromSeconds(5));
 
         var error = await Should.ThrowAsync<WorkerException>(() => hurried.RunAsync(LongRun(Path.Combine(_folder, "chậm.pdf")), new Recorded(), Token));
 

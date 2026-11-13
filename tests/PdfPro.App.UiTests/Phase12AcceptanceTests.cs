@@ -65,7 +65,7 @@ public sealed class Phase12AcceptanceTests(ITestOutputHelper output) : IDisposab
         app.Find("BatchJob", batch).AsComboBox().Select(Text("Workflow_Template_Digitize"));
         app.Invoke("BatchAddFolder", batch);
         app.UseFileDialog(Text("Batch_AddFolder_Title"), input);
-        AppUnderTest.WaitUntil(() => app.ItemCount("BatchRows", batch) == 50, TimeSpan.FromSeconds(30), "the 50 files");
+        AppUnderTest.WaitUntil(() => app.RowCount("BatchRows", batch) == 50, TimeSpan.FromSeconds(30), "the 50 files");
         app.SetText("BatchOutput", results, batch);
         var watch = Stopwatch.StartNew();
         app.Invoke("BatchStart", batch);

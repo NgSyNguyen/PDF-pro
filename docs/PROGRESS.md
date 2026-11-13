@@ -4,9 +4,16 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 13/11/2026 (chiều, phiên cloud) — sau nghiệm thu trên Windows: kiểm tĩnh XAML, sửa 2 lỗi (nhãn trang mất khi lưu; Bates/Trộn biểu mẫu với tài liệu có mật khẩu), biểu tượng ứng dụng, nhãn trang trên viewer, Ctrl+B thêm bookmark, kéo-thả cây bookmark, thumbnail hiện chú thích của phiên. Xem "Lời nhắn lần 9" ngay dưới.
+Cập nhật lần cuối: 13/11/2026 (tối, máy Windows) — `fetch-tools.ps1` chạy được (Tesseract 5.4.0, SHA-256 đã ghim); với Tesseract: sửa OCR trong Worker luôn báo lỗi và cửa sổ Chạy lô sập khi mở; **36/37 kịch bản FlaUI đạt** (1 cần LibreOffice). Trước đó, 13/11/2026 (chiều, phiên cloud) — sau nghiệm thu trên Windows: kiểm tĩnh XAML, sửa 2 lỗi (nhãn trang mất khi lưu; Bates/Trộn biểu mẫu với tài liệu có mật khẩu), biểu tượng ứng dụng, nhãn trang trên viewer, Ctrl+B thêm bookmark, kéo-thả cây bookmark, thumbnail hiện chú thích của phiên. Xem "Lời nhắn lần 9" ngay dưới.
 
-## 0. Lời nhắn bàn giao (13/11/2026, cập nhật lần 9 — phiên cloud)
+## 0. Lời nhắn bàn giao (13/11/2026 tối, cập nhật lần 10 — máy Windows)
+
+- Công cụ đã có trên máy chủ dự án: `tools/fetch-tools.ps1` chạy được (qpdf 12.2.0; **Tesseract 5.4.0.20240606** vì UB Mannheim không có 5.5.0 trên GitHub; tessdata best/fast vie+eng+osd), **SHA-256 đã ghim** trong script. Chi tiết ở "Lời nhắn lần 8" bên dưới, mục **Công cụ**.
+- Với Tesseract, nghiệm thu lộ và đã sửa: **OCR trong Worker luôn bị coi là thất bại** (báo cáo JSON mất null → giờ `ParameterSchema.ReportJson`), **cửa sổ Chạy lô sập khi mở** (`ProgressBar` bind hai chiều vào `Fraction` chỉ đọc).
+- Windows sau khi gộp các commit lần 9 (qpdf trên PATH): build 0 cảnh báo; **3053 test, 0 lỗi, 39 bỏ qua** (37 FlaUI + veraPDF + LibreOffice) sau khi nới `WorkerTests.ARunOverItsTimeLimit_StopsTheWorker` (giới hạn 1 s trùm cả lúc khởi động Worker → `NotStarted` khi máy bận; giờ 5 s). **Chưa** chạy lại 37 kịch bản FlaUI trên code đã gộp lần 9.
+- **Phiên cloud tiếp theo:** đọc mục này + lần 9; mọi `ProgressBar.Value` phải `Mode=OneWay` (`XamlResourceTests.ProgressBars_BindTheirValueOneWay`); báo cáo mới đi qua Worker phải đọc lại được bằng `ReportJson`.
+
+### Lời nhắn lần 9 (13/11/2026 — phiên cloud)
 
 Sau lần 8 (máy Windows), phiên cloud làm tiếp — **chỉ App.Tests chạy trên CI**, mọi thứ khác chạy được ở cloud:
 - `949ee7e` **`XamlValueTests`**: đọc mọi XAML của App như WPF khi nạp view (enum/biểu tượng, bool, `x:Static`, `x:Type`, Setter/Trigger, tham số markup extension, thuộc tính gắn) — bắt loại lỗi "view sập khi mở" như Hình mờ. 54 tệp sạch.
@@ -21,13 +28,17 @@ Sau lần 8 (máy Windows), phiên cloud làm tiếp — **chỉ App.Tests chạ
 
 ### Lời nhắn lần 8 (13/11/2026 — máy Windows)
 
-**Kết quả trên máy Windows (13/11/2026, `ce6264c` + sửa):** build Release 0 cảnh báo; `dotnet test --solution` **3024 test, 0 lỗi, 50 bỏ qua** (37 FlaUI khi không đặt `PDFPRO_UI_TESTS` + 13 cần qpdf/Tesseract/LibreOffice/veraPDF). `PDFPRO_UI_TESTS=1`: **34/37 kịch bản P3–P13 đạt** (lần đầu chạy tay P5–P8, P10–P13), 3 bỏ qua (Tesseract ×2, LibreOffice). Lần chạy đầu có 4 lỗi, đã sửa:
+**Kết quả trên máy Windows (13/11/2026, `ce6264c` + sửa, có qpdf + Tesseract 5.4.0):** build Release 0 cảnh báo; `dotnet test --solution` **3026 test, 0 lỗi, 43 bỏ qua** (37 FlaUI khi không đặt `PDFPRO_UI_TESTS`, 4 test qpdf vì `qpdf` không nằm trên PATH — đặt PATH thì đạt, veraPDF, LibreOffice). `PDFPRO_UI_TESTS=1`: **36/37 kịch bản P3–P13 đạt** (lần đầu chạy tay P5–P8, P10–P13; OCR `scan-vi` 18 trang 6,6–6,9 s; "Số hóa hồ sơ" 50 tệp 10 s), 1 bỏ qua (LibreOffice). Chạy cả bộ ngay sau một lần build chép `tools	esseract` (240 MB) vào các thư mục `bin` thì mọi kịch bản chậm 4–5 lần (máy quét virus) → `PageOperationsOnAThousandPages` (2,3 s > 2 s) và đọc báo cáo so sánh (tệp bị khóa thoáng qua) có thể đỏ; chạy lại lúc máy yên thì đạt. Lần chạy đầu có 4 lỗi, đã sửa:
 - **Hộp thoại Hình mờ sập ngay khi mở** (từ P5 lát 8): `StampWindow.xaml` dùng `{StaticResource InverseBool}` không được định nghĩa → `XamlParseException`. Giờ dùng `WatermarkDialogViewModel.UsesPosition`. Test mới `XamlResourceTests` (App.Tests) quét mọi `{StaticResource …}` của App phải có `x:Key` hoặc `Resources.Add` trong code-behind.
 - **Hướng dẫn nhanh không có trong cây UIA** (trình đọc màn hình không thấy tên nhóm): `AutomationId`/`Name` đặt trên `Border` (không có automation peer) → bọc trong `UserControl`.
 - Test cũ: chú thích nút Hoàn tác giờ có "(Ctrl+Z)" (P13); `PdfFile.PageTexts` ghép chữ không khoảng trắng → tìm "ĐàNẵng".
 - `Phase12AcceptanceTests` gõ Enter bằng **bàn phím thật** (`FlaUI Keyboard.Press`) → giờ `AppUnderTest.PressEnter(window)` (PostMessage). `UiTestEnvironment.LogProblems` kèm 15 dòng ngoại lệ dưới mỗi dòng `[ERR]`.
 
-**Còn trên Windows:** `tools/fetch-tools.ps1` (đang làm), ghim SHA-256; chạy test cần Tesseract/qpdf; phát hành thử (chủ dự án **chưa** cho đẩy thẻ — để sau).
+**Công cụ (13/11/2026):** `tools/fetch-tools.ps1` chạy được trên Windows sau hai sửa: tên bộ cài 5.5.0 không có trên GitHub (404) → **Tesseract 5.4.0.20240606**; bộ cài NSIS chạy im lặng (máy không có 7-Zip) **bỏ qua `/D`** và cài vào `C:\Program Files\Tesseract-OCR` → script chép từ đó và gỡ bản cài nếu chính nó vừa tạo. **SHA-256 đã ghim** (qpdf, bộ cài Tesseract, 6 tệp tessdata). Trên máy chủ dự án vẫn còn bản cài `Program Files\Tesseract-OCR` do lần chạy đầu (trước khi sửa script) để lại — gỡ bằng Settings › Apps nếu không cần.
+- Với Tesseract có mặt, chạy lại thì lộ thêm hai lỗi thật: **OCR trong Worker luôn "thất bại" sau khi đã xong** — báo cáo OCR gửi từ Worker về App bằng `ParameterSchema.Json` (bỏ null khi ghi, bắt buộc tham số khi đọc) mất `OcrPageReport.MeanConfidence` = null của trang không nhận dạng → `JsonException` → cả thao tác bị coi là lỗi. Giờ báo cáo dùng `ParameterSchema.ReportJson` (giữ null), test `Reports_WithNullMembers_ComeBackFromTheWorkerJson`. **Cửa sổ "Chạy lô" sập khi mở**: `ProgressBar.Value` (mặc định hai chiều) bind vào `Fraction` có `private set` → `Mode=OneWay`; test `ProgressBars_BindTheirValueOneWay`.
+- Test: `AppUnderTest.RowCount` (Grid pattern) cho `DataGrid` (dòng là `DataItem`, `ItemCount` đếm 0); OCR tìm "ủybannhândân" (`PageTexts` không khoảng trắng).
+
+**Còn trên Windows:** phát hành thử (chủ dự án **chưa** cho đẩy thẻ — để sau); kiểm tay theo SPEC các phase (Acrobat Reader, Excel, LibreOffice/veraPDF thật — máy chưa cài). Test qpdf chỉ chạy khi `qpdf` có trên PATH (đặt `$env:PATH = "$PWD\tools\qpdf\bin;$env:PATH"`): đạt 20/20.
 
 ### Lời nhắn lần 7 (12/11/2026)
 
@@ -82,7 +93,7 @@ Sau lần 8 (máy Windows), phiên cloud làm tiếp — **chỉ App.Tests chạ
 | CI | `.github/workflows/build.yml`, `windows-latest`; chạy khi push vào `main` hoặc trên pull request (nhánh không có PR thì **không** chạy CI) |
 | CI gần nhất | `46ae649` (P13 lát 4 + sửa), `4d1f97a` (lát 2), `cc7fc3c` (lát 1), `9917944`, `2b564c4`, `c3b5de7`, `7c3bb9c`, `793eda6`: **xanh**. `17c41cb` đỏ do test palette đi phím mũi tên sai thứ tự (sửa ở `7216518`); `861531f` đỏ do `HotFolderServiceTests` kỳ vọng tên kết quả "sổ tay.pdf" — bước sổ gập đặt "sổ tay-booklet.pdf" (sửa ở `a6fb34a`). `e75f764` (P13 lát 3) đỏ do `PageOperationTimingTests` (xóa 200/1.000 trang 60 ms > 50 ms): `PdfPro.Worker.Tests` chạy song song, Worker vẽ trang 300 DPI tranh CPU → Worker giờ chạy ở độ ưu tiên dưới bình thường (`59a2c91`). `17fef1d` (lát 4) đỏ do tooltip "Đánh dấu tách" đã có "(Ctrl+M)" bị gắn phím lần nữa (sửa ở `46ae649`). `3cb9336` (lát 5) đỏ do hai test cập nhật dùng `Arg.Any<string>()` cạnh `null` (NSubstitute mơ hồ — bài học cũ ở mục 6; sửa ngay sau đó). `7cd50ec`, `4a7b68e`, `c03ae19` **đỏ** do một test App kỳ vọng sai (`Bookmarks_EditedInTheDialog_BecomeOneContentChange`: `basic-vi` có sẵn 4 bookmark; sửa ở `9917944`). Trước đó `481b1d6` (P11 lát 3–5b + sửa test so sánh): **xanh** (cả `ab5433d`, `871cf63`, `53a929a`, `f3045de`, `64b7024`, `f70f09c`, `9d6e79a`, `630d861`, `2a5be01`, `d325333`, `f9d5dc8`, `0c6658c`, `a4b6f55`, `0e51f6a`, `6ce96c5`, `cea9fb0`, `39dfd96`, `7f538c4`, `84d3efb`, `22e6489`, `77af225`, `f376296`, `7cae483`, `8fa89df`, `d028948`, `f366110`). `1520dac`…`813ed15` đỏ do một kỳ vọng sai của `CompareViewModelTests` (thay đổi "Sửa" cũng có ô xanh của từ thêm; sửa ở `481b1d6`); `db2c98f` đỏ do `Pages_AreReadInParallel_WithProgress` (render 300 DPI trên CI chậm hơn độ trễ giả → không thấy đọc chồng; sửa ở `ab5433d`: lần đọc chờ lần thứ hai bắt đầu); `ea46071` đỏ do test named pipe chập chờn (sửa ở `f376296`, xem mục 6); `5282022` đỏ do đặc tả NSubstitute mơ hồ (sửa ở `40439cf`) |
 
-- Trên máy chủ dự án có `README.md` chưa track (không rõ nguồn) — repo giờ có `README.md` chính thức (P13 lát 5): dời tệp cũ đi trước khi pull.
+- `README.md` chưa track trên máy chủ dự án (một dòng `"# PDF-pro"`, sót từ lúc tạo repo) đã được dời đi ngày 13/11/2026; repo dùng `README.md` chính thức (P13 lát 5).
 - Máy chủ dự án cần `git config user.name/user.email` trong repo (đã từng thiếu → commit thất bại im lặng).
 - Repo lưu LF (`.gitattributes`: `* text=auto`), checkout Windows ra CRLF — bình thường.
 
@@ -451,6 +462,9 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - **`{StaticResource}` thiếu chỉ lỗi lúc mở view** (test ViewModel không bắt được) → `XamlResourceTests` canh. Bộ chuyển đổi đảo bool không có: thêm thuộc tính bool vào ViewModel.
 - **`Border`, `Panel` không có automation peer**: `AutomationId`/`Name` đặt trên chúng không vào cây UIA (FlaUI không thấy, trình đọc màn hình cũng không) → đặt trên control (`UserControl`, `GroupBox`…).
 - **`XamlValueTests` (App.Tests) đọc mọi XAML của App như WPF khi nạp view**: giá trị enum (cả biểu tượng WPF-UI), bool, `{x:Static}`, `{x:Type}`, thuộc tính của Setter/Trigger (theo `TargetType`/`TargetName`), tham số enum của markup extension (`{Binding Mode=…}`, `{RelativeSource …}`), thuộc tính gắn (`Grid.Row`), kiểu phần tử. Enum có `TypeConverter` riêng (`ModifierKeys` "Control+Shift", `Key`) không bị kiểm. `XamlValueChecker` chỉ dùng phản chiếu mà `MetadataLoadContext` cũng có → thử được trên Linux với DLL WPF thật trong `~/.nuget/packages/microsoft.windowsdesktop.app.runtime.win-x64/*/runtimes/win-x64/lib/net10.0` (dự án console nhỏ trong scratchpad, `<Compile Include>` tệp checker).
+- **JSON giữa Worker và App**: tham số đi bằng `ParameterSchema.Json`, **báo cáo** đi bằng `ParameterSchema.ReportJson` (giữ null). Record báo cáo mới có thành viên nullable không mặc định thì vẫn đi được; record tham số thì vẫn phải cho mặc định `= null`.
+- **`ProgressBar.Value` (RangeBase) mặc định bind hai chiều**: thuộc tính không có setter public làm view ném lỗi khi tải → luôn `Mode=OneWay` (`XamlResourceTests` canh).
+- **`DataGrid` trong FlaUI**: dòng là `DataItem` (không phải `ListItem`) và bị ảo hóa → đếm bằng `AppUnderTest.RowCount` (Grid pattern).
 - **Test FlaUI không được dùng chuột/bàn phím thật** (`Keyboard.*`, `Mouse.*`, `.Click()`): dùng `Invoke`, `SetText`, `AppUnderTest.PressKey/PressEnter` (PostMessage).
 
 ## 7. Rủi ro / nợ đang mở
@@ -459,7 +473,6 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - Tài liệu có mật khẩu: Bates và Trộn biểu mẫu giờ **từ chối** như 12 lệnh ghi tệp mới khác ("gỡ mật khẩu và lưu trước") — trước đó Bates của tài liệu đã sửa ghi bản đánh số **không** mật khẩu, Trộn biểu mẫu báo nhầm "không có trường". Còn: Xuất trang của tài liệu có bảo vệ ra tệp **không** bảo vệ.
 - SkiaSharp kéo theo `SkiaSharp.NativeAssets.macOS`: chỉ thư mục build (không RID) có `runtimes/osx*/`; bản publish theo RID `win-x64`/`win-arm64` không còn (đã kiểm).
 - Phát hành (P13): bộ cài, cập nhật tự động và hook "Mở bằng" **chưa chạy thử trên Windows**; biểu tượng `assets/icon/PdfPro.ico` đã có (xem `docs/RELEASE.md` mục Biểu tượng); Worker chưa nhận phần đo của công cụ scan, thao tác xuất, chạy lô/hot folder, vẽ trang tệp lạ.
-- `tools/fetch-tools.ps1` (tải qpdf) chưa chạy thử trên Windows: tên tệp zip/checksum của bản phát hành qpdf 12.2.0 là phỏng đoán theo quy ước của qpdf — chạy một lần, nếu khác thì sửa biến và ghim `-QpdfSha256`.
 - Bản cài tạm trên Desktop của chủ dự án còn ở `464d0de` (rất cũ) — thay bằng bản cài Velopack khi phát hành thử.
 - PDF/A: chưa kiểm bằng veraPDF (9a-3) — mọi quy tắc khác của ISO 19005 (giới hạn cài đặt, glyph phải có trong phông nhúng sẵn, `/Differences` ngoài AGL…) chưa được PDF_Pro tự kiểm; 1b biến trang có trong suốt thành ảnh (mất chữ chọn được, tệp lớn); phông thay thế làm chữ lệch; bản PDF/A làm mất hiệu lực chữ ký số; 2b: chú thích (trừ ghi chú) thiếu `/AP` được hình **rỗng** (không còn hiện); tệp PDFsharp không đọc được (như `broken.pdf`) phải Sửa tệp hỏng trước.
 - Tệp đã ký: chỉ "thêm chú thích" được lưu gia tăng; điền biểu mẫu, sửa/xóa chú thích có sẵn, thao tác trang sau khi ký vẫn ghi toàn bộ (cảnh báo trước). Quyền DocMDP của chữ ký chứng nhận được kiểm từ 13/11 (ký thêm vào tệp P=1 bị từ chối; lưu chú thích gia tăng chỉ khi P=3).

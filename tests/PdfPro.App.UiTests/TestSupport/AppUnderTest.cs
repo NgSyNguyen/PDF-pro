@@ -128,6 +128,13 @@ internal sealed partial class AppUnderTest : IDisposable
     public int ItemCount(string automationId, AutomationElement? root = null)
         => Find(automationId, root).FindAllChildren(cf => cf.ByControlType(ControlType.ListItem)).Length;
 
+    /// <summary>
+    /// The rows of a data grid, through its Grid pattern: all of them, also those virtualized out of view (its children
+    /// are DataItems, which <see cref="ItemCount"/> does not count).
+    /// </summary>
+    public int RowCount(string automationId, AutomationElement? root = null)
+        => Find(automationId, root).Patterns.Grid.Pattern.RowCount.Value;
+
     /// <summary>Types into a text box (through its value, not the keyboard).</summary>
     public void SetText(string automationId, string text, AutomationElement? root = null)
     {

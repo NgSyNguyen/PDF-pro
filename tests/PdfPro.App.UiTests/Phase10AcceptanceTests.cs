@@ -51,7 +51,7 @@ public sealed class Phase10AcceptanceTests(ITestOutputHelper output) : IDisposab
 
         app.Ribbon("file", "file.save");
         app.WaitForTab("scan-vi.pdf", Long);
-        PdfFile.PageTexts(path)[0].Normalize(NormalizationForm.FormC).ToLowerInvariant().ShouldContain("ủy ban nhân dân");
+        PdfFile.PageTexts(path)[0].Normalize(NormalizationForm.FormC).ToLowerInvariant().ShouldContain("ủybannhândân", customMessage: "PdfFile.PageTexts joins the letters without spaces");
         Jpegs(path).ShouldBe(images, "the scanned images are kept byte for byte");
     }
 

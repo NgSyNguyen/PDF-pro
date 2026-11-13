@@ -57,7 +57,7 @@ internal sealed class WorkerIsolation(IWorkerClient worker, ISettingsService set
                 await result.CopyToAsync(output, cancellationToken).ConfigureAwait(false);
             }
 
-            if (report is not null && operation is IReportingOperation reporting && JsonSerializer.Deserialize(report, reporting.ReportType, ParameterSchema.Json) is { } read)
+            if (report is not null && operation is IReportingOperation reporting && JsonSerializer.Deserialize(report, reporting.ReportType, ParameterSchema.ReportJson) is { } read)
             {
                 reporting.Remember(parameters, read);
             }

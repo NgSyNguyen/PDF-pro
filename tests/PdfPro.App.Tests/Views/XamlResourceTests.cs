@@ -32,6 +32,30 @@ public sealed partial class XamlResourceTests
         missing.ShouldBeEmpty("these resources are used but never defined");
     }
 
+    /// <summary>
+    /// A progress bar's Value binds two-way by default (RangeBase), which throws as the view loads when the property has
+    /// no public setter — the batch window crashed on opening for that reason. Nobody drags a progress bar: always OneWay.
+    /// </summary>
+    [Fact]
+    public void ProgressBars_BindTheirValueOneWay()
+    {
+        var app = Path.Combine(Samples.Repository, "src", "PdfPro.App");
+        var twoWay = Directory.GetFiles(app, "*.xaml", SearchOption.AllDirectories).Where(InSources)
+            .SelectMany(f => ProgressBar().Matches(File.ReadAllText(f))
+                .Select(m => BoundValue().Match(m.Value))
+                .Where(v => v.Success && !v.Groups[1].Value.Contains("Mode=OneWay", StringComparison.Ordinal))
+                .Select(v => $"{Path.GetFileName(f)}: {v.Value}"))
+            .ToList();
+
+        twoWay.ShouldBeEmpty("a progress bar's Value must be bound with Mode=OneWay");
+    }
+
+    [GeneratedRegex(@"<(?:ui:)?ProgressBar\b[^>]*>", RegexOptions.Singleline, 1000)]
+    private static partial Regex ProgressBar();
+
+    [GeneratedRegex(@"\bValue=""\{Binding ([^}]*)\}""", RegexOptions.None, 1000)]
+    private static partial Regex BoundValue();
+
     private static bool InSources(string path)
         => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
         && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal);

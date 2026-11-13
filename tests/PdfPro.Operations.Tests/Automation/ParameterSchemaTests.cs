@@ -1,8 +1,10 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Security;
 using PdfPro.Operations.Automation;
 using PdfPro.Operations.Extracting;
+using PdfPro.Operations.Ocr;
 using PdfPro.Operations.Optimizing;
 using PdfPro.Operations.Security;
 using PdfPro.Operations.Tests.TestSupport;
@@ -82,5 +84,34 @@ public sealed class ParameterSchemaTests(PdfiumFixture pdfium)
         descriptors.ShouldContain(d => d.Id == "convert.toText" && !d.WritesPdf);
         descriptors.Single(d => d.Id == "optimize.compress").Group.ShouldBe("optimize");
         descriptors.SelectMany(d => d.Parameters).ShouldAllBe(f => f.Name.Length > 0 && char.IsLower(f.Name[0]));
+    }
+
+    /// <summary>
+    /// The worker sends reports to the app as JSON. An OCR report with a page not recognised has a null confidence and
+    /// no default for it: the parameter options leave it out and then refuse it as missing (an OCR run in the worker
+    /// failed after it had succeeded); the report options keep it.
+    /// </summary>
+    [Fact]
+    public void Reports_WithNullMembers_ComeBackFromTheWorkerJson()
+    {
+        var report = new OcrReport(
+            [
+                new OcrPageReport(0, OcrPageOutcome.Recognized, 91.5, 120, 0, 0.4, "Ủy ban nhân dân"),
+                new OcrPageReport(1, OcrPageOutcome.Blank, null, 0, 0, 0, ""),
+            ],
+            60,
+            [],
+            [1],
+            TimeSpan.FromSeconds(6.5));
+
+        var json = JsonSerializer.Serialize(report, ParameterSchema.ReportJson);
+        var read = JsonSerializer.Deserialize<OcrReport>(json, ParameterSchema.ReportJson).ShouldNotBeNull();
+
+        read.Pages.ShouldBe(report.Pages);
+        read.StraightenedPages.ShouldBe([1]);
+        read.Duration.ShouldBe(report.Duration);
+        Should.Throw<JsonException>(
+            () => JsonSerializer.Deserialize<OcrReport>(JsonSerializer.Serialize(report, ParameterSchema.Json), ParameterSchema.Json),
+            "the parameter options drop the null and then miss it");
     }
 }

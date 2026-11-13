@@ -61,6 +61,13 @@ public static class ParameterSchema
         RespectRequiredConstructorParameters = true,
     };
 
+    /// <summary>
+    /// The JSON options of operation reports sent from the worker to the app. Unlike <see cref="Json"/>, nulls are
+    /// written: a report record may have a nullable member with no default (OcrPageReport.MeanConfidence of a page
+    /// not recognised), which <see cref="Json"/> would leave out and then refuse as missing when reading it back.
+    /// </summary>
+    public static JsonSerializerOptions ReportJson { get; } = new(Json) { DefaultIgnoreCondition = JsonIgnoreCondition.Never };
+
     /// <summary>The fields of a parameter record, in constructor order.</summary>
     public static IReadOnlyList<ParameterField> Of(Type parameters)
     {

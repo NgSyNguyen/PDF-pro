@@ -28,13 +28,14 @@ param(
     [string]$QpdfVersion = '12.2.0',
 
     # SHA-256 đã ghim của tệp zip (để trống: lấy từ tệp checksum của bản phát hành).
-    [string]$QpdfSha256 = '',
+    [string]$QpdfSha256 = '7CF812816E7D688E6D782FB7C060EE18613E6366568F6DE4819BFA7DB7A05CBC',
 
-    # Phiên bản Tesseract của UB Mannheim (thẻ phát hành không có chữ 'v').
-    [string]$TesseractVersion = '5.5.0.20241111',
+    # Phiên bản Tesseract của UB Mannheim (thẻ phát hành không có chữ 'v'). Bản mới nhất có trên GitHub của UB Mannheim;
+    # 5.5.x chỉ có ở máy chủ của trường (digi.bib.uni-mannheim.de), không có trong releases của GitHub.
+    [string]$TesseractVersion = '5.4.0.20240606',
 
     # SHA-256 đã ghim của bộ cài Tesseract (để trống: in ra giá trị tính được để ghim).
-    [string]$TesseractSha256 = '',
+    [string]$TesseractSha256 = 'C885FFF6998E0608BA4BB8AB51436E1C6775C2BAFC2559A19B423E18678B60C9',
 
     # Thẻ (hoặc commit) của kho tessdata_best / tessdata_fast.
     [string]$TessdataRef = '4.1.0',
@@ -52,6 +53,12 @@ param(
 
 # SHA-256 đã ghim của dữ liệu nhận dạng ("best/vie.traineddata" = '...'). Để trống: in ra để ghim.
 $TessdataSha256 = @{
+    'best/vie.traineddata' = 'B6B49293D95D0B6DBD8780174627E82C75BE957B6F4ED9862155540D6B00BB45'
+    'best/eng.traineddata' = '8280AED0782FE27257A68EA10FE7EF324CA0F8D85BD2FD145D1C2B560BCB66BA'
+    'best/osd.traineddata' = '9CF5D576FCC47564F11265841E5CA839001E7E6F38FF7F7AACF46D15A96B00FF'
+    'fast/vie.traineddata' = '79DF64CAF7BCFB2A27DF5042ECB6121E196EADA34DA774956995747636D5BFA1'
+    'fast/eng.traineddata' = '7D4322BD2A7749724879683FC3912CB542F19906C83BCC1A52132556427170B2'
+    'fast/osd.traineddata' = '9CF5D576FCC47564F11265841E5CA839001E7E6F38FF7F7AACF46D15A96B00FF'
 }
 
 Set-StrictMode -Version Latest
@@ -206,8 +213,24 @@ function Install-Tesseract {
         else {
             # NSIS: /D phải đứng cuối và không có ngoặc kép. Có thể hiện hộp xác nhận quyền quản trị.
             Write-Host 'Không thấy 7-Zip: chạy bộ cài im lặng vào thư mục tạm.'
+            $installed = Join-Path $env:ProgramFiles 'Tesseract-OCR'
+            $installedBefore = Test-Path (Join-Path $installed 'tesseract.exe')
             $process = Start-Process -FilePath $setup -ArgumentList @('/S', "/D=$staging") -Wait -PassThru
             if ($process.ExitCode -ne 0) { throw "Bộ cài Tesseract kết thúc với mã $($process.ExitCode)." }
+
+            # Bộ cài của UB Mannheim (5.4.0) bỏ qua /D khi chạy im lặng và cài vào Program Files: chép từ đó, rồi gỡ
+            # bản cài ấy nếu chính script vừa tạo ra nó (bản người dùng tự cài từ trước thì để nguyên).
+            if (-not (Test-Path (Join-Path $staging 'tesseract.exe')) -and (Test-Path (Join-Path $installed 'tesseract.exe'))) {
+                Write-Host "Bộ cài đã cài vào $installed (bỏ qua /D): chép từ đó."
+                if (Test-Path $staging) { Remove-Item -Recurse -Force $staging }
+                Copy-Item $installed $staging -Recurse
+                Get-ChildItem $staging -Force | Where-Object { $_.Name -like 'tesseract-uninstall*' } | Remove-Item -Force
+                $uninstaller = Join-Path $installed 'tesseract-uninstall.exe'
+                if (-not $installedBefore -and (Test-Path $uninstaller)) {
+                    Write-Host "Gỡ bản cài trong $installed do script vừa tạo (có thể hỏi quyền quản trị)."
+                    Start-Process -FilePath $uninstaller -ArgumentList '/S' -Wait | Out-Null
+                }
+            }
         }
 
         if (-not (Test-Path (Join-Path $staging 'tesseract.exe'))) {

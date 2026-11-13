@@ -446,7 +446,7 @@
             AutomationProperties.AutomationId="StatusTaskProgress"
             Maximum="1"
             Visibility="{Binding IsTaskRunning, Converter={StaticResource BoolToVisibility}}"
-            Value="{Binding TaskProgress}" />
+            Value="{Binding TaskProgress, Mode=OneWay}" />
           <TextBlock
             VerticalAlignment="Center"
             AutomationProperties.AutomationId="StatusTask"

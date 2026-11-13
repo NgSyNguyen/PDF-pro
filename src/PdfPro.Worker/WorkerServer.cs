@@ -113,7 +113,7 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog)
         }
 
         return operation is IReportingOperation reporting && reporting.ReportOf(parameters) is { } report
-            ? JsonSerializer.Serialize(report, reporting.ReportType, ParameterSchema.Json)
+            ? JsonSerializer.Serialize(report, reporting.ReportType, ParameterSchema.ReportJson)
             : null;
     }
 

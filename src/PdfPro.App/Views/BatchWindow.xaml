@@ -91,7 +91,7 @@
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
-      <ProgressBar Height="4" Margin="0,0,0,8" Maximum="1" Value="{Binding Fraction}" />
+      <ProgressBar Height="4" Margin="0,0,0,8" Maximum="1" Value="{Binding Fraction, Mode=OneWay}" />
       <Grid Grid.Row="1">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
