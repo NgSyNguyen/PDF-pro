@@ -104,6 +104,11 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog)
             return await ExportAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
+        if (request.Measure)
+        {
+            return await MeasureAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
         if (request is not { Operation: { } id, Parameters: { } json, Input: { } input, Output: { } output })
         {
             throw new InvalidDataException("A run needs an operation, its parameters, an input and an output.");
@@ -126,6 +131,24 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog)
         return operation is IReportingOperation reporting && reporting.ReportOf(parameters) is { } report
             ? JsonSerializer.Serialize(report, reporting.ReportType, ParameterSchema.ReportJson)
             : null;
+    }
+
+    /// <summary>Looks at a file for a scan tool; what it finds as JSON.</summary>
+    private async Task<string?> MeasureAsync(WorkerMessage request, CancellationToken cancellationToken)
+    {
+        if (request is not { Operation: { } id, Parameters: { } json, Input: { } input })
+        {
+            throw new InvalidDataException("A measurement needs an operation, its parameters and an input.");
+        }
+
+        if (catalog.Find(id) is not IMeasuringOperation operation)
+        {
+            throw new NotSupportedException($"'{id}' does not measure in the worker.");
+        }
+
+        var parameters = JsonSerializer.Deserialize(json, operation.MeasureType, ParameterSchema.Json) ?? throw new InvalidDataException("The parameters are missing.");
+        var result = await operation.MeasureAsync(input, parameters, new SentProgress(this, request.Id), cancellationToken).ConfigureAwait(false);
+        return JsonSerializer.Serialize(result, operation.MeasurementType, ParameterSchema.ReportJson);
     }
 
     /// <summary>Runs an export (compress, convert…); its result as JSON.</summary>

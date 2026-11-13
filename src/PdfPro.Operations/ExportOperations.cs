@@ -17,6 +17,27 @@ public sealed record ExportCall(IReadOnlyList<string> Inputs, string Output, str
 }
 
 /// <summary>
+/// An operation that looks at a file before it is applied — the scan tools measure blank pages, tilt, dark borders and
+/// turned pages (SPEC Phase 10) — and can do so in the worker process (SPEC Phase 13): rendering every page of a scan
+/// is where a hostile file would crash PDFium. Its parameters are of <see cref="MeasureType"/>, what it finds of
+/// <see cref="MeasurementType"/> (records that travel as JSON).
+/// </summary>
+public interface IMeasuringOperation
+{
+    /// <summary>The operation's id ("scan.deskew").</summary>
+    string Id { get; }
+
+    /// <summary>The type of the measuring parameters.</summary>
+    Type MeasureType { get; }
+
+    /// <summary>The type of what <see cref="MeasureAsync"/> returns.</summary>
+    Type MeasurementType { get; }
+
+    /// <summary>Looks at <paramref name="input"/>: what the operation would be applied with.</summary>
+    Task<object> MeasureAsync(string input, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// An operation that writes new files from files — compress, convert, repair… (SPEC Phase 9) — and can run in the worker
 /// process (SPEC Phase 13), so that a hostile or huge file crashes or exhausts the worker, never the window: what it
 /// reads and writes is an <see cref="ExportCall"/>, what it returns is of <see cref="ResultType"/> (a record that travels

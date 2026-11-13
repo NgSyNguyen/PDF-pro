@@ -26,7 +26,8 @@ public sealed partial class MainWindowViewModel
             return;
         }
 
-        var shares = await MeasureAsync(document, "blank", Strings.Scan_Blank_Progress, (path, progress, token) => RemoveBlankPagesOperation.MeasureAsync(scan.Gate, path, progress, token));
+        var shares = await MeasureAsync(document, "blank", Strings.Scan_Blank_Progress, (path, progress, token) => Exports.MeasureAsync(
+            scan.RemoveBlankPages, path, new ScanMeasureParams(), (p, t) => RemoveBlankPagesOperation.MeasureAsync(scan.Gate, path, p, t), progress, token));
         if (shares is null || !Tabs.Contains(document))
         {
             return;
@@ -76,7 +77,8 @@ public sealed partial class MainWindowViewModel
 
         var languages = _settings.Current.OcrLanguages;
         var workers = _settings.Current.OcrParallelism > 0 ? _settings.Current.OcrParallelism : Math.Max(1, Environment.ProcessorCount - 1);
-        var turns = await MeasureAsync(document, "rotate", Strings.Scan_Rotate_Progress, (path, progress, token) => AutoRotateOperation.DetectAsync(scan.Gate, scan.Ocr!, path, languages, workers, progress, token));
+        var turns = await MeasureAsync(document, "rotate", Strings.Scan_Rotate_Progress, (path, progress, token) => Exports.MeasureAsync(
+            scan.AutoRotate, path, new ScanMeasureParams(Languages: languages, Workers: workers), (p, t) => AutoRotateOperation.DetectAsync(scan.Gate, scan.Ocr!, path, languages, workers, p, t), progress, token));
         if (turns is null || !Tabs.Contains(document))
         {
             return;
@@ -109,7 +111,8 @@ public sealed partial class MainWindowViewModel
             return;
         }
 
-        var angles = await MeasureAsync(document, "deskew", Strings.Scan_Deskew_Progress, (path, progress, token) => DeskewOperation.MeasureAsync(scan.Gate, path, null, DeskewOperation.DefaultMinDegrees, progress, token));
+        var angles = await MeasureAsync(document, "deskew", Strings.Scan_Deskew_Progress, (path, progress, token) => Exports.MeasureAsync(
+            scan.Deskew, path, new ScanMeasureParams(), (p, t) => DeskewOperation.MeasureAsync(scan.Gate, path, null, DeskewOperation.DefaultMinDegrees, p, t), progress, token));
         if (angles is null || !Tabs.Contains(document))
         {
             return;
@@ -143,7 +146,8 @@ public sealed partial class MainWindowViewModel
             return;
         }
 
-        var borders = await MeasureAsync(document, "borders", Strings.Scan_Borders_Progress, (path, progress, token) => CleanBordersOperation.MeasureAsync(scan.Gate, path, null, progress, token));
+        var borders = await MeasureAsync(document, "borders", Strings.Scan_Borders_Progress, (path, progress, token) => Exports.MeasureAsync(
+            scan.CleanBorders, path, new ScanMeasureParams(), (p, t) => CleanBordersOperation.MeasureAsync(scan.Gate, path, null, p, t), progress, token));
         if (borders is null || !Tabs.Contains(document))
         {
             return;
@@ -200,11 +204,19 @@ public sealed partial class MainWindowViewModel
                 task.Complete(Strings.Scan_Cancelled);
                 return null;
             }
-            catch (Exception ex) when (ex is OcrException or Pdfium.PdfDocumentException or IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is OcrException or Pdfium.PdfDocumentException or IOException or UnauthorizedAccessException or InvalidDataException
+                || ex is WorkerException { Failure: not WorkerFailure.NotStarted })
             {
-                _logger.LogWarning(ex, "Looking at the pages for {Purpose} failed", purpose);
+                _logger.LogWarning("Looking at the pages for {Purpose} failed: {ErrorType}", purpose, ex.GetType().Name);
                 task.Complete(Strings.Scan_Failed);
-                await _messages.ShowErrorAsync(Strings.Scan_Error_Title, ex is OcrException ocr ? DocumentTabViewModel.OcrFailureMessage(ocr)! : Strings.Optimize_Error_Unreadable);
+                var message = ex switch
+                {
+                    OcrException ocr => DocumentTabViewModel.OcrFailureMessage(ocr)!,
+                    WorkerException { Failure: WorkerFailure.TimedOut } => Strings.Content_Error_WorkerTimedOut,
+                    WorkerException => Strings.Content_Error_WorkerStopped,
+                    _ => Strings.Optimize_Error_Unreadable,
+                };
+                await _messages.ShowErrorAsync(Strings.Scan_Error_Title, message);
                 return null;
             }
         }

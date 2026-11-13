@@ -17,6 +17,20 @@ namespace PdfPro.Operations.Scanning;
 /// <param name="Pages">The blank pages to remove ("2, 5-6").</param>
 public sealed record RemoveBlankPagesParams([property: Required] string Pages);
 
+/// <summary>How the scan tools look at a file (<see cref="IMeasuringOperation"/>); each tool uses what it needs.</summary>
+/// <param name="Pages">The pages (0-based) to look at, or null for all (tilt, borders).</param>
+/// <param name="MinDegrees">Tilts smaller than this are not reported.</param>
+/// <param name="Languages">The languages an unsure page is read in to tell its orientation, or null for Vietnamese.</param>
+/// <param name="Workers">How many pages are read at once to tell their orientation.</param>
+public sealed record ScanMeasureParams(IReadOnlyList<int>? Pages = null, double MinDegrees = DeskewOperation.DefaultMinDegrees, IReadOnlyList<string>? Languages = null, int Workers = 1)
+{
+    internal static ScanMeasureParams Of(object parameters)
+        => parameters as ScanMeasureParams ?? throw new ArgumentException("Scan tools are measured with ScanMeasureParams.", nameof(parameters));
+
+    internal static PdfiumGate Need(PdfiumGate? gate)
+        => gate ?? throw new InvalidOperationException("Measuring pages needs PDFium: the operation was built without it.");
+}
+
 /// <summary>A page (0-based) and how many degrees it is turned clockwise.</summary>
 public sealed record PageTurn(int Page, int Degrees);
 
@@ -43,14 +57,24 @@ public sealed record CleanBordersParams([property: Required, MinLength(1)] IRead
 /// of two-sided scans) — a page operation, one undoable step. Blank is what <see cref="BlankPageDetector"/> says: dark
 /// pixels at 54 DPI inside 5% margins and outside dark edge bands (scanner borders, a book's spine).
 /// </summary>
-public sealed class RemoveBlankPagesOperation(IPlanMaterializer materializer, IPdfDocumentLoader loader)
-    : PlanOperation<RemoveBlankPagesParams>(materializer, loader)
+public sealed class RemoveBlankPagesOperation(IPlanMaterializer materializer, IPdfDocumentLoader loader, PdfiumGate? gate = null)
+    : PlanOperation<RemoveBlankPagesParams>(materializer, loader), IMeasuringOperation
 {
     public const string OperationId = "scan.removeBlankPages";
 
     public const string Stage = "Stage_FindBlankPages";
 
     public override string Id => OperationId;
+
+    Type IMeasuringOperation.MeasureType => typeof(ScanMeasureParams);
+
+    Type IMeasuringOperation.MeasurementType => typeof(IReadOnlyList<double>);
+
+    async Task<object> IMeasuringOperation.MeasureAsync(string input, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ScanMeasureParams.Of(parameters);
+        return await MeasureAsync(ScanMeasureParams.Need(gate), input, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>The share of dark pixels (in %) of every page of a file (the document as displayed).</summary>
     public static Task<IReadOnlyList<double>> MeasureAsync(PdfiumGate gate, string path, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
@@ -74,8 +98,8 @@ public sealed class RemoveBlankPagesOperation(IPlanMaterializer materializer, IP
 /// detection and, unless it is sure, reads the page both ways and keeps the more confident reading
 /// (<see cref="OcrPageReader"/>); blank pages are left alone.
 /// </summary>
-public sealed class AutoRotateOperation(IPlanMaterializer materializer, IPdfDocumentLoader loader)
-    : PlanOperation<AutoRotateParams>(materializer, loader)
+public sealed class AutoRotateOperation(IPlanMaterializer materializer, IPdfDocumentLoader loader, PdfiumGate? gate = null, IOcrEngine? ocr = null)
+    : PlanOperation<AutoRotateParams>(materializer, loader), IMeasuringOperation
 {
     public const string OperationId = "scan.autoRotate";
 
@@ -84,6 +108,23 @@ public sealed class AutoRotateOperation(IPlanMaterializer materializer, IPdfDocu
     private const int Dpi = 300;
 
     public override string Id => OperationId;
+
+    Type IMeasuringOperation.MeasureType => typeof(ScanMeasureParams);
+
+    Type IMeasuringOperation.MeasurementType => typeof(IReadOnlyList<PageTurn>);
+
+    async Task<object> IMeasuringOperation.MeasureAsync(string input, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        var measure = ScanMeasureParams.Of(parameters);
+        return await DetectAsync(
+            ScanMeasureParams.Need(gate),
+            ocr ?? throw new OcrException(OcrFailure.NotInstalled),
+            input,
+            measure.Languages is { Count: > 0 } languages ? languages : ["vie"],
+            Math.Clamp(measure.Workers, 1, Environment.ProcessorCount),
+            progress,
+            cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>The pages of a file (the document as displayed) that are turned, and the turn that makes them upright.</summary>
     /// <param name="gate">PDFium.</param>
@@ -197,7 +238,7 @@ public sealed class AutoRotateOperation(IPlanMaterializer materializer, IPdfDocu
 /// <see cref="MeasureAsync"/> found (<see cref="SkewDetector"/>); images keep their bytes. A content operation, one
 /// undoable step.
 /// </summary>
-public sealed class DeskewOperation : DocumentContentOperation<DeskewParams>
+public sealed class DeskewOperation(PdfiumGate? gate = null) : DocumentContentOperation<DeskewParams>, IMeasuringOperation
 {
     public const string OperationId = "scan.deskew";
 
@@ -212,6 +253,16 @@ public sealed class DeskewOperation : DocumentContentOperation<DeskewParams>
     public override string Id => OperationId;
 
     public override string Stage => "Stage_Deskew";
+
+    Type IMeasuringOperation.MeasureType => typeof(ScanMeasureParams);
+
+    Type IMeasuringOperation.MeasurementType => typeof(IReadOnlyList<PageAngle>);
+
+    async Task<object> IMeasuringOperation.MeasureAsync(string input, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        var measure = ScanMeasureParams.Of(parameters);
+        return await MeasureAsync(ScanMeasureParams.Need(gate), input, measure.Pages, measure.MinDegrees, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>The pages of a file (the document as displayed) tilted by at least <paramref name="minDegrees"/>, and their tilt.</summary>
     public static async Task<IReadOnlyList<PageAngle>> MeasureAsync(PdfiumGate gate, string path, IReadOnlyList<int>? pages, double minDegrees, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
@@ -250,7 +301,7 @@ public sealed class DeskewOperation : DocumentContentOperation<DeskewParams>
 /// shadow of a book's spine) that <see cref="MeasureAsync"/> found (<see cref="ScanBorders"/>) — over the page, so the
 /// images keep their bytes. A content operation, one undoable step.
 /// </summary>
-public sealed class CleanBordersOperation : DocumentContentOperation<CleanBordersParams>
+public sealed class CleanBordersOperation(PdfiumGate? gate = null) : DocumentContentOperation<CleanBordersParams>, IMeasuringOperation
 {
     public const string OperationId = "scan.cleanBorders";
 
@@ -259,6 +310,16 @@ public sealed class CleanBordersOperation : DocumentContentOperation<CleanBorder
     public override string Id => OperationId;
 
     public override string Stage => "Stage_CleanBorders";
+
+    Type IMeasuringOperation.MeasureType => typeof(ScanMeasureParams);
+
+    Type IMeasuringOperation.MeasurementType => typeof(IReadOnlyList<PageBorders>);
+
+    async Task<object> IMeasuringOperation.MeasureAsync(string input, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        var measure = ScanMeasureParams.Of(parameters);
+        return await MeasureAsync(ScanMeasureParams.Need(gate), input, measure.Pages, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>The pages of a file (the document as displayed) with dark bands along their edges, and the bands.</summary>
     public static async Task<IReadOnlyList<PageBorders>> MeasureAsync(PdfiumGate gate, string path, IReadOnlyList<int>? pages, IProgress<OperationProgress> progress, CancellationToken cancellationToken)

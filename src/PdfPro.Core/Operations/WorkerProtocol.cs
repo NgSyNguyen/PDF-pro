@@ -65,6 +65,9 @@ public sealed record WorkerMessage(WorkerMessageKind Kind, int Id)
     /// <summary>Run: an export (compress, convert…) rather than a content operation; its result comes back as the report.</summary>
     public bool Export { get; init; }
 
+    /// <summary>Run: a measurement (the scan tools looking at a file); what it finds comes back as the report.</summary>
+    public bool Measure { get; init; }
+
     /// <summary>Run: the files an export reads, when it reads several (else <see cref="Input"/>).</summary>
     public IReadOnlyList<string>? Inputs { get; init; }
 

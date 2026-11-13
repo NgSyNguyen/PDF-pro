@@ -16,6 +16,12 @@ public interface IExportRunner
 {
     /// <summary>Runs <paramref name="operation"/> and returns its result (a report, the files written…).</summary>
     Task<TResult> RunAsync<TResult>(IExportOperation operation, ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Looks at <paramref name="input"/> for a scan tool: in the worker when it is on, otherwise (or when it does not
+    /// start) with <paramref name="inApp"/>.
+    /// </summary>
+    Task<TResult> MeasureAsync<TResult>(IMeasuringOperation operation, string input, object parameters, Func<IProgress<OperationProgress>, CancellationToken, Task<TResult>> inApp, IProgress<OperationProgress> progress, CancellationToken cancellationToken);
 }
 
 /// <summary>Runs export operations in the app's own process (tests, the worker off or missing).</summary>
@@ -27,6 +33,12 @@ public sealed class InProcessExportRunner : IExportRunner
     {
         ArgumentNullException.ThrowIfNull(operation);
         return (TResult)await operation.ExportAsync(call, parameters, progress, cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<TResult> MeasureAsync<TResult>(IMeasuringOperation operation, string input, object parameters, Func<IProgress<OperationProgress>, CancellationToken, Task<TResult>> inApp, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(inApp);
+        return inApp(progress, cancellationToken);
     }
 }
 
@@ -75,6 +87,37 @@ internal sealed class WorkerExportRunner(IWorkerClient worker, ISettingsService 
         return result is not null && JsonSerializer.Deserialize(result, operation.ResultType, ParameterSchema.ReportJson) is TResult read
             ? read
             : throw new InvalidDataException("The worker did not return the result of the operation.");
+    }
+
+    public async Task<TResult> MeasureAsync<TResult>(IMeasuringOperation operation, string input, object parameters, Func<IProgress<OperationProgress>, CancellationToken, Task<TResult>> inApp, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(parameters);
+        ArgumentNullException.ThrowIfNull(inApp);
+        if (!settings.Current.IsolateOperations || !worker.IsAvailable)
+        {
+            return await inApp(progress, cancellationToken).ConfigureAwait(false);
+        }
+
+        var json = JsonSerializer.Serialize(parameters, parameters.GetType(), ParameterSchema.Json);
+        string? result;
+        try
+        {
+            result = await worker.RunAsync(new WorkerRun(operation.Id, json, input, string.Empty) { Measure = true }, progress, cancellationToken).ConfigureAwait(false);
+        }
+        catch (WorkerException ex) when (ex.Failure == WorkerFailure.NotStarted)
+        {
+            logger.LogWarning("The worker did not start: {OperationId} measures in the app", operation.Id);
+            return await inApp(progress, cancellationToken).ConfigureAwait(false);
+        }
+        catch (WorkerOperationException ex)
+        {
+            throw Rebuild(ex);
+        }
+
+        return result is not null && JsonSerializer.Deserialize(result, operation.MeasurementType, ParameterSchema.ReportJson) is TResult read
+            ? read
+            : throw new InvalidDataException("The worker did not return what it measured.");
     }
 
     /// <summary>

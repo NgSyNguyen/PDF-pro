@@ -61,6 +61,30 @@ public sealed class ExportRunnerTests
     }
 
     [Fact]
+    public async Task AScanToolsMeasurement_RunsInTheWorker_OrInTheAppWhenItIsOffOrDoesNotStart()
+    {
+        var operation = Substitute.For<IMeasuringOperation>();
+        operation.Id.Returns(PdfPro.Operations.Scanning.DeskewOperation.OperationId);
+        operation.MeasurementType.Returns(typeof(IReadOnlyList<PdfPro.Operations.Scanning.PageAngle>));
+        IReadOnlyList<PdfPro.Operations.Scanning.PageAngle> found = [new(1, 0.92), new(7, -1.15)];
+        IReadOnlyList<PdfPro.Operations.Scanning.PageAngle> inApp = [new(0, 2)];
+        WorkerRun? sent = null;
+        _worker.RunAsync(Arg.Do<WorkerRun>(r => sent = r), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>())
+            .Returns(JsonSerializer.Serialize(found, ParameterSchema.ReportJson));
+        Task<IReadOnlyList<PdfPro.Operations.Scanning.PageAngle>> InApp(IProgress<OperationProgress> progress, CancellationToken token) => Task.FromResult(inApp);
+
+        var measured = await Runner(isolate: true).MeasureAsync(operation, @"C:\quét.pdf", new PdfPro.Operations.Scanning.ScanMeasureParams(), InApp, new Progress<OperationProgress>(), Token);
+
+        measured.ShouldBe(found);
+        sent.ShouldNotBeNull();
+        (sent.Measure, sent.Export, sent.Operation, sent.Input).ShouldBe((true, false, PdfPro.Operations.Scanning.DeskewOperation.OperationId, @"C:\quét.pdf"));
+
+        (await Runner(isolate: false).MeasureAsync(operation, @"C:\quét.pdf", new PdfPro.Operations.Scanning.ScanMeasureParams(), InApp, new Progress<OperationProgress>(), Token)).ShouldBe(inApp);
+        _worker.RunAsync(Arg.Any<WorkerRun>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()).ThrowsAsync(new WorkerException(WorkerFailure.NotStarted));
+        (await Runner(isolate: true).MeasureAsync(operation, @"C:\quét.pdf", new PdfPro.Operations.Scanning.ScanMeasureParams(), InApp, new Progress<OperationProgress>(), Token)).ShouldBe(inApp);
+    }
+
+    [Fact]
     public async Task AWorkerThatCrashes_FailsTheExport()
     {
         _worker.RunAsync(Arg.Any<WorkerRun>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()).ThrowsAsync(new WorkerException(WorkerFailure.Crashed));

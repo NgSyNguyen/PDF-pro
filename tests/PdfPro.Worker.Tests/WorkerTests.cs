@@ -57,6 +57,27 @@ public sealed class WorkerTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task AScanToolsMeasurement_RunsInTheWorker_AndWhatItFoundComesBack()
+    {
+        var parameters = JsonSerializer.Serialize(new PdfPro.Operations.Scanning.ScanMeasureParams(), ParameterSchema.Json);
+
+        var blank = await _client.RunAsync(new WorkerRun(PdfPro.Operations.Scanning.RemoveBlankPagesOperation.OperationId, parameters, Sample("scan-vi.pdf"), string.Empty) { Measure = true }, new Recorded(), Token);
+        var shares = JsonSerializer.Deserialize<IReadOnlyList<double>>(blank.ShouldNotBeNull(), ParameterSchema.ReportJson).ShouldNotBeNull();
+        shares.Count.ShouldBe(18);
+        PdfPro.Operations.Splitting.BlankPageDetector.BlankPages(shares, PdfPro.Operations.Splitting.BlankPageDetector.DefaultThresholdPercent).Order().ToArray().ShouldBe(new[] { 3, 6, 9, 13 }, "the separator sheets of the scan");
+
+        var tilt = await _client.RunAsync(new WorkerRun(PdfPro.Operations.Scanning.DeskewOperation.OperationId, parameters, Sample("scan-vi.pdf"), string.Empty) { Measure = true }, new Recorded(), Token);
+        var angles = JsonSerializer.Deserialize<IReadOnlyList<PdfPro.Operations.Scanning.PageAngle>>(tilt.ShouldNotBeNull(), ParameterSchema.ReportJson).ShouldNotBeNull();
+        angles.Select(a => a.Page).ShouldContain(1);
+        angles.Select(a => a.Page).ShouldContain(7);
+
+        var unreadable = Path.Combine(_folder, "hỏng.pdf");
+        await File.WriteAllTextAsync(unreadable, "không phải PDF", Token);
+        (await Should.ThrowAsync<WorkerOperationException>(() => _client.RunAsync(new WorkerRun(PdfPro.Operations.Scanning.CleanBordersOperation.OperationId, parameters, unreadable, string.Empty) { Measure = true }, new Recorded(), Token)))
+            .ErrorType.ShouldBe("PdfPro.Pdfium.PdfCorruptedFileException", "PDFium cannot read it; the app explains it as an unreadable file");
+    }
+
+    [Fact]
     public async Task AnExportsError_ComesBackWithWhatTheAppExplains()
     {
         var notAPicture = Path.Combine(_folder, "ảnh.png");
