@@ -4,9 +4,20 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 13/11/2026 (tối) — **phiên cloud đã đóng; từ nay mọi việc làm trên máy Windows** (xem "Lời nhắn lần 11" ngay dưới). Máy Windows: 36/37 kịch bản FlaUI đạt trên code mới nhất, 3063 test xanh; còn kiểm tay, phát hành thử, các tính năng chưa làm ở mục 0.
+Cập nhật lần cuối: 13/11/2026 (khuya) — máy Windows làm tiếp sau P13 (lát 1–17 ở "Sau Phase 13"): **3142+ test, 0 lỗi**, CI xanh tới `1f2b8f8`. Xem "Lời nhắn lần 12" ngay dưới.
 
-## 0. Lời nhắn bàn giao (13/11/2026 tối, cập nhật lần 11 — phiên cloud đóng)
+## 0. Lời nhắn bàn giao (13/11/2026 khuya, cập nhật lần 12 — máy Windows)
+
+**Đã làm sau P13 (bảng "Sau Phase 13", lát 1–17):** vẽ liên kết; tài liệu có mật khẩu không rò ra tệp trần (trích/tách giữ bảo vệ, gộp nói rõ); tiến độ khi gỡ dấu; điền biểu mẫu trên tệp đã ký lưu gia tăng; "Gộp bằng PDF_Pro" trong menu chuột phải; **Worker** cho thao tác xuất, phần đo của công cụ scan, trích bảng/ảnh, so sánh, chạy lô/hot folder/workflow; **chữ ký chứng nhận, PAdES-B-T, LTV (AIA + OCSP + CRL + `/VRI`), PAdES-B-LTA**; ảnh chụp màn hình README (lộ và sửa 2 lỗi giao diện); **Chế độ an toàn** (tệp đang mở khi app sập được thử trong Worker trước khi mở lại); OCR lại trang thành ảnh sau xóa vĩnh viễn. Bản cài tạm trên Desktop đã cập nhật (xem mục 7).
+
+**Đã tự kiểm trên app thật (UIA/PrintWindow, không chuột/bàn phím thật):** nhãn trang trong ô trang (FlaUI `ThePageBox_ShowsThePageLabels…`), thumbnail hiện tô sáng của phiên, biểu tượng của `PdfPro.exe`/`pdfpro.exe`/bản cài.
+
+**Còn lại — cần chủ dự án:**
+1. Kiểm tay trong Acrobat Reader: liên kết từ chữ/vùng vẽ bấm được; chữ ký PAdES-B-LTA hiện "LTV enabled" (cần chứng thư thật của CA Việt Nam có OCSP/CRL); DocMDP với tệp chứng nhận do Acrobat tạo; Ctrl+B và kéo-thả bookmark (cần chuột/bàn phím thật).
+2. Phát hành thử theo `docs/RELEASE.md` (chưa được phép đẩy thẻ).
+3. PDF/A với veraPDF thật: cần cài Java + veraPDF (chưa tự cài vì là phần mềm hệ thống ngoài danh sách được phép tải); LibreOffice cho kịch bản Office.
+
+### Lời nhắn lần 11 (13/11/2026 tối — phiên cloud đóng)
 
 **Phiên cloud đã đóng.** Chủ dự án quyết định từ nay chỉ làm trên máy Windows; không còn phiên cloud nào chạy trên nhánh này. Commit cuối của phiên cloud trước tệp này: `d3f610f` (kiểm quyền DocMDP); máy Windows đã gộp tới `f0fdacb`, CI của `f0fdacb` xanh.
 
@@ -519,7 +530,7 @@ Thứ tự: 1 vẽ liên kết → 2 xuất trang của tài liệu có mật kh
 - Tài liệu có mật khẩu: Bates và Trộn biểu mẫu giờ **từ chối** như 12 lệnh ghi tệp mới khác ("gỡ mật khẩu và lưu trước") — trước đó Bates của tài liệu đã sửa ghi bản đánh số **không** mật khẩu, Trộn biểu mẫu báo nhầm "không có trường". Xuất trang / tách tệp của tài liệu có bảo vệ giờ giữ bảo vệ; bố cục trang in từ chối (13/11/2026). Gộp tài liệu có mật khẩu: tệp gộp không có mật khẩu (như Acrobat), hộp thoại Gộp nói rõ điều đó (13/11/2026).
 - SkiaSharp kéo theo `SkiaSharp.NativeAssets.macOS`: chỉ thư mục build (không RID) có `runtimes/osx*/`; bản publish theo RID `win-x64`/`win-arm64` không còn (đã kiểm).
 - Phát hành (P13): bộ cài, cập nhật tự động và hook "Mở bằng" **chưa chạy thử trên Windows**; biểu tượng `assets/icon/PdfPro.ico` đã có (xem `docs/RELEASE.md` mục Biểu tượng); trình xem vẽ trang trong App; tệp đang mở khi app sập được thử trong Worker trước khi mở lại (Chế độ an toàn, 13/11).
-- Bản cài tạm trên Desktop của chủ dự án (`%LOCALAPPDATA%\Programs\PDF_Pro`) đã cập nhật lên `bb90351` ngày 13/11/2026 (publish từ worktree sạch, chạy thử với thư mục dữ liệu tạm) — thay bằng bản cài Velopack khi phát hành thử.
+- Bản cài tạm trên Desktop của chủ dự án (`%LOCALAPPDATA%\Programs\PDF_Pro`) đã cập nhật lên `72ae494` ngày 13/11/2026 khuya (publish từ worktree sạch, chạy thử với thư mục dữ liệu tạm; có Worker, qpdf, Tesseract) — thay bằng bản cài Velopack khi phát hành thử.
 - PDF/A: chưa kiểm bằng veraPDF (9a-3) — mọi quy tắc khác của ISO 19005 (giới hạn cài đặt, glyph phải có trong phông nhúng sẵn, `/Differences` ngoài AGL…) chưa được PDF_Pro tự kiểm; 1b biến trang có trong suốt thành ảnh (mất chữ chọn được, tệp lớn); phông thay thế làm chữ lệch; bản PDF/A làm mất hiệu lực chữ ký số; 2b: chú thích (trừ ghi chú) thiếu `/AP` được hình **rỗng** (không còn hiện); tệp PDFsharp không đọc được (như `broken.pdf`) phải Sửa tệp hỏng trước.
 - Tệp đã ký: "thêm chú thích" và (13/11/2026) "điền biểu mẫu" được lưu gia tăng; sửa/xóa chú thích có sẵn, thao tác trang sau khi ký vẫn ghi toàn bộ (cảnh báo trước). Lưu gia tăng thất bại (ví dụ trường bị chữ ký khóa) giờ **không** tự ghi toàn bộ: `SaveFailure.SignaturesWouldBreak` → hỏi "Lưu thành…" / "Vẫn ghi đè" / Hủy; chấp nhận thì `DocumentWorkspace.SignaturesMayBreak` (không hỏi lại). Quyền DocMDP của chữ ký chứng nhận được kiểm từ 13/11 (ký thêm vào tệp P=1 bị từ chối; lưu chú thích gia tăng chỉ khi P=3).
 - OCR (P10): phần tải Tesseract/tessdata của `tools/fetch-tools.ps1` **chưa chạy thử trên Windows** (tên bộ cài UB Mannheim 5.5.0.20241111 và thẻ tessdata 4.1.0 theo quy ước đã biết; không có 7-Zip thì bộ cài chạy im lặng và có thể hỏi quyền quản trị), SHA-256 chưa ghim; CI Windows chưa có Tesseract nên test OCR thật chỉ chạy ở cloud (cân nhắc cho CI chạy `fetch-tools.ps1` để kiểm luôn script); trang quay 90° mà OSD báo 0° không được "Xoay đúng chiều"; "Xóa viền đen" có thể coi ảnh tối tràn lề là viền (có danh sách hỏi trước, hoàn tác được); xóa chữ ẩn cũ xử lý form một tầng.
