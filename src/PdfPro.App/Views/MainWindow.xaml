@@ -332,14 +332,15 @@
           <TextBlock VerticalAlignment="Center" Text="{loc:Tr Status_PageLabel}" />
           <TextBox
             x:Name="PageNumberBox"
-            Width="64"
+            MinWidth="64"
+            MaxWidth="160"
             Margin="6,0"
             Padding="6,2"
             VerticalAlignment="Center"
             AutomationProperties.AutomationId="PageNumberBox"
             AutomationProperties.Name="{loc:Tr Status_PageLabel}"
             HorizontalContentAlignment="Center"
-            Text="{Binding CurrentPageNumber, Mode=OneWay}"
+            Text="{Binding CurrentPageText, Mode=OneWay}"
             ToolTip="{loc:Tr Status_PageInput_ToolTip}">
             <TextBox.InputBindings>
               <KeyBinding
@@ -351,7 +352,7 @@
           <TextBlock
             VerticalAlignment="Center"
             AutomationProperties.AutomationId="PageCountText"
-            Text="{Binding PageCount, StringFormat={loc:Tr Status_PageCount}}" />
+            Text="{Binding PageCountText}" />
           <!-- "Tệp 3/13" while the document has first-page marks for a split. -->
           <TextBlock
             Margin="16,0,0,0"

@@ -678,7 +678,12 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 **Quyết định / giới hạn (Phase 11)**
 - Diff tự viết thay cho DiffPlex; ghi XLSX tự viết thay cho ClosedXML; Tabula là package mới duy nhất (MIT, THIRD_PARTY_NOTICES).
 - So sánh dựa trên chữ trích được: bản scan cần OCR trước mới so được chữ (so hình ảnh vẫn được); bố cục nhiều cột phức tạp theo thứ tự đọc của PdfPig.
-- Chưa làm: kéo-thả trong cây bookmark (dùng nút), thêm bookmark từ vùng chữ đang chọn, viewer hiện nhãn trang, tạo liên kết bằng cách vẽ vùng trên trang; tài liệu có mật khẩu bị từ chối ở các lệnh trích xuất/cấu trúc như các lệnh xuất khác.
+- Ô số trang của viewer hiện **nhãn trang** của tệp ("iii", "Phụ lục 1") kèm "(3/20)" khi nhãn khác số trang; gõ nhãn
+  (không phân biệt hoa/thường) để nhảy tới trang đó — nhãn trước, số trang sau, như các trình đọc PDF khác. Nhãn được đọc
+  nền từ tệp nền (đọc lại sau mỗi revision) và chỉ hiện khi các trang còn đúng thứ tự (`PagePlan.KeepsPageOrder`: xoay,
+  cắt, chú thích, điền biểu mẫu vẫn giữ; di chuyển/xóa/thêm/nhân bản trang thì không) — lưu cũng chỉ bỏ `/PageLabels`
+  trong trường hợp đó.
+- Chưa làm: kéo-thả trong cây bookmark (dùng nút), thêm bookmark từ vùng chữ đang chọn, tạo liên kết bằng cách vẽ vùng trên trang; tài liệu có mật khẩu bị từ chối ở các lệnh trích xuất/cấu trúc như các lệnh xuất khác.
 
 **Nghiệm thu (Phase 11)**
 - Test tự động: `contract-v1` vs `contract-v2` (chèn 1 trang + sửa 3 chỗ) báo **đúng 4 thay đổi** đúng loại/chữ/trang, ghép trang (0,0)(1,1)(–,2)(2,3)(3,4); tài liệu so với chính nó = 0 thay đổi, mọi cặp trang trông giống nhau; vùng khác về hình ảnh đè đúng chữ giá tiền; `tables.pdf`: bảng kẻ 7×4 và bảng không kẻ 9×4 đúng từng ô tiếng Việt, workbook 2 sheet (số kiểu Việt thành số), CSV `;` có BOM; 18 ảnh JPEG của `scan-vi` trùng SHA-256 từng byte; tệp đính kèm tên tiếng Việt thêm/thay/gỡ, PdfPig đọc đúng; bookmark đọc lại bằng PDFium; hợp đồng → "HỢP ĐỒNG…" với 9 "Điều n" theo regex và theo cỡ chữ; mô tả tiếng Việt vào Info + XMP giữ `pdfaid:part`; nhãn i, ii, 1, 2, 3, "Phụ lục"; tự nhận 3 địa chỉ → tạo → nhận lần hai = 0.

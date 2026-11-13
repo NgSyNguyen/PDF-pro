@@ -1,8 +1,11 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging.Abstractions;
+using PdfPro.App.Resources;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Structure;
 using PdfPro.Core.Viewing;
 using PdfPro.Infrastructure.Settings;
 
@@ -118,6 +121,45 @@ public sealed class DocumentViewerViewModelTests : IDisposable
         _viewer.GoToPageNumberCommand.Execute(text);
 
         _viewer.CurrentPageIndex.ShouldBe(expectedIndex);
+    }
+
+    [Fact]
+    public void PageLabels_NameThePage_AndATypedLabelGoesToItsPage()
+    {
+        _viewer.ViewportSize = Viewport;
+        _viewer.PageLabels =
+        [
+            new PageLabelRange(0, PageLabelStyle.LowerRoman),
+            new PageLabelRange(4),
+            new PageLabelRange(18, PageLabelStyle.Decimal, "Phụ lục "),
+        ];
+
+        _viewer.CurrentPageText.ShouldBe("i");
+        _viewer.PageCountText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Status_PageOfCount, 1, 20));
+
+        _viewer.GoToPageNumberCommand.Execute("3");
+        _viewer.CurrentPageIndex.ShouldBe(6, "labels first: the body's page 3 is the seventh page");
+        _viewer.CurrentPageText.ShouldBe("3");
+
+        _viewer.GoToPageNumberCommand.Execute(" PHỤ LỤC 2 ");
+        _viewer.CurrentPageIndex.ShouldBe(19);
+        _viewer.CurrentPageText.ShouldBe("Phụ lục 2");
+
+        _viewer.GoToPageNumberCommand.Execute("iv");
+        _viewer.CurrentPageIndex.ShouldBe(3);
+
+        _viewer.GoToPageNumberCommand.Execute("15");
+        _viewer.CurrentPageIndex.ShouldBe(14, "no page is labelled 15: the 15th page");
+        _viewer.CurrentPageText.ShouldBe("11");
+    }
+
+    [Fact]
+    public void PageLabels_ThatAreThePageNumbers_ShowTheNumberAlone()
+    {
+        _viewer.PageLabels = [new PageLabelRange(0)];
+
+        _viewer.CurrentPageText.ShouldBe("1");
+        _viewer.PageCountText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Status_PageCount, 20));
     }
 
     [Fact]

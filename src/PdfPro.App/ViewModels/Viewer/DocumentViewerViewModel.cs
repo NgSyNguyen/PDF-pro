@@ -8,6 +8,8 @@ using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Rendering;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Structure;
+using PdfPro.Core.Text;
 using PdfPro.Core.Viewing;
 using PdfPro.Pdfium;
 
@@ -28,6 +30,7 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
 
     private IReadOnlyList<PdfSize> _pageSizes;
     private readonly PageRenderScheduler _scheduler;
+    private IReadOnlyList<PageLabelRange> _pageLabels = [];
     private readonly IDebouncer _zoomSettle;
     private readonly IDebouncer _scrollSettle;
     private bool _zoomSettled = true;
@@ -57,7 +60,7 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
     public VirtualDocument Document { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PageCount))]
+    [NotifyPropertyChangedFor(nameof(PageCount), nameof(PageCountText), nameof(CurrentPageText))]
     public partial IReadOnlyList<PageViewModel> Pages { get; private set; }
 
     public int PageCount => Pages.Count;
@@ -134,10 +137,38 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
     public partial PageLayoutMode LayoutMode { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CurrentPageNumber))]
+    [NotifyPropertyChangedFor(nameof(CurrentPageNumber), nameof(CurrentPageText), nameof(PageCountText))]
     public partial int CurrentPageIndex { get; private set; }
 
     public int CurrentPageNumber => CurrentPageIndex + 1;
+
+    /// <summary>
+    /// The page labels of the document as shown ("i, ii, 1, 2…", "Phụ lục 1"): empty when it has none, or while its
+    /// pages are not in the order the labels describe.
+    /// </summary>
+    public IReadOnlyList<PageLabelRange> PageLabels
+    {
+        get => _pageLabels;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (!_pageLabels.SequenceEqual(value))
+            {
+                _pageLabels = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CurrentPageText));
+                OnPropertyChanged(nameof(PageCountText));
+            }
+        }
+    }
+
+    /// <summary>The page box: the current page's label when it has one other than its number, else its number.</summary>
+    public string CurrentPageText => LabelOf(CurrentPageIndex) ?? CurrentPageNumber.ToString(CultureInfo.CurrentCulture);
+
+    /// <summary>After the page box: "/ 20", or "(3/20)" after a label.</summary>
+    public string PageCountText => LabelOf(CurrentPageIndex) is null
+        ? string.Format(CultureInfo.CurrentCulture, Strings.Status_PageCount, PageCount)
+        : string.Format(CultureInfo.CurrentCulture, Strings.Status_PageOfCount, CurrentPageNumber, PageCount);
 
     public string ZoomText => Zoom.ToString("P0", CultureInfo.CurrentCulture);
 
@@ -314,17 +345,57 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
         }
     }
 
-    /// <summary>Page box in the status bar: a 1-based number typed by the user; invalid input is ignored.</summary>
+    /// <summary>
+    /// Page box in the status bar: a page label typed by the user ("iii", "Phụ lục 1" — labels first, as in other PDF
+    /// readers), else a 1-based page number; invalid input is ignored.
+    /// </summary>
     [RelayCommand]
     private void GoToPageNumber(string? text)
     {
-        if (int.TryParse(text?.Trim(), NumberStyles.Integer, CultureInfo.CurrentCulture, out var number))
+        var typed = TextNormalizer.ToNfc(text?.Trim() ?? string.Empty);
+        if (IndexOfLabel(typed) is { } labelled)
+        {
+            NavigateTo(labelled);
+        }
+        else if (int.TryParse(typed, NumberStyles.Integer, CultureInfo.CurrentCulture, out var number))
         {
             NavigateTo(number - 1);
         }
 
         // Refresh the box even when nothing changed, so invalid input is replaced by the current page.
         OnPropertyChanged(nameof(CurrentPageNumber));
+        OnPropertyChanged(nameof(CurrentPageText));
+    }
+
+    /// <summary>The label of a page when it is not simply its number, or null.</summary>
+    private string? LabelOf(int pageIndex)
+    {
+        if (_pageLabels.Count == 0 || pageIndex < 0 || pageIndex >= PageCount)
+        {
+            return null;
+        }
+
+        var label = Core.Structure.PageLabels.Of(_pageLabels, pageIndex);
+        return string.IsNullOrEmpty(label) || label == (pageIndex + 1).ToString(CultureInfo.InvariantCulture) ? null : label;
+    }
+
+    /// <summary>The first page whose label is <paramref name="typed"/> (case aside), or null.</summary>
+    private int? IndexOfLabel(string typed)
+    {
+        if (_pageLabels.Count == 0 || typed.Length == 0)
+        {
+            return null;
+        }
+
+        for (var i = 0; i < PageCount; i++)
+        {
+            if (LabelOf(i) is { } label && string.Equals(TextNormalizer.ToNfc(label), typed, StringComparison.CurrentCultureIgnoreCase))
+            {
+                return i;
+            }
+        }
+
+        return null;
     }
 
     partial void OnScrollOffsetChanged(ViewPoint value)

@@ -136,7 +136,8 @@
   <data name="Status_Ready" xml:space="preserve"><value>Ready</value></data>
   <data name="Status_PageLabel" xml:space="preserve"><value>Page</value></data>
   <data name="Status_PageCount" xml:space="preserve"><value>/ {0}</value></data>
-  <data name="Status_PageInput_ToolTip" xml:space="preserve"><value>Type a page number and press Enter (Ctrl+G)</value></data>
+  <data name="Status_PageOfCount" xml:space="preserve"><value>({0}/{1})</value></data>
+  <data name="Status_PageInput_ToolTip" xml:space="preserve"><value>Type a page number or label (such as &quot;iii&quot;) and press Enter (Ctrl+G)</value></data>
 
   <!-- Viewer -->
   <data name="Page_AutomationName" xml:space="preserve"><value>Page {0}</value></data>

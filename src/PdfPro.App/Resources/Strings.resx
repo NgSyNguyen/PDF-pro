@@ -136,7 +136,8 @@
   <data name="Status_Ready" xml:space="preserve"><value>Sẵn sàng</value></data>
   <data name="Status_PageLabel" xml:space="preserve"><value>Trang</value></data>
   <data name="Status_PageCount" xml:space="preserve"><value>/ {0}</value></data>
-  <data name="Status_PageInput_ToolTip" xml:space="preserve"><value>Nhập số trang rồi nhấn Enter (Ctrl+G)</value></data>
+  <data name="Status_PageOfCount" xml:space="preserve"><value>({0}/{1})</value></data>
+  <data name="Status_PageInput_ToolTip" xml:space="preserve"><value>Nhập số trang hoặc nhãn trang (như &quot;iii&quot;) rồi nhấn Enter (Ctrl+G)</value></data>
 
   <!-- Viewer -->
   <data name="Page_AutomationName" xml:space="preserve"><value>Trang {0}</value></data>

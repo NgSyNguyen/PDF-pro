@@ -197,6 +197,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             }
         };
         Forms.Refresh();
+        UpdatePageLabels();
         _shownPlan = workspace.Session.Plan;
         Editor.ApplyRequested += OnEditorApplyRequested;
         Editor.PropertyChanged += OnEditorPropertyChanged;
@@ -1141,6 +1142,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
 
         Comments.Invalidate();
+        UpdatePageLabels();
         Thumbnails.SetDocument(Workspace.Pages);
         Organizer?.SetDocument(Workspace.Pages);
         Editor.Refresh();
