@@ -297,6 +297,25 @@ public sealed class StampOperationTests(PdfiumFixture pdfium) : IDisposable
     }
 
     [Fact]
+    public async Task ScanningForStamps_ReportsEachPage_AndCanBeCancelled()
+    {
+        var stamped = await ApplyAsync(new WatermarkOperation(), Samples.BasicVi, new WatermarkParams("MẪU"));
+        var reports = new List<OperationProgress>();
+
+        var found = RemoveStampsOperation.Scan(stamped, new SyncProgress(reports.Add), CancellationToken.None);
+
+        found.ShouldBe(new Dictionary<StampKind, int> { [StampKind.Watermark] = 6 });
+        reports.Select(r => (r.Completed, r.Total)).ShouldBe([(0, 6), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6)]);
+        Should.Throw<OperationCanceledException>(() => RemoveStampsOperation.Scan(stamped, null, new CancellationToken(canceled: true)));
+    }
+
+    /// <summary>Reports on the calling thread (Progress&lt;T&gt; would post them later).</summary>
+    private sealed class SyncProgress(Action<OperationProgress> report) : IProgress<OperationProgress>
+    {
+        public void Report(OperationProgress value) => report(value);
+    }
+
+    [Fact]
     public async Task RemovingStamps_TakesOffOnlyTheChosenKinds_AndThenThePageIsAsBefore()
     {
         var stamped = await ApplyAsync(new BackgroundOperation(), Samples.BasicVi, new BackgroundParams(new RgbColor(230, 240, 255)));

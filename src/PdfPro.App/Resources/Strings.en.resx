@@ -2444,4 +2444,7 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Links_FromArea" xml:space="preserve"><value>Link for the drawn area</value></data>
   <data name="Links_Area" xml:space="preserve"><value>Area drawn on page {0}</value></data>
   <data name="Links_MadeArea" xml:space="preserve"><value>A link was added for the drawn area (in italics); click Apply to write it.</value></data>
+  <data name="RemoveStamps_Scanning" xml:space="preserve"><value>Looking for the stamps added to {0}…</value></data>
+  <data name="Status_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="Stage_ScanStamps" xml:space="preserve"><value>Looking for added stamps</value></data>
 </root>

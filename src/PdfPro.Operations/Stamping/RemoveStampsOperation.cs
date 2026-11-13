@@ -26,12 +26,21 @@ public sealed partial class RemoveStampsOperation : DocumentContentOperation<Rem
 
     /// <summary>How many pages carry each kind of PDF_Pro stamp (kinds absent from the file are not listed).</summary>
     /// <exception cref="InvalidDataException">The file cannot be read.</exception>
-    public static IReadOnlyDictionary<StampKind, int> Scan(string path)
+    public static IReadOnlyDictionary<StampKind, int> Scan(string path) => Scan(path, null, CancellationToken.None);
+
+    /// <summary>As <see cref="Scan(string)"/>, page by page with progress, and cancellable between pages.</summary>
+    /// <exception cref="InvalidDataException">The file cannot be read.</exception>
+    /// <exception cref="OperationCanceledException">Cancelled.</exception>
+    public static IReadOnlyDictionary<StampKind, int> Scan(string path, IProgress<OperationProgress>? progress, CancellationToken cancellationToken)
     {
         using var document = OpenForChange(path);
         var counts = new Dictionary<StampKind, int>();
-        foreach (var page in document.Pages)
+        var count = document.PageCount;
+        for (var index = 0; index < count; index++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(new OperationProgress(index, count, "Stage_ScanStamps"));
+            var page = document.Pages[index];
             foreach (var kind in PageStamper.ContentStreams(page).Select(KindOf).OfType<StampKind>().Distinct())
             {
                 counts[kind] = counts.GetValueOrDefault(kind) + 1;

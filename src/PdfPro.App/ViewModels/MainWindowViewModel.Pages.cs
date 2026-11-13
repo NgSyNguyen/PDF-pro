@@ -467,6 +467,67 @@ public sealed partial class MainWindowViewModel
         return true;
     }
 
+    /// <summary>
+    /// Runs work a tab asked for in the status bar — its text, progress and cancel button — one task at a time (saving
+    /// waits for it), then tells the tab: done, cancelled, or failed with the work's error.
+    /// </summary>
+    internal async Task RunBackgroundWorkAsync(BackgroundWorkRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        await WaitForBackgroundWorkAsync(cancelPrint: false);
+        var task = StatusBar.StartTask(request.Text);
+        var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, request.Text));
+        var work = Start(request, progress, task.Token);
+        _activeSave = work;
+        NotifySaveCommands();
+        try
+        {
+            await work;
+            task.Complete(Strings.Status_Ready);
+            request.Done(completed: true);
+        }
+        catch (OperationCanceledException)
+        {
+            task.Complete(Strings.Status_Cancelled);
+            request.Done(completed: false);
+        }
+        catch (Exception ex)
+        {
+            task.Complete(Strings.Status_Ready);
+            request.Failed(ex);
+        }
+        finally
+        {
+            _activeSave = null;
+            NotifySaveCommands();
+        }
+    }
+
+    /// <summary>The work started on the UI thread (it reads the document there and awaits its own background parts).</summary>
+    private static Task Start(BackgroundWorkRequest request, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return request.Work(progress, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return Task.FromException(ex);
+        }
+    }
+
+    private async void OnBackgroundWorkRequested(object? sender, BackgroundWorkRequest request)
+    {
+        if (sender is DocumentTabViewModel document && Tabs.Contains(document))
+        {
+            await RunBackgroundWorkAsync(request);
+        }
+        else
+        {
+            request.Done(completed: false);
+        }
+    }
+
     private async void OnLayoutRequested(object? sender, LayoutRequest request)
     {
         if (sender is DocumentTabViewModel document && Tabs.Contains(document))

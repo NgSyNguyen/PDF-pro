@@ -123,24 +123,33 @@ public static class DocumentStamps
 {
     /// <summary>
     /// How many pages of the document as displayed carry each kind of PDF_Pro stamp: the plan is written to the work
-    /// folder (pages may come from several files and revisions), read in the background and removed again.
+    /// folder (pages may come from several files and revisions), read in the background and removed again. Writing is
+    /// the first half of <paramref name="progress"/>, reading the pages the second; both can be cancelled.
     /// </summary>
     /// <exception cref="DocumentSaveException">The pages could not be written.</exception>
     /// <exception cref="InvalidDataException">The written pages could not be read.</exception>
-    public static async Task<IReadOnlyDictionary<StampKind, int>> ScanAsync(DocumentWorkspace workspace, IDocumentSaver saver, CancellationToken cancellationToken)
+    /// <exception cref="OperationCanceledException">Cancelled.</exception>
+    public static async Task<IReadOnlyDictionary<StampKind, int>> ScanAsync(DocumentWorkspace workspace, IDocumentSaver saver, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(workspace);
         ArgumentNullException.ThrowIfNull(saver);
+        ArgumentNullException.ThrowIfNull(progress);
         Directory.CreateDirectory(workspace.WorkDirectory);
         var path = Path.Combine(workspace.WorkDirectory, $"stamps-{Guid.NewGuid():N}.pdf");
         try
         {
-            await saver.ExportAsync(workspace, [.. Enumerable.Range(0, workspace.Pages.PageCount)], path, new Progress<OperationProgress>(), cancellationToken);
-            return await Task.Run(() => RemoveStampsOperation.Scan(path), cancellationToken);
+            var writing = new Progress<OperationProgress>(p => progress.Report(new OperationProgress(Done(p), 2 * Steps(p), p.StageKey)));
+            await saver.ExportAsync(workspace, [.. Enumerable.Range(0, workspace.Pages.PageCount)], path, writing, cancellationToken);
+            var reading = new Progress<OperationProgress>(p => progress.Report(new OperationProgress(Steps(p) + Done(p), 2 * Steps(p), p.StageKey)));
+            return await Task.Run(() => RemoveStampsOperation.Scan(path, reading, cancellationToken), cancellationToken);
         }
         finally
         {
             StampPreview.TryDelete(path);
         }
+
+        static int Steps(OperationProgress p) => Math.Max(p.Total, 1);
+
+        static int Done(OperationProgress p) => Math.Clamp(p.Completed, 0, Steps(p));
     }
 }

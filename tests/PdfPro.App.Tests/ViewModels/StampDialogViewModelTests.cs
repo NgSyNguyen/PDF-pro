@@ -440,6 +440,28 @@ public sealed class StampDialogViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task RemoveStamps_LooksForThem_AsWorkTheWindowRuns_AndOpensNothingWhenCancelled()
+    {
+        await using var tab = await OpenAsync(2);
+        ExportWrites(await PdfAsync("stamped", 2, stamped: true));
+        BackgroundWorkRequest? request = null;
+        tab.BackgroundWorkRequested += (_, r) => request = r;
+
+        var removing = tab.RemoveStampsCommand.ExecuteAsync(null);
+
+        request.ShouldNotBeNull().Text.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.RemoveStamps_Scanning, tab.FileName));
+        removing.IsCompleted.ShouldBeFalse("the tab waits for the window");
+        using var cancel = new CancellationTokenSource();
+        await cancel.CancelAsync();
+        await Should.ThrowAsync<OperationCanceledException>(() => request.Work(new Progress<OperationProgress>(), cancel.Token));
+        request.Done(completed: false);
+        await removing;
+
+        _pageDialogs.DidNotReceive().ShowStamp(Arg.Any<StampDialogViewModel>());
+        await _messages.DidNotReceiveWithAnyArgs().ShowErrorAsync(default!, default!);
+    }
+
+    [Fact]
     public async Task RemoveStamps_WhenThePagesCannotBeWritten_ExplainsIt()
     {
         await using var tab = await OpenAsync(2);

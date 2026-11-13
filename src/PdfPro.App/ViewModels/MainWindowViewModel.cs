@@ -524,6 +524,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.SplitRequested -= OnSplitRequested;
             _trackedDocument.LayoutRequested -= OnLayoutRequested;
             _trackedDocument.FormMergeRequested -= OnFormMergeRequested;
+            _trackedDocument.BackgroundWorkRequested -= OnBackgroundWorkRequested;
         }
 
         _trackedDocument = value as DocumentTabViewModel;
@@ -535,6 +536,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.SplitRequested += OnSplitRequested;
             _trackedDocument.LayoutRequested += OnLayoutRequested;
             _trackedDocument.FormMergeRequested += OnFormMergeRequested;
+            _trackedDocument.BackgroundWorkRequested += OnBackgroundWorkRequested;
         }
 
         foreach (var command in new[]

@@ -154,6 +154,44 @@ public sealed partial class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task BackgroundWorkOfATab_RunsInTheStatusBar_OneTaskAtATime_AndCanBeCancelled()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        var started = new TaskCompletionSource();
+        var request = new BackgroundWorkRequest("Đang tìm dấu…", async (progress, token) =>
+        {
+            progress.Report(new OperationProgress(1, 4));
+            started.SetResult();
+            await Task.Delay(Timeout.Infinite, token);
+        });
+
+        var running = viewModel.RunBackgroundWorkAsync(request);
+        await started.Task;
+
+        viewModel.StatusBar.IsTaskRunning.ShouldBeTrue();
+        viewModel.StatusBar.TaskText.ShouldBe("Đang tìm dấu…");
+        viewModel.SaveAsCommand.CanExecute(null).ShouldBeFalse("one task at a time");
+        viewModel.StatusBar.CancelTaskCommand.Execute(null);
+        await running;
+        (await request.Completion).ShouldBeFalse("cancelled");
+        viewModel.StatusBar.IsTaskRunning.ShouldBeFalse();
+        viewModel.StatusBar.TaskText.ShouldBe(Strings.Status_Cancelled);
+    }
+
+    [Fact]
+    public async Task BackgroundWorkOfATab_ThatFails_FailsTheTabsWait_AndFreesTheStatusBar()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        var request = new BackgroundWorkRequest("Đang tìm dấu…", (_, _) => throw new InvalidDataException("hỏng"));
+
+        await viewModel.RunBackgroundWorkAsync(request);
+
+        await Should.ThrowAsync<InvalidDataException>(() => request.Completion);
+        viewModel.StatusBar.IsTaskRunning.ShouldBeFalse();
+        viewModel.SaveAsCommand.CanExecute(null).ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task ClosingADocumentDuringAnExtraction_WaitsForIt()
     {
         var (viewModel, path) = await CreateWithFileAsync("a.pdf");

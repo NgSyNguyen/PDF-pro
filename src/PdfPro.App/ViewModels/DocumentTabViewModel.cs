@@ -69,11 +69,29 @@ public sealed record DocumentTabServices(
 /// <summary>What the stamp dialogs use besides the operations.</summary>
 /// <param name="CreatePreview">Shows page n (0-based) of the document with a stamp, until disposed.</param>
 /// <param name="Debouncers">Delays previews while the user types.</param>
-/// <param name="ScanAsync">Counts the pages carrying each kind of PDF_Pro stamp in the document as displayed.</param>
+/// <param name="ScanAsync">Counts the pages carrying each kind of PDF_Pro stamp in the document as displayed, with progress.</param>
 public sealed record StampServices(
     Func<DocumentWorkspace, int, IStampPreview> CreatePreview,
     IDebouncerFactory Debouncers,
-    Func<DocumentWorkspace, CancellationToken, Task<IReadOnlyDictionary<StampKind, int>>> ScanAsync);
+    Func<DocumentWorkspace, IProgress<OperationProgress>, CancellationToken, Task<IReadOnlyDictionary<StampKind, int>>> ScanAsync);
+
+/// <summary>
+/// Work a document tab asks the window to run in the status bar (its text, progress and cancel button) while the tab
+/// waits: <see cref="Completion"/> is true once done, false when the user cancelled, and fails as the work does.
+/// </summary>
+/// <param name="Text">What the status bar says while it runs.</param>
+/// <param name="Work">The work, reporting progress and observing the status bar's cancel.</param>
+public sealed record BackgroundWorkRequest(string Text, Func<IProgress<OperationProgress>, CancellationToken, Task> Work)
+{
+    private readonly TaskCompletionSource<bool> _done = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>True when the work is done, false when it was cancelled; faulted as the work when it fails.</summary>
+    public Task<bool> Completion => _done.Task;
+
+    internal void Done(bool completed) => _done.TrySetResult(completed);
+
+    internal void Failed(Exception error) => _done.TrySetException(error);
+}
 
 /// <summary>A content change the user asked for, run by the window in the background.</summary>
 /// <param name="Operation">The content operation.</param>
@@ -807,10 +825,14 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
             return;
         }
 
-        IReadOnlyDictionary<StampKind, int> found;
+        IReadOnlyDictionary<StampKind, int> found = new Dictionary<StampKind, int>();
         try
         {
-            found = await stamps.ScanAsync(Workspace, CancellationToken.None);
+            var text = string.Format(CultureInfo.CurrentCulture, Strings.RemoveStamps_Scanning, FileName);
+            if (!await RunInBackgroundAsync(text, async (progress, token) => found = await stamps.ScanAsync(Workspace, progress, token)))
+            {
+                return;
+            }
         }
         catch (Exception ex) when (ex is DocumentSaveException or IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
         {
@@ -826,6 +848,26 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         }
 
         await StampAsync((context, preview, debouncers) => new RemoveStampsDialogViewModel(context, found, _operations.Get<RemoveStampsOperation>(), preview, debouncers));
+    }
+
+    /// <summary>Work the window runs in its status bar while this tab waits (raised by <see cref="RunInBackgroundAsync"/>).</summary>
+    public event EventHandler<BackgroundWorkRequest>? BackgroundWorkRequested;
+
+    /// <summary>
+    /// Runs <paramref name="work"/> in the window's status bar, with progress and cancel; directly (no progress, no
+    /// cancel) when no window listens. True when done, false when cancelled.
+    /// </summary>
+    private async Task<bool> RunInBackgroundAsync(string text, Func<IProgress<OperationProgress>, CancellationToken, Task> work)
+    {
+        if (BackgroundWorkRequested is not { } handler)
+        {
+            await work(new Progress<OperationProgress>(), CancellationToken.None);
+            return true;
+        }
+
+        var request = new BackgroundWorkRequest(text, work);
+        handler(this, request);
+        return await request.Completion;
     }
 
     /// <summary>Stamps change the content: objects waiting in the page editor are applied first.</summary>
@@ -1376,7 +1418,7 @@ internal sealed class DocumentTabFactory(
             : new StampServices(
                 (w, page) => new StampPreview(w, page, saver, loader, renderer, loggers.CreateLogger<StampPreview>()),
                 debouncers,
-                (w, token) => DocumentStamps.ScanAsync(w, saver, token));
+                (w, progress, token) => DocumentStamps.ScanAsync(w, saver, progress, token));
 
     /// <summary>A page as displayed, sharp enough for the crop preview box.</summary>
     private async Task<ImageSource?> LoadPreviewAsync(DocumentWorkspace workspace, VirtualPage page, CancellationToken cancellationToken)
