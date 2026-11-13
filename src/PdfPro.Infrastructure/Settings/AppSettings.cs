@@ -68,6 +68,9 @@ public sealed record AppSettings
     /// <summary>Digital signatures get a timestamp from <see cref="TimestampServer"/> (needs the network).</summary>
     public bool UseTimestamp { get; init; } = true;
 
+    /// <summary>Signatures are PAdES (ETSI.CAdES.detached) rather than adbe.pkcs7.detached.</summary>
+    public bool UsePades { get; init; }
+
     /// <summary>
     /// Where LibreOffice is ("Office sang PDF"): its soffice program, its "program" folder or its installation folder;
     /// blank: looked for where it is usually installed.

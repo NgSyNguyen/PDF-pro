@@ -261,7 +261,7 @@ public sealed partial class MainWindowViewModel
                 appearance = new SignatureAppearance(page, rect, choice.Lines(DateTimeOffset.Now), choice.Image);
             }
 
-            var sign = new SignRequest(FreeSignatureFieldName(FieldsOf(file)), appearance, choice.Reason, choice.Location, choice.Contact, choice.TimestampServer);
+            var sign = new SignRequest(FreeSignatureFieldName(FieldsOf(file)), appearance, choice.Reason, choice.Location, choice.Contact, choice.TimestampServer, Pades: choice.Pades);
             return new SignParams(sign, certificate, overwrite);
         };
     }

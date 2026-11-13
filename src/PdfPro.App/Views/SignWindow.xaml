@@ -215,6 +215,34 @@
         PlaceholderText="{loc:Tr Sign_TimestampServer}"
         Text="{Binding TimestampServer, UpdateSourceTrigger=PropertyChanged}" />
 
+      <!-- PAdES (ETSI.CAdES.detached): with the timestamp above, PAdES-B-T. -->
+      <CheckBox
+        Margin="0,12,0,0"
+        AutomationProperties.AutomationId="SignPades"
+        Content="{loc:Tr Sign_Pades}"
+        IsChecked="{Binding UsePades}" />
+      <TextBlock
+        Margin="28,2,0,0"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr Sign_Pades_Note}"
+        TextWrapping="Wrap" />
+
+      <!-- The certification (DocMDP): only a document without a signature yet. -->
+      <StackPanel Margin="0,12,0,0" Visibility="{Binding CanCertify, Converter={StaticResource BoolToVisibility}}">
+        <CheckBox
+          AutomationProperties.AutomationId="SignCertify"
+          Content="{loc:Tr Sign_Certify}"
+          IsChecked="{Binding Certify}" />
+        <ComboBox
+          Margin="28,6,0,0"
+          AutomationProperties.AutomationId="SignCertification"
+          AutomationProperties.Name="{loc:Tr Sign_Certify}"
+          DisplayMemberPath="Label"
+          IsEnabled="{Binding Certify}"
+          ItemsSource="{Binding Certifications}"
+          SelectedItem="{Binding SelectedCertification}" />
+      </StackPanel>
+
       <TextBlock
         Margin="0,8,0,0"
         AutomationProperties.AutomationId="SignError"

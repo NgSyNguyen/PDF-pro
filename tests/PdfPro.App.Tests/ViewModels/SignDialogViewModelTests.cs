@@ -216,7 +216,8 @@ public sealed class SignDialogViewModelTests : IDisposable
     [Fact]
     public void ForManyFiles_TheSignatureGoesInACorner_OrNowhere()
     {
-        var dialog = new SignDialogViewModel(_store, _files, ["Ignored"], [], _ => null, Server, useTimestamp: false, fileCount: 3);
+        var dialog = new SignDialogViewModel(_store, _files, ["Ignored"], [], _ => null, Server, useTimestamp: false, fileCount: 3, canCertify: true);
+        dialog.CanCertify.ShouldBeFalse("a batch is never certified: some files may be signed already");
 
         dialog.IsBatch.ShouldBeTrue();
         dialog.BatchText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Sign_Batch_Intro, 3));

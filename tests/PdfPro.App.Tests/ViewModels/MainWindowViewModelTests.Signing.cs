@@ -276,6 +276,33 @@ public sealed partial class MainWindowViewModelTests
     private static string SignedPath(string path) => Path.Combine(Path.GetDirectoryName(path)!, Format(Strings.Sign_SignedName, "hợp đồng") + ".pdf");
 
     /// <summary>The dialog gets <paramref name="choose"/>, then "Ký".</summary>
+    [Fact]
+    public async Task Sign_ACertifiedPadesSignature_IsWritten_AndThePadesChoiceIsRemembered()
+    {
+        var (viewModel, path) = await CreateSignableAsync();
+        var output = SignedPath(path);
+        ChooseInDialog(
+            d =>
+            {
+                d.CanCertify.ShouldBeTrue("the document has no signature yet");
+                d.SelectedPlacement = d.Placements.Single(p => p.Kind == SignaturePlacementKind.Invisible);
+                d.Certify = true;
+                d.SelectedCertification = d.Certifications.Single(c => c.Permission == PdfPro.Operations.Signing.DocMdp.Annotations);
+                d.UsePades = true;
+            },
+            useTimestamp: false);
+
+        await viewModel.SignCommand.ExecuteAsync(null);
+
+        using (var signed = PdfReader.Open(output, PdfDocumentOpenMode.Import))
+        {
+            PdfPro.Operations.Signing.DocMdp.PermissionOf(signed).ShouldBe(PdfPro.Operations.Signing.DocMdp.Annotations);
+        }
+
+        System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(output)).ShouldContain("/SubFilter /ETSI.CAdES.detached");
+        _settings.Current.UsePades.ShouldBeTrue("the choice is remembered");
+    }
+
     private void ChooseInDialog(Action<SignDialogViewModel> choose, bool useTimestamp)
         => _pageDialogs.ShowSign(Arg.Any<SignDialogViewModel>()).Returns(call =>
         {

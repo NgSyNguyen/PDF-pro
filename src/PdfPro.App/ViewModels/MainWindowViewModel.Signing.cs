@@ -50,7 +50,9 @@ public sealed partial class MainWindowViewModel
             library?.List() ?? [],
             id => library?.Load(id),
             _settings.Current.TimestampServer,
-            _settings.Current.UseTimestamp);
+            _settings.Current.UseTimestamp,
+            usePades: _settings.Current.UsePades,
+            canCertify: !form.Fields.Any(f => f.IsSigned) && !document.Document.Features.HasDigitalSignatures);
         if (!_pageDialogs.ShowSign(dialog) || dialog.Result is not { } choice)
         {
             return;
@@ -97,7 +99,7 @@ public sealed partial class MainWindowViewModel
             _ => null,
         };
         var fieldName = choice.Placement == SignaturePlacementKind.Field && choice.FieldName is { } name ? name : FreeSignatureFieldName(form.Fields);
-        var request = new SignRequest(fieldName, appearance, choice.Reason, choice.Location, choice.Contact, choice.TimestampServer);
+        var request = new SignRequest(fieldName, appearance, choice.Reason, choice.Location, choice.Contact, choice.TimestampServer, choice.Certification, choice.Pades);
         if (!await WriteSignedAsync(signing, input, output, request, certificate, time))
         {
             return;
@@ -202,14 +204,14 @@ public sealed partial class MainWindowViewModel
     private async Task RememberTimestampSettingsAsync(SignDialogViewModel dialog)
     {
         var server = dialog.TimestampServer.Trim();
-        if (server == _settings.Current.TimestampServer && dialog.UseTimestamp == _settings.Current.UseTimestamp)
+        if (server == _settings.Current.TimestampServer && dialog.UseTimestamp == _settings.Current.UseTimestamp && dialog.UsePades == _settings.Current.UsePades)
         {
             return;
         }
 
         try
         {
-            await _settings.UpdateAsync(s => s with { TimestampServer = server, UseTimestamp = dialog.UseTimestamp });
+            await _settings.UpdateAsync(s => s with { TimestampServer = server, UseTimestamp = dialog.UseTimestamp, UsePades = dialog.UsePades });
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

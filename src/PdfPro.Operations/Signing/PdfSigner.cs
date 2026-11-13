@@ -53,6 +53,11 @@ public static class PdfSigner
             throw new ArgumentException("A time-stamping authority needs a client to reach it.", nameof(timestamps));
         }
 
+        if (request.Certification is { } permission && permission is < DocMdp.NoChanges or > DocMdp.Annotations)
+        {
+            throw new ArgumentOutOfRangeException(nameof(request), permission, "A certification allows 1, 2 or 3.");
+        }
+
         FileTrailer trailer;
         try
         {
@@ -123,6 +128,11 @@ public static class PdfSigner
                 throw new SigningException(SigningFailure.Certified, "The document's certification allows no change.");
             }
 
+            if (request.Certification is not null && (HasSignature(pdf.Internals.Catalog) || DocMdp.PermissionOf(pdf) is not null))
+            {
+                throw new SigningException(SigningFailure.AlreadySigned, "Only the first signature of a document can certify it.");
+            }
+
             var next = trailer.Size;
             var signature = next++;
             var changed = new HashSet<PdfObject>(ReferenceEqualityComparer.Instance);
@@ -183,6 +193,21 @@ public static class PdfSigner
                 AddReference(pdf, form, "/Fields", number, changed);
             }
 
+            if (request.Certification is not null)
+            {
+                // The catalog names the certification signature (12.8.4, /Perms), beside usage rights it may have.
+                if (AsDictionary(catalog.Elements["/Perms"]) is { } perms)
+                {
+                    perms.Elements["/DocMDP"] = new PdfLiteral($"{signature} 0 R");
+                    changed.Add(Owner(perms, catalog));
+                }
+                else
+                {
+                    catalog.Elements["/Perms"] = new PdfLiteral($"<< /DocMDP {signature} 0 R >>");
+                    changed.Add(catalog);
+                }
+            }
+
             var acroForm = AsDictionary(catalog.Elements["/AcroForm"]);
             if (acroForm is not null && acroForm.Elements.GetInteger("/SigFlags") != 3)
             {
@@ -206,7 +231,9 @@ public static class PdfSigner
     /// <summary>The signature dictionary with its holes, and where /Contents' '&lt;' and /ByteRange's '[' are in it.</summary>
     private static (byte[] Body, int ContentsAt, int ByteRangeAt) SignatureDictionary(SignRequest request, X509Certificate2 certificate, DateTimeOffset signingTime, int space)
     {
-        var text = new StringBuilder("<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached /ByteRange ");
+        var text = new StringBuilder("<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter ")
+            .Append(request.Pades ? "/ETSI.CAdES.detached" : "/adbe.pkcs7.detached")
+            .Append(" /ByteRange ");
         var byteRange = text.Length;
         text.Append(ByteRangeHolder).Append(" /Contents ");
         var contents = text.Length;
@@ -219,6 +246,11 @@ public static class PdfSigner
             {
                 text.Append(' ').Append(key).Append(' ').Append(PdfObjectWriter.Text(value.Trim()));
             }
+        }
+
+        if (request.Certification is { } permission)
+        {
+            text.Append(CultureInfo.InvariantCulture, $" /Reference [<< /Type /SigRef /TransformMethod /DocMDP /TransformParams << /Type /TransformParams /P {permission} /V /1.2 >> >>]");
         }
 
         text.Append(" /Prop_Build << /App << /Name /PDF_Pro >> >> >>");
@@ -256,7 +288,15 @@ public static class PdfSigner
             IncludeOption = X509IncludeOption.EndCertOnly,
         };
         signer.Certificates.AddRange(Issuers(certificate));
-        signer.SignedAttributes.Add(new Pkcs9SigningTime(signingTime.UtcDateTime));
+        if (request.Pades)
+        {
+            // PAdES baseline (ETSI EN 319 142-1 6.3): the signing certificate is signed for; the time is the dictionary's /M.
+            signer.SignedAttributes.Add(new AsnEncodedData(new Oid(SigningCertificateV2Oid), SigningCertificateV2(certificate)));
+        }
+        else
+        {
+            signer.SignedAttributes.Add(new Pkcs9SigningTime(signingTime.UtcDateTime));
+        }
         try
         {
             cms.ComputeSignature(signer, silent: false);
@@ -285,6 +325,66 @@ public static class PdfSigner
         }
 
         return cms.Encode();
+    }
+
+    /// <summary>id-aa-signingCertificateV2 (RFC 5035).</summary>
+    internal const string SigningCertificateV2Oid = "1.2.840.113549.1.9.16.2.47";
+
+    /// <summary>
+    /// SigningCertificateV2 (RFC 5035) naming the signer's certificate: its SHA-256 hash (the default algorithm, left
+    /// out) and its issuer and serial number.
+    /// </summary>
+    internal static byte[] SigningCertificateV2(X509Certificate2 certificate)
+    {
+        var writer = new System.Formats.Asn1.AsnWriter(System.Formats.Asn1.AsnEncodingRules.DER);
+        using (writer.PushSequence())
+        {
+            using (writer.PushSequence())
+            {
+                using (writer.PushSequence())
+                {
+                    writer.WriteOctetString(SHA256.HashData(certificate.RawData));
+                    using (writer.PushSequence())
+                    {
+                        using (writer.PushSequence())
+                        {
+                            using (writer.PushSequence(new System.Formats.Asn1.Asn1Tag(System.Formats.Asn1.TagClass.ContextSpecific, 4, isConstructed: true)))
+                            {
+                                writer.WriteEncodedValue(certificate.IssuerName.RawData);
+                            }
+                        }
+
+                        writer.WriteInteger(certificate.SerialNumberBytes.Span);
+                    }
+                }
+            }
+        }
+
+        return writer.Encode();
+    }
+
+    /// <summary>Whether a signature field of the document holds a signature.</summary>
+    private static bool HasSignature(PdfDictionary catalog)
+    {
+        var stack = new Stack<(PdfDictionary Field, int Depth)>(Dictionaries(AsDictionary(catalog.Elements["/AcroForm"])?.Elements["/Fields"]).Select(f => (f, 0)));
+        while (stack.Count > 0)
+        {
+            var (field, depth) = stack.Pop();
+            if (Inherited(field, "/FT") is PdfName { Value: "/Sig" } && field.Elements.ContainsKey("/V"))
+            {
+                return true;
+            }
+
+            if (depth < 32)
+            {
+                foreach (var kid in Dictionaries(field.Elements["/Kids"]))
+                {
+                    stack.Push((kid, depth + 1));
+                }
+            }
+        }
+
+        return false;
     }
 
     /// <summary>The appearance form for a box of the page; its objects join the update. Returns its number.</summary>

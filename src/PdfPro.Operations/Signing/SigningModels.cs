@@ -18,15 +18,25 @@ public sealed record SignatureAppearance(int Page, PdfRect Rect, IReadOnlyList<s
 /// <param name="Location">Where it is signed (/Location), or null.</param>
 /// <param name="ContactInfo">How to reach the signer (/ContactInfo), or null.</param>
 /// <param name="TimestampServer">An RFC 3161 time-stamping authority to timestamp the signature, or null.</param>
+/// <param name="Certification">
+/// Certifies the document (DocMDP, ISO 32000-1 12.8.2.2) allowing, after it: 1 no change, 2 filling in forms and signing,
+/// 3 also comments; null for an ordinary (approval) signature. Only the first signature of a document can certify it.
+/// </param>
+/// <param name="Pades">
+/// A PAdES signature (ETSI EN 319 142, SubFilter ETSI.CAdES.detached with the signing certificate as a signed attribute)
+/// instead of adbe.pkcs7.detached; with a timestamp it is PAdES-B-T.
+/// </param>
 public sealed record SignRequest(
     string FieldName,
     SignatureAppearance? Appearance = null,
     string? Reason = null,
     string? Location = null,
     string? ContactInfo = null,
-    Uri? TimestampServer = null)
+    Uri? TimestampServer = null,
+    int? Certification = null,
+    bool Pades = false)
 {
-    public override string ToString() => $"SignRequest {{ Field = {FieldName}, Visible = {Appearance is not null}, Timestamp = {TimestampServer is not null} }}";
+    public override string ToString() => $"SignRequest {{ Field = {FieldName}, Visible = {Appearance is not null}, Timestamp = {TimestampServer is not null}, Certification = {Certification}, Pades = {Pades} }}";
 }
 
 /// <summary>Why a document could not be signed.</summary>
@@ -55,6 +65,9 @@ public enum SigningFailure
 
     /// <summary>The document is certified and its certification allows no change, not even another signature.</summary>
     Certified,
+
+    /// <summary>A certification was asked for a document already signed: only its first signature can certify it.</summary>
+    AlreadySigned,
 }
 
 /// <summary>A document could not be signed; nothing was written.</summary>

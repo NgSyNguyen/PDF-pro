@@ -48,7 +48,8 @@ public sealed partial class MainWindowViewModel
             id => library?.Load(id),
             _settings.Current.TimestampServer,
             _settings.Current.UseTimestamp,
-            files.Count);
+            files.Count,
+            usePades: _settings.Current.UsePades);
         if (!_pageDialogs.ShowSign(dialog) || dialog.Result is not { } choice)
         {
             return;
@@ -171,7 +172,7 @@ public sealed partial class MainWindowViewModel
             appearance = new SignatureAppearance(page, rect, choice.Lines(time), choice.Image);
         }
 
-        var request = new SignRequest(FreeSignatureFieldName(FieldsOf(file)), appearance, choice.Reason, choice.Location, choice.Contact, server);
+        var request = new SignRequest(FreeSignatureFieldName(FieldsOf(file)), appearance, choice.Reason, choice.Location, choice.Contact, server, Pades: choice.Pades);
         await SignOperation.SignFileAsync(input, output, request, certificate, signing.Timestamps, time, cancellationToken).ConfigureAwait(false);
     }
 
@@ -197,6 +198,7 @@ public sealed partial class MainWindowViewModel
         SigningFailure.NotASignatureField => Strings.Sign_Error_NotSignatureField,
         SigningFailure.NoSuchPage => Strings.Sign_Error_NoSuchPage,
         SigningFailure.Certified => Strings.Sign_Error_Certified,
+        SigningFailure.AlreadySigned => Strings.Sign_Error_AlreadySigned,
         _ => Strings.Sign_Error_Unreadable,
     };
 }

@@ -46,6 +46,9 @@ public sealed record CertificateItem(CertificateChoice Certificate)
     public override string ToString() => Label;
 }
 
+/// <summary>What a certification lets change after it (DocMDP 1, 2 or 3) and how the dialog names it.</summary>
+public sealed record CertificationChoice(int Permission, string Label);
+
 /// <summary>
 /// What the user chose in the "Ký số" dialog. The certificate (with its private key) now belongs to the caller, who
 /// disposes of it after signing; nothing here is ever logged or stored.
@@ -64,6 +67,12 @@ public sealed record SignDialogResult(
 {
     /// <summary>The page whose corner gets the signature, for <see cref="SignaturePlacementKind.Corner"/>.</summary>
     public SignaturePage CornerPage { get; init; } = SignaturePage.Last;
+
+    /// <summary>Certifies the document allowing, after it, 1 no change, 2 forms and signing, 3 also comments; or null.</summary>
+    public int? Certification { get; init; }
+
+    /// <summary>A PAdES signature (ETSI.CAdES.detached).</summary>
+    public bool Pades { get; init; }
 
     /// <summary>The signer's common name, as the certificate gives it.</summary>
     public string SignerName => Certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false);
@@ -124,6 +133,8 @@ public sealed partial class SignDialogViewModel : ObservableObject
     /// <param name="timestampServer">The time-stamping authority last used.</param>
     /// <param name="useTimestamp">Signatures were last timestamped.</param>
     /// <param name="fileCount">More than one: the same signature goes on that many files (in a corner, or invisible).</param>
+    /// <param name="usePades">Signatures were last PAdES.</param>
+    /// <param name="canCertify">The document has no signature yet: this one may certify it.</param>
     public SignDialogViewModel(
         ICertificateStore store,
         IFileDialogService files,
@@ -132,7 +143,9 @@ public sealed partial class SignDialogViewModel : ObservableObject
         Func<string, byte[]?> loadImage,
         string timestampServer,
         bool useTimestamp,
-        int fileCount = 1)
+        int fileCount = 1,
+        bool usePades = false,
+        bool canCertify = false)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(emptyFields);
@@ -163,7 +176,33 @@ public sealed partial class SignDialogViewModel : ObservableObject
         ShowImage = Images.Count > 0;
         TimestampServer = timestampServer;
         UseTimestamp = useTimestamp;
+        UsePades = usePades;
+        CanCertify = canCertify && !IsBatch;
+        Certifications =
+        [
+            new(Operations.Signing.DocMdp.FormsAndSigning, Strings.Sign_Certify_Forms),
+            new(Operations.Signing.DocMdp.Annotations, Strings.Sign_Certify_Comments),
+            new(Operations.Signing.DocMdp.NoChanges, Strings.Sign_Certify_NoChanges),
+        ];
+        SelectedCertification = Certifications[0];
     }
+
+    /// <summary>The document has no signature yet: this one may certify it (one document, not a batch).</summary>
+    public bool CanCertify { get; }
+
+    /// <summary>"Chứng nhận tài liệu": this signature certifies the document.</summary>
+    [ObservableProperty]
+    public partial bool Certify { get; set; }
+
+    /// <summary>What may change after the certification.</summary>
+    public IReadOnlyList<CertificationChoice> Certifications { get; }
+
+    [ObservableProperty]
+    public partial CertificationChoice SelectedCertification { get; set; }
+
+    /// <summary>"Chữ ký chuẩn PAdES": ETSI.CAdES.detached (PAdES-B-T with a timestamp).</summary>
+    [ObservableProperty]
+    public partial bool UsePades { get; set; }
 
     public event EventHandler<bool>? CloseRequested;
 
@@ -296,6 +335,8 @@ public sealed partial class SignDialogViewModel : ObservableObject
             server)
         {
             CornerPage = SelectedPlacement.Page,
+            Certification = CanCertify && Certify ? SelectedCertification.Permission : null,
+            Pades = UsePades,
         };
         Error = null;
         Forget();

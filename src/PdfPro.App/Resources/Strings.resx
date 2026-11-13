@@ -2449,4 +2449,11 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Stage_ScanStamps" xml:space="preserve"><value>Đang tìm dấu đã thêm</value></data>
   <data name="Save_Error_SignaturesWouldBreak" xml:space="preserve"><value>Không thể lưu các thay đổi vào “{0}” mà vẫn giữ chữ ký số (ví dụ một trường đang bị chữ ký khóa). Ghi đè sẽ làm mọi chữ ký của tệp mất hiệu lực — hãy lưu thành tệp khác nếu cần giữ bản đã ký.</value></data>
   <data name="Shell_MergeWithPdfPro" xml:space="preserve"><value>Gộp bằng PDF_Pro</value></data>
+  <data name="Sign_Pades" xml:space="preserve"><value>Chữ ký chuẩn PAdES (ETSI)</value></data>
+  <data name="Sign_Pades_Note" xml:space="preserve"><value>Theo chuẩn châu Âu ETSI EN 319 142; kèm dấu thời gian là PAdES-B-T.</value></data>
+  <data name="Sign_Certify" xml:space="preserve"><value>Chứng nhận tài liệu (chữ ký đầu tiên)</value></data>
+  <data name="Sign_Certify_Forms" xml:space="preserve"><value>Sau đó chỉ cho phép điền biểu mẫu và ký</value></data>
+  <data name="Sign_Certify_Comments" xml:space="preserve"><value>Sau đó cho phép điền biểu mẫu, ký và thêm bình luận</value></data>
+  <data name="Sign_Certify_NoChanges" xml:space="preserve"><value>Sau đó không cho phép thay đổi nào</value></data>
+  <data name="Sign_Error_AlreadySigned" xml:space="preserve"><value>Tài liệu đã có chữ ký: chỉ chữ ký đầu tiên mới chứng nhận được tài liệu. Hãy ký thường.</value></data>
 </root>

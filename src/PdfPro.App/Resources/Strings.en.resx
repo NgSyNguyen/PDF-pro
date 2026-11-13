@@ -2449,4 +2449,11 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Stage_ScanStamps" xml:space="preserve"><value>Looking for added stamps</value></data>
   <data name="Save_Error_SignaturesWouldBreak" xml:space="preserve"><value>The changes cannot be saved into “{0}” while keeping its digital signatures (a field a signature locks, for example). Overwriting it would make every signature of the file invalid — save as another file to keep the signed one.</value></data>
   <data name="Shell_MergeWithPdfPro" xml:space="preserve"><value>Merge with PDF_Pro</value></data>
+  <data name="Sign_Pades" xml:space="preserve"><value>PAdES signature (ETSI)</value></data>
+  <data name="Sign_Pades_Note" xml:space="preserve"><value>As the European standard ETSI EN 319 142 sets it out; with a timestamp it is PAdES-B-T.</value></data>
+  <data name="Sign_Certify" xml:space="preserve"><value>Certify the document (first signature)</value></data>
+  <data name="Sign_Certify_Forms" xml:space="preserve"><value>Afterwards allow only filling in forms and signing</value></data>
+  <data name="Sign_Certify_Comments" xml:space="preserve"><value>Afterwards allow filling in forms, signing and comments</value></data>
+  <data name="Sign_Certify_NoChanges" xml:space="preserve"><value>Afterwards allow no change at all</value></data>
+  <data name="Sign_Error_AlreadySigned" xml:space="preserve"><value>The document is already signed: only its first signature can certify it. Sign it as usual.</value></data>
 </root>
