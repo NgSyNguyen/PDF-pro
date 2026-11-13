@@ -552,6 +552,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         File.Exists(written).ShouldBeTrue();
         await _workspaces.Received(1).OpenAsync(written, Arg.Any<CancellationToken>());
         File.ReadAllBytes(path).ShouldBe(File.ReadAllBytes(Samples.Basic), "the document's own file is never written");
+        _fileRunner.ShouldNotBeNull().Runs.ShouldBe(1, "the open document's run goes where batches run (the worker, when it is on)");
     }
 
     [Fact]
@@ -662,6 +663,24 @@ public sealed partial class MainWindowViewModelTests : IDisposable
     private PdfPro.App.Services.Automation.AutomationServices Automation()
     {
         var catalog = TestOperations.All();
-        return new(catalog, new PdfPro.Operations.Automation.WorkflowRunner(catalog, TestOperations.PdfiumGate), new PdfPro.App.Services.Automation.WorkflowLibrary(Path.Combine(_paths.DataRoot, "workflows")));
+        var runner = new PdfPro.Operations.Automation.WorkflowRunner(catalog, TestOperations.PdfiumGate);
+        _fileRunner = new RecordingFileRunner(runner);
+        return new(catalog, runner, new PdfPro.App.Services.Automation.WorkflowLibrary(Path.Combine(_paths.DataRoot, "workflows")), _fileRunner);
+    }
+
+    private RecordingFileRunner? _fileRunner;
+
+    /// <summary>The runner of files (the worker's, in the app), counting its runs.</summary>
+    private sealed class RecordingFileRunner(PdfPro.Operations.Automation.WorkflowRunner inner) : PdfPro.Operations.Automation.IWorkflowFileRunner
+    {
+        public int Runs { get; private set; }
+
+        public PdfPro.Operations.OperationCatalog Catalog => inner.Catalog;
+
+        public Task<PdfPro.Operations.Automation.WorkflowRunResult> RunAsync(PdfPro.Operations.Automation.Workflow workflow, PdfPro.Operations.Automation.WorkflowRunRequest request, IProgress<PdfPro.Operations.Automation.WorkflowProgress>? progress, CancellationToken cancellationToken)
+        {
+            Runs++;
+            return inner.RunAsync(workflow, request, progress, cancellationToken);
+        }
     }
 }

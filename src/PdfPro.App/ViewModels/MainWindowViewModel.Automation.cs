@@ -120,7 +120,7 @@ public sealed partial class MainWindowViewModel
                 async (progress, token) =>
                 {
                     var steps = new Progress<WorkflowProgress>(p => progress.Report(new OperationProgress((int)(p.Fraction * 1000), 1000)));
-                    outputs = (await automation.Runner.RunAsync(workflow, request, steps, token).ConfigureAwait(false)).Outputs;
+                    outputs = (await automation.FileRunner.RunAsync(workflow, request, steps, token).ConfigureAwait(false)).Outputs;
                 },
                 Format(Strings.Workflow_Done, workflow.Name),
                 Strings.Workflow_Error_Title,
