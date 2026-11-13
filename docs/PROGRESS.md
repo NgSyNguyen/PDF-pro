@@ -4,9 +4,28 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 13/11/2026 (tối, máy Windows) — `fetch-tools.ps1` chạy được (Tesseract 5.4.0, SHA-256 đã ghim); với Tesseract: sửa OCR trong Worker luôn báo lỗi và cửa sổ Chạy lô sập khi mở; **36/37 kịch bản FlaUI đạt** (1 cần LibreOffice). Trước đó, 13/11/2026 (chiều, phiên cloud) — sau nghiệm thu trên Windows: kiểm tĩnh XAML, sửa 2 lỗi (nhãn trang mất khi lưu; Bates/Trộn biểu mẫu với tài liệu có mật khẩu), biểu tượng ứng dụng, nhãn trang trên viewer, Ctrl+B thêm bookmark, kéo-thả cây bookmark, thumbnail hiện chú thích của phiên. Xem "Lời nhắn lần 9" ngay dưới.
+Cập nhật lần cuối: 13/11/2026 (tối) — **phiên cloud đã đóng; từ nay mọi việc làm trên máy Windows** (xem "Lời nhắn lần 11" ngay dưới). Trước đó: máy Windows chạy `fetch-tools.ps1` (Tesseract 5.4.0, SHA-256 đã ghim), sửa OCR trong Worker và cửa sổ Chạy lô, 36/37 kịch bản FlaUI đạt (lần 10); phiên cloud làm các mục của lần 9.
 
-## 0. Lời nhắn bàn giao (13/11/2026 tối, cập nhật lần 10 — máy Windows)
+## 0. Lời nhắn bàn giao (13/11/2026 tối, cập nhật lần 11 — phiên cloud đóng)
+
+**Phiên cloud đã đóng.** Chủ dự án quyết định từ nay chỉ làm trên máy Windows; không còn phiên cloud nào chạy trên nhánh này. Commit cuối của phiên cloud trước tệp này: `d3f610f` (kiểm quyền DocMDP); máy Windows đã gộp tới `f0fdacb`, CI của `f0fdacb` xanh.
+
+**Còn dở / chưa kiểm (việc của máy Windows):**
+1. **Chạy lại 37 kịch bản FlaUI** (`$env:PDFPRO_UI_TESTS=1`) trên code đã gộp lần 9 + lần 10 (lần 10 mới chạy `dotnet test` thường); kịch bản Office cần LibreOffice.
+2. **Kiểm tay các mục của lần 9** (chỉ có test ViewModel, chưa ai nhìn trên màn hình):
+   - biểu tượng `assets/icon/PdfPro.ico` ở thanh tác vụ, Explorer, khay hệ thống, lối tắt (và `pdfpro.exe`);
+   - `samples/links-annots.pdf`: ô trang hiện "i (1/6)", gõ "3" nhảy tới trang 4 (nhãn trước, số trang sau); xoay một trang vẫn còn nhãn, dời trang thì mất; lưu sau khi chỉ thêm chú thích vẫn giữ `/PageLabels`;
+   - chọn một dòng chữ → **Ctrl+B** → hộp thoại Bookmark có mục mới mang dòng đó, đúng trang/vị trí; không chọn gì → "Trang n";
+   - **kéo-thả** trong cây bookmark: thả lên giữa một mục (thành mục con), trên/dưới (cùng cấp), không thả được vào chính nó;
+   - chọn chữ → Liên kết → khung "Liên kết từ chữ đang chọn" → gõ "www.example.com" / email / số trang → Tạo liên kết → Áp dụng → bấm vào chữ trong Acrobat;
+   - tô sáng một đoạn → **thumbnail** hiện ngay (không có khung chọn trên thumbnail);
+   - Bates / Trộn biểu mẫu trên tài liệu có mật khẩu → báo "gỡ mật khẩu và lưu trước";
+   - **DocMDP**: ký thêm vào tệp được chứng nhận "không cho thay đổi" → bị từ chối với thông báo tiếng Việt; thêm ghi chú vào tệp chứng nhận P=2 rồi Lưu → được cảnh báo chữ ký mất hiệu lực (không lưu gia tăng). Chưa có tệp chứng nhận thật để thử — tạo bằng Acrobat ("Certify").
+3. **Phát hành thử** theo `docs/RELEASE.md` (chủ dự án chưa cho đẩy thẻ): `Setup.exe` trên máy sạch, tự cập nhật beta.1 → beta.2, "Mở bằng", gỡ cài đặt giữ `%LOCALAPPDATA%\PdfPro`; bộ cài giờ có biểu tượng (`vpk pack --icon`).
+4. **Chưa làm (tính năng):** Worker cho phần đo của công cụ scan, thao tác xuất (nén, chuyển đổi, sửa tệp hỏng…), chạy lô/hot folder và việc vẽ trang tệp lạ; "Gộp bằng PDF_Pro" trong menu chuột phải; tạo liên kết bằng cách **vẽ vùng** trên trang (đã có: từ chữ đang chọn); ảnh chụp màn hình cho README; **tạo** chữ ký chứng nhận, LTV, PAdES-B-T; điền biểu mẫu sau khi ký vẫn ghi toàn bộ; gỡ dấu trên tài liệu lớn chưa có tiến độ; xuất trang của tài liệu có bảo vệ ra tệp không bảo vệ; PDF/A chưa kiểm bằng veraPDF thật; PdfPig trích chữ trên trang "bom nội dung" có thể dùng ~5 GB (cần Worker).
+5. **Cách thử `XamlValueTests` ngoài Windows** (nếu cần): xem mục 6 — `XamlValueChecker` chạy được với `MetadataLoadContext` trên DLL WPF thật của gói `microsoft.windowsdesktop.app.runtime.win-x64`.
+
+### Lời nhắn lần 10 (13/11/2026 tối — máy Windows)
 
 - Công cụ đã có trên máy chủ dự án: `tools/fetch-tools.ps1` chạy được (qpdf 12.2.0; **Tesseract 5.4.0.20240606** vì UB Mannheim không có 5.5.0 trên GitHub; tessdata best/fast vie+eng+osd), **SHA-256 đã ghim** trong script. Chi tiết ở "Lời nhắn lần 8" bên dưới, mục **Công cụ**.
 - Với Tesseract, nghiệm thu lộ và đã sửa: **OCR trong Worker luôn bị coi là thất bại** (báo cáo JSON mất null → giờ `ParameterSchema.ReportJson`), **cửa sổ Chạy lô sập khi mở** (`ProgressBar` bind hai chiều vào `Fraction` chỉ đọc).
@@ -83,6 +102,7 @@ Sau lần 8 (máy Windows), phiên cloud làm tiếp — **chỉ App.Tests chạ
 - Mỗi lát: code → build Release 0 cảnh báo → test → cập nhật tệp này → commit → push → kiểm CI trên PR.
 - Trả lời chủ dự án bằng tiếng Việt; code, tên, comment bằng tiếng Anh.
 - **04/11/2026:** chủ dự án nhắc lại "xong lát nào commit push lát đó" — mỗi lát xong là commit **và push** ngay (máy Windows của chủ dự án cũng làm như vậy).
+- **13/11/2026:** chủ dự án quyết định **từ nay chỉ làm trên máy Windows**; phiên cloud đã bàn giao và đóng (xem mục 0, lần 11).
 
 ## 2. Git, PR và CI
 
