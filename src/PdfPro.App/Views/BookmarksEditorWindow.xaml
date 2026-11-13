@@ -3,6 +3,7 @@
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:dd="urn:gong-wpf-dragdrop"
   xmlns:loc="clr-namespace:PdfPro.App.Localization"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:structure="clr-namespace:PdfPro.App.ViewModels.Structure"
@@ -93,6 +94,10 @@
         BorderThickness="1"
         CornerRadius="4">
         <TreeView
+          dd:DragDrop.DropHandler="{Binding}"
+          dd:DragDrop.IsDragSource="True"
+          dd:DragDrop.IsDropTarget="True"
+          dd:DragDrop.UseDefaultDragAdorner="True"
           AutomationProperties.AutomationId="BookmarksTree"
           AutomationProperties.Name="{loc:Tr Bookmarks_Title}"
           ItemsSource="{Binding Items}"

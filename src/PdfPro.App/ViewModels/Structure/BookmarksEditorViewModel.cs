@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GongSolutions.Wpf.DragDrop;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
 using PdfPro.Core.Text;
@@ -84,7 +86,7 @@ public sealed record BookmarkColor(string? Value, string Label);
 /// removed — or made from the document's headings (by font size, or by patterns such as "^Chương [IVXLC]+" for level 1
 /// and "^Điều \d+" for level 2). Applied, the whole tree is written as one revision (one undoable step).
 /// </summary>
-public sealed partial class BookmarksEditorViewModel : ObservableObject
+public sealed partial class BookmarksEditorViewModel : ObservableObject, IDropTarget
 {
     private readonly string _input;
     private readonly ILogger _logger;
@@ -235,6 +237,80 @@ public sealed partial class BookmarksEditorViewModel : ObservableObject
 
         Items.Insert(index, item);
         Selected = item;
+    }
+
+    /// <summary>
+    /// Dragging a bookmark in the tree: dropped on the middle of another it becomes its last child, dropped above or
+    /// below it goes before or after it, at its level. Never into itself or one of its own children.
+    /// </summary>
+    void IDropTarget.DragOver(IDropInfo dropInfo)
+    {
+        ArgumentNullException.ThrowIfNull(dropInfo);
+        if (dropInfo.Data is BookmarkItemViewModel item && Placement(dropInfo) is { } place && !IsWithin(place.Parent, item))
+        {
+            dropInfo.Effects = DragDropEffects.Move;
+            dropInfo.DropTargetAdorner = place.Inside ? DropTargetAdorners.Highlight : DropTargetAdorners.Insert;
+        }
+        else
+        {
+            dropInfo.Effects = DragDropEffects.None;
+        }
+    }
+
+    void IDropTarget.Drop(IDropInfo dropInfo)
+    {
+        ArgumentNullException.ThrowIfNull(dropInfo);
+        if (dropInfo.Data is not BookmarkItemViewModel item || Placement(dropInfo) is not { } place || IsWithin(place.Parent, item))
+        {
+            return;
+        }
+
+        var from = Siblings(item);
+        var to = place.Parent?.Children ?? Items;
+        var index = place.Index;
+        var old = from.IndexOf(item);
+        if (ReferenceEquals(from, to) && old < index)
+        {
+            index--;
+        }
+
+        from.RemoveAt(old);
+        item.Parent = place.Parent;
+        to.Insert(Math.Clamp(index, 0, to.Count), item);
+        if (place.Parent is { } parent)
+        {
+            parent.IsExpanded = true;
+        }
+
+        Selected = item;
+    }
+
+    /// <summary>Where a drop puts the bookmark: under which parent (null = top level), at which index, and whether "into" an item.</summary>
+    private (BookmarkItemViewModel? Parent, int Index, bool Inside)? Placement(IDropInfo dropInfo)
+    {
+        if (dropInfo.TargetItem is BookmarkItemViewModel over)
+        {
+            return dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.TargetItemCenter)
+                ? (over, over.Children.Count, true)
+                : (over.Parent, dropInfo.InsertIndex, false);
+        }
+
+        // Below the last bookmark of the tree.
+        return ReferenceEquals(dropInfo.TargetCollection, Items) || dropInfo.TargetCollection is null ? (null, Items.Count, false) : null;
+    }
+
+    /// <summary>Whether <paramref name="place"/> is <paramref name="item"/> or lies under it.</summary>
+    private static bool IsWithin(BookmarkItemViewModel? place, BookmarkItemViewModel item)
+    {
+        for (var at = place; at is not null; at = at.Parent)
+        {
+            if (ReferenceEquals(at, item))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>"Thêm mục con": a bookmark under the one chosen.</summary>

@@ -1,5 +1,8 @@
 using System.Globalization;
+using System.Windows;
+using GongSolutions.Wpf.DragDrop;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using PdfPro.App.Resources;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels.Structure;
@@ -69,6 +72,44 @@ public sealed class StructureViewModelsTests : IDisposable
         var node = dialog.Result.ShouldNotBeNull().Bookmarks[2];
         node.Page.ShouldBe(2);
         node.Top.ShouldBe(512.5);
+    }
+
+    [Fact]
+    public void Bookmarks_AreDraggedBeforeAfterAndIntoOthers_NeverIntoThemselves()
+    {
+        var dialog = new BookmarksEditorViewModel(
+            "hồ sơ.pdf",
+            Samples.Basic,
+            6,
+            0,
+            [new BookmarkNode("A", 0), new BookmarkNode("B", 1, Children: [new BookmarkNode("B1", 1)]), new BookmarkNode("C", 2)],
+            NullLogger.Instance);
+        var target = (IDropTarget)dialog;
+        var (a, b, c) = (dialog.Items[0], dialog.Items[1], dialog.Items[2]);
+        var b1 = b.Children[0];
+
+        target.Drop(DropOf(c, a, RelativeInsertPosition.TargetItemCenter, 0, dialog.Items));
+        Tree(dialog).ShouldBe(["A", "  C", "B", "  B1"], "dropped on the middle of A: its child");
+        a.IsExpanded.ShouldBeTrue();
+
+        target.Drop(DropOf(a, b1, RelativeInsertPosition.AfterTargetItem, 1, b.Children));
+        Tree(dialog).ShouldBe(["B", "  B1", "  A", "    C"], "dropped below B1: after it, with its own child");
+
+        var intoItself = DropOf(b, b1, RelativeInsertPosition.TargetItemCenter, 0, b.Children);
+        target.DragOver(intoItself);
+        intoItself.Effects.ShouldBe(DragDropEffects.None);
+        target.Drop(intoItself);
+        Tree(dialog).ShouldBe(["B", "  B1", "  A", "    C"], "a bookmark never goes under itself");
+
+        var below = DropOf(c, null, RelativeInsertPosition.None, 1, dialog.Items);
+        target.DragOver(below);
+        below.Effects.ShouldBe(DragDropEffects.Move);
+        target.Drop(below);
+        Tree(dialog).ShouldBe(["B", "  B1", "  A", "C"], "below the tree: last at the top level");
+        dialog.Selected.ShouldBe(c);
+
+        dialog.ApplyCommand.Execute(null);
+        dialog.Result.ShouldNotBeNull().Bookmarks.Select(n => n.Title).ShouldBe(["B", "C"]);
     }
 
     [Fact]
@@ -169,4 +210,21 @@ public sealed class StructureViewModelsTests : IDisposable
 
     private static List<string> Flat(IReadOnlyList<BookmarkNode> nodes, int depth = 0)
         => [.. nodes.SelectMany(n => (IEnumerable<string>)[$"{depth}|{n.Title}|{n.Page}", .. Flat(n.Children ?? [], depth + 1)])];
+
+    private static IDropInfo DropOf(BookmarkItemViewModel item, BookmarkItemViewModel? over, RelativeInsertPosition position, int index, System.Collections.IEnumerable collection)
+    {
+        var info = Substitute.For<IDropInfo>();
+        info.Data.Returns(item);
+        info.TargetItem.Returns(over);
+        info.InsertPosition.Returns(position);
+        info.InsertIndex.Returns(index);
+        info.TargetCollection.Returns(collection);
+        return info;
+    }
+
+    /// <summary>The tree as indented titles.</summary>
+    private static List<string> Tree(BookmarksEditorViewModel dialog) => [.. Lines(dialog.Items, 0)];
+
+    private static IEnumerable<string> Lines(IEnumerable<BookmarkItemViewModel> items, int depth)
+        => items.SelectMany(i => (IEnumerable<string>)[new string(' ', depth * 2) + i.Title, .. Lines(i.Children, depth + 1)]);
 }
