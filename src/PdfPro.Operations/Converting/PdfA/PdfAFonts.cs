@@ -404,7 +404,10 @@ internal static class PdfAFonts
         return name.Length is 5 or 6 or 7 && name[0] == 'u' && int.TryParse(name.AsSpan(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var u) ? u : -1;
     }
 
-    /// <summary>The CIDSet of a subset TrueType CIDFont whose glyphs are its CIDs (PDF/A-1 6.3.5): one bit per glyph present.</summary>
+    /// <summary>
+    /// The CIDSet of a subset TrueType CIDFont whose glyphs are its CIDs (PDF/A-1 6.3.5): one bit for every glyph the
+    /// program holds — those without an outline too (a space has none), as veraPDF reads "present in the font program".
+    /// </summary>
     private static void AddCidSet(PdfDocument document, PdfDictionary descendant)
     {
         var name = Name(descendant, "/BaseFont") ?? string.Empty;
@@ -419,10 +422,7 @@ internal static class PdfAFonts
         var bits = new byte[(present.Length + 7) / 8];
         for (var glyph = 0; glyph < present.Length; glyph++)
         {
-            if (present[glyph])
-            {
-                bits[glyph / 8] |= (byte)(0x80 >> (glyph % 8));
-            }
+            bits[glyph / 8] |= (byte)(0x80 >> (glyph % 8));
         }
 
         var set = new PdfDictionary(document);

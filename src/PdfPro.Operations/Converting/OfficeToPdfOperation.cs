@@ -45,9 +45,11 @@ public sealed record OfficeConversionResult(string Output, int PageCount);
 /// convert.officeToPdf (<see cref="OperationKind.Export"/>, "Office sang PDF"): Word, Excel, PowerPoint, OpenDocument
 /// and RTF documents converted by LibreOffice, run as a separate process (<c>soffice --headless --convert-to pdf</c>,
 /// through <see cref="IExternalToolRunner"/>: no shell, a timeout, cancellable). Every run has a user profile of its own
-/// (<c>-env:UserInstallation</c>) in a working folder next to the output, so that several conversions run side by side
-/// and never touch the user's own LibreOffice settings; the document is copied there under a plain name, and the
-/// folder is removed afterwards. The PDF must read back with its pages, and is moved into place only then.
+/// (<c>-env:UserInstallation</c>), so that several conversions run side by side and never touch the user's own
+/// LibreOffice settings — in a short folder of the system's temporary folder: LibreOffice's profile nests deep, and
+/// past about 150 characters of profile path soffice crashes (0xC0000409) on Windows. The document is copied under a
+/// plain name into a working folder next to the output; both folders are removed afterwards. The PDF must read back
+/// with its pages, and is moved into place only then.
 /// </summary>
 public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOfficeLocator locator) : PdfOperation<OfficeToPdfParams>
 {
@@ -115,12 +117,13 @@ public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOffic
         var work = Path.Combine(Path.GetDirectoryName(output)!, $".pdfpro-office-{Guid.NewGuid():N}");
         var source = Path.Combine(work, "in", "document" + Path.GetExtension(input).ToLowerInvariant());
         var converted = Path.Combine(work, "out", "document.pdf");
+        var profileFolder = ProfileFolder();
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(source)!);
             Directory.CreateDirectory(Path.GetDirectoryName(converted)!);
             File.Copy(input, source);
-            var profile = new Uri(Path.Combine(work, "profile") + Path.DirectorySeparatorChar).AbsoluteUri;
+            var profile = new Uri(profileFolder + Path.DirectorySeparatorChar).AbsoluteUri;
             var request = new ExternalToolRequest(
                 soffice,
                 [
@@ -162,8 +165,15 @@ public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOffic
         finally
         {
             Remove(work);
+            Remove(profileFolder);
         }
     }
+
+    /// <summary>
+    /// A new folder for a conversion's LibreOffice profile, its path short wherever the output goes: soffice crashes on
+    /// Windows when its profile path is longer than about 150 characters (its own folders nest deep inside).
+    /// </summary>
+    internal static string ProfileFolder() => Path.Combine(Path.GetTempPath(), "pdfpro-lo-" + Guid.NewGuid().ToString("N")[..12]);
 
     /// <summary>
     /// Outside Windows LibreOffice turns paths and file URIs into bytes with the locale's character set: under a POSIX

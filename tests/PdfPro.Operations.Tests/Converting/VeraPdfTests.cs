@@ -2,6 +2,7 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using PdfPro.Core.ExternalTools;
 using PdfPro.Operations.Converting;
+using PdfPro.Operations.Tests.TestSupport;
 
 namespace PdfPro.Operations.Tests.Converting;
 
@@ -9,7 +10,7 @@ namespace PdfPro.Operations.Tests.Converting;
 /// veraPDF, when installed: Java run with veraPDF's jars and command-line class (no launcher script, no shell), the
 /// level asked, its XML report read. veraPDF itself is played by the tool runner.
 /// </summary>
-public sealed class VeraPdfTests
+public sealed class VeraPdfTests(PdfiumFixture pdfium)
 {
     private const string Folder = @"C:\Users\lan\verapdf";
     private const string Java = @"C:\Program Files\Java\jdk-21\bin\java.exe";
@@ -150,20 +151,40 @@ public sealed class VeraPdfTests
         }
     }
 
-    [Fact]
-    public async Task AnInstalledVeraPdf_ValidatesAConvertedFile()
+    /// <summary>
+    /// The real check (when veraPDF and Java are installed): every sample, made PDF/A-2b and PDF/A-1b by PDF_Pro, passes
+    /// veraPDF — text, scans, annotations and links, forms, a damaged-looking file, a rotated and cropped one.
+    /// </summary>
+    [Theory]
+    [InlineData("vanban-vi.pdf")]
+    [InlineData("basic-vi.pdf")]
+    [InlineData("scan-vi.pdf")]
+    [InlineData("links-annots.pdf")]
+    [InlineData("pii.pdf")]
+    [InlineData("rotated-cropbox.pdf")]
+    [InlineData("contract-v2.pdf")]
+    [InlineData("tables.pdf")]
+    public async Task AnInstalledVeraPdf_FindsTheConvertedSamplesCompliant(string sample)
     {
         Assert.SkipUnless(new VeraPdfLocator().Find() is { Java: not null }, "veraPDF and Java are not installed");
         using var temp = new TestSupport.TempDirectory();
-        var output = temp.Combine("pdfa.pdf");
-        using var gate = new PdfPro.Pdfium.PdfiumGate(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfPro.Pdfium.PdfiumGate>.Instance);
-        await new ToPdfAOperation(gate).ConvertAsync(TestSupport.Samples.VanBanVi, null, output, new ToPdfAParams(), Token);
         var runner = new PdfPro.Infrastructure.ExternalTools.ExternalToolRunner(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfPro.Infrastructure.ExternalTools.ExternalToolRunner>.Instance);
+        var failures = new List<string>();
+        foreach (var level in new[] { PdfALevel.A2B, PdfALevel.A1B })
+        {
+            var output = temp.Combine($"{level}.pdf");
+            await new ToPdfAOperation(pdfium.Gate).ConvertAsync(System.IO.Path.Combine(TestSupport.Samples.RepositoryRoot, "samples", sample), null, output, new ToPdfAParams(level), Token);
 
-        var validation = await new VeraPdfValidator(runner, new VeraPdfLocator()).ValidateAsync(output, PdfALevel.A2B, null, Token);
+            var validation = await new VeraPdfValidator(runner, new VeraPdfLocator()).ValidateAsync(output, level, null, Token);
 
-        validation.Failures.ShouldBeEmpty();
-        validation.IsCompliant.ShouldBeTrue();
+            failures.AddRange(validation.Failures.Select(f => $"{level}: {f}"));
+            if (!validation.IsCompliant && validation.Failures.Count == 0)
+            {
+                failures.Add($"{level}: not compliant, no rule named");
+            }
+        }
+
+        failures.ShouldBeEmpty();
     }
 
     private sealed class ValidationComparer : IEqualityComparer<PdfAValidation>

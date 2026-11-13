@@ -58,6 +58,10 @@ public sealed class OfficeToPdfOperationTests : IDisposable
         request.Arguments[request.Arguments.ToList().IndexOf("--convert-to") + 1].ShouldBe("pdf");
         var profile = request.Arguments.Single(a => a.StartsWith("-env:UserInstallation=file:///", StringComparison.Ordinal));
         _requests[1].Arguments.ShouldNotContain(profile, "each run has a profile of its own");
+        var profileFolder = new Uri(profile["-env:UserInstallation=".Length..]).LocalPath;
+        profileFolder.ShouldStartWith(Path.GetTempPath(), customMessage: "a short path: soffice crashes on long profile paths");
+        profileFolder.Length.ShouldBeLessThan(Path.GetTempPath().Length + 30);
+        Directory.Exists(profileFolder).ShouldBeFalse("the profile goes too");
         Path.GetFileName(request.Arguments[^1]).ShouldBe("document.docx", "a plain name: LibreOffice never sees the document's own path");
         request.WorkingDirectory.ShouldNotBeNull().ShouldStartWith(_temp.Path);
         Directory.GetFileSystemEntries(_temp.Path).Select(Path.GetFileName).Order(StringComparer.Ordinal).ShouldBe(new[] { "Báo cáo quý 4.docx", "Báo cáo quý 4.pdf", "lần hai.pdf" }.Order(StringComparer.Ordinal), "the working folders are gone");

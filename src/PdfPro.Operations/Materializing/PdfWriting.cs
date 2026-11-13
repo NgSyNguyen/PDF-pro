@@ -178,9 +178,22 @@ internal static partial class PdfWriting
 
         data += "stream".Length;
         data += text[data] == '\r' && text[data + 1] == '\n' ? 2 : 1;
-        if (stop > data)
+
+        // The end-of-line before "endstream" stays: it is not part of the data, and PDF/A (ISO 19005 6.1.7) wants both
+        // it and /Length to say where the data ends.
+        var dataEnd = stop;
+        if (dataEnd - 2 >= data && text[dataEnd - 2] == '\r' && text[dataEnd - 1] == '\n')
         {
-            Overwrite(file, start + offset + data, new string(' ', stop - data));
+            dataEnd -= 2;
+        }
+        else if (dataEnd - 1 >= data && text[dataEnd - 1] is '\n' or '\r')
+        {
+            dataEnd -= 1;
+        }
+
+        if (dataEnd > data)
+        {
+            Overwrite(file, start + offset + data, new string(' ', dataEnd - data));
         }
     }
 

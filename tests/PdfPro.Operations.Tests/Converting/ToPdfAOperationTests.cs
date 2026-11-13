@@ -338,8 +338,8 @@ public sealed class ToPdfAOperationTests(PdfiumFixture pdfium) : IDisposable
 
         CidSets(_temp.Combine("cid-2b.pdf")).ShouldBeEmpty("PDF/A-2 does not ask for it");
         var set = CidSets(_temp.Combine("cid-1b.pdf")).ShouldHaveSingleItem();
-        set[0].ShouldBe((byte)0x80, "glyph 0 is always there");
-        set.Sum(b => System.Numerics.BitOperations.PopCount(b)).ShouldBeGreaterThan(10, "a glyph for each letter drawn");
+        set[0].ShouldBe((byte)0xFF, "every glyph the program holds is listed, those without an outline too (veraPDF reads it so)");
+        set.Sum(b => System.Numerics.BitOperations.PopCount(b)).ShouldBeGreaterThan(10);
         Text(_temp.Combine("cid-1b.pdf")).ShouldContain("Xin chào Việt Nam");
     }
 

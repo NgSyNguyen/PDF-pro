@@ -216,9 +216,10 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         app.WaitForStatus(Format("OfficeToPdf_Done", folder), Long);
         output.WriteLine($"one Word document through LibreOffice: {elapsed.TotalSeconds:N1} s");
 
+        // PdfFile.PageTexts joins the letters without the spaces between words.
         var text = string.Join('\n', PdfFile.PageTexts(pdf)).Normalize(System.Text.NormalizationForm.FormC);
-        text.ShouldContain("Cộng hòa xã hội chủ nghĩa Việt Nam");
-        text.ShouldContain("Kính gửi Ủy ban nhân dân xã");
+        text.ShouldContain("CộnghòaxãhộichủnghĩaViệtNam");
+        text.ShouldContain("KínhgửiỦybannhândânxã");
         Directory.GetFileSystemEntries(folder).ShouldBe([pdf], "LibreOffice's working folder is gone");
     }
 
@@ -234,11 +235,25 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         app.Ribbon("convert", "convert.toPdfA");
         var dialog = app.WaitForWindow(Text("PdfA_Title"));
         app.Select("PdfAA2B", dialog);
+
+        // With veraPDF and Java installed, the copy is checked by veraPDF too, and passes.
+        var validated = app.IsEnabled("PdfAValidate", dialog);
+        if (validated)
+        {
+            app.SetChecked("PdfAValidate", true, dialog);
+        }
+
         app.Invoke("PdfAApply", dialog);
         var copy = Path.Combine(_folder.Documents, Format("PdfA_Name", "vanban-vi") + ".pdf");
         app.UseFileDialog(Text("Save_Dialog_Title"), copy);
         var done = app.WaitForWindow(Text("PdfA_Done_Title"), Long);
-        output.WriteLine(done.Name);
+        var report = string.Join('\n', done.FindAllDescendants().Select(e => e.Name));
+        output.WriteLine(report);
+        if (validated)
+        {
+            report.ShouldContain(Text("PdfA_VeraPdf_Pass")[..^"{0}.".Length], customMessage: "veraPDF finds the copy compliant");
+        }
+
         done.FindFirstDescendant(cf => cf.ByName(Text("Common_Close")))!.AsButton().Invoke();
 
         using (var pdf = PdfSharp.Pdf.IO.PdfReader.Open(copy, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import))
