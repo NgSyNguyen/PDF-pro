@@ -35,5 +35,5 @@ catch (Exception ex) when (ex is TimeoutException or IOException or Unauthorized
     return 3;
 }
 
-await new WorkerServer(pipe, catalog).ServeAsync();
+await new WorkerServer(pipe, catalog, [new PdfPro.Operations.Comparing.ComparisonMeasurement(gate)]).ServeAsync();
 return 0;

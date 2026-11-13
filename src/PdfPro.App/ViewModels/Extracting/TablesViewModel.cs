@@ -292,7 +292,7 @@ public sealed partial class TablesViewModel : ObservableObject, IDisposable, IAs
                     ProgressText = string.Format(CultureInfo.CurrentCulture, Strings.Tables_Progress, Math.Min(p.Completed + 1, p.Total), p.Total);
                 }
             });
-            var found = await TableExtractor.FindAsync(_source.Input, null, pages, progress, cancellationToken);
+            var found = await SearchAsync(new TableSearchParams(Pages: pages), (p, t) => TableExtractor.FindAsync(_source.Input, null, pages, p, t), progress, cancellationToken);
             Tables.Clear();
             foreach (var table in found)
             {
@@ -315,10 +315,10 @@ public sealed partial class TablesViewModel : ObservableObject, IDisposable, IAs
         {
             // Stopped by the user or by closing the window.
         }
-        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or DocumentPasswordException)
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or DocumentPasswordException or WorkerException)
         {
             _logger.LogWarning("Tables could not be looked for: {ErrorType}", ex.GetType().Name);
-            ErrorText = Strings.Tables_Error_Read;
+            ErrorText = Explain(ex);
         }
         finally
         {
@@ -328,6 +328,19 @@ public sealed partial class TablesViewModel : ObservableObject, IDisposable, IAs
     }
 
     private bool IsIdle() => !IsBusy && _closing is null;
+
+    /// <summary>The tables of pages or regions: in the worker when it is on (PdfPig and Tabula on a strange page).</summary>
+    private Task<IReadOnlyList<ExtractedTable>> SearchAsync(TableSearchParams search, Func<IProgress<OperationProgress>, CancellationToken, Task<IReadOnlyList<ExtractedTable>>> inApp, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+        => _services.Runner is { } runner
+            ? runner.MeasureAsync(_services.Tables, _source.Input, search, inApp, progress, cancellationToken)
+            : inApp(progress, cancellationToken);
+
+    private static string Explain(Exception error) => error switch
+    {
+        WorkerException { Failure: WorkerFailure.TimedOut } => Strings.Content_Error_WorkerTimedOut,
+        WorkerException => Strings.Content_Error_WorkerStopped,
+        _ => Strings.Tables_Error_Read,
+    };
 
     /// <summary>A box drawn on the page shown (device-independent pixels at 100 %) read as a table, replacing the table it covers.</summary>
     [RelayCommand(CanExecute = nameof(IsIdle))]
@@ -449,7 +462,7 @@ public sealed partial class TablesViewModel : ObservableObject, IDisposable, IAs
         IsBusy = true;
         try
         {
-            var read = await TableExtractor.ReadAsync(_source.Input, null, [region], null, CancellationToken.None);
+            var read = await SearchAsync(new TableSearchParams(Regions: [region]), (p, t) => TableExtractor.ReadAsync(_source.Input, null, [region], p, t), new Progress<OperationProgress>(), CancellationToken.None);
             if (read.Count == 0)
             {
                 StatusText = Strings.Tables_NoTableInArea;
@@ -472,10 +485,10 @@ public sealed partial class TablesViewModel : ObservableObject, IDisposable, IAs
             ExportCommand.NotifyCanExecuteChanged();
             SelectedTable = item;
         }
-        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or DocumentPasswordException)
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or DocumentPasswordException or WorkerException)
         {
             _logger.LogWarning("An area could not be read as a table: {ErrorType}", ex.GetType().Name);
-            ErrorText = Strings.Tables_Error_Read;
+            ErrorText = Explain(ex);
         }
         finally
         {

@@ -29,10 +29,16 @@ public interface IDocumentComparison
     Task<ComparisonResult> CompareAsync(ComparedFile oldFile, ComparedFile newFile, CompareSettings settings, IProgress<OperationProgress> progress, CancellationToken cancellationToken);
 }
 
-/// <summary>The text compared by PdfPig (<see cref="TextComparer"/>), then the paired pages drawn by PDFium (<see cref="VisualComparer"/>).</summary>
-public sealed class DocumentComparison(PdfiumGate gate) : IDocumentComparison
+/// <summary>
+/// The text compared by PdfPig (<see cref="TextComparer"/>), then the paired pages drawn by PDFium
+/// (<see cref="VisualComparer"/>) — in the worker process when it is on (<paramref name="runner"/>), so a "content bomb"
+/// page exhausts the worker, not the window.
+/// </summary>
+public sealed class DocumentComparison(PdfiumGate gate, Optimizing.IExportRunner? runner = null) : IDocumentComparison
 {
-    public const string TextStage = "Stage_CompareText";
+    public const string TextStage = ComparisonMeasurement.TextStage;
+
+    private readonly ComparisonMeasurement _measurement = new(gate);
 
     public async Task<ComparisonResult> CompareAsync(ComparedFile oldFile, ComparedFile newFile, CompareSettings settings, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
     {
@@ -40,21 +46,11 @@ public sealed class DocumentComparison(PdfiumGate gate) : IDocumentComparison
         ArgumentNullException.ThrowIfNull(newFile);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(progress);
-        progress.Report(new OperationProgress(0, 1, TextStage));
-        var text = await TextComparer.CompareAsync(
-            oldFile.Path,
-            oldFile.Password,
-            newFile.Path,
-            newFile.Password,
-            new TextCompareOptions(settings.IgnoreRunningLines, settings.IgnoreCase),
-            cancellationToken).ConfigureAwait(false);
-        if (!settings.Visual)
-        {
-            return new ComparisonResult(text, null);
-        }
-
-        var visual = await VisualComparer.CompareAsync(gate, oldFile.Path, oldFile.Password, newFile.Path, newFile.Password, text.Pages, new VisualCompareOptions(), progress, cancellationToken).ConfigureAwait(false);
-        return new ComparisonResult(text, visual);
+        var request = new CompareRequest(oldFile.Path, newFile.Path, oldFile.Password, newFile.Password, settings.IgnoreRunningLines, settings.IgnoreCase, settings.Visual);
+        var compared = runner is null
+            ? await _measurement.CompareAsync(request, progress, cancellationToken).ConfigureAwait(false)
+            : await runner.MeasureAsync(_measurement, oldFile.Path, request, (p, t) => _measurement.CompareAsync(request, p, t), progress, cancellationToken).ConfigureAwait(false);
+        return new ComparisonResult(compared.Text, compared.Visual);
     }
 }
 

@@ -194,7 +194,9 @@ internal static class AppHost
             sp.GetRequiredService<Operations.Scanning.DeskewOperation>(),
             sp.GetRequiredService<Operations.Scanning.CleanBordersOperation>(),
             sp.GetRequiredService<PdfPro.Core.Ocr.IOcrEngine>()));
-        services.AddSingleton<Services.Comparing.IDocumentComparison>(sp => new Services.Comparing.DocumentComparison(sp.GetRequiredService<PdfPro.Pdfium.PdfiumGate>()));
+        services.AddSingleton<Services.Comparing.IDocumentComparison>(sp => new Services.Comparing.DocumentComparison(
+            sp.GetRequiredService<PdfPro.Pdfium.PdfiumGate>(),
+            sp.GetRequiredService<Services.Optimizing.IExportRunner>()));
         services.AddSingleton(sp => new Services.Comparing.CompareServices(
             sp.GetRequiredService<Services.Comparing.IDocumentComparison>(),
             sp.GetRequiredService<PdfPro.Pdfium.IPdfDocumentLoader>(),
@@ -211,7 +213,8 @@ internal static class AppHost
             sp.GetRequiredService<Operations.Extracting.ExtractTablesOperation>(),
             sp.GetRequiredService<PdfPro.Pdfium.IPdfDocumentLoader>(),
             sp.GetRequiredService<Services.Rendering.IPageImageRenderer>(),
-            sp.GetRequiredService<Operations.Extracting.ExtractImagesOperation>()));
+            sp.GetRequiredService<Operations.Extracting.ExtractImagesOperation>(),
+            sp.GetRequiredService<Services.Optimizing.IExportRunner>()));
         services.AddSingleton<ICompressPreviews, CompressPreviews>();
         services.AddSingleton(sp => new OptimizingServices(
             sp.GetRequiredService<LinearizeOperation>(),

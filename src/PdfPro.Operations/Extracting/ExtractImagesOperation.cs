@@ -32,9 +32,17 @@ public sealed record ExtractImagesResult(IReadOnlyList<string> Files, int Duplic
 /// at its own resolution (masks are not applied). Files are named "name-003-1.jpg" (page, then order on the page),
 /// written under temporary names and renamed when all are done: a failure or a cancel leaves the folder as it was.
 /// </summary>
-public sealed class ExtractImagesOperation(PdfiumGate gate) : PdfOperation<ExtractImagesParams>
+public sealed class ExtractImagesOperation(PdfiumGate gate) : PdfOperation<ExtractImagesParams>, IExportOperation
 {
     public const string OperationId = "extract.images";
+
+    Type IExportOperation.ResultType => typeof(ExtractImagesResult);
+
+    async Task<object> IExportOperation.ExportAsync(ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(call);
+        return await WriteAsync(call.Input, call.Password, call.Output, call.BaseName, (ExtractImagesParams)parameters, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     public const string Stage = "Stage_ExtractImages";
 

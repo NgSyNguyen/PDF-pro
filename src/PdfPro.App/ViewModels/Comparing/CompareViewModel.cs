@@ -471,6 +471,11 @@ public sealed partial class CompareViewModel : ObservableObject, IDisposable, IA
         {
             // Stopped by the user or by closing the window.
         }
+        catch (Exception ex) when (ex is WorkerException { Failure: not WorkerFailure.NotStarted })
+        {
+            _logger.LogWarning("The worker failed a comparison: {Failure}", ((WorkerException)ex).Failure);
+            ErrorText = ((WorkerException)ex).Failure == WorkerFailure.TimedOut ? Strings.Content_Error_WorkerTimedOut : Strings.Content_Error_WorkerStopped;
+        }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or PdfDocumentException or DocumentPasswordException)
         {
             _logger.LogWarning("Two documents could not be compared: {ErrorType}", ex.GetType().Name);

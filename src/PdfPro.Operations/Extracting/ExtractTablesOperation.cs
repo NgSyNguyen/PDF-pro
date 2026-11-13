@@ -51,11 +51,24 @@ public sealed record ExtractTablesResult(IReadOnlyList<string> Files, IReadOnlyL
 /// written as one Excel workbook with a sheet per table, or one CSV file per table, for Excel to open with its Vietnamese
 /// intact. Files are written under temporary names and renamed when all are done.
 /// </summary>
-public sealed class ExtractTablesOperation : PdfOperation<ExtractTablesParams>
+public sealed class ExtractTablesOperation : PdfOperation<ExtractTablesParams>, IMeasuringOperation
 {
     public const string OperationId = "extract.tables";
 
     public override string Id => OperationId;
+
+    Type IMeasuringOperation.MeasureType => typeof(TableSearchParams);
+
+    Type IMeasuringOperation.MeasurementType => typeof(IReadOnlyList<ExtractedTable>);
+
+    /// <summary>Finds the tables of pages, or reads regions as tables (PdfPig and Tabula: in the worker when it is on).</summary>
+    async Task<object> IMeasuringOperation.MeasureAsync(string input, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        var search = parameters as TableSearchParams ?? throw new ArgumentException("Tables are looked for with TableSearchParams.", nameof(parameters));
+        return search.Regions is { Count: > 0 } regions
+            ? await TableExtractor.ReadAsync(input, null, regions, progress, cancellationToken).ConfigureAwait(false)
+            : await TableExtractor.FindAsync(input, null, search.Pages, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     public override OperationKind Kind => OperationKind.Export;
 

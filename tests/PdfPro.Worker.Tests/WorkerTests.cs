@@ -78,6 +78,23 @@ public sealed class WorkerTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task TablesAndComparisons_RunInTheWorker_AndWhatTheyFoundComesBack()
+    {
+        var search = JsonSerializer.Serialize(new PdfPro.Operations.Extracting.TableSearchParams(), ParameterSchema.Json);
+        var tablesJson = await _client.RunAsync(new WorkerRun(PdfPro.Operations.Extracting.ExtractTablesOperation.OperationId, search, Sample("tables.pdf"), string.Empty) { Measure = true }, new Recorded(), Token);
+        var tables = JsonSerializer.Deserialize<IReadOnlyList<PdfPro.Operations.Extracting.ExtractedTable>>(tablesJson.ShouldNotBeNull(), ParameterSchema.ReportJson).ShouldNotBeNull();
+        tables.Select(t => t.RowCount).ShouldBe([7, 9], "the ruled table and the one aligned by its columns");
+        tables[0].Rows[0].Count.ShouldBe(4);
+
+        var request = new PdfPro.Operations.Comparing.CompareRequest(Sample("contract-v1.pdf"), Sample("contract-v2.pdf"));
+        var comparedJson = await _client.RunAsync(new WorkerRun(PdfPro.Operations.Comparing.ComparisonMeasurement.OperationId, JsonSerializer.Serialize(request, ParameterSchema.Json), request.OldPath, string.Empty) { Measure = true }, new Recorded(), Token);
+        var compared = JsonSerializer.Deserialize<PdfPro.Operations.Comparing.ComparedDocuments>(comparedJson.ShouldNotBeNull(), ParameterSchema.ReportJson).ShouldNotBeNull();
+        compared.Text.Changes.Count.ShouldBe(4, "the four changes of the contract");
+        compared.Text.Changes.ShouldContain(c => c.NewText.Contains("120.000.000"));
+        compared.Visual.ShouldNotBeNull().Count.ShouldBe(compared.Text.Pages.Count);
+    }
+
+    [Fact]
     public async Task AnExportsError_ComesBackWithWhatTheAppExplains()
     {
         var notAPicture = Path.Combine(_folder, "ảnh.png");

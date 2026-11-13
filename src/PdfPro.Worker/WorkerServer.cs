@@ -16,7 +16,7 @@ namespace PdfPro.Worker;
 /// file, sending its progress and then its result (with the report of an <see cref="IReportingOperation"/>); "Cancel"
 /// stops a run. When the app closes the pipe, every run is cancelled and the worker ends.
 /// </summary>
-internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog)
+internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog, IReadOnlyList<IMeasuringOperation>? measurements = null)
 {
     /// <summary>Progress is sent at most this often (the last report of a stage always goes).</summary>
     private static readonly TimeSpan ProgressInterval = TimeSpan.FromMilliseconds(100);
@@ -141,7 +141,7 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog)
             throw new InvalidDataException("A measurement needs an operation, its parameters and an input.");
         }
 
-        if (catalog.Find(id) is not IMeasuringOperation operation)
+        if ((catalog.Find(id) as IMeasuringOperation ?? measurements?.FirstOrDefault(m => m.Id == id)) is not { } operation)
         {
             throw new NotSupportedException($"'{id}' does not measure in the worker.");
         }

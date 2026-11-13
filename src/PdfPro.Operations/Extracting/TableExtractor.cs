@@ -29,6 +29,11 @@ public enum TableMethod
 /// <summary>Where to read a table: a page (0-based) and an area of it in PDF space (null: find the tables of the page).</summary>
 public sealed record TableRegion(int Page, PdfRect? Area = null, TableMethod Method = TableMethod.Auto);
 
+/// <summary>What the tables dialog asks for: the tables of pages, or regions read as tables.</summary>
+/// <param name="Pages">The pages (0-based) to look on, or null for all.</param>
+/// <param name="Regions">Regions to read as tables instead (an area drawn on a page).</param>
+public sealed record TableSearchParams(IReadOnlyList<int>? Pages = null, IReadOnlyList<TableRegion>? Regions = null);
+
 /// <summary>A table read from a page: where it is (PDF space), how it was read, and its rows of cell texts (NFC).</summary>
 public sealed record ExtractedTable(int Page, PdfRect Box, TableMethod Method, IReadOnlyList<IReadOnlyList<string>> Rows)
 {

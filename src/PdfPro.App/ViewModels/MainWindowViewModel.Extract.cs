@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
 using PdfPro.App.ViewModels.Extracting;
+using PdfPro.Operations;
 using PdfPro.Operations.Extracting;
 
 namespace PdfPro.App.ViewModels;
@@ -103,7 +104,7 @@ public sealed partial class MainWindowViewModel
             ExtractImagesResult? result = null;
             var done = await RunOptimizingAsync(
                 Format(Strings.ExtractImages_Progress, document.FileName),
-                async (progress, token) => result = await images.WriteAsync(input, null, choice.OutputFolder, stem, choice.Parameters, progress, token),
+                async (progress, token) => result = await Exports.RunAsync<ExtractImagesResult>(images, new ExportCall([input], choice.OutputFolder, Name: stem), choice.Parameters, progress, token),
                 Format(Strings.ExtractImages_Done, choice.OutputFolder),
                 Strings.ExtractImages_Title);
             if (!done || result is null)
