@@ -23,6 +23,32 @@ public sealed class Phase11AcceptanceTests(ITestOutputHelper output) : IDisposab
         problems.ShouldBeEmpty("the application logged errors");
     }
 
+    /// <summary>
+    /// links-annots.pdf labels its pages "i", then 1–5: the page box shows the label before the page number, takes a
+    /// label typed into it, and keeps the labels when a page is turned (the pages keep their order).
+    /// </summary>
+    [Fact]
+    public void ThePageBox_ShowsThePageLabels_AndGoesToALabelTyped()
+    {
+        RequireEnabled();
+        var path = _folder.Copy("links-annots.pdf");
+        using var app = AppUnderTest.Start(_folder, path);
+        app.WaitForTab("links-annots.pdf", Long);
+        AppUnderTest.WaitUntil(() => Shown(app) == "i (1/6)", TimeSpan.FromSeconds(20), $"the label of page 1 (now '{Shown(app)}')");
+
+        app.Find("PageNumberBox").Focus();
+        app.SetText("PageNumberBox", "3");
+        app.PressEnter();
+        AppUnderTest.WaitUntil(() => Shown(app) == "3 (4/6)", TimeSpan.FromSeconds(20), $"the page labelled 3 (now '{Shown(app)}')");
+
+        app.Ribbon("page", "organize.rotateRight");
+        AppUnderTest.WaitUntil(() => app.DocumentTabs().Contains("links-annots.pdf *"), TimeSpan.FromSeconds(20), "the turn to be a change");
+        Shown(app).ShouldBe("3 (4/6)", "turning a page keeps the labels");
+
+        // The page box (the label) and the count beside it ("(4/6)").
+        static string Shown(AppUnderTest app) => $"{app.Text("PageNumberBox")} {app.Name("PageCountText")}";
+    }
+
     /// <summary>contract-v2 has a page inserted and three places changed: exactly four changes, and a report listing them.</summary>
     [Fact]
     public void TheTwoContracts_DifferByFourChanges_AndTheReportListsThem()

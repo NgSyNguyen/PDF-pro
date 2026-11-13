@@ -12,8 +12,8 @@ toàn trên máy, không gửi tài liệu hay dữ liệu sử dụng đi đâu
 | Màn hình chính, hướng dẫn nhanh | Tìm "cong hoa" thấy "CỘNG HÒA" |
 | ![Sắp xếp trang](docs/screenshots/organizer.png) | ![So sánh hai bản hợp đồng](docs/screenshots/compare.png) |
 | Sắp xếp trang (chọn "2-3") | So sánh hai bản hợp đồng: chữ và hình ảnh |
-
-![Tìm lệnh bằng Ctrl+K](docs/screenshots/palette.png)
+| ![Tô sáng và panel Bình luận](docs/screenshots/comments.png) | ![Tìm lệnh bằng Ctrl+K](docs/screenshots/palette.png) |
+| Tô sáng một kết quả tìm kiếm, panel Bình luận | Tìm lệnh bằng Ctrl+K, gõ không dấu |
 
 Ảnh chụp từ ứng dụng thật trên các tệp mẫu (dữ liệu giả) bằng `tests/PdfPro.App.UiTests/ReadmeScreenshots.cs`:
 `$env:PDFPRO_SCREENSHOTS=1; dotnet test --project tests\PdfPro.App.UiTests -c Release -- --filter-class "*ReadmeScreenshots"`.

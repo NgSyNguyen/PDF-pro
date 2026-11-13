@@ -73,6 +73,27 @@ public sealed class ReadmeScreenshots : IDisposable
             Take(window, "compare.png");
             app.Invoke("CompareClose", window);
         }
+
+        // A highlight of the session: on the page and in the comments panel.
+        var marked = _folder.Copy("vanban-vi.pdf", "Quyết định.pdf");
+
+        // The comments' author is a made-up name, never the Windows user taking the pictures.
+        Directory.CreateDirectory(_folder.DataDirectory);
+        File.WriteAllText(Path.Combine(_folder.DataDirectory, "settings.json"), """{ "schemaVersion": 1, "annotationAuthor": "Nguyễn Văn A" }""");
+        using (var app = AppUnderTest.Start(_folder, marked))
+        {
+            app.WaitForTab("Quyết định.pdf", Long);
+            app.Ribbon("annotate", "search.find");
+            app.SetText("SearchQuery", "quyet dinh");
+            app.Invoke("SearchRun");
+            AppUnderTest.WaitUntil(() => app.ItemCount("SearchResults") > 0, Long, "the search results");
+            app.Ribbon("annotate", "annotate.highlight");
+            app.WaitForTab("Quyết định.pdf *", Long);
+            app.Ribbon("annotate", "annotate.comments");
+            AppUnderTest.WaitUntil(() => app.ItemCount("CommentsList") == 1, Long, "the highlight in the comments list");
+            Take(app.Main, "comments.png");
+            app.Kill(); // the change is not kept: nothing comes after it in this data folder
+        }
     }
 
     private static void Take(FlaUI.Core.AutomationElements.AutomationElement window, string name)
