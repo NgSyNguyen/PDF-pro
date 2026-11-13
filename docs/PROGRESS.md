@@ -4,9 +4,22 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 13/11/2026 — **máy Windows chạy nghiệm thu P4–P13**: 34/37 kịch bản FlaUI đạt (3 cần Tesseract/LibreOffice), sửa hộp thoại Hình mờ sập khi mở (`InverseBool` không tồn tại), hướng dẫn nhanh không có trong cây UIA, 2 kỳ vọng test cũ. Xem "Lời nhắn lần 8" ngay dưới.
+Cập nhật lần cuối: 13/11/2026 (chiều, phiên cloud) — sau nghiệm thu trên Windows: kiểm tĩnh XAML, sửa 2 lỗi (nhãn trang mất khi lưu; Bates/Trộn biểu mẫu với tài liệu có mật khẩu), biểu tượng ứng dụng, nhãn trang trên viewer, Ctrl+B thêm bookmark, kéo-thả cây bookmark, thumbnail hiện chú thích của phiên. Xem "Lời nhắn lần 9" ngay dưới.
 
-## 0. Lời nhắn bàn giao (13/11/2026, cập nhật lần 8 — máy Windows)
+## 0. Lời nhắn bàn giao (13/11/2026, cập nhật lần 9 — phiên cloud)
+
+Sau lần 8 (máy Windows), phiên cloud làm tiếp — **chỉ App.Tests chạy trên CI**, mọi thứ khác chạy được ở cloud:
+- `949ee7e` **`XamlValueTests`**: đọc mọi XAML của App như WPF khi nạp view (enum/biểu tượng, bool, `x:Static`, `x:Type`, Setter/Trigger, tham số markup extension, thuộc tính gắn) — bắt loại lỗi "view sập khi mở" như Hình mờ. 54 tệp sạch.
+- `e611374` Bates / Trộn biểu mẫu **từ chối tài liệu có mật khẩu** như 12 lệnh ghi tệp khác (trước đó Bates của tài liệu đã sửa ghi bản sao **không** mật khẩu).
+- `802fecb` **biểu tượng** `assets/icon/PdfPro.ico` (PdfPro.exe, pdfpro.exe, bộ cài `vpk --icon`).
+- `98ffe91` **sửa mất nhãn trang khi lưu** sau khi chỉ xoay/chú thích/điền biểu mẫu (`PagePlan.KeepsPageOrder`).
+- `1e0daa4` + `2f20ee2` ô số trang hiện **nhãn trang** ("iii (3/20)"), gõ nhãn để nhảy trang.
+- `462da51` **Ctrl+B "Thêm bookmark"** ở chữ đang chọn / trang đang xem (ribbon Chỉnh sửa › Cấu trúc).
+- `6a9aeb1` **thumbnail hiện chú thích của phiên**; `99c2608` **kéo-thả trong cây bookmark**.
+
+**Kiểm tay trên Windows (mới):** biểu tượng ở thanh tác vụ/Explorer/khay; mở `samples/links-annots.pdf` → ô trang hiện "i (1/6)", gõ "3" nhảy tới trang 4; chọn một dòng chữ → Ctrl+B → mục mới mang dòng đó; kéo một bookmark lên giữa bookmark khác; tô sáng một đoạn → thumbnail hiện ngay.
+
+### Lời nhắn lần 8 (13/11/2026 — máy Windows)
 
 **Kết quả trên máy Windows (13/11/2026, `ce6264c` + sửa):** build Release 0 cảnh báo; `dotnet test --solution` **3024 test, 0 lỗi, 50 bỏ qua** (37 FlaUI khi không đặt `PDFPRO_UI_TESTS` + 13 cần qpdf/Tesseract/LibreOffice/veraPDF). `PDFPRO_UI_TESTS=1`: **34/37 kịch bản P3–P13 đạt** (lần đầu chạy tay P5–P8, P10–P13), 3 bỏ qua (Tesseract ×2, LibreOffice). Lần chạy đầu có 4 lỗi, đã sửa:
 - **Hộp thoại Hình mờ sập ngay khi mở** (từ P5 lát 8): `StampWindow.xaml` dùng `{StaticResource InverseBool}` không được định nghĩa → `XamlParseException`. Giờ dùng `WatermarkDialogViewModel.UsesPosition`. Test mới `XamlResourceTests` (App.Tests) quét mọi `{StaticResource …}` của App phải có `x:Key` hoặc `Resources.Add` trong code-behind.
@@ -16,7 +29,7 @@ Cập nhật lần cuối: 13/11/2026 — **máy Windows chạy nghiệm thu P4�
 
 **Còn trên Windows:** `tools/fetch-tools.ps1` (đang làm), ghim SHA-256; chạy test cần Tesseract/qpdf; phát hành thử (chủ dự án **chưa** cho đẩy thẻ — để sau).
 
-### 0. Lời nhắn bàn giao (12/11/2026, cập nhật lần 7)
+### Lời nhắn lần 7 (12/11/2026)
 
 **Phase 13 xong về code** (lát 1–5): tệp độc hại + fuzz hằng đêm (`PdfSafeReader`, trần giải nén), benchmark (`benchmarks/PdfPro.Benchmarks`, nén nhanh hơn 22 %), tiến trình Worker (OCR/xóa vĩnh viễn/làm sạch/làm thẳng/xóa viền chạy tách, Job Object), trải nghiệm & trợ năng (F1, hướng dẫn nhanh, Giới thiệu, sao chép thông tin lỗi, tương phản cao), phát hành (Velopack, `release.yml`, `licenses/`, CHANGELOG, README, `docs/RELEASE.md`). Package mới: **BenchmarkDotNet 0.15.8** (chỉ khi phát triển), **Velopack 1.2.161** (MIT).
 
