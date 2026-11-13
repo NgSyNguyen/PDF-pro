@@ -2471,4 +2471,7 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Safety_OpenAnyway" xml:space="preserve"><value>Open anyway</value></data>
   <data name="Safety_DontOpen" xml:space="preserve"><value>Don't open</value></data>
   <data name="Stage_Probe" xml:space="preserve"><value>Trying each page</value></data>
+  <data name="Redaction_OcrOffer" xml:space="preserve"><value>The pages that became pictures have no text to search or copy any more. Recognise their text again (OCR)? What was removed is painted over and cannot come back.</value></data>
+  <data name="Redaction_OcrRun" xml:space="preserve"><value>Recognise text…</value></data>
+  <data name="Redaction_OcrLater" xml:space="preserve"><value>Not now</value></data>
 </root>

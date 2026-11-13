@@ -85,6 +85,28 @@ public sealed class OcrCommandTests : IDisposable
     }
 
     [Fact]
+    public async Task PagesARedactionTurnedIntoPictures_AreOfferedToOcr_PreselectedInItsDialog()
+    {
+        _engine.Describe().Returns(Installed);
+        var tab = Factory(_engine).Create(await _fixture.CreateAsync(FakePdfDocument.WithPages(4)));
+        _messages.AskAsync(Strings.Redaction_Done_Title, Arg.Any<string>(), Strings.Redaction_OcrRun, Arg.Is<string?>(s => s == null), Strings.Redaction_OcrLater).Returns(DialogChoice.Primary);
+        OcrViewModel? shown = null;
+        _dialogs.ShowOcr(Arg.Any<OcrViewModel>()).Returns(call =>
+        {
+            shown = call.Arg<OcrViewModel>();
+            return false;
+        });
+
+        await tab.ReportRedactionAsync(new PdfPro.Operations.Security.RedactionReport(2, [2, 4], [2, 4], 0, 0, 0, [], false, 0), PdfPro.Operations.Security.RedactionMode.Raster);
+
+        shown.ShouldNotBeNull().Target.IsSelected.ShouldBeTrue("the pages that became pictures are proposed");
+        shown.Target.RangeText.ShouldBe(PdfPro.Core.Organizing.PageRanges.Format([1, 3]));
+
+        await tab.ReportRedactionAsync(new PdfPro.Operations.Security.RedactionReport(1, [1], [], 0, 0, 0, [], false, 0), PdfPro.Operations.Security.RedactionMode.Vector);
+        await _messages.Received(1).ShowInfoAsync(Strings.Redaction_Done_Title, Arg.Any<string>());
+    }
+
+    [Fact]
     public void Failures_AreExplained()
     {
         DocumentTabViewModel.OcrFailureMessage(new OcrException(OcrFailure.NotInstalled)).ShouldBe(Strings.Ocr_Error_NotInstalled);

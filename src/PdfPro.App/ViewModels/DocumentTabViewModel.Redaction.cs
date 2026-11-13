@@ -99,10 +99,31 @@ public sealed partial class DocumentTabViewModel
                 Redaction.ClearAll();
                 if (RedactOperation.ReportOf(parameters) is { } report)
                 {
-                    _ = _messages.ShowInfoAsync(Strings.Redaction_Done_Title, Describe(report, parameters.Mode));
+                    _ = ReportRedactionAsync(report, parameters.Mode);
                 }
             }
         });
+    }
+
+    /// <summary>
+    /// The report of a redaction; when pages became pictures (their text gone, searchable no more) and OCR is installed,
+    /// it offers to recognise those pages again — what was removed is painted over, so it cannot come back.
+    /// </summary>
+    internal async Task ReportRedactionAsync(RedactionReport report, RedactionMode mode)
+    {
+        var text = Describe(report, mode);
+        if (report.PicturePages.Count > 0 && _services.Ocr is { } ocr && ocr.Engine.Describe() is { } engine && CanRecognize())
+        {
+            var choice = await _messages.AskAsync(Strings.Redaction_Done_Title, text + Environment.NewLine + Environment.NewLine + Strings.Redaction_OcrOffer, Strings.Redaction_OcrRun, null, Strings.Redaction_OcrLater);
+            if (choice == Services.DialogChoice.Primary)
+            {
+                await RecognizeAsync(ocr, engine, [.. report.PicturePages.Select(p => p - 1)]);
+            }
+
+            return;
+        }
+
+        await _messages.ShowInfoAsync(Strings.Redaction_Done_Title, text);
     }
 
     /// <summary>The report of a redaction for the user: what went, and which pages are now pictures.</summary>

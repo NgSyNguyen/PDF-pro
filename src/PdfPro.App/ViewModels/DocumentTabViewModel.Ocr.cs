@@ -36,8 +36,14 @@ public sealed partial class DocumentTabViewModel
             return;
         }
 
-        var settings = ocr.Settings?.Current;
         IReadOnlyList<int> selected = IsOrganizing && Organizer is { } organizer ? organizer.SelectedIndices : [];
+        await RecognizeAsync(ocr, engine, selected);
+    }
+
+    /// <summary>The OCR dialog with <paramref name="selected"/> (0-based) proposed, then the run as one content change.</summary>
+    private async Task RecognizeAsync(Services.Ocr.OcrServices ocr, OcrEngineInfo engine, IReadOnlyList<int> selected)
+    {
+        var settings = ocr.Settings?.Current;
         var dialog = new OcrViewModel(FileName, Viewer.PageCount, selected, engine, settings?.OcrLanguages ?? [], settings?.OcrParallelism ?? 0);
         if (!_services.PageDialogs.ShowOcr(dialog) || dialog.Result is not { } choice)
         {
