@@ -6,8 +6,16 @@ namespace PdfPro.Infrastructure.Instances;
 
 /// <summary>Command line of PdfPro.exe: files to open ("PdfPro.exe a.pdf b.pdf") and internal options.</summary>
 /// <param name="Background">"--background": started with Windows for the hot folder — the window starts minimized.</param>
-public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForProcessId, bool Background = false)
+/// <param name="Merge">"--merge": the files are to be merged (Explorer's "Gộp bằng PDF_Pro"), not opened.</param>
+public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForProcessId, bool Background = false, bool Merge = false)
 {
+    /// <summary>
+    /// "--merge": Explorer's "Gộp bằng PDF_Pro" starts PdfPro.exe once per selected file with it; the running window
+    /// gathers the files and merges them together. Also the first item of such a hand-over message (a path never
+    /// starts with "--": they are made absolute).
+    /// </summary>
+    public const string MergeOption = "--merge";
+
     /// <summary>"--background": started with Windows to watch the hot folder.</summary>
     public const string BackgroundOption = "--background";
 
@@ -26,6 +34,7 @@ public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForP
         var files = new List<string>();
         int? waitFor = null;
         var background = false;
+        var merge = false;
         for (var i = 0; i < args.Count; i++)
         {
             var arg = args[i];
@@ -46,6 +55,7 @@ public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForP
                 }
 
                 background |= string.Equals(arg, BackgroundOption, StringComparison.OrdinalIgnoreCase);
+                merge |= string.Equals(arg, MergeOption, StringComparison.OrdinalIgnoreCase);
                 continue;
             }
 
@@ -55,7 +65,22 @@ public sealed record StartupArguments(IReadOnlyList<string> Files, int? WaitForP
             }
         }
 
-        return new StartupArguments(files, waitFor, background);
+        return new StartupArguments(files, waitFor, background, merge);
+    }
+
+    /// <summary>
+    /// What a later launch hands to the running window: its files, after <see cref="MergeOption"/> when they are to be
+    /// merged.
+    /// </summary>
+    public IReadOnlyList<string> HandOverMessage() => Merge ? [MergeOption, .. Files] : Files;
+
+    /// <summary>Reads a hand-over message: whether its files are to be merged, and the files.</summary>
+    public static (bool Merge, IReadOnlyList<string> Files) ReadHandOver(IReadOnlyList<string> message)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        return message.Count > 0 && string.Equals(message[0], MergeOption, StringComparison.Ordinal)
+            ? (true, message.Skip(1).ToList())
+            : (false, message);
     }
 
     /// <summary>

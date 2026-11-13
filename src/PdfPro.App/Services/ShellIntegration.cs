@@ -11,7 +11,7 @@ public interface IShellIntegration
     /// <summary>Whether "Mở bằng PDF_Pro" is in the right-click menu of PDF files.</summary>
     bool HasContextMenu { get; }
 
-    /// <summary>Adds or removes "Mở bằng PDF_Pro" in the right-click menu of PDF files.</summary>
+    /// <summary>Adds or removes "Mở bằng PDF_Pro" and "Gộp bằng PDF_Pro" in the right-click menu of PDF files.</summary>
     void SetContextMenu(bool enabled);
 }
 
@@ -26,6 +26,12 @@ public sealed class ShellIntegration : IShellIntegration
     private const string Classes = @"Software\Classes";
     private const string ProgId = "PdfPro.Document";
     private const string ContextVerb = @"Software\Classes\SystemFileAssociations\.pdf\shell\PdfPro.Open";
+
+    /// <summary>
+    /// "Gộp bằng PDF_Pro" on the selected PDF files. Explorer runs a verb's command once per selected file; "Player"
+    /// lifts its limit of 15 files. Each launch hands its file to the running window, which merges them together.
+    /// </summary>
+    private const string MergeVerb = @"Software\Classes\SystemFileAssociations\.pdf\shell\PdfPro.Merge";
     private const int AssociationsChanged = 0x08000000;
 
     public bool HasContextMenu
@@ -46,14 +52,24 @@ public sealed class ShellIntegration : IShellIntegration
             verb.SetValue("Icon", $"\"{Program}\",0");
             using var command = verb.CreateSubKey("command");
             command.SetValue(null, $"\"{Program}\" \"%1\"");
+            using var merge = Registry.CurrentUser.CreateSubKey(MergeVerb);
+            merge.SetValue("MUIVerb", Strings.Shell_MergeWithPdfPro);
+            merge.SetValue("Icon", $"\"{Program}\",0");
+            merge.SetValue("MultiSelectModel", "Player");
+            using var mergeCommand = merge.CreateSubKey("command");
+            mergeCommand.SetValue(null, MergeCommand(Program));
         }
         else
         {
             Registry.CurrentUser.DeleteSubKeyTree(ContextVerb, throwOnMissingSubKey: false);
+            Registry.CurrentUser.DeleteSubKeyTree(MergeVerb, throwOnMissingSubKey: false);
         }
 
         Notify();
     }
+
+    /// <summary>The command of "Gộp bằng PDF_Pro": one selected file after the merge option.</summary>
+    internal static string MergeCommand(string program) => $"\"{program}\" {Infrastructure.Instances.StartupArguments.MergeOption} \"%1\"";
 
     /// <summary>The program Explorer starts: PdfPro.exe of this installation.</summary>
     private static string Program => Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "PdfPro.exe");
@@ -97,6 +113,7 @@ public sealed class ShellIntegration : IShellIntegration
             }
 
             Registry.CurrentUser.DeleteSubKeyTree(ContextVerb, throwOnMissingSubKey: false);
+            Registry.CurrentUser.DeleteSubKeyTree(MergeVerb, throwOnMissingSubKey: false);
             Notify();
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)

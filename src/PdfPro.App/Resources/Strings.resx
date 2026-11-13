@@ -2448,4 +2448,5 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Status_Cancelled" xml:space="preserve"><value>Đã hủy</value></data>
   <data name="Stage_ScanStamps" xml:space="preserve"><value>Đang tìm dấu đã thêm</value></data>
   <data name="Save_Error_SignaturesWouldBreak" xml:space="preserve"><value>Không thể lưu các thay đổi vào “{0}” mà vẫn giữ chữ ký số (ví dụ một trường đang bị chữ ký khóa). Ghi đè sẽ làm mọi chữ ký của tệp mất hiệu lực — hãy lưu thành tệp khác nếu cần giữ bản đã ký.</value></data>
+  <data name="Shell_MergeWithPdfPro" xml:space="preserve"><value>Gộp bằng PDF_Pro</value></data>
 </root>

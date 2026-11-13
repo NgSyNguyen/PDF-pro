@@ -275,7 +275,25 @@ public sealed partial class MainWindowViewModel
             }
         }
 
-        var dialog = new MergeViewModel(_merge, _fileDialogs, initial, suggested);
+        await RunMergeAsync(new MergeViewModel(_merge, _fileDialogs, initial, suggested));
+    }
+
+    /// <summary>
+    /// Explorer's "Gộp bằng PDF_Pro": the merge dialog with these files already in it (read, asking for passwords as
+    /// needed), then the merge as from the ribbon. The window comes to the front first.
+    /// </summary>
+    internal async Task MergeFilesAsync(IReadOnlyList<string> files)
+    {
+        ArgumentNullException.ThrowIfNull(files);
+        await WaitForBackgroundWorkAsync(cancelPrint: false);
+        var dialog = new MergeViewModel(_merge, _fileDialogs, [], null);
+        await dialog.AddPathsAsync(files);
+        await RunMergeAsync(dialog);
+    }
+
+    /// <summary>The merge dialog, then the merge in the background with progress and cancel; the result opens when asked.</summary>
+    private async Task RunMergeAsync(MergeViewModel dialog)
+    {
         if (!_pageDialogs.ShowMerge(dialog) || dialog.Result is not { } result)
         {
             return;

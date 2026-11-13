@@ -35,6 +35,26 @@ public sealed partial class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task MergeFiles_FromExplorer_OpenTheDialogWithThem_InTheirOrder()
+    {
+        var viewModel = Create(isDebugBuild: false);
+        await PrepareMergeAsync();
+        var first = _fixture.CreateFolder("trang 1.pdf");
+        var second = _fixture.CreateFolder("trang 2.pdf");
+        string[]? listed = null;
+        _pageDialogs.ShowMerge(Arg.Any<MergeViewModel>()).Returns(call =>
+        {
+            listed = [.. call.Arg<MergeViewModel>().Items.Select(i => i.Source.Path)];
+            return false;
+        });
+
+        await viewModel.MergeFilesAsync([first, second]);
+
+        listed.ShouldBe([first, second], "the files Explorer gave, already in the dialog");
+        await _merge.DidNotReceiveWithAnyArgs().WriteAsync(default!, default!, default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
     public async Task Merge_ThatCannotWrite_Explains()
     {
         var viewModel = Create(isDebugBuild: false);

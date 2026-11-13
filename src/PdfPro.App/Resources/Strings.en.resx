@@ -2448,4 +2448,5 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Status_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
   <data name="Stage_ScanStamps" xml:space="preserve"><value>Looking for added stamps</value></data>
   <data name="Save_Error_SignaturesWouldBreak" xml:space="preserve"><value>The changes cannot be saved into “{0}” while keeping its digital signatures (a field a signature locks, for example). Overwriting it would make every signature of the file invalid — save as another file to keep the signed one.</value></data>
+  <data name="Shell_MergeWithPdfPro" xml:space="preserve"><value>Merge with PDF_Pro</value></data>
 </root>

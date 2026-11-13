@@ -243,6 +243,9 @@ internal static class AppHost
         services.AddSingleton<IRecoveryService, RecoveryService>();
 
         services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton(sp => new MergeRequestCollector(
+            sp.GetRequiredService<IDebouncerFactory>(),
+            files => sp.GetRequiredService<MainWindowViewModel>().MergeFilesAsync(files)));
         services.AddSingleton<IExitGuard>(sp => sp.GetRequiredService<MainWindowViewModel>());
         services.AddSingleton<MainWindow>();
         services.AddTransient<SettingsViewModel>();
