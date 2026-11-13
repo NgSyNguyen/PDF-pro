@@ -179,8 +179,10 @@ public sealed partial class MainWindowViewModelTests
         Command(viewModel, "security.verify").Command.Execute(null);
 
         viewModel.Sidebar.SelectedPanel.ShouldBe(SidebarPanel.Signatures);
+        viewModel.Sidebar.Title.ShouldBe(Strings.Sidebar_Signatures, "the switch shows icons: the open panel is named below it");
         tab.Signatures.IsActive.ShouldBeTrue();
         viewModel.Sidebar.SelectedPanel = SidebarPanel.Thumbnails;
+        viewModel.Sidebar.Title.ShouldBe(Strings.Sidebar_Thumbnails);
         tab.Signatures.IsActive.ShouldBeFalse();
     }
 

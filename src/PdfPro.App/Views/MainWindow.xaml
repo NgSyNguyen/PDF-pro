@@ -164,7 +164,17 @@
       <TabControl.ContentTemplate>
         <DataTemplate DataType="{x:Type vm:RibbonTabViewModel}">
           <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <!-- On a narrow window the scroll bar is drawn over the content: room is left for it below the group names. -->
             <ItemsControl Focusable="False" ItemsSource="{Binding Groups}">
+              <ItemsControl.Style>
+                <Style TargetType="ItemsControl">
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding ComputedHorizontalScrollBarVisibility, RelativeSource={RelativeSource AncestorType=ScrollViewer}}" Value="Visible">
+                      <Setter Property="Margin" Value="0,0,0,14" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </ItemsControl.Style>
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                   <StackPanel Orientation="Horizontal" />

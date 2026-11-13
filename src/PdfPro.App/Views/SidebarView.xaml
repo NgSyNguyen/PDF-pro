@@ -135,7 +135,7 @@
     BorderThickness="1"
     CornerRadius="8">
     <DockPanel>
-      <!-- Segmented switch; icon above label so both fit the narrowest sidebar. -->
+      <!-- Segmented switch: icons (named by their tooltip and to screen readers); the open panel's name is below. -->
       <UniformGrid
         Margin="8"
         Columns="5"
@@ -143,110 +143,77 @@
         DockPanel.Dock="Top">
         <RadioButton
           Margin="0,0,2,0"
-          Padding="4,6"
+          Padding="4,8"
           HorizontalAlignment="Stretch"
           HorizontalContentAlignment="Center"
           AutomationProperties.AutomationId="SidebarThumbnails"
           AutomationProperties.Name="{loc:Tr Sidebar_Thumbnails}"
           GroupName="SidebarPanel"
           IsChecked="{Binding IsThumbnailsSelected}"
-          Style="{StaticResource {x:Type ToggleButton}}">
-          <StackPanel>
-            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="GridDots24" />
-            <TextBlock
-              Margin="0,2,0,0"
-              HorizontalAlignment="Center"
-              FontSize="12"
-              Text="{loc:Tr Sidebar_Thumbnails}"
-              TextTrimming="CharacterEllipsis"
-              ToolTip="{loc:Tr Sidebar_Thumbnails}" />
-          </StackPanel>
+          Style="{StaticResource {x:Type ToggleButton}}"
+          ToolTip="{loc:Tr Sidebar_Thumbnails}">
+          <ui:SymbolIcon HorizontalAlignment="Center" Symbol="GridDots24" />
         </RadioButton>
         <RadioButton
           Margin="2,0,0,0"
-          Padding="4,6"
+          Padding="4,8"
           HorizontalAlignment="Stretch"
           HorizontalContentAlignment="Center"
           AutomationProperties.AutomationId="SidebarBookmarks"
           AutomationProperties.Name="{loc:Tr Sidebar_Bookmarks}"
           GroupName="SidebarPanel"
           IsChecked="{Binding IsBookmarksSelected}"
-          Style="{StaticResource {x:Type ToggleButton}}">
-          <StackPanel>
-            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Bookmark24" />
-            <TextBlock
-              Margin="0,2,0,0"
-              HorizontalAlignment="Center"
-              FontSize="12"
-              Text="{loc:Tr Sidebar_Bookmarks}"
-              TextTrimming="CharacterEllipsis"
-              ToolTip="{loc:Tr Sidebar_Bookmarks}" />
-          </StackPanel>
+          Style="{StaticResource {x:Type ToggleButton}}"
+          ToolTip="{loc:Tr Sidebar_Bookmarks}">
+          <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Bookmark24" />
         </RadioButton>
         <RadioButton
           Margin="2,0,0,0"
-          Padding="4,6"
+          Padding="4,8"
           HorizontalAlignment="Stretch"
           HorizontalContentAlignment="Center"
           AutomationProperties.AutomationId="SidebarSearch"
           AutomationProperties.Name="{loc:Tr Sidebar_Search}"
           GroupName="SidebarPanel"
           IsChecked="{Binding IsSearchSelected}"
-          Style="{StaticResource {x:Type ToggleButton}}">
-          <StackPanel>
-            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Search24" />
-            <TextBlock
-              Margin="0,2,0,0"
-              HorizontalAlignment="Center"
-              FontSize="12"
-              Text="{loc:Tr Sidebar_Search}"
-              TextTrimming="CharacterEllipsis"
-              ToolTip="{loc:Tr Sidebar_Search}" />
-          </StackPanel>
+          Style="{StaticResource {x:Type ToggleButton}}"
+          ToolTip="{loc:Tr Sidebar_Search}">
+          <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Search24" />
         </RadioButton>
         <RadioButton
           Margin="2,0,0,0"
-          Padding="4,6"
+          Padding="4,8"
           HorizontalAlignment="Stretch"
           HorizontalContentAlignment="Center"
           AutomationProperties.AutomationId="SidebarComments"
           AutomationProperties.Name="{loc:Tr Sidebar_Comments}"
           GroupName="SidebarPanel"
           IsChecked="{Binding IsCommentsSelected}"
-          Style="{StaticResource {x:Type ToggleButton}}">
-          <StackPanel>
-            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="CommentMultiple24" />
-            <TextBlock
-              Margin="0,2,0,0"
-              HorizontalAlignment="Center"
-              FontSize="12"
-              Text="{loc:Tr Sidebar_Comments}"
-              TextTrimming="CharacterEllipsis"
-              ToolTip="{loc:Tr Sidebar_Comments}" />
-          </StackPanel>
+          Style="{StaticResource {x:Type ToggleButton}}"
+          ToolTip="{loc:Tr Sidebar_Comments}">
+          <ui:SymbolIcon HorizontalAlignment="Center" Symbol="CommentMultiple24" />
         </RadioButton>
         <RadioButton
           Margin="2,0,0,0"
-          Padding="4,6"
+          Padding="4,8"
           HorizontalAlignment="Stretch"
           HorizontalContentAlignment="Center"
           AutomationProperties.AutomationId="SidebarSignatures"
           AutomationProperties.Name="{loc:Tr Sidebar_Signatures}"
           GroupName="SidebarPanel"
           IsChecked="{Binding IsSignaturesSelected}"
-          Style="{StaticResource {x:Type ToggleButton}}">
-          <StackPanel>
-            <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Certificate24" />
-            <TextBlock
-              Margin="0,2,0,0"
-              HorizontalAlignment="Center"
-              FontSize="12"
-              Text="{loc:Tr Sidebar_Signatures}"
-              TextTrimming="CharacterEllipsis"
-              ToolTip="{loc:Tr Sidebar_Signatures}" />
-          </StackPanel>
+          Style="{StaticResource {x:Type ToggleButton}}"
+          ToolTip="{loc:Tr Sidebar_Signatures}">
+          <ui:SymbolIcon HorizontalAlignment="Center" Symbol="Certificate24" />
         </RadioButton>
       </UniformGrid>
+      <TextBlock
+        Margin="12,0,12,4"
+        AutomationProperties.AutomationId="SidebarTitle"
+        DockPanel.Dock="Top"
+        FontWeight="SemiBold"
+        Text="{Binding Sidebar.Title}"
+        TextTrimming="CharacterEllipsis" />
 
       <Grid>
         <!-- Thumbnails -->

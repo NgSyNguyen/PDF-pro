@@ -4,7 +4,19 @@
 sửa nội dung, biểu mẫu, bảo mật và ký số, nén và chuyển đổi, OCR tiếng Việt, so sánh, workflow và dòng lệnh — chạy hoàn
 toàn trên máy, không gửi tài liệu hay dữ liệu sử dụng đi đâu.
 
-> Ảnh chụp màn hình: sẽ bổ sung trong `docs/screenshots/`.
+![Trình xem với văn bản tiếng Việt](docs/screenshots/viewer.png)
+
+| | |
+|---|---|
+| ![Màn hình chính và hướng dẫn nhanh](docs/screenshots/home.png) | ![Tìm kiếm không cần gõ dấu](docs/screenshots/search.png) |
+| Màn hình chính, hướng dẫn nhanh | Tìm "cong hoa" thấy "CỘNG HÒA" |
+| ![Sắp xếp trang](docs/screenshots/organizer.png) | ![So sánh hai bản hợp đồng](docs/screenshots/compare.png) |
+| Sắp xếp trang (chọn "2-3") | So sánh hai bản hợp đồng: chữ và hình ảnh |
+
+![Tìm lệnh bằng Ctrl+K](docs/screenshots/palette.png)
+
+Ảnh chụp từ ứng dụng thật trên các tệp mẫu (dữ liệu giả) bằng `tests/PdfPro.App.UiTests/ReadmeScreenshots.cs`:
+`$env:PDFPRO_SCREENSHOTS=1; dotnet test --project tests\PdfPro.App.UiTests -c Release -- --filter-class "*ReadmeScreenshots"`.
 
 ## Tính năng
 

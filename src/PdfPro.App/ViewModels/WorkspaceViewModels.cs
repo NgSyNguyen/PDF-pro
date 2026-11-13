@@ -95,8 +95,18 @@ public enum SidebarPanel
 public sealed partial class SidebarViewModel : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsThumbnailsSelected), nameof(IsBookmarksSelected), nameof(IsSearchSelected), nameof(IsCommentsSelected), nameof(IsSignaturesSelected))]
+    [NotifyPropertyChangedFor(nameof(IsThumbnailsSelected), nameof(IsBookmarksSelected), nameof(IsSearchSelected), nameof(IsCommentsSelected), nameof(IsSignaturesSelected), nameof(Title))]
     public partial SidebarPanel SelectedPanel { get; set; }
+
+    /// <summary>The open panel's name (the switch above it shows icons only).</summary>
+    public string Title => SelectedPanel switch
+    {
+        SidebarPanel.Bookmarks => Strings.Sidebar_Bookmarks,
+        SidebarPanel.Search => Strings.Sidebar_Search,
+        SidebarPanel.Comments => Strings.Sidebar_Comments,
+        SidebarPanel.Signatures => Strings.Sidebar_Signatures,
+        _ => Strings.Sidebar_Thumbnails,
+    };
 
     public bool IsThumbnailsSelected
     {
