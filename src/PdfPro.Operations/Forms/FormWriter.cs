@@ -735,7 +735,7 @@ public static class FormWriter
         return action;
     }
 
-    private static void SetValue(PdfDictionary field, FormFieldKind kind, string? value, IReadOnlyList<string>? selected, IReadOnlyList<FormOption> options)
+    internal static void SetValue(PdfDictionary field, FormFieldKind kind, string? value, IReadOnlyList<string>? selected, IReadOnlyList<FormOption> options)
     {
         switch (kind)
         {

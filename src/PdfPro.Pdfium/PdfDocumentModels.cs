@@ -46,6 +46,9 @@ public sealed record PdfDocumentFeatures(
     /// <summary>Annotations may be added without breaking a certification (none, or one that allows them).</summary>
     public bool CertificationAllowsAnnotations => CertificationPermission is 0 or 3;
 
+    /// <summary>Form fields may be filled in without breaking a certification (none, or one that allows forms).</summary>
+    public bool CertificationAllowsFormFilling => CertificationPermission is 0 or 2 or 3;
+
     private const uint PrintPermission = 1 << 2;
     private const uint CopyPermission = 1 << 4;
     private const uint AssemblePermission = 1 << 10;

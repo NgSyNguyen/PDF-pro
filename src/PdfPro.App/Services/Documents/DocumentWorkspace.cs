@@ -123,6 +123,12 @@ public sealed class DocumentWorkspace : IAsyncDisposable
     /// </summary>
     public bool NeedsPasswordsToSave => Protection is { } protection && Passwords.SecurityOf(protection) is null;
 
+    /// <summary>
+    /// The user accepted that saving this document breaks its digital signatures: the changes could not be appended to
+    /// the signed file, so it is written anew (and not asked about again).
+    /// </summary>
+    public bool SignaturesMayBreak { get; set; }
+
     /// <summary>A save is running: edits are refused so the saved state matches the save point.</summary>
     public bool IsBusy
     {

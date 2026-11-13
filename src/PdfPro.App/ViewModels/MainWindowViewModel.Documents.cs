@@ -291,8 +291,10 @@ public sealed partial class MainWindowViewModel : IExitGuard
     /// <summary>Signed or externally changed files get a warning first. Primary = save as, Secondary = overwrite.</summary>
     private async Task<DialogChoice> ConfirmOverwriteAsync(DocumentTabViewModel document)
     {
-        // Comments alone are appended to a signed file, which keeps its signatures: nothing to warn about.
+        // Comments and form values alone are appended to a signed file, which keeps its signatures: nothing to warn
+        // about. Neither when the user already accepted that this document's signatures break.
         if ((document.Document.Features.HasDigitalSignatures || document.Workspace.OriginalDocument.Features.HasDigitalSignatures)
+            && !document.Workspace.SignaturesMayBreak
             && !_saver.KeepsSignatures(document.Workspace))
         {
             var choice = await _messages.AskAsync(
@@ -326,6 +328,19 @@ public sealed partial class MainWindowViewModel : IExitGuard
     private async Task<bool> ExplainSaveFailureAsync(DocumentTabViewModel document, SaveFailure failure, string fileName)
     {
         var message = Format(SaveFailureMessage(failure), fileName);
+
+        // The changes could not be appended to the signed file: written anew, its signatures would break.
+        if (failure is SaveFailure.SignaturesWouldBreak)
+        {
+            var choice = await _messages.AskAsync(Strings.Save_Signed_Title, message, Strings.Save_SaveAsButton, Strings.Save_OverwriteAnyway, Strings.Common_Cancel);
+            if (choice == DialogChoice.Cancel)
+            {
+                return false;
+            }
+
+            document.Workspace.SignaturesMayBreak = true;
+            return await SaveDocumentAsync(document, saveAs: choice == DialogChoice.Primary);
+        }
 
         if (failure is SaveFailure.Locked or SaveFailure.AccessDenied)
         {

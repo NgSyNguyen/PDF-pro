@@ -28,6 +28,13 @@ public enum SaveFailure
     /// <summary>The written file could not be opened again (it was not used).</summary>
     VerificationFailed,
 
+    /// <summary>
+    /// The changes were to be appended to a signed file, keeping its signatures, and could not be (a field a signature
+    /// locks…): nothing was written. Saving again after setting <see cref="DocumentWorkspace.SignaturesMayBreak"/>
+    /// writes the file anew.
+    /// </summary>
+    SignaturesWouldBreak,
+
     Failed,
 }
 
@@ -95,10 +102,14 @@ internal sealed class DocumentSaver(
     {
         ArgumentNullException.ThrowIfNull(workspace);
         var session = workspace.Session;
+        var plan = session.Plan;
         return workspace.Protection is null
+            && !workspace.SignaturesMayBreak
             && session.BaseSourceId == SourceIds.Original
-            && workspace.BaseDocument.Features is { HasDigitalSignatures: true, CertificationAllowsAnnotations: true }
-            && session.Plan.AddsOnlyAnnotations(session.BaseSourceId, workspace.BaseDocument.PageCount);
+            && workspace.BaseDocument.Features is { HasDigitalSignatures: true } features
+            && (!plan.HasAnnotations || features.CertificationAllowsAnnotations)
+            && (!plan.HasFormValues || features.CertificationAllowsFormFilling)
+            && plan.ChangesOnlyCommentsOrFormValues(session.BaseSourceId, workspace.BaseDocument.PageCount);
     }
 
     public async Task SaveAsync(DocumentWorkspace workspace, string targetPath, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
@@ -128,7 +139,13 @@ internal sealed class DocumentSaver(
         workspace.IsBusy = true;
         try
         {
-            var update = KeepsSignatures(workspace) ? await IncrementalAsync(workspace, request, cancellationToken) : null;
+            byte[]? update = null;
+            if (KeepsSignatures(workspace))
+            {
+                // Never written anew without the user knowing: that would break every signature of the file.
+                update = await IncrementalAsync(workspace, request, cancellationToken) ?? throw new DocumentSaveException(SaveFailure.SignaturesWouldBreak);
+            }
+
             await WriteAsync(workspace, request, path, progress, cancellationToken, update);
             workspace.CompleteSave(path, FileStamp.Read(path));
             logger.LogInformation("Session {SessionId} saved: {PageCount} pages", workspace.Session.Id, request.Plan.Count);
@@ -207,14 +224,17 @@ internal sealed class DocumentSaver(
     private async Task<byte[]?> IncrementalAsync(DocumentWorkspace workspace, MaterializeRequest request, CancellationToken cancellationToken)
     {
         var pages = request.Plan.Select((page, index) => (index, page.Annotations)).Where(p => p.Annotations.Count > 0).ToList();
+        var values = request.Plan.FormValues.Values.ToList();
         try
         {
             var original = await File.ReadAllBytesAsync(request.SourcePaths[request.BaseSourceId], cancellationToken);
-            return await Task.Run(() => IncrementalAnnotations.Append(original, pages), cancellationToken);
+
+            // Form values first, then comments: two updates, each leaving the signatures as they were.
+            return await Task.Run(() => IncrementalAnnotations.Append(IncrementalFormValues.Append(original, values), pages), cancellationToken);
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or ArgumentException)
         {
-            logger.LogWarning("Session {SessionId}: the comments cannot be appended to the signed file ({ErrorType}); it is written anew", workspace.Session.Id, ex.GetType().Name);
+            logger.LogWarning("Session {SessionId}: the comments or form values cannot be appended to the signed file ({ErrorType})", workspace.Session.Id, ex.GetType().Name);
             return null;
         }
     }

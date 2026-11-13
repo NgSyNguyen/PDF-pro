@@ -171,8 +171,16 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
     /// incremental update of the source, which keeps its digital signatures valid.
     /// </summary>
     public bool AddsOnlyAnnotations(string sourceId, int pageCount)
+        => _formValues.Count == 0 && ChangesOnlyCommentsOrFormValues(sourceId, pageCount);
+
+    /// <summary>
+    /// True when the plan only adds annotations and/or fills in form values: every page of the source once, in order,
+    /// without rotation or crop, and at least one annotation or value. Such a plan can be written as incremental updates
+    /// of the source, which keep its digital signatures valid.
+    /// </summary>
+    public bool ChangesOnlyCommentsOrFormValues(string sourceId, int pageCount)
     {
-        if (_pages.Length != pageCount || _formValues.Count > 0 || !HasAnnotations)
+        if (_pages.Length != pageCount || (!HasAnnotations && _formValues.Count == 0))
         {
             return false;
         }

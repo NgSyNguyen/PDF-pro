@@ -143,6 +143,31 @@ public sealed partial class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task Save_OfChangesASignedFileCannotTake_AsksOnce_ThenOverwritesWhenTheUserInsists()
+    {
+        var document = FakePdfDocument.WithPages(3);
+        document.Features = FakePdfDocument.PlainFeatures with { SignatureCount = 1 };
+        var (viewModel, path) = await CreateDirtyAsync(document);
+        _saver.KeepsSignatures(Arg.Any<DocumentWorkspace>()).Returns(call => !call.Arg<DocumentWorkspace>().SignaturesMayBreak);
+        var attempts = 0;
+        AnySave().Returns(call =>
+        {
+            attempts++;
+            return call.Arg<DocumentWorkspace>().SignaturesMayBreak
+                ? Task.CompletedTask
+                : Task.FromException(new DocumentSaveException(SaveFailure.SignaturesWouldBreak));
+        });
+        _messages.AskAsync(Strings.Save_Signed_Title, Arg.Any<string>(), Strings.Save_SaveAsButton, Strings.Save_OverwriteAnyway, Strings.Common_Cancel).Returns(DialogChoice.Secondary);
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        attempts.ShouldBe(2, "tried in place, then written anew once the user accepted");
+        await _messages.Received(1).AskAsync(Strings.Save_Signed_Title, Format(Strings.Save_Error_SignaturesWouldBreak, Path.GetFileName(path)), Strings.Save_SaveAsButton, Strings.Save_OverwriteAnyway, Strings.Common_Cancel);
+        viewModel.ActiveDocument!.Workspace.SignaturesMayBreak.ShouldBeTrue();
+        await _saver.Received(2).SaveAsync(Arg.Any<DocumentWorkspace>(), path, Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Save_FileChangedByAnotherProgram_WarnsBeforeOverwriting()
     {
         var (viewModel, path) = await CreateDirtyAsync();

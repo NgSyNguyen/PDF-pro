@@ -6,6 +6,7 @@ using PdfPro.App.Services.Documents;
 using PdfPro.App.Services.Security;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.Core.Annotations;
+using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
@@ -459,6 +460,89 @@ public sealed class DocumentSaverTests : IDisposable
         workspace.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
 
         _saver.KeepsSignatures(workspace).ShouldBe(keeps, "a comment breaks a certification that does not allow comments: saving warns instead");
+    }
+
+    [Fact]
+    public async Task Save_AFormFilledInAfterSigning_IsAppended_SoItsSignatureStays()
+    {
+        var (workspace, path, signed) = await SignedFormWorkspaceAsync();
+        workspace.Apply(TestOperations.Catalog().Get<FillFormOperation>(), new FillFormParams([new FormValue("ho_ten", "Nguyễn Văn An"), new FormValue("dong_y", "Yes")])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeTrue();
+
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        var saved = await File.ReadAllBytesAsync(path, TestToken);
+        saved.AsSpan(0, signed.Length).SequenceEqual(signed).ShouldBeTrue("the signed file is untouched before the update");
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        using var read = PdfReader.Open(new MemoryStream(saved), PdfDocumentOpenMode.Import);
+        var fields = FormReader.Read(read).ToDictionary(f => f.Name);
+        fields["ho_ten"].Value.ShouldBe("Nguyễn Văn An");
+        fields["dong_y"].Value.ShouldBe("Yes");
+        fields["ChuKy1"].IsSigned.ShouldBeTrue();
+        workspace.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Save_OfASignedFileThatCannotBeUpdated_WritesNothing_UntilTheUserAcceptsBreakingItsSignatures()
+    {
+        var (workspace, path, signed) = await SignedFormWorkspaceAsync();
+        workspace.Apply(TestOperations.Catalog().Get<FillFormOperation>(), new FillFormParams([new FormValue("khong_co", "A")])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeTrue("the plan only fills in a form");
+
+        var error = await Should.ThrowAsync<DocumentSaveException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        error.Failure.ShouldBe(SaveFailure.SignaturesWouldBreak, "the file has no such field: it cannot be updated in place");
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(signed, "never written anew without the user knowing");
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        workspace.IsDirty.ShouldBeTrue();
+        workspace.IsBusy.ShouldBeFalse();
+
+        workspace.SignaturesMayBreak = true;
+        _saver.KeepsSignatures(workspace).ShouldBeFalse();
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        await _materializer.ReceivedWithAnyArgs(1).MaterializeAsync(default!, default!, default!, TestToken);
+        workspace.IsDirty.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(1, false, false)]
+    [InlineData(2, true, false)]
+    [InlineData(3, true, true)]
+    public async Task KeepsSignatures_OfACertifiedForm_AsItsCertificationAllows(int permission, bool keepsFilling, bool keepsFillingAndComments)
+    {
+        var (workspace, _, _) = await SignedFormWorkspaceAsync(permission);
+        workspace.Apply(TestOperations.Catalog().Get<FillFormOperation>(), new FillFormParams([new FormValue("ho_ten", "An")])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBe(keepsFilling, "a certification allowing forms (2, 3) keeps them");
+
+        workspace.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBe(keepsFillingAndComments, "comments also need a certification allowing them (3)");
+    }
+
+    /// <summary>An open one-page form (a name and a check box) whose file is signed, the session holding the same bytes.</summary>
+    private async Task<(DocumentWorkspace Workspace, string Path, byte[] Signed)> SignedFormWorkspaceAsync(int certification = 0)
+    {
+        byte[] form;
+        using (var document = new PdfDocument())
+        {
+            document.AddPage();
+            FormWriter.AddFields(document,
+            [
+                new FormFieldSpec("ho_ten", FormFieldKind.Text, 0, new PdfRect(100, 700, 400, 720)),
+                new FormFieldSpec("dong_y", FormFieldKind.CheckBox, 0, new PdfRect(100, 660, 116, 676)),
+            ]);
+            using var stream = new MemoryStream();
+            document.Save(stream, closeStream: false);
+            form = stream.ToArray();
+        }
+
+        using var certificate = SigningCertificates.Signer();
+        var signed = await PdfSigner.SignAsync(form, new SignRequest("ChuKy1"), certificate, null, DateTimeOffset.Now, TestToken);
+        var path = _fixture.CreateFile("biểu mẫu đã ký.pdf", signed);
+        var opened = FakePdfDocument.WithPages(1);
+        opened.Features = FakePdfDocument.PlainFeatures with { SignatureCount = 1, CertificationPermission = certification };
+        _reopenedPages = 1;
+        return (await _fixture.CreateAsync(opened, path, signed), path, signed);
     }
 
     private static NoteAnnotation Note()

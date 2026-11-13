@@ -37,6 +37,21 @@ public sealed class PagePlanTests
     }
 
     [Fact]
+    public void ChangesOnlyCommentsOrFormValues_WhenTheyAreTheOnlyChanges()
+    {
+        var note = new NoteAnnotation("n", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, "", new PdfPoint(10, 10));
+        var filled = _plan.WithFormValues([new FormValue("Ten", "An")]);
+
+        _plan.ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeFalse("nothing changed");
+        filled.ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeTrue();
+        filled.WithAnnotations(2, [note]).ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeTrue();
+        filled.AddsOnlyAnnotations("s0", 5).ShouldBeFalse();
+        filled.Rotate([0], 90).ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeFalse("a turned page is written anew");
+        filled.Delete([1]).ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeFalse();
+        filled.ChangesOnlyCommentsOrFormValues("s1", 5).ShouldBeFalse();
+    }
+
+    [Fact]
     public void KeepsPageOrder_WhenNoPageIsMovedRemovedAddedOrRepeated()
     {
         var note = new NoteAnnotation("n", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, "", new PdfPoint(10, 10));

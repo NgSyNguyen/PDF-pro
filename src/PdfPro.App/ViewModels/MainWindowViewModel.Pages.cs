@@ -569,6 +569,7 @@ public sealed partial class MainWindowViewModel
         SaveFailure.DiskFull => Strings.Save_Error_DiskFull,
         SaveFailure.SourceUnreadable => Strings.Save_Error_SourceUnreadable,
         SaveFailure.VerificationFailed => Strings.Save_Error_Verification,
+        SaveFailure.SignaturesWouldBreak => Strings.Save_Error_SignaturesWouldBreak,
         _ => Strings.Save_Error_Failed,
     };
 }
