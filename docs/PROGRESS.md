@@ -4,14 +4,14 @@
 > **Cập nhật tệp này ở cuối mỗi lát** (trạng thái, commit, quyết định, việc tiếp theo) trong cùng commit với lát đó.
 > Nguồn sự thật về thiết kế vẫn là `docs/SPEC.md`; lộ trình là `docs/PROMPTS.md`; luật là `AGENTS.md`.
 
-Cập nhật lần cuối: 13/11/2026 (tối) — **phiên cloud đã đóng; từ nay mọi việc làm trên máy Windows** (xem "Lời nhắn lần 11" ngay dưới). Trước đó: máy Windows chạy `fetch-tools.ps1` (Tesseract 5.4.0, SHA-256 đã ghim), sửa OCR trong Worker và cửa sổ Chạy lô, 36/37 kịch bản FlaUI đạt (lần 10); phiên cloud làm các mục của lần 9.
+Cập nhật lần cuối: 13/11/2026 (tối) — **phiên cloud đã đóng; từ nay mọi việc làm trên máy Windows** (xem "Lời nhắn lần 11" ngay dưới). Máy Windows: 36/37 kịch bản FlaUI đạt trên code mới nhất, 3063 test xanh; còn kiểm tay, phát hành thử, các tính năng chưa làm ở mục 0.
 
 ## 0. Lời nhắn bàn giao (13/11/2026 tối, cập nhật lần 11 — phiên cloud đóng)
 
 **Phiên cloud đã đóng.** Chủ dự án quyết định từ nay chỉ làm trên máy Windows; không còn phiên cloud nào chạy trên nhánh này. Commit cuối của phiên cloud trước tệp này: `d3f610f` (kiểm quyền DocMDP); máy Windows đã gộp tới `f0fdacb`, CI của `f0fdacb` xanh.
 
 **Còn dở / chưa kiểm (việc của máy Windows):**
-1. **Chạy lại 37 kịch bản FlaUI** (`$env:PDFPRO_UI_TESTS=1`) trên code đã gộp lần 9 + lần 10 (lần 10 mới chạy `dotnet test` thường); kịch bản Office cần LibreOffice.
+1. ~~Chạy lại 37 kịch bản FlaUI trên code đã gộp lần 9 + lần 10~~ — **xong 13/11/2026 tối trên máy Windows** (`f0fdacb`): **36/37 đạt, 0 lỗi**, 1 bỏ qua (Office cần LibreOffice); `dotnet test --solution` (qpdf trên PATH) **3063 test, 0 lỗi, 39 bỏ qua**; CI `f0fdacb` xanh.
 2. **Kiểm tay các mục của lần 9** (chỉ có test ViewModel, chưa ai nhìn trên màn hình):
    - biểu tượng `assets/icon/PdfPro.ico` ở thanh tác vụ, Explorer, khay hệ thống, lối tắt (và `pdfpro.exe`);
    - `samples/links-annots.pdf`: ô trang hiện "i (1/6)", gõ "3" nhảy tới trang 4 (nhãn trước, số trang sau); xoay một trang vẫn còn nhãn, dời trang thì mất; lưu sau khi chỉ thêm chú thích vẫn giữ `/PageLabels`;
