@@ -2438,4 +2438,10 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Settings_ExplorerMenu" xml:space="preserve"><value>Add "Open with PDF_Pro" to the right-click menu of PDF files</value></data>
   <data name="Shell_OpenWithPdfPro" xml:space="preserve"><value>Open with PDF_Pro</value></data>
   <data name="Shell_DocumentType" xml:space="preserve"><value>PDF document (PDF_Pro)</value></data>
+  <data name="Cmd_DrawLink" xml:space="preserve"><value>Draw link</value></data>
+  <data name="Cmd_DrawLink_ToolTip" xml:space="preserve"><value>Drag a box on a page as the area a new link is clicked in</value></data>
+  <data name="Links_Place_Hint" xml:space="preserve"><value>Drag a box around the area to click for the link — Esc to cancel</value></data>
+  <data name="Links_FromArea" xml:space="preserve"><value>Link for the drawn area</value></data>
+  <data name="Links_Area" xml:space="preserve"><value>Area drawn on page {0}</value></data>
+  <data name="Links_MadeArea" xml:space="preserve"><value>A link was added for the drawn area (in italics); click Apply to write it.</value></data>
 </root>

@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.IO;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
+using PdfPro.App.ViewModels.Security;
 using PdfPro.App.ViewModels.Structure;
 using PdfPro.Operations.Structure;
 
@@ -111,7 +113,39 @@ public sealed partial class MainWindowViewModel
         var selection = shown.TextSelection.Areas() is { Count: > 0 } areas
             ? new LinkSelection(FirstLine(await shown.TextSelection.GetTextAsync()), areas)
             : null;
-        await WithStructureAsync(Strings.Links_Title, "links", async (document, input) =>
+        await OpenLinksAsync(selection);
+    }
+
+    /// <summary>
+    /// "Vẽ liên kết": the user drags the area of a new link on a page (a click gives an area of a short line), then the
+    /// links dialog offers a link over that area. A document that cannot be changed is refused before the area is drawn.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanChangeStructure))]
+    private async Task DrawLinkAsync()
+    {
+        if (ActiveDocument is not { } shown)
+        {
+            return;
+        }
+
+        if (shown.IsReadOnly || shown.Workspace.Protection is not null)
+        {
+            await _messages.ShowErrorAsync(Strings.Links_Title, Strings.Optimize_Error_Protected);
+            return;
+        }
+
+        if (await shown.PlaceAreaAsync(PlacementPurpose.Link) is not { } box || ActiveDocument != shown)
+        {
+            return;
+        }
+
+        var text = string.Format(CultureInfo.CurrentCulture, Strings.Links_Area, box.PageIndex + 1);
+        await OpenLinksAsync(new LinkSelection(text, [(box.PageIndex, box.Rect)], IsArea: true));
+    }
+
+    /// <summary>The links dialog on the document as it is shown, offering a link over <paramref name="selection"/> when given.</summary>
+    private Task OpenLinksAsync(LinkSelection? selection)
+        => WithStructureAsync(Strings.Links_Title, "links", async (document, input) =>
         {
             var structure = await Task.Run(() => DocumentStructureReader.Read(input));
             var dialog = new LinksViewModel(document.FileName, input, structure.Links, _logger, document.Viewer.PageCount, selection);
@@ -120,7 +154,6 @@ public sealed partial class MainWindowViewModel
                 document.ChangeStructure<EditLinksOperation>(result);
             }
         });
-    }
 
     private bool CanChangeStructure() => ActiveDocument is { IsReadOnly: false, CanChangeAttachments: true } && _activeSave is null && !StatusBar.IsTaskRunning;
 

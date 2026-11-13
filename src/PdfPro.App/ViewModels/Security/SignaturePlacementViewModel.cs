@@ -1,17 +1,29 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PdfPro.App.Resources;
 using PdfPro.App.ViewModels.Viewer;
 using PdfPro.Core.Geometry;
 
 namespace PdfPro.App.ViewModels.Security;
 
-/// <summary>Where the user put a visible signature: the page (0-based, as shown) and its box in the page's PDF space.</summary>
+/// <summary>Where the user put a box: the page (0-based, as shown) and the box in the page's PDF space.</summary>
 public sealed record SignatureBox(int PageIndex, Guid PageKey, PdfRect Rect);
 
+/// <summary>What a box is placed for: the hint, the icon and the size a click gives follow it.</summary>
+public enum PlacementPurpose
+{
+    /// <summary>"Ký số": the box of a visible signature.</summary>
+    Signature,
+
+    /// <summary>"Vẽ liên kết": the area a new link is clicked in.</summary>
+    Link,
+}
+
 /// <summary>
-/// "Ký số" → "Kéo khung trên trang": the viewer's mouse places the box of a visible signature, once. A drag gives the
-/// box; a click gives a box of the usual size around the point (upright as the page is shown). The box is kept inside
-/// the page. Esc, another mode taking the viewer, or closing the document gives nothing. Must be used on the UI thread.
+/// "Ký số" → "Kéo khung trên trang", or "Vẽ liên kết": the viewer's mouse places a box, once. A drag gives the box; a
+/// click gives a box of the usual size for its purpose around the point (upright as the page is shown). The box is kept
+/// inside the page. Esc, another mode taking the viewer, or closing the document gives nothing. Must be used on the UI
+/// thread.
 /// </summary>
 public sealed partial class SignaturePlacementViewModel : ObservableObject
 {
@@ -19,6 +31,11 @@ public sealed partial class SignaturePlacementViewModel : ObservableObject
     public const double DefaultWidth = 180;
 
     public const double DefaultHeight = 60;
+
+    /// <summary>The link area a click gives (points): about a short line of text.</summary>
+    public const double DefaultLinkWidth = 144;
+
+    public const double DefaultLinkHeight = 20;
 
     /// <summary>A drag smaller than this (points) counts as a click.</summary>
     public const double MinimumSize = 12;
@@ -43,6 +60,17 @@ public sealed partial class SignaturePlacementViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsActive { get; private set; }
 
+    /// <summary>What the awaited box is for.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsForLink), nameof(Hint))]
+    public partial PlacementPurpose Purpose { get; private set; }
+
+    /// <summary>The box is the area of a new link (the bar shows a link, not a certificate).</summary>
+    public bool IsForLink => Purpose == PlacementPurpose.Link;
+
+    /// <summary>What to do, in the bar above the pages.</summary>
+    public string Hint => IsForLink ? Strings.Links_Place_Hint : Strings.Sign_Place_Hint;
+
     /// <summary>A box is being dragged (the mouse is captured for it).</summary>
     public bool IsDragging => _drag is not null;
 
@@ -53,11 +81,12 @@ public sealed partial class SignaturePlacementViewModel : ObservableObject
         => _drag is { } drag && drag.PageKey == pageKey ? Box(drag.Start, drag.End) : null;
 
     /// <summary>Waits for the box: it is the user's next drag or click on a page, or null when placing is given up.</summary>
-    public Task<SignatureBox?> PlaceAsync()
+    public Task<SignatureBox?> PlaceAsync(PlacementPurpose purpose = PlacementPurpose.Signature)
     {
         Cancel();
         var pending = new TaskCompletionSource<SignatureBox?>(TaskCreationOptions.RunContinuationsAsynchronously);
         _pending = pending;
+        Purpose = purpose;
         IsActive = true;
         return pending.Task;
     }
@@ -103,7 +132,7 @@ public sealed partial class SignaturePlacementViewModel : ObservableObject
         }
 
         var box = Box(drag.Start, drag.End);
-        box = box.Width < MinimumSize || box.Height < MinimumSize ? Around(drag.Start, geometry) : Clip(box, geometry.Box);
+        box = box.Width < MinimumSize || box.Height < MinimumSize ? Around(drag.Start, geometry, Purpose) : Clip(box, geometry.Box);
         Finish(new SignatureBox(index, drag.PageKey, box));
     }
 
@@ -120,13 +149,14 @@ public sealed partial class SignaturePlacementViewModel : ObservableObject
         Finish(null);
     }
 
-    /// <summary>The usual box centred on a point, upright as the page is shown, moved inside the page.</summary>
-    internal static PdfRect Around(PdfPoint point, PageGeometry geometry)
+    /// <summary>The usual box of the purpose centred on a point, upright as the page is shown, moved inside the page.</summary>
+    internal static PdfRect Around(PdfPoint point, PageGeometry geometry, PlacementPurpose purpose = PlacementPurpose.Signature)
     {
+        var (across, down) = purpose == PlacementPurpose.Link ? (DefaultLinkWidth, DefaultLinkHeight) : (DefaultWidth, DefaultHeight);
         var sideways = geometry.RotationDegrees is 90 or 270;
         var page = geometry.Box;
-        var width = Math.Min(sideways ? DefaultHeight : DefaultWidth, page.Width);
-        var height = Math.Min(sideways ? DefaultWidth : DefaultHeight, page.Height);
+        var width = Math.Min(sideways ? down : across, page.Width);
+        var height = Math.Min(sideways ? across : down, page.Height);
         var left = Math.Clamp(point.X - (width / 2), page.Left, page.Right - width);
         var bottom = Math.Clamp(point.Y - (height / 2), page.Bottom, page.Top - height);
         return new PdfRect(left, bottom, left + width, bottom + height);

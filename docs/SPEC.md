@@ -695,7 +695,14 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
   ô "Đi tới"): gõ địa chỉ web (`https://…`, `www.…` → https), email (→ `mailto:`) hoặc số trang → "Tạo liên kết" = một
   liên kết trên **mỗi dòng** của vùng chọn (không tạo trùng), in nghiêng trong bảng; Áp dụng như mọi liên kết mới. Đích
   khác (`javascript:`, `file:`, số trang ngoài tài liệu) bị từ chối kèm giải thích.
-- Chưa làm: tạo liên kết bằng cách vẽ vùng trên trang (đã có: từ chữ đang chọn); tài liệu có mật khẩu bị từ chối ở các lệnh trích xuất/cấu trúc như các lệnh xuất khác.
+- **Vẽ liên kết** (`structure.drawLink`, ribbon Chỉnh sửa › Cấu trúc, sau "Liên kết"): kéo một khung trên trang (bấm = vùng
+  144 × 20 pt quanh điểm bấm, thẳng theo trang hiển thị; khung cắt theo trang; Esc / "Hủy" / chế độ khác = bỏ) — dùng chung
+  cách đặt khung của "Ký số" (`SignaturePlacementViewModel` + `PlacementPurpose.Link`: thanh gợi ý và biểu tượng riêng) —
+  rồi hộp thoại "Liên kết" mở với khung "Liên kết cho vùng đã vẽ" ("Vùng đã vẽ trên trang n"): gõ đích như trên → "Tạo liên
+  kết" = một liên kết đúng vùng đó (không có chữ riêng) → Áp dụng = một bước hoàn tác. Tài liệu chỉ xem / có mật khẩu bị từ
+  chối **trước** khi vẽ. Kiểm tay: vẽ một vùng quanh một hình trên trang, liên kết tới trang 3, lưu, bấm vào vùng trong
+  Acrobat Reader.
+- Chưa làm: tài liệu có mật khẩu bị từ chối ở các lệnh trích xuất/cấu trúc như các lệnh xuất khác.
 
 **Nghiệm thu (Phase 11)**
 - Test tự động: `contract-v1` vs `contract-v2` (chèn 1 trang + sửa 3 chỗ) báo **đúng 4 thay đổi** đúng loại/chữ/trang, ghép trang (0,0)(1,1)(–,2)(2,3)(3,4); tài liệu so với chính nó = 0 thay đổi, mọi cặp trang trông giống nhau; vùng khác về hình ảnh đè đúng chữ giá tiền; `tables.pdf`: bảng kẻ 7×4 và bảng không kẻ 9×4 đúng từng ô tiếng Việt, workbook 2 sheet (số kiểu Việt thành số), CSV `;` có BOM; 18 ảnh JPEG của `scan-vi` trùng SHA-256 từng byte; tệp đính kèm tên tiếng Việt thêm/thay/gỡ, PdfPig đọc đúng; bookmark đọc lại bằng PDFium; hợp đồng → "HỢP ĐỒNG…" với 9 "Điều n" theo regex và theo cỡ chữ; mô tả tiếng Việt vào Info + XMP giữ `pdfaid:part`; nhãn i, ii, 1, 2, 3, "Phụ lục"; tự nhận 3 địa chỉ → tạo → nhận lần hai = 0.

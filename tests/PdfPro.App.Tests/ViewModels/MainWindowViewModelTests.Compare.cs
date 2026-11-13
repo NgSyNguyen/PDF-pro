@@ -183,6 +183,68 @@ public sealed partial class MainWindowViewModelTests
     public void ABookmarkTitle_IsCutAtOneHundredSixtyCharacters()
         => PdfPro.App.ViewModels.MainWindowViewModel.FirstLine(new string('a', 200)).ShouldBe(new string('a', 160) + "…");
 
+    /// <summary>"Vẽ liên kết": the area dragged on a page becomes a new link in the links dialog, written as one change.</summary>
+    [Fact]
+    public async Task DrawLink_TheDraggedArea_BecomesANewLink_ToThePageTyped()
+    {
+        var path = _fixture.CreateFile("văn bản.pdf", File.ReadAllBytes(Samples.Basic));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        var tab = viewModel.ActiveDocument!;
+        tab.Viewer.ViewportSize = new PdfPro.Core.Geometry.ViewSize(1000, 3000);
+        foreach (var page in tab.Workspace.Pages.Pages)
+        {
+            await tab.Editor.GetGeometryAsync(page.Key);
+        }
+
+        PdfPro.App.ViewModels.Structure.LinksViewModel? shown = null;
+        _pageDialogs.ShowLinks(Arg.Do<PdfPro.App.ViewModels.Structure.LinksViewModel>(d =>
+        {
+            shown = d;
+            d.NewTarget = "3";
+            d.MakeLinkCommand.Execute(null);
+            d.ApplyCommand.Execute(null);
+        })).Returns(true);
+
+        var drawing = viewModel.DrawLinkCommand.ExecuteAsync(null);
+        tab.SignaturePlacement.IsForLink.ShouldBeTrue();
+        tab.SignaturePlacement.Press(Viewport(tab, 1, new PdfPro.Core.Geometry.PdfPoint(100, 520))).ShouldBeTrue();
+        tab.SignaturePlacement.DragTo(Viewport(tab, 1, new PdfPro.Core.Geometry.PdfPoint(260, 500)));
+        tab.SignaturePlacement.Release();
+        await drawing;
+
+        shown.ShouldNotBeNull().SelectionTitle.ShouldBe(PdfPro.App.Resources.Strings.Links_FromArea);
+        shown.SelectionText.ShouldBe(Format(PdfPro.App.Resources.Strings.Links_Area, 2));
+        for (var i = 0; i < 250 && !_contentChanger.ReceivedCalls().Any(c => c.GetMethodInfo().Name == nameof(PdfPro.App.Services.Documents.IContentChanger.ApplyAsync)); i++)
+        {
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+
+        var call = _contentChanger.ReceivedCalls().Single(c => c.GetMethodInfo().Name == nameof(PdfPro.App.Services.Documents.IContentChanger.ApplyAsync));
+        call.GetArguments()[1].ShouldBeOfType<PdfPro.Operations.Structure.EditLinksOperation>();
+        var link = call.GetArguments()[2].ShouldBeOfType<PdfPro.Operations.Structure.EditLinksParams>().Add.ShouldNotBeNull().ShouldHaveSingleItem();
+        link.Page.ShouldBe(1);
+        new PdfPro.Core.Geometry.PdfRect(Math.Round(link.Rect.Left), Math.Round(link.Rect.Bottom), Math.Round(link.Rect.Right), Math.Round(link.Rect.Top))
+            .ShouldBe(new PdfPro.Core.Geometry.PdfRect(100, 500, 260, 520));
+        link.Target.Page.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task DrawLink_GivenUp_OpensNothing()
+    {
+        var path = _fixture.CreateFile("văn bản.pdf", File.ReadAllBytes(Samples.Basic));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+
+        var drawing = viewModel.DrawLinkCommand.ExecuteAsync(null);
+        viewModel.ActiveDocument!.SignaturePlacement.CancelCommand.Execute(null);
+        await drawing;
+
+        _pageDialogs.DidNotReceiveWithAnyArgs().ShowLinks(default!);
+    }
+
     private PdfPro.App.Services.Extracting.ExtractingServices Extracting()
         => new(new PdfPro.Operations.Extracting.ExtractTablesOperation(), Substitute.For<IPdfDocumentLoader>(), new FakePageImageRenderer(), new PdfPro.Operations.Extracting.ExtractImagesOperation(TestOperations.PdfiumGate));
 

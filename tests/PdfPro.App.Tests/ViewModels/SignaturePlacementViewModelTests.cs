@@ -88,6 +88,37 @@ public sealed class SignaturePlacementViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task TheAreaOfALink_IsPlacedTheSameWay_AClickGivingAShortLine()
+    {
+        var tab = await OpenAsync();
+        var placing = tab.PlaceAreaAsync(PlacementPurpose.Link);
+        var placement = tab.SignaturePlacement;
+
+        placement.IsForLink.ShouldBeTrue();
+        placement.Hint.ShouldBe(PdfPro.App.Resources.Strings.Links_Place_Hint);
+        placement.Press(Viewport(tab, 0, new PdfPoint(300, 400)));
+        placement.Release();
+
+        var box = (await placing).ShouldNotBeNull();
+        box.PageIndex.ShouldBe(0);
+        Round(box.Rect).ShouldBe(new PdfRect(300 - 72, 400 - 10, 300 + 72, 400 + 10), "a click gives a short line around the point");
+
+        var signing = tab.PlaceSignatureAsync();
+        placement.IsForLink.ShouldBeFalse("each placing says what it is for");
+        placement.Hint.ShouldBe(PdfPro.App.Resources.Strings.Sign_Place_Hint);
+        placement.CancelCommand.Execute(null);
+        (await signing).ShouldBeNull();
+    }
+
+    [Fact]
+    public void TheUsualLinkArea_IsUprightAsThePageShows()
+    {
+        var box = SignaturePlacementViewModel.Around(new PdfPoint(300, 400), new PageGeometry(new PdfRect(0, 0, 595, 842), 90), PlacementPurpose.Link);
+
+        (box.Width, box.Height).ShouldBe((SignaturePlacementViewModel.DefaultLinkHeight, SignaturePlacementViewModel.DefaultLinkWidth));
+    }
+
+    [Fact]
     public async Task Esc_GivesNothing()
     {
         var tab = await OpenAsync();

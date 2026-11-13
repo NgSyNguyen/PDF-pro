@@ -16,7 +16,10 @@ public sealed partial class DocumentTabViewModel
     /// mouse is taken like by any mode: the page editor closes, the organizer gives way and other tools turn off. Null
     /// when the user gave up (Esc, another mode, the tab closing).
     /// </summary>
-    public Task<SignatureBox?> PlaceSignatureAsync()
+    public Task<SignatureBox?> PlaceSignatureAsync() => PlaceAreaAsync(PlacementPurpose.Signature);
+
+    /// <summary>As <see cref="PlaceSignatureAsync"/>, for a box of any purpose (the area of a new link…).</summary>
+    public Task<SignatureBox?> PlaceAreaAsync(PlacementPurpose purpose)
     {
         if (Editor.IsActive)
         {
@@ -29,7 +32,7 @@ public sealed partial class DocumentTabViewModel
         FormDesigner.IsActive = false;
         Redaction.IsActive = false;
         TextSelection.Clear();
-        return SignaturePlacement.PlaceAsync();
+        return SignaturePlacement.PlaceAsync(purpose);
     }
 
     private void OnSignaturePlacementPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

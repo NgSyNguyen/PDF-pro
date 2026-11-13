@@ -364,8 +364,11 @@ public sealed partial class LinkItemViewModel : ObservableObject
     public static LinkItemViewModel Of(LinkSpec link, string? text = null) => new(null, link, link.Page, text, link.Target);
 }
 
-/// <summary>The text selected in the viewer when the links dialog opened: its words and where they are, line by line.</summary>
-public sealed record LinkSelection(string Text, IReadOnlyList<(int Page, PdfRect Rect)> Areas);
+/// <summary>
+/// What a new link can be made over when the links dialog opens: the text selected in the viewer (its words and where
+/// they are, line by line), or an area drawn on a page (<paramref name="IsArea"/>; its text says where it is).
+/// </summary>
+public sealed record LinkSelection(string Text, IReadOnlyList<(int Page, PdfRect Rect)> Areas, bool IsArea = false);
 
 /// <summary>
 /// "Liên kết" (structure.links): the links of the document listed with the words they are over and where they go,
@@ -402,10 +405,16 @@ public sealed partial class LinksViewModel : ObservableObject
 
     public bool HasSelectionToLink => Selection is not null;
 
-    /// <summary>"“Điều 3. Hiệu lực”" — the selected words, shortened.</summary>
-    public string SelectionText => Selection is { } selection
-        ? string.Format(CultureInfo.CurrentCulture, Strings.Links_Selection, selection.Text.Length > 80 ? selection.Text[..80].TrimEnd() + "…" : selection.Text)
-        : string.Empty;
+    /// <summary>"Liên kết từ chữ đang chọn", or "Liên kết cho vùng đã vẽ".</summary>
+    public string SelectionTitle => Selection is { IsArea: true } ? Strings.Links_FromArea : Strings.Links_FromSelection;
+
+    /// <summary>"“Điều 3. Hiệu lực”" — the selected words, shortened — or where the drawn area is ("Vùng đã vẽ trên trang 3").</summary>
+    public string SelectionText => Selection switch
+    {
+        { IsArea: true } area => area.Text,
+        { } selection => string.Format(CultureInfo.CurrentCulture, Strings.Links_Selection, selection.Text.Length > 80 ? selection.Text[..80].TrimEnd() + "…" : selection.Text),
+        _ => string.Empty,
+    };
 
     /// <summary>Where the new link goes, as typed: a web address, an e-mail address or a page number.</summary>
     [ObservableProperty]
@@ -436,7 +445,7 @@ public sealed partial class LinksViewModel : ObservableObject
         {
             if (!Items.Any(i => i.Found is { } other && other.Page == page && other.Rect == rect))
             {
-                var item = LinkItemViewModel.Of(new LinkSpec(page, rect, target), selection.Text);
+                var item = LinkItemViewModel.Of(new LinkSpec(page, rect, target), selection.IsArea ? null : selection.Text);
                 Items.Add(item);
                 first ??= item;
             }
@@ -445,7 +454,7 @@ public sealed partial class LinksViewModel : ObservableObject
         if (first is not null)
         {
             Selected = first;
-            StatusText = Strings.Links_Made;
+            StatusText = selection.IsArea ? Strings.Links_MadeArea : Strings.Links_Made;
         }
 
         Changed();

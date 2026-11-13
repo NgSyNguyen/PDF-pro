@@ -179,7 +179,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand), nameof(BookmarksCommand), nameof(AddBookmarkCommand), nameof(DocumentDescriptionCommand), nameof(PageLabelsCommand), nameof(LinksCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand), nameof(BookmarksCommand), nameof(AddBookmarkCommand), nameof(DocumentDescriptionCommand), nameof(PageLabelsCommand), nameof(LinksCommand), nameof(DrawLinkCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -826,6 +826,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("structure.metadata", Strings.Cmd_DocumentDescription, SymbolRegular.DocumentBulletList24, DocumentDescriptionCommand, Strings.Cmd_DocumentDescription_ToolTip),
                     new("structure.pageLabels", Strings.Cmd_PageLabels, SymbolRegular.TextWordCount24, PageLabelsCommand, Strings.Cmd_PageLabels_ToolTip),
                     new("structure.links", Strings.Cmd_Links, SymbolRegular.GlobeArrowForward24, LinksCommand, Strings.Cmd_Links_ToolTip),
+                    new("structure.drawLink", Strings.Cmd_DrawLink, SymbolRegular.Link24, DrawLinkCommand, Strings.Cmd_DrawLink_ToolTip),
                 ]),
             ]),
             new("annotate", Strings.Ribbon_Tab_Annotate,

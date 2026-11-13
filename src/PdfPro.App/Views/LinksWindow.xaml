@@ -61,7 +61,7 @@
         CornerRadius="4"
         Visibility="{Binding HasSelectionToLink, Converter={StaticResource BoolToVisibility}}">
         <StackPanel>
-          <TextBlock FontWeight="SemiBold" Text="{loc:Tr Links_FromSelection}" />
+          <TextBlock FontWeight="SemiBold" Text="{Binding SelectionTitle}" />
           <TextBlock
             Margin="0,2,0,6"
             AutomationProperties.AutomationId="LinksSelection"

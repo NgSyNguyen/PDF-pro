@@ -159,6 +159,29 @@ public sealed class StructureViewModelsTests : IDisposable
     }
 
     [Fact]
+    public void ALink_IsMadeOverADrawnArea_WithoutWordsOfItsOwn()
+    {
+        PdfRect area = new(100, 500, 244, 520);
+        var dialog = new LinksViewModel("hồ sơ.pdf", Samples.Basic, [], NullLogger.Instance, 6, new LinkSelection("Vùng đã vẽ trên trang 3", [(2, area)], IsArea: true));
+
+        dialog.SelectionTitle.ShouldBe(Strings.Links_FromArea);
+        dialog.SelectionText.ShouldBe("Vùng đã vẽ trên trang 3", "where the area is, not quoted as words");
+        dialog.NewTarget = "1";
+        dialog.MakeLinkCommand.Execute(null);
+
+        var item = dialog.Items.ShouldHaveSingleItem();
+        (item.IsNew, item.Text, item.Page).ShouldBe((true, string.Empty, 2), "an area has no words of its own");
+        dialog.StatusText.ShouldBe(Strings.Links_MadeArea);
+        dialog.ApplyCommand.Execute(null);
+        var link = dialog.Result.ShouldNotBeNull().Add.ShouldNotBeNull().ShouldHaveSingleItem();
+        (link.Page, link.Rect, link.Target.Page).ShouldBe((2, area, (int?)0));
+    }
+
+    [Fact]
+    public void ASelectedText_IsTitledAsSuch()
+        => new LinksViewModel("hồ sơ.pdf", Samples.Basic, [], NullLogger.Instance, 6, new LinkSelection("Điều 3", [(0, new PdfRect(72, 700, 120, 714))])).SelectionTitle.ShouldBe(Strings.Links_FromSelection);
+
+    [Fact]
     public void WithoutSelectedText_NoLinkIsOfferedForIt()
         => new LinksViewModel("hồ sơ.pdf", Samples.Basic, [], NullLogger.Instance, 6).HasSelectionToLink.ShouldBeFalse();
 

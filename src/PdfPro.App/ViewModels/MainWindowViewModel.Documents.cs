@@ -407,6 +407,7 @@ public sealed partial class MainWindowViewModel : IExitGuard
         DocumentDescriptionCommand.NotifyCanExecuteChanged();
         PageLabelsCommand.NotifyCanExecuteChanged();
         LinksCommand.NotifyCanExecuteChanged();
+        DrawLinkCommand.NotifyCanExecuteChanged();
         OfficeToPdfCommand.NotifyCanExecuteChanged();
         ToPdfACommand.NotifyCanExecuteChanged();
     }

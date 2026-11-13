@@ -544,11 +544,18 @@
           Content="{loc:Tr Common_Cancel}"
           DockPanel.Dock="Right" />
         <StackPanel Orientation="Horizontal">
-          <ui:SymbolIcon Margin="0,0,8,0" Symbol="Certificate24" />
+          <ui:SymbolIcon
+            Margin="0,0,8,0"
+            Symbol="Certificate24"
+            Visibility="{Binding IsForLink, Converter={StaticResource InverseBoolToVisibility}}" />
+          <ui:SymbolIcon
+            Margin="0,0,8,0"
+            Symbol="GlobeArrowForward24"
+            Visibility="{Binding IsForLink, Converter={StaticResource BoolToVisibility}}" />
           <TextBlock
             VerticalAlignment="Center"
             AutomationProperties.AutomationId="SignaturePlacementHint"
-            Text="{loc:Tr Sign_Place_Hint}"
+            Text="{Binding Hint}"
             TextTrimming="CharacterEllipsis" />
         </StackPanel>
       </DockPanel>
