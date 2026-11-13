@@ -26,6 +26,54 @@ public sealed partial class MainWindowViewModel
             }
         });
 
+    /// <summary>
+    /// "Thêm bookmark" (Ctrl+B): the bookmark editor with a new bookmark where the selected text starts, titled with its
+    /// first line — or at the page shown, titled with its number — to be named and placed before it is applied.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanChangeStructure))]
+    private async Task AddBookmarkAsync()
+    {
+        if (ActiveDocument is not { } shown)
+        {
+            return;
+        }
+
+        // Read before pending edits are applied: a new revision clears the selection.
+        var (title, page, top) = await ProposedBookmarkAsync(shown);
+        await WithStructureAsync(Strings.Bookmarks_Title, "bookmarks", async (document, input) =>
+        {
+            var bookmarks = await Task.Run(() => DocumentStructureReader.ReadBookmarks(input));
+            var dialog = new BookmarksEditorViewModel(document.FileName, input, document.Viewer.PageCount, page, bookmarks, _logger);
+            dialog.Propose(title, page, top);
+            if (_pageDialogs.ShowBookmarks(dialog) && dialog.Result is { } result)
+            {
+                document.ChangeStructure<SetBookmarksOperation>(result);
+            }
+        });
+    }
+
+    /// <summary>The title, page and height of a bookmark made from the viewer.</summary>
+    private static async Task<(string Title, int Page, double? Top)> ProposedBookmarkAsync(DocumentTabViewModel document)
+    {
+        if (document.TextSelection.Start() is { } start)
+        {
+            var line = FirstLine(await document.TextSelection.GetTextAsync());
+            return (line.Length > 0 ? line : Format(Strings.Bookmarks_PageOf, start.Page + 1), start.Page, start.Top);
+        }
+
+        var page = document.Viewer.CurrentPageIndex;
+        return (Format(Strings.Bookmarks_PageOf, page + 1), page, null);
+    }
+
+    /// <summary>The first line of a text with its spaces made single, cut at <see cref="MaxBookmarkTitle"/> characters.</summary>
+    internal static string FirstLine(string text)
+    {
+        var line = text.Split('\n').Select(l => string.Join(' ', l.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))).FirstOrDefault(l => l.Length > 0) ?? string.Empty;
+        return line.Length <= MaxBookmarkTitle ? line : line[..MaxBookmarkTitle].TrimEnd() + "…";
+    }
+
+    private const int MaxBookmarkTitle = 160;
+
     [RelayCommand(CanExecute = nameof(CanChangeStructure))]
     private Task DocumentDescriptionAsync()
         => WithStructureAsync(Strings.DocInfo_Title, "description", async (document, input) =>

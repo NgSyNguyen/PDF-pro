@@ -1948,6 +1948,8 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Ribbon_Group_Structure" xml:space="preserve"><value>Structure</value></data>
   <data name="Cmd_Bookmarks" xml:space="preserve"><value>Bookmarks</value></data>
   <data name="Cmd_Bookmarks_ToolTip" xml:space="preserve"><value>Edit the bookmark tree (add, rename, reorder, change level, colour) or make it from headings by font size or by patterns such as “Chapter I”</value></data>
+  <data name="Cmd_AddBookmark" xml:space="preserve"><value>Add bookmark</value></data>
+  <data name="Cmd_AddBookmark_ToolTip" xml:space="preserve"><value>Add a bookmark where the selected text is (titled with its first line) or at the page shown, then name it in the bookmark tree</value></data>
   <data name="Cmd_DocumentDescription" xml:space="preserve"><value>Description</value></data>
   <data name="Cmd_DocumentDescription_ToolTip" xml:space="preserve"><value>Edit the title, author, subject and keywords (Info and XMP alike) and how the document opens: page, zoom, side panel, window title</value></data>
   <data name="Cmd_PageLabels" xml:space="preserve"><value>Page labels</value></data>
@@ -2372,6 +2374,7 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Shortcuts_Redo" xml:space="preserve"><value>Redo</value></data>
   <data name="Shortcuts_Rotate" xml:space="preserve"><value>Rotate pages right, left</value></data>
   <data name="Shortcuts_MarkSplit" xml:space="preserve"><value>Mark where to split</value></data>
+  <data name="Shortcuts_AddBookmark" xml:space="preserve"><value>Add a bookmark at the selected text or the page shown</value></data>
   <data name="Shortcuts_Delete" xml:space="preserve"><value>Delete the selection</value></data>
   <data name="Shortcuts_Escape" xml:space="preserve"><value>Clear the selection, leave the current tool</value></data>
   <data name="Shortcuts_FinishComment" xml:space="preserve"><value>Finish the comment being typed</value></data>

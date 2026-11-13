@@ -683,7 +683,11 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
   nền từ tệp nền (đọc lại sau mỗi revision) và chỉ hiện khi các trang còn đúng thứ tự (`PagePlan.KeepsPageOrder`: xoay,
   cắt, chú thích, điền biểu mẫu vẫn giữ; di chuyển/xóa/thêm/nhân bản trang thì không) — lưu cũng chỉ bỏ `/PageLabels`
   trong trường hợp đó.
-- Chưa làm: kéo-thả trong cây bookmark (dùng nút), thêm bookmark từ vùng chữ đang chọn, tạo liên kết bằng cách vẽ vùng trên trang; tài liệu có mật khẩu bị từ chối ở các lệnh trích xuất/cấu trúc như các lệnh xuất khác.
+- **Thêm bookmark** (Ctrl+B, Chỉnh sửa › Cấu trúc): mở cây bookmark với một mục mới đã chọn sẵn — ở chỗ chữ đang chọn
+  bắt đầu (trang + đỉnh dòng đầu, `/XYZ`), tiêu đề là dòng đầu của chữ đó (gộp khoảng trắng, tối đa 160 ký tự), không chọn
+  gì thì ở trang đang xem với tiêu đề "Trang n"; mục mới đứng sau các bookmark cùng trang, trước bookmark của trang sau;
+  Áp dụng = một `structure.bookmarks` như hộp thoại Bookmark.
+- Chưa làm: kéo-thả trong cây bookmark (dùng nút), tạo liên kết bằng cách vẽ vùng trên trang; tài liệu có mật khẩu bị từ chối ở các lệnh trích xuất/cấu trúc như các lệnh xuất khác.
 
 **Nghiệm thu (Phase 11)**
 - Test tự động: `contract-v1` vs `contract-v2` (chèn 1 trang + sửa 3 chỗ) báo **đúng 4 thay đổi** đúng loại/chữ/trang, ghép trang (0,0)(1,1)(–,2)(2,3)(3,4); tài liệu so với chính nó = 0 thay đổi, mọi cặp trang trông giống nhau; vùng khác về hình ảnh đè đúng chữ giá tiền; `tables.pdf`: bảng kẻ 7×4 và bảng không kẻ 9×4 đúng từng ô tiếng Việt, workbook 2 sheet (số kiểu Việt thành số), CSV `;` có BOM; 18 ảnh JPEG của `scan-vi` trùng SHA-256 từng byte; tệp đính kèm tên tiếng Việt thêm/thay/gỡ, PdfPig đọc đúng; bookmark đọc lại bằng PDFium; hợp đồng → "HỢP ĐỒNG…" với 9 "Điều n" theo regex và theo cỡ chữ; mô tả tiếng Việt vào Info + XMP giữ `pdfaid:part`; nhãn i, ii, 1, 2, 3, "Phụ lục"; tự nhận 3 địa chỉ → tạo → nhận lần hai = 0.

@@ -139,6 +139,50 @@ public sealed partial class MainWindowViewModelTests
         bookmarks[1].Children.ShouldNotBeEmpty();
     }
 
+    [Fact]
+    public async Task AddBookmark_WithoutASelection_ProposesThePageShown_AmongTheOthersInPageOrder()
+    {
+        var path = _fixture.CreateFile("văn bản.pdf", File.ReadAllBytes(Samples.Basic));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        var title = Format(PdfPro.App.Resources.Strings.Bookmarks_PageOf, 1);
+        string? chosen = null;
+        _pageDialogs.ShowBookmarks(Arg.Do<PdfPro.App.ViewModels.Structure.BookmarksEditorViewModel>(d =>
+        {
+            chosen = d.Selected?.Title;
+            d.ApplyCommand.Execute(null);
+        })).Returns(true);
+
+        await viewModel.AddBookmarkCommand.ExecuteAsync(null);
+
+        chosen.ShouldBe(title, "the new bookmark is chosen, its title ready to be typed over");
+        for (var i = 0; i < 250 && !_contentChanger.ReceivedCalls().Any(c => c.GetMethodInfo().Name == nameof(PdfPro.App.Services.Documents.IContentChanger.ApplyAsync)); i++)
+        {
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+
+        var call = _contentChanger.ReceivedCalls().Single(c => c.GetMethodInfo().Name == nameof(PdfPro.App.Services.Documents.IContentChanger.ApplyAsync));
+        var bookmarks = call.GetArguments()[2].ShouldBeOfType<PdfPro.Operations.Structure.SetBookmarksParams>().Bookmarks;
+        bookmarks.Count.ShouldBe(5, "basic-vi.pdf's four bookmarks and the new one");
+        var index = bookmarks.Select(b => b.Title).ToList().IndexOf(title);
+        bookmarks[index].Page.ShouldBe(0);
+        bookmarks[index].Top.ShouldBeNull();
+        bookmarks.Take(index).ShouldAllBe(b => b.Page <= 0);
+        bookmarks.Skip(index + 1).ShouldAllBe(b => b.Page > 0);
+    }
+
+    [Theory]
+    [InlineData("  Điều 3.\tHiệu   lực\r\nnội dung", "Điều 3. Hiệu lực")]
+    [InlineData("\r\n\r\nPhụ lục", "Phụ lục")]
+    [InlineData("", "")]
+    public void ABookmarkFromSelectedText_IsTitledWithItsFirstLine(string text, string title)
+        => PdfPro.App.ViewModels.MainWindowViewModel.FirstLine(text).ShouldBe(title);
+
+    [Fact]
+    public void ABookmarkTitle_IsCutAtOneHundredSixtyCharacters()
+        => PdfPro.App.ViewModels.MainWindowViewModel.FirstLine(new string('a', 200)).ShouldBe(new string('a', 160) + "…");
+
     private PdfPro.App.Services.Extracting.ExtractingServices Extracting()
         => new(new PdfPro.Operations.Extracting.ExtractTablesOperation(), Substitute.For<IPdfDocumentLoader>(), new FakePageImageRenderer(), new PdfPro.Operations.Extracting.ExtractImagesOperation(TestOperations.PdfiumGate));
 

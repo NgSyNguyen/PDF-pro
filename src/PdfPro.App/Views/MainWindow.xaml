@@ -48,6 +48,7 @@
     <KeyBinding Key="R" Command="{Binding RotateRightCommand}" Modifiers="Control" />
     <KeyBinding Key="R" Command="{Binding RotateLeftCommand}" Modifiers="Control+Shift" />
     <KeyBinding Key="M" Command="{Binding MarkSplitCommand}" Modifiers="Control" />
+    <KeyBinding Key="B" Command="{Binding AddBookmarkCommand}" Modifiers="Control" />
     <KeyBinding Key="F" Command="{Binding ShowSearchCommand}" Modifiers="Control" />
     <KeyBinding Key="K" Command="{Binding CommandPaletteCommand}" Modifiers="Control" />
     <KeyBinding Key="F1" Command="{Binding ShowShortcutsCommand}" />

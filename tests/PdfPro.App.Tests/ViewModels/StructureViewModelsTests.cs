@@ -51,6 +51,27 @@ public sealed class StructureViewModelsTests : IDisposable
     }
 
     [Fact]
+    public void AProposedBookmark_GoesInPageOrder_AndIsChosen()
+    {
+        var dialog = new BookmarksEditorViewModel(
+            "hồ sơ.pdf",
+            Samples.Basic,
+            6,
+            0,
+            [new BookmarkNode("Mở đầu", 0), new BookmarkNode("Chương 1", 2), new BookmarkNode("Phụ lục", 5)],
+            NullLogger.Instance);
+
+        dialog.Propose("Điều 3. Hiệu lực", 2, 512.5);
+
+        dialog.Items.Select(i => i.Title).ShouldBe(["Mở đầu", "Chương 1", "Điều 3. Hiệu lực", "Phụ lục"]);
+        dialog.Selected.ShouldBe(dialog.Items[2]);
+        dialog.ApplyCommand.Execute(null);
+        var node = dialog.Result.ShouldNotBeNull().Bookmarks[2];
+        node.Page.ShouldBe(2);
+        node.Top.ShouldBe(512.5);
+    }
+
+    [Fact]
     public async Task Bookmarks_AreMadeFromTheHeadings_ByPatterns()
     {
         var dialog = new BookmarksEditorViewModel("hợp đồng.pdf", Samples.ContractV1, 4, 0, [], NullLogger.Instance)

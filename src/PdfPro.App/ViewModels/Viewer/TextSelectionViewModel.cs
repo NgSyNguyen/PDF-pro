@@ -186,6 +186,26 @@ public sealed class TextSelectionViewModel
         return new TextRange(pageIndex == first.Page ? start : 0, pageIndex == last.Page ? end : int.MaxValue);
     }
 
+    /// <summary>
+    /// Where the selection starts: its first page and the top of its first line there (PDF space; null when that page's
+    /// text is not read yet), or null without a selection.
+    /// </summary>
+    public (int Page, double? Top)? Start()
+    {
+        for (var page = 0; HasSelection && page < _viewer.PageCount; page++)
+        {
+            if (RangeOn(page) is not { } range)
+            {
+                continue;
+            }
+
+            var rects = _layers.TryGet(_viewer.Document.Pages[page]) is { } layer ? layer.Rects(Clamp(range, layer)) : [];
+            return (page, rects.Count > 0 ? rects[0].Top : null);
+        }
+
+        return null;
+    }
+
     /// <summary>Where the selection is on a page, in its PDF space (one rectangle per line); empty when it is not there.</summary>
     public IReadOnlyList<PdfRect> RectsOn(Guid pageKey)
     {

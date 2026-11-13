@@ -403,6 +403,7 @@ public sealed partial class MainWindowViewModel : IExitGuard
         AttachmentsCommand.NotifyCanExecuteChanged();
         FontsCommand.NotifyCanExecuteChanged();
         BookmarksCommand.NotifyCanExecuteChanged();
+        AddBookmarkCommand.NotifyCanExecuteChanged();
         DocumentDescriptionCommand.NotifyCanExecuteChanged();
         PageLabelsCommand.NotifyCanExecuteChanged();
         LinksCommand.NotifyCanExecuteChanged();

@@ -214,6 +214,29 @@ public sealed partial class BookmarksEditorViewModel : ObservableObject
         Selected = item;
     }
 
+    /// <summary>
+    /// A bookmark proposed from the viewer ("Thêm bookmark", Ctrl+B): at the top level, after the bookmarks of its page
+    /// and before those of later pages, and chosen so that its title can be typed over.
+    /// </summary>
+    public void Propose(string title, int page, double? top)
+    {
+        ArgumentNullException.ThrowIfNull(title);
+        page = Math.Clamp(page, 0, Math.Max(0, PageCount - 1));
+        var item = new BookmarkItemViewModel(new BookmarkNode(title, page, top), null);
+        var index = Items.Count;
+        for (var i = 0; i < Items.Count; i++)
+        {
+            if (Items[i].Page > page)
+            {
+                index = i;
+                break;
+            }
+        }
+
+        Items.Insert(index, item);
+        Selected = item;
+    }
+
     /// <summary>"Thêm mục con": a bookmark under the one chosen.</summary>
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void AddChild()
