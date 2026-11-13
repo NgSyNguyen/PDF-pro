@@ -180,6 +180,28 @@ public sealed partial class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task Merge_OfAProtectedDocument_UsesACopy_AndSaysTheMergedFileHasNoPassword()
+    {
+        var (viewModel, path) = await CreateWithFileAsync("mật.pdf");
+        var document = viewModel.ActiveDocument!;
+        document.Apply(TestOperations.Catalog().Get<PdfPro.Operations.Security.SetProtectionOperation>(), new PdfPro.Operations.Security.SetProtectionParams(Unknown)).ShouldBeTrue();
+        await PrepareMergeAsync();
+        MergeViewModel? shown = null;
+        _pageDialogs.ShowMerge(Arg.Any<MergeViewModel>()).Returns(call =>
+        {
+            shown = call.Arg<MergeViewModel>();
+            return false;
+        });
+
+        await viewModel.MergeCommand.ExecuteAsync(null);
+
+        shown.ShouldNotBeNull().Items.ShouldHaveSingleItem().IsProtected.ShouldBeTrue("its password is known: a copy is merged");
+        shown.HasProtectedFiles.ShouldBeTrue("the dialog says the merged file has no password");
+        await _merge.DidNotReceive().AddAsync(path, Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await _saver.Received(1).ExportAsync(document.Workspace, Arg.Any<IReadOnlyList<int>>(), Arg.Any<string>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Layout_OfAProtectedDocument_IsRefused_BeforeItsDialog()
     {
         var (viewModel, _) = await CreateWithFileAsync("a.pdf");

@@ -296,8 +296,12 @@ public sealed partial class MergeViewModel : ObservableObject, IDropTarget
         StartFilesOnOddPages,
         Title: string.IsNullOrWhiteSpace(OutputPath) ? null : Path.GetFileNameWithoutExtension(OutputPath.Trim()));
 
+    /// <summary>Some file has a password: the merged file will have none (said under the list).</summary>
+    public bool HasProtectedFiles => Items.Any(i => i.IsProtected);
+
     private void Recompute()
     {
+        OnPropertyChanged(nameof(HasProtectedFiles));
         foreach (var item in Items)
         {
             item.HasPageError = !string.IsNullOrWhiteSpace(item.PagesText) && !PageRanges.TryParse(item.PagesText, item.PageCount, out _, out _);
@@ -410,6 +414,12 @@ public sealed partial class MergeItemViewModel : ObservableObject
     public string PageCountText => string.Format(CultureInfo.CurrentCulture, Strings.Merge_PageCount, PageCount);
 
     public bool IsEncrypted => Source.IsEncrypted;
+
+    /// <summary>The open document's copy, of a document with a password (the copy itself has none).</summary>
+    public bool WasProtected { get; init; }
+
+    /// <summary>A file with a password: the merged file will have none.</summary>
+    public bool IsProtected => IsEncrypted || WasProtected;
 
     /// <summary>Placeholder of the title box: the file name without extension.</summary>
     public string DefaultTitle => Path.GetFileNameWithoutExtension(FileName);

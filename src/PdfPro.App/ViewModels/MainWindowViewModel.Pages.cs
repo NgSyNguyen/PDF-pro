@@ -359,7 +359,8 @@ public sealed partial class MainWindowViewModel
 
     /// <summary>
     /// The open document as a file to merge: its own file when nothing is unsaved, otherwise a copy of what it shows
-    /// written into its session folder. Null when it cannot be read (the merge then starts without it).
+    /// written into its session folder — always the copy for a protected document, whose password is known already (the
+    /// merged file has none; the dialog says so). Null when it cannot be read (the merge then starts without it).
     /// </summary>
     private async Task<MergeItemViewModel?> OpenDocumentForMergeAsync(DocumentTabViewModel document)
     {
@@ -368,7 +369,7 @@ public sealed partial class MainWindowViewModel
         {
             string path;
             string displayName;
-            if (!document.IsDirty && File.Exists(document.FilePath) && !document.Workspace.HasChangedOnDisk())
+            if (!document.IsDirty && File.Exists(document.FilePath) && !document.Workspace.HasChangedOnDisk() && document.Workspace.Protection is null)
             {
                 path = document.FilePath;
                 displayName = document.FileName;
@@ -390,7 +391,9 @@ public sealed partial class MainWindowViewModel
                 displayName = Format(Strings.Merge_CurrentDocument, document.FileName);
             }
 
-            return await _merge.AddAsync(path, document.FileName) is { } source ? new MergeItemViewModel(source, displayName, name) : null;
+            return await _merge.AddAsync(path, document.FileName) is { } source
+                ? new MergeItemViewModel(source, displayName, name) { WasProtected = document.Workspace.Protection is not null }
+                : null;
         }
         catch (Exception ex) when (ex is DocumentSaveException or OperationCanceledException or IOException or UnauthorizedAccessException)
         {
