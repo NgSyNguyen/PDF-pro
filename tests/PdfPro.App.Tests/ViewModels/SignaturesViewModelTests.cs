@@ -182,6 +182,17 @@ public sealed class SignaturesViewModelTests : IDisposable
         }
     }
 
+    [Fact]
+    public void ADocumentTimestamp_IsNamedAsOne_AfterItsAuthority()
+    {
+        var stamp = new SignatureItemViewModel(Valid() with { SubFilter = SignatureVerifier.DocumentTimestampSubFilter, Page = -1, Reason = null, Timestamp = SignedAt });
+
+        stamp.IsDocumentTimestamp.ShouldBeTrue();
+        stamp.SignerName.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Signatures_DocumentTimestamp, "Nguyễn Văn A"));
+        stamp.Details.ShouldContain(Strings.Signatures_DocumentTimestamp_Note);
+        new SignatureItemViewModel(Valid()).IsDocumentTimestamp.ShouldBeFalse();
+    }
+
     private static async Task<SignaturesViewModel> ShowAsync(DocumentTabViewModel tab)
     {
         tab.Signatures.IsActive = true;

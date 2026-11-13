@@ -122,6 +122,52 @@ public sealed class LongTermValidationTests : IDisposable
     }
 
     [Fact]
+    public async Task WithATimestamp_TheMaterialIsSealedByADocumentTimestamp_PadesBLta()
+    {
+        using var tsa = new FakeTimestampAuthority(DateTimeOffset.UtcNow.AddMinutes(-1));
+        var fetcher = new FakeFetcher(new Dictionary<string, byte[]?> { [CrlAddress] = Crl() });
+        var output = Path.Combine(_folder, "lưu trữ.pdf");
+
+        var result = await SignOperation.SignFileAsync(Samples.Pii, output, new SignRequest("ChuKy", TimestampServer: new Uri("http://tsa.example.vn/"), Pades: true, LongTerm: true), _signer, tsa, fetcher, DateTimeOffset.Now, Token);
+
+        result.ShouldNotBeNull().DocumentTimestamp.ShouldBeTrue();
+        tsa.Requests.ShouldBe(2, "one timestamp for the signature, one for the document");
+        var file = await File.ReadAllBytesAsync(output, Token);
+        System.Text.Encoding.Latin1.GetString(file).ShouldContain("/Type /DocTimeStamp");
+        Dss(file).Crls.ShouldHaveSingleItem("the DSS comes before the document timestamp");
+
+        var checks = await SignatureVerifier.VerifyAsync(_pdfium.Gate, file, Token);
+        checks.Count.ShouldBe(2);
+        var signature = checks.Single(c => c.SubFilter == "ETSI.CAdES.detached");
+        signature.IsIntact.ShouldBeTrue(signature.Problem);
+        signature.Changes.ShouldBe(ChangesAfterSigning.Signatures, "a document timestamp is a signature field, nothing a reader sees");
+        var stamp = checks.Single(c => c.SubFilter == SignatureVerifier.DocumentTimestampSubFilter);
+        stamp.IsIntact.ShouldBeTrue(stamp.Problem);
+        stamp.CoversWholeFile.ShouldBeTrue();
+        stamp.Timestamp.ShouldBe(tsa.Time);
+        stamp.Signer.ShouldNotBeNull().GetNameInfo(X509NameType.SimpleName, false).ShouldBe("PDF_Pro Test TSA");
+        stamp.FieldName.ShouldBe("DocTimeStamp");
+    }
+
+    [Fact]
+    public async Task ADocumentTimestamp_ThatWasChanged_IsNotIntact_AndASecondOneTakesAnotherName()
+    {
+        using var tsa = new FakeTimestampAuthority(DateTimeOffset.UtcNow.AddMinutes(-1));
+        var once = await PdfSigner.TimestampDocumentAsync(await File.ReadAllBytesAsync(Samples.Pii, Token), new Uri("http://tsa.example.vn/"), tsa, Token);
+        var twice = await PdfSigner.TimestampDocumentAsync(once, new Uri("http://tsa.example.vn/"), tsa, Token);
+
+        var checks = await SignatureVerifier.VerifyAsync(_pdfium.Gate, twice, Token);
+        checks.Select(c => c.FieldName).ShouldBe(["DocTimeStamp", "DocTimeStamp 2"], ignoreOrder: true);
+        checks.ShouldAllBe(c => c.IsIntact);
+
+        var changed = (byte[])twice.Clone();
+        var at = System.Text.Encoding.Latin1.GetString(changed).IndexOf("/Producer", StringComparison.Ordinal);
+        at.ShouldBeGreaterThan(0);
+        changed[at + 1] = (byte)'p';
+        (await SignatureVerifier.VerifyAsync(_pdfium.Gate, changed, Token)).ShouldAllBe(c => !c.IsIntact, "both cover that byte");
+    }
+
+    [Fact]
     public void DistributionPoints_AreTheHttpAddressesOfTheCertificate()
     {
         LongTermValidation.DistributionPoints(_signer).ShouldBe([new Uri(CrlAddress)]);

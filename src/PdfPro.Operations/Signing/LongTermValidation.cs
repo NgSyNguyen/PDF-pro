@@ -56,7 +56,11 @@ public sealed class HttpRevocationFetcher(HttpClient http) : IRevocationFetcher
 /// <param name="Certificates">Certificates in the DSS.</param>
 /// <param name="Crls">Revocation lists in the DSS.</param>
 /// <param name="Missing">The certificates (their subject's common name) whose revocation list could not be had.</param>
-public sealed record LtvResult(byte[] File, int Certificates, int Crls, IReadOnlyList<string> Missing);
+public sealed record LtvResult(byte[] File, int Certificates, int Crls, IReadOnlyList<string> Missing)
+{
+    /// <summary>A document timestamp was added after the material (PAdES-B-LTA).</summary>
+    public bool DocumentTimestamp { get; init; }
+}
 
 /// <summary>
 /// Long-term validation (LTV, PAdES-B-LT; ISO 32000-2 12.8.4.3): the validation material of a file's signatures — every

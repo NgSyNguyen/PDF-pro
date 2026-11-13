@@ -2457,8 +2457,10 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Sign_Certify_NoChanges" xml:space="preserve"><value>Afterwards allow no change at all</value></data>
   <data name="Sign_Error_AlreadySigned" xml:space="preserve"><value>The document is already signed: only its first signature can certify it. Sign it as usual.</value></data>
   <data name="Sign_Ltv" xml:space="preserve"><value>Add long-term validation data (LTV)</value></data>
-  <data name="Sign_Ltv_Note" xml:space="preserve"><value>Embeds the certificates and revocation lists (CRLs) so the signature can still be checked once its certificate expires; the CRLs are downloaded.</value></data>
+  <data name="Sign_Ltv_Note" xml:space="preserve"><value>Embeds the certificates and revocation lists (CRLs) so the signature can still be checked once its certificate expires; with a timestamp, the document is timestamped too (PAdES-B-LTA). The CRLs are downloaded.</value></data>
   <data name="Sign_Ltv_Title" xml:space="preserve"><value>Long-term validation</value></data>
   <data name="Sign_Ltv_Missing" xml:space="preserve"><value>Signed. The revocation lists of these could not be downloaded: {0} — the signature is valid, but long-term validation lacks their data.</value></data>
   <data name="Merge_ProtectedNote" xml:space="preserve"><value>Some files are protected by a password: the merged file will have none. Set one with Security › Password once it is open.</value></data>
+  <data name="Signatures_DocumentTimestamp" xml:space="preserve"><value>Document timestamp — {0}</value></data>
+  <data name="Signatures_DocumentTimestamp_Note" xml:space="preserve"><value>Timestamps the whole document so the embedded validation data stays verifiable later (PAdES-B-LTA).</value></data>
 </root>

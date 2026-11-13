@@ -19,7 +19,8 @@ public sealed class SignatureItemViewModel
     {
         ArgumentNullException.ThrowIfNull(check);
         Check = check;
-        SignerName = check.Signer?.GetNameInfo(X509NameType.SimpleName, forIssuer: false) is { Length: > 0 } name ? name : Strings.Signatures_UnknownSigner;
+        var name = check.Signer?.GetNameInfo(X509NameType.SimpleName, forIssuer: false) is { Length: > 0 } simple ? simple : Strings.Signatures_UnknownSigner;
+        SignerName = IsDocumentTimestamp ? Format(Strings.Signatures_DocumentTimestamp, name) : name;
         Organization = check.Signer is { } signer ? OrganizationOf(signer.SubjectName) : null;
         Details = DetailsOf(check);
     }
@@ -27,6 +28,9 @@ public sealed class SignatureItemViewModel
     public SignatureCheck Check { get; }
 
     public SignatureVerdict Verdict => Check.Verdict;
+
+    /// <summary>A document timestamp (PAdES-B-LTA), not a person's signature: its "signer" is the time-stamping authority.</summary>
+    public bool IsDocumentTimestamp => Check.SubFilter == PdfPro.Operations.Signing.SignatureVerifier.DocumentTimestampSubFilter;
 
     public string VerdictText => Verdict switch
     {
@@ -51,6 +55,11 @@ public sealed class SignatureItemViewModel
     private static IReadOnlyList<string> DetailsOf(SignatureCheck check)
     {
         var lines = new List<string> { check.IsIntact ? Strings.Signatures_Intact : Strings.Signatures_Broken };
+        if (check.SubFilter == PdfPro.Operations.Signing.SignatureVerifier.DocumentTimestampSubFilter)
+        {
+            lines.Add(Strings.Signatures_DocumentTimestamp_Note);
+        }
+
         if (check.IsIntact)
         {
             lines.AddRange(Changes(check));

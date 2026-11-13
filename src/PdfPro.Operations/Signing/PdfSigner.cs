@@ -73,11 +73,86 @@ public static class PdfSigner
             throw new SigningException(SigningFailure.Encrypted, "The document is encrypted.");
         }
 
+        return await AppendAsync(
+            document,
+            trailer,
+            request,
+            timestamp: false,
+            space => SignatureDictionary(request, certificate, signingTime, space),
+            signed => SignatureAsync(signed, request, certificate, timestamps, signingTime, cancellationToken),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// The file with a document timestamp appended (ISO 32000-2 12.8.5, PAdES-B-LTA): an invisible signature field whose
+    /// value is a /DocTimeStamp dictionary (SubFilter ETSI.RFC3161) holding an RFC 3161 token over the whole file but its
+    /// own /Contents. Added after the validation material (DSS), it keeps that material verifiable once the signatures'
+    /// algorithms or certificates can no longer be trusted. Any certification allows it.
+    /// </summary>
+    /// <exception cref="SigningException">The document cannot take it, or the authority gave no valid timestamp.</exception>
+    public static async Task<byte[]> TimestampDocumentAsync(byte[] document, Uri server, ITimestampClient timestamps, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(server);
+        ArgumentNullException.ThrowIfNull(timestamps);
+        FileTrailer trailer;
+        try
+        {
+            trailer = IncrementalUpdate.ReadTrailer(document);
+        }
+        catch (InvalidDataException ex)
+        {
+            throw new SigningException(SigningFailure.Unreadable, "The document cannot be updated.", ex);
+        }
+
+        if (trailer.IsEncrypted)
+        {
+            throw new SigningException(SigningFailure.Encrypted, "The document is encrypted.");
+        }
+
+        var request = new SignRequest(FreeFieldName(document, "DocTimeStamp"));
+        return await AppendAsync(
+            document,
+            trailer,
+            request,
+            timestamp: true,
+            TimestampDictionary,
+            async signed =>
+            {
+                var query = Rfc3161TimestampRequest.CreateFromData(signed, HashAlgorithmName.SHA256, requestSignerCertificates: true, nonce: RandomNumberGenerator.GetBytes(8));
+                var answer = await timestamps.RequestAsync(server, query.Encode(), cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    return query.ProcessResponse(answer, out _).AsSignedCms().Encode();
+                }
+                catch (CryptographicException ex)
+                {
+                    throw new SigningException(SigningFailure.Timestamp, "The time-stamping authority gave no valid timestamp.", ex);
+                }
+            },
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Appends a signature-like value (a signature, a document timestamp) to <paramref name="document"/>: the update is
+    /// written with a hole for /Contents, its /ByteRange patched, the bytes around the hole given to
+    /// <paramref name="contents"/>, and what it returns written into the hole — made bigger and done again when it does
+    /// not fit.
+    /// </summary>
+    private static async Task<byte[]> AppendAsync(
+        byte[] document,
+        FileTrailer trailer,
+        SignRequest request,
+        bool timestamp,
+        Func<int, (byte[] Body, int ContentsAt, int ByteRangeAt)> dictionary,
+        Func<byte[], Task<byte[]>> contents,
+        CancellationToken cancellationToken)
+    {
         var space = InitialSignatureSpace;
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var (file, contentsAt, byteRangeAt) = Prepare(document, trailer, request, certificate, signingTime, space);
+            var (file, contentsAt, byteRangeAt) = Prepare(document, trailer, request, timestamp, dictionary(space));
             var holeEnd = contentsAt + 2 + (space * 2);
             var ranges = new long[] { 0, contentsAt, holeEnd, file.Length - holeEnd };
             var byteRange = string.Create(CultureInfo.InvariantCulture, $"[0 {ranges[1]} {ranges[2]} {ranges[3]}");
@@ -86,15 +161,36 @@ public static class PdfSigner
             var signed = new byte[ranges[1] + ranges[3]];
             Array.Copy(file, 0, signed, 0, ranges[1]);
             Array.Copy(file, ranges[2], signed, ranges[1], ranges[3]);
-            var cms = await SignatureAsync(signed, request, certificate, timestamps, signingTime, cancellationToken).ConfigureAwait(false);
-            if (cms.Length > space)
+            var value = await contents(signed).ConfigureAwait(false);
+            if (value.Length > space)
             {
-                space = cms.Length + 4096;
+                space = value.Length + 4096;
                 continue;
             }
 
-            Encoding.ASCII.GetBytes(Convert.ToHexString(cms)).CopyTo(file, contentsAt + 1);
+            Encoding.ASCII.GetBytes(Convert.ToHexString(value)).CopyTo(file, contentsAt + 1);
             return file;
+        }
+    }
+
+    /// <summary>A field name the document does not use yet: <paramref name="stem"/>, else "stem 2", "stem 3"…</summary>
+    private static string FreeFieldName(byte[] document, string stem)
+    {
+        try
+        {
+            using var pdf = PdfSafeReader.Open(new MemoryStream(document, writable: false), PdfDocumentOpenMode.Import);
+            var catalog = pdf.Internals.Catalog;
+            var name = stem;
+            for (var i = 2; FindField(catalog, name) is not null; i++)
+            {
+                name = string.Create(CultureInfo.InvariantCulture, $"{stem} {i}");
+            }
+
+            return name;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            throw new SigningException(SigningFailure.Unreadable, "The document cannot be read.", ex);
         }
     }
 
@@ -106,9 +202,8 @@ public static class PdfSigner
         byte[] document,
         FileTrailer trailer,
         SignRequest request,
-        X509Certificate2 certificate,
-        DateTimeOffset signingTime,
-        int space)
+        bool timestamp,
+        (byte[] Body, int ContentsAt, int ByteRangeAt) signatureDictionary)
     {
         PdfDocument pdf;
         try
@@ -122,7 +217,7 @@ public static class PdfSigner
 
         using (pdf)
         {
-            if (DocMdp.PermissionOf(pdf) == DocMdp.NoChanges)
+            if (!timestamp && DocMdp.PermissionOf(pdf) == DocMdp.NoChanges)
             {
                 // Another signature would break the certification (ISO 32000-1 12.8.2.2).
                 throw new SigningException(SigningFailure.Certified, "The document's certification allows no change.");
@@ -220,12 +315,24 @@ public static class PdfSigner
                 objects.Add(new UpdatedObject(item.Reference!.ObjectNumber, item.Reference.GenerationNumber, original.Body(item)));
             }
 
-            var (dictionary, contents, byteRange) = SignatureDictionary(request, certificate, signingTime, space);
+            var (dictionary, contents, byteRange) = signatureDictionary;
             objects.Insert(0, new UpdatedObject(signature, 0, dictionary));
             var file = IncrementalUpdate.Append(document, trailer, objects, out var offsets);
             var header = Encoding.ASCII.GetByteCount($"{signature} 0 obj\n");
             return (file, offsets[signature] + header + contents, offsets[signature] + header + byteRange);
         }
+    }
+
+    /// <summary>A document timestamp's dictionary with its holes (ISO 32000-2 Table 255: no /M, the time is in the token).</summary>
+    private static (byte[] Body, int ContentsAt, int ByteRangeAt) TimestampDictionary(int space)
+    {
+        var text = new StringBuilder("<< /Type /DocTimeStamp /Filter /Adobe.PPKLite /SubFilter /ETSI.RFC3161 /ByteRange ");
+        var byteRange = text.Length;
+        text.Append(ByteRangeHolder).Append(" /Contents ");
+        var contents = text.Length;
+        text.Append('<').Append('0', space * 2).Append('>');
+        text.Append(" /Prop_Build << /App << /Name /PDF_Pro >> >> >>");
+        return (Encoding.Latin1.GetBytes(text.ToString()), contents, byteRange);
     }
 
     /// <summary>The signature dictionary with its holes, and where /Contents' '&lt;' and /ByteRange's '[' are in it.</summary>

@@ -90,6 +90,9 @@ public static class SignatureVerifier
 {
     private const string TimestampTokenOid = "1.2.840.113549.1.9.16.2.14";
 
+    /// <summary>The SubFilter of a document timestamp (ISO 32000-2 12.8.5).</summary>
+    public const string DocumentTimestampSubFilter = "ETSI.RFC3161";
+
     /// <summary>The signatures of <paramref name="file"/>, read by PDFium, each checked (certificates as this computer trusts them).</summary>
     /// <exception cref="InvalidDataException">The file cannot be read.</exception>
     public static Task<IReadOnlyList<SignatureCheck>> VerifyAsync(PdfiumGate gate, byte[] file, CancellationToken cancellationToken = default)
@@ -174,7 +177,7 @@ public static class SignatureVerifier
         }
 
         result = result with { CoversWholeFile = range[2] + range[3] == file.Length };
-        if (signature.SubFilter is not ("adbe.pkcs7.detached" or "ETSI.CAdES.detached"))
+        if (signature.SubFilter is not ("adbe.pkcs7.detached" or "ETSI.CAdES.detached" or DocumentTimestampSubFilter))
         {
             return result with { Problem = $"Signatures encoded as {signature.SubFilter} are not checked." };
         }
@@ -182,6 +185,11 @@ public static class SignatureVerifier
         var signed = new byte[range[1] + range[3]];
         Array.Copy(file, 0, signed, 0, range[1]);
         Array.Copy(file, range[2], signed, range[1], range[3]);
+        if (signature.SubFilter == DocumentTimestampSubFilter)
+        {
+            return CheckDocumentTimestamp(result, signature, signed);
+        }
+
         var cms = new SignedCms(new ContentInfo(signed), detached: true);
         try
         {
@@ -224,6 +232,42 @@ public static class SignatureVerifier
             Timestamp = Timestamp(signerInfo),
             DigestAlgorithm = DigestName(signerInfo.DigestAlgorithm.Value),
             KeyAlgorithm = KeyName(signerInfo.Certificate),
+        };
+    }
+
+    /// <summary>
+    /// A document timestamp (ISO 32000-2 12.8.5): an RFC 3161 token whose imprint is the hash of the bytes around its
+    /// /Contents, signed by its authority. Its signer is the authority, its time the token's.
+    /// </summary>
+    private static SignatureCheck CheckDocumentTimestamp(SignatureCheck result, PdfSignatureData signature, byte[] signed)
+    {
+        Rfc3161TimestampToken? token;
+        try
+        {
+            if (!Rfc3161TimestampToken.TryDecode(Encoded(signature.Contents), out token, out _) || token is null)
+            {
+                return result with { Problem = "The timestamp cannot be read." };
+            }
+        }
+        catch (Exception ex) when (ex is CryptographicException or AsnContentException)
+        {
+            return result with { Problem = "The timestamp cannot be read." };
+        }
+
+        var certificates = token.AsSignedCms().Certificates;
+        result = result with { Certificates = [.. certificates], Timestamp = token.TokenInfo.Timestamp };
+        if (!token.VerifySignatureForData(signed, out var authority, certificates))
+        {
+            return result with { Problem = "The signed bytes were changed, or the timestamp is wrong." };
+        }
+
+        return result with
+        {
+            IsIntact = true,
+            Signer = authority,
+            SigningTime = token.TokenInfo.Timestamp,
+            DigestAlgorithm = DigestName(token.TokenInfo.HashAlgorithmId.Value),
+            KeyAlgorithm = KeyName(authority),
         };
     }
 

@@ -61,6 +61,13 @@ public sealed class SignOperation(ITimestampClient? timestamps = null, IRevocati
             {
                 throw new SigningException(SigningFailure.Unreadable, "The validation material could not be added.", ex);
             }
+
+            if (request.TimestampServer is { } server && timestamps is not null)
+            {
+                // The validation material under a document timestamp (PAdES-B-LTA): it stays verifiable later on.
+                signed = await PdfSigner.TimestampDocumentAsync(signed, server, timestamps, cancellationToken).ConfigureAwait(false);
+                longTerm = longTerm with { File = signed, DocumentTimestamp = true };
+            }
         }
 
         var folder = Path.GetDirectoryName(Path.GetFullPath(output)) ?? throw new ArgumentException("The output has no folder.", nameof(output));

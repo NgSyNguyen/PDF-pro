@@ -2457,8 +2457,10 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Sign_Certify_NoChanges" xml:space="preserve"><value>Sau đó không cho phép thay đổi nào</value></data>
   <data name="Sign_Error_AlreadySigned" xml:space="preserve"><value>Tài liệu đã có chữ ký: chỉ chữ ký đầu tiên mới chứng nhận được tài liệu. Hãy ký thường.</value></data>
   <data name="Sign_Ltv" xml:space="preserve"><value>Thêm dữ liệu xác minh lâu dài (LTV)</value></data>
-  <data name="Sign_Ltv_Note" xml:space="preserve"><value>Nhúng chứng thư và danh sách thu hồi (CRL) để chữ ký vẫn kiểm được khi chứng thư hết hạn; cần mạng để tải CRL.</value></data>
+  <data name="Sign_Ltv_Note" xml:space="preserve"><value>Nhúng chứng thư và danh sách thu hồi (CRL) để chữ ký vẫn kiểm được khi chứng thư hết hạn; có dấu thời gian thì đóng thêm dấu thời gian tài liệu (PAdES-B-LTA). Cần mạng để tải CRL.</value></data>
   <data name="Sign_Ltv_Title" xml:space="preserve"><value>Xác minh lâu dài</value></data>
   <data name="Sign_Ltv_Missing" xml:space="preserve"><value>Đã ký. Không tải được danh sách thu hồi của: {0} — chữ ký vẫn hợp lệ nhưng chưa đủ dữ liệu xác minh lâu dài cho các chứng thư này.</value></data>
   <data name="Merge_ProtectedNote" xml:space="preserve"><value>Có tệp được bảo vệ bằng mật khẩu: tệp gộp sẽ không có mật khẩu. Đặt lại bằng Bảo mật › Mật khẩu sau khi mở.</value></data>
+  <data name="Signatures_DocumentTimestamp" xml:space="preserve"><value>Dấu thời gian tài liệu — {0}</value></data>
+  <data name="Signatures_DocumentTimestamp_Note" xml:space="preserve"><value>Đóng dấu thời gian cả tài liệu, giữ dữ liệu xác minh đã nhúng kiểm được về sau (PAdES-B-LTA).</value></data>
 </root>
