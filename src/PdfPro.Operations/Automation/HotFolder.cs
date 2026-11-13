@@ -40,7 +40,7 @@ public sealed record HotFolderEvent(string File, bool Succeeded, IReadOnlyList<s
 /// </summary>
 public sealed class HotFolder : IAsyncDisposable
 {
-    private readonly WorkflowRunner _runner;
+    private readonly IWorkflowFileRunner _runner;
     private readonly HotFolderOptions _options;
     private readonly ConcurrentDictionary<string, (long Size, DateTime Since)> _seen = new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim _busy = new(1, 1);
@@ -48,7 +48,7 @@ public sealed class HotFolder : IAsyncDisposable
     private FileSystemWatcher? _watcher;
     private Task? _polling;
 
-    public HotFolder(WorkflowRunner runner, HotFolderOptions options)
+    public HotFolder(IWorkflowFileRunner runner, HotFolderOptions options)
     {
         _runner = runner ?? throw new ArgumentNullException(nameof(runner));
         _options = options ?? throw new ArgumentNullException(nameof(options));

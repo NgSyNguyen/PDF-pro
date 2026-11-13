@@ -105,9 +105,13 @@ public sealed class WorkflowLibrary(string folder) : IWorkflowLibrary
 }
 
 /// <summary>What the automation commands need: the operations, the runners and the library.</summary>
-public sealed record AutomationServices(OperationCatalog Catalog, WorkflowRunner Runner, IWorkflowLibrary Library)
+/// <param name="Files">Runs a workflow on each file of a batch or of the hot folder: in the worker process when it is on (null: <paramref name="Runner"/>).</param>
+public sealed record AutomationServices(OperationCatalog Catalog, WorkflowRunner Runner, IWorkflowLibrary Library, IWorkflowFileRunner? Files = null)
 {
-    public BatchRunner Batches => new(Runner);
+    public BatchRunner Batches => new(Files ?? Runner);
+
+    /// <summary>The runner of batches and of the hot folder.</summary>
+    public IWorkflowFileRunner FileRunner => Files ?? Runner;
 }
 
 /// <summary>Names of operations and parameters in the user's language (resources "Op_…" and "Param_…").</summary>

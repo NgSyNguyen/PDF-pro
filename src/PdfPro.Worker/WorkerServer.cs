@@ -16,7 +16,7 @@ namespace PdfPro.Worker;
 /// file, sending its progress and then its result (with the report of an <see cref="IReportingOperation"/>); "Cancel"
 /// stops a run. When the app closes the pipe, every run is cancelled and the worker ends.
 /// </summary>
-internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog, IReadOnlyList<IMeasuringOperation>? measurements = null)
+internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog, IReadOnlyList<IMeasuringOperation>? measurements = null, WorkflowRunner? workflows = null)
 {
     /// <summary>Progress is sent at most this often (the last report of a stage always goes).</summary>
     private static readonly TimeSpan ProgressInterval = TimeSpan.FromMilliseconds(100);
@@ -77,15 +77,7 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog, IReadO
                 Outcome = WorkerOutcome.Failed,
                 ErrorType = ex.GetType().FullName,
                 ErrorMessage = ex.Message,
-                ErrorDetail = ex switch
-                {
-                    OperationValidationException validation => JsonSerializer.Serialize(validation.Errors),
-                    OcrException ocr => ocr.Detail is null ? ocr.Failure.ToString() : $"{ocr.Failure}\n{ocr.Detail}",
-                    ImageFileException image => $"{image.FileIndex}\n{image.Problem}",
-                    RepairFailedException repair => JsonSerializer.Serialize(repair.Attempts.Select(a => new[] { a.Method.ToString(), a.Failure.ToString() })),
-                    ExternalToolNotFoundException tool => tool.ToolName,
-                    _ => null,
-                },
+                ErrorDetail = ex is WorkflowFailedException failed ? WorkflowProgressCodec.Describe(failed, DetailOf) : DetailOf(ex),
             };
         }
         finally
@@ -94,6 +86,43 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog, IReadO
         }
 
         await SendAsync(reply).ConfigureAwait(false);
+    }
+
+    /// <summary>What the app needs to rebuild an error it explains.</summary>
+    private static string? DetailOf(Exception error) => error switch
+    {
+        OperationValidationException validation => JsonSerializer.Serialize(validation.Errors),
+        OcrException ocr => ocr.Detail is null ? ocr.Failure.ToString() : $"{ocr.Failure}\n{ocr.Detail}",
+        ImageFileException image => $"{image.FileIndex}\n{image.Problem}",
+        RepairFailedException repair => JsonSerializer.Serialize(repair.Attempts.Select(a => new[] { a.Method.ToString(), a.Failure.ToString() })),
+        ExternalToolNotFoundException tool => tool.ToolName,
+        _ => null,
+    };
+
+    /// <summary>Runs a workflow on one file; its result as JSON.</summary>
+    private async Task<string?> RunWorkflowAsync(WorkerMessage request, CancellationToken cancellationToken)
+    {
+        if (workflows is null)
+        {
+            throw new NotSupportedException("This worker does not run workflows.");
+        }
+
+        if (request is not { Parameters: { } json, Input: { } input })
+        {
+            throw new InvalidDataException("A workflow run needs its call and an input.");
+        }
+
+        var call = JsonSerializer.Deserialize<WorkerWorkflowCall>(json, ParameterSchema.Json) ?? throw new InvalidDataException("The workflow is missing.");
+        var run = new WorkflowRunRequest(input) { OutputFolder = call.OutputFolder, WorkingFolder = call.WorkingFolder, Password = request.Password };
+        IProgress<OperationProgress> sent = new SentProgress(this, request.Id);
+        var result = await workflows.RunAsync(WorkflowFile.Read(call.Workflow), run, new Direct<WorkflowProgress>(p => sent.Report(WorkflowProgressCodec.Encode(p))), cancellationToken).ConfigureAwait(false);
+        return JsonSerializer.Serialize(result, ParameterSchema.ReportJson);
+    }
+
+    /// <summary>Reports at once, on the reporting thread (Progress&lt;T&gt; would post to the thread pool, out of order).</summary>
+    private sealed class Direct<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value) => report(value);
     }
 
     /// <summary>Runs the operation; its report as JSON, or null.</summary>
@@ -107,6 +136,11 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog, IReadO
         if (request.Measure)
         {
             return await MeasureAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (request.Workflow)
+        {
+            return await RunWorkflowAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         if (request is not { Operation: { } id, Parameters: { } json, Input: { } input, Output: { } output })

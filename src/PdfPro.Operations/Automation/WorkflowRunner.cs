@@ -175,7 +175,7 @@ public sealed class WorkflowFailedException : Exception
 /// needed). The result is written where the workflow says only when every step succeeded; the intermediate files
 /// are removed whatever happens.
 /// </summary>
-public sealed class WorkflowRunner(OperationCatalog catalog, PdfiumGate gate, IOcrEngine? ocr = null)
+public sealed class WorkflowRunner(OperationCatalog catalog, PdfiumGate gate, IOcrEngine? ocr = null) : IWorkflowFileRunner
 {
     /// <summary>The language a turned page is read in when nothing else is said.</summary>
     public const string DefaultLanguage = "vie";

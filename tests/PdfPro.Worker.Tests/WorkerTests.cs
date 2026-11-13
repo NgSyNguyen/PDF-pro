@@ -95,6 +95,35 @@ public sealed class WorkerTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task AWorkflow_RunsOnAFileInTheWorker_AndItsFailureComesBackWithItsStep()
+    {
+        var workflow = new PdfPro.Operations.Automation.Workflow("x", [
+            PdfPro.Operations.Automation.WorkflowSteps.Create(PdfPro.Operations.Organizing.RotatePagesOperation.OperationId, new PdfPro.Operations.Organizing.RotatePagesParams("1", 90)),
+            PdfPro.Operations.Automation.WorkflowSteps.Create(PdfPro.Operations.Stamping.PageNumbersOperation.OperationId, new PdfPro.Operations.Stamping.PageNumbersParams("Trang {page}")),
+        ]);
+        var output = Path.Combine(_folder, "kết quả");
+        var call = new PdfPro.Operations.Automation.WorkerWorkflowCall(PdfPro.Operations.Automation.WorkflowFile.Write(workflow), output, Path.Combine(_folder, "làm việc"));
+        var progress = new Recorded();
+
+        var json = await _client.RunAsync(new WorkerRun("workflow.run", JsonSerializer.Serialize(call, ParameterSchema.Json), Sample("basic-vi.pdf"), string.Empty) { Workflow = true }, progress, Token);
+
+        var result = JsonSerializer.Deserialize<PdfPro.Operations.Automation.WorkflowRunResult>(json.ShouldNotBeNull(), ParameterSchema.ReportJson).ShouldNotBeNull();
+        result.Outputs.ShouldHaveSingleItem().ShouldBe(Path.Combine(output, "basic-vi.pdf"));
+        File.Exists(result.Outputs[0]).ShouldBeTrue();
+        result.Steps.Count.ShouldBe(2);
+        progress.Reports.Select(PdfPro.Operations.Automation.WorkflowProgressCodec.Decode).ShouldAllBe(p => p != null, "the steps' progress travels as the run's");
+
+        var failing = new PdfPro.Operations.Automation.Workflow("x", [
+            PdfPro.Operations.Automation.WorkflowSteps.Create(PdfPro.Operations.Organizing.DeletePagesOperation.OperationId, new PdfPro.Operations.Organizing.DeletePagesParams("99")),
+        ]);
+        var bad = new PdfPro.Operations.Automation.WorkerWorkflowCall(PdfPro.Operations.Automation.WorkflowFile.Write(failing), output);
+        var error = await Should.ThrowAsync<WorkerOperationException>(() => _client.RunAsync(new WorkerRun("workflow.run", JsonSerializer.Serialize(bad, ParameterSchema.Json), Sample("basic-vi.pdf"), string.Empty) { Workflow = true }, new Recorded(), Token));
+        error.ErrorType.ShouldBe(typeof(PdfPro.Operations.Automation.WorkflowFailedException).FullName);
+        var detail = JsonSerializer.Deserialize<PdfPro.Operations.Automation.WorkflowFailureDetail>(error.Detail.ShouldNotBeNull(), ParameterSchema.ReportJson).ShouldNotBeNull();
+        (detail.Failure, detail.Step).ShouldBe((PdfPro.Operations.Automation.WorkflowFailure.Parameters, 0));
+    }
+
+    [Fact]
     public async Task AnExportsError_ComesBackWithWhatTheAppExplains()
     {
         var notAPicture = Path.Combine(_folder, "ảnh.png");

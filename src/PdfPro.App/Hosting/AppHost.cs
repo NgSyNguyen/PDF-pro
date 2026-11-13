@@ -145,7 +145,7 @@ internal static class AppHost
         services.AddSingleton<IContentChanger, ContentChanger>();
 
         // PdfPro.Worker (SPEC Phase 13): heavy operations run apart from the app, in a process limited in memory.
-        services.AddSingleton<PdfPro.Infrastructure.Worker.IWorkerClient>(sp =>
+        services.AddSingleton<Func<PdfPro.Infrastructure.Worker.IWorkerClient>>(sp => () =>
         {
             var settings = sp.GetRequiredService<PdfPro.Infrastructure.Settings.ISettingsService>().Current;
             var program = System.IO.Path.Combine(AppContext.BaseDirectory, "PdfPro.Worker.exe");
@@ -153,6 +153,7 @@ internal static class AppHost
                 new PdfPro.Infrastructure.Worker.WorkerOptions(program, (long)settings.WorkerMemoryMegabytes << 20, TimeSpan.FromHours(4)) { DataRoot = sp.GetRequiredService<AppPaths>().DataRoot },
                 sp.GetRequiredService<ILogger<PdfPro.Infrastructure.Worker.WorkerClient>>());
         });
+        services.AddSingleton(sp => sp.GetRequiredService<Func<PdfPro.Infrastructure.Worker.IWorkerClient>>()());
         services.AddSingleton<IOperationIsolation, WorkerIsolation>();
         services.AddSingleton<Services.Optimizing.IExportRunner, Services.Optimizing.WorkerExportRunner>();
         services.AddSingleton<IMergeService, MergeService>();
@@ -236,10 +237,17 @@ internal static class AppHost
             new PdfFormSource(),
             sp.GetRequiredService<SignatureLibrary>(),
             sp.GetRequiredService<IRevocationFetcher>()));
+        services.AddSingleton(sp => new Operations.Automation.WorkflowRunner(sp.GetRequiredService<OperationCatalog>(), sp.GetRequiredService<PdfPro.Pdfium.PdfiumGate>(), sp.GetRequiredService<PdfPro.Core.Ocr.IOcrEngine>()));
+        services.AddSingleton(sp => new Services.Automation.WorkerWorkflowRunner(
+            sp.GetRequiredService<Operations.Automation.WorkflowRunner>(),
+            sp.GetRequiredService<Func<PdfPro.Infrastructure.Worker.IWorkerClient>>(),
+            sp.GetRequiredService<PdfPro.Infrastructure.Settings.ISettingsService>(),
+            sp.GetRequiredService<ILogger<Services.Automation.WorkerWorkflowRunner>>()));
         services.AddSingleton(sp => new Services.Automation.AutomationServices(
             sp.GetRequiredService<OperationCatalog>(),
-            new Operations.Automation.WorkflowRunner(sp.GetRequiredService<OperationCatalog>(), sp.GetRequiredService<PdfPro.Pdfium.PdfiumGate>(), sp.GetRequiredService<PdfPro.Core.Ocr.IOcrEngine>()),
-            new Services.Automation.WorkflowLibrary(sp.GetRequiredService<AppPaths>().WorkflowsDirectory)));
+            sp.GetRequiredService<Operations.Automation.WorkflowRunner>(),
+            new Services.Automation.WorkflowLibrary(sp.GetRequiredService<AppPaths>().WorkflowsDirectory),
+            sp.GetRequiredService<Services.Automation.WorkerWorkflowRunner>()));
         services.AddSingleton<Services.Automation.IWorkflowLibrary>(sp => sp.GetRequiredService<Services.Automation.AutomationServices>().Library);
         services.AddSingleton<Services.Automation.HotFolderService>();
         services.AddSingleton<Services.Automation.IHotFolderService>(sp => sp.GetRequiredService<Services.Automation.HotFolderService>());

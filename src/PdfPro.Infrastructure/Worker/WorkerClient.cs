@@ -37,6 +37,9 @@ public sealed record WorkerRun(string Operation, string Parameters, string Input
     /// <summary>A measurement (the scan tools looking at a file): what it finds comes back as the report.</summary>
     public bool Measure { get; init; }
 
+    /// <summary>A workflow on one file: its result comes back as the report.</summary>
+    public bool Workflow { get; init; }
+
     /// <summary>The files an export reads, when it reads several.</summary>
     public IReadOnlyList<string>? Inputs { get; init; }
 
@@ -102,6 +105,7 @@ public sealed class WorkerClient(WorkerOptions options, ILogger<WorkerClient> lo
                     Output = run.Output,
                     Export = run.Export,
                     Measure = run.Measure,
+                    Workflow = run.Workflow,
                     Inputs = run.Inputs,
                     Password = run.Password,
                     Name = run.Name,

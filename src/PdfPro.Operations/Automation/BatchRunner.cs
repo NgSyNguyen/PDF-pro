@@ -220,7 +220,7 @@ public sealed record BatchResult(IReadOnlyList<BatchItemResult> Items, TimeSpan 
 /// never stops the others; paused between files, cancelled at any time (the files not finished are reported as
 /// cancelled). The results keep the folders of the files under the folder that was chosen.
 /// </summary>
-public sealed class BatchRunner(WorkflowRunner runner)
+public sealed class BatchRunner(IWorkflowFileRunner runner)
 {
     /// <exception cref="WorkflowFailedException">The workflow itself is invalid (no file is run).</exception>
     public async Task<BatchResult> RunAsync(Workflow workflow, IReadOnlyList<BatchFile> files, BatchOptions options, IProgress<BatchProgress>? progress, CancellationToken cancellationToken)
@@ -296,12 +296,12 @@ public sealed class BatchRunner(WorkflowRunner runner)
         }
         catch (WorkflowFailedException ex)
         {
-            return new BatchItemResult(file, BatchItemStatus.Failed, [], ex.Failure, ex.Step, ex.Operation, Innermost(ex).GetType().Name, clock.Elapsed, Error: ex);
+            return new BatchItemResult(file, BatchItemStatus.Failed, [], ex.Failure, ex.Step, ex.Operation, ErrorTypeName(ex), clock.Elapsed, Error: ex);
         }
         catch (Exception ex)
         {
             // One file must never stop the others, whatever goes wrong with it.
-            return new BatchItemResult(file, BatchItemStatus.Failed, [], WorkflowFailure.Step, ErrorType: Innermost(ex).GetType().Name, Duration: clock.Elapsed, Error: ex);
+            return new BatchItemResult(file, BatchItemStatus.Failed, [], WorkflowFailure.Step, ErrorType: ErrorTypeName(ex), Duration: clock.Elapsed, Error: ex);
         }
     }
 
@@ -313,10 +313,27 @@ public sealed class BatchRunner(WorkflowRunner runner)
     {
         ArgumentNullException.ThrowIfNull(error);
         var inner = Innermost(error);
+        if (inner is Core.Operations.WorkerOperationException { ErrorType: { } type })
+        {
+            // The same errors, met in the worker process.
+            return type.StartsWith("PdfPro.Pdfium.Pdf", StringComparison.Ordinal)
+                || type is "System.IO.InvalidDataException" or "UglyToad.PdfPig.Core.PdfDocumentFormatException" or "System.Exception"
+                || type.StartsWith("PdfSharp.Pdf.IO.", StringComparison.Ordinal);
+        }
+
         return inner is Pdfium.PdfDocumentException or InvalidDataException or UglyToad.PdfPig.Core.PdfDocumentFormatException
             || inner.GetType() == typeof(Exception)
             || inner.GetType().Namespace?.StartsWith("PdfSharp.Pdf.IO", StringComparison.Ordinal) == true;
     }
+
+    /// <summary>
+    /// The name of the type of the error at the bottom of a chain — for an error of the worker process, the name of the
+    /// type it had there.
+    /// </summary>
+    public static string ErrorTypeName(Exception exception)
+        => Innermost(exception) is Core.Operations.WorkerOperationException { ErrorType: { } type }
+            ? type[(type.LastIndexOf('.') + 1)..]
+            : Innermost(exception).GetType().Name;
 
     /// <summary>The exception at the bottom of a chain (the one that says what really went wrong).</summary>
     public static Exception Innermost(Exception exception)

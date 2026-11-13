@@ -166,7 +166,9 @@ public sealed partial class MainWindowViewModel
             _ when inner is LibreOfficeNotFoundException => Strings.OfficeToPdf_Error_NoLibreOffice,
             _ when inner is Core.ExternalTools.ExternalToolNotFoundException => Strings.Optimize_Error_NoQpdf,
             _ when BatchRunner.IsUnreadableFile(failed) => Strings.Workflow_Failure_Unreadable,
-            _ => Format(Strings.Workflow_Failure_Step, inner.GetType().Name),
+            _ when inner is Core.Operations.WorkerException { Failure: Core.Operations.WorkerFailure.TimedOut } => Strings.Content_Error_WorkerTimedOut,
+            _ when inner is Core.Operations.WorkerException => Strings.Content_Error_WorkerStopped,
+            _ => Format(Strings.Workflow_Failure_Step, BatchRunner.ErrorTypeName(failed)),
         };
         return failed.Step is { } step
             ? Format(Strings.Workflow_Failure_AtStep, step + 1, OperationNames.Of(failed.Operation ?? string.Empty), reason)

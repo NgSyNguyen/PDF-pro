@@ -67,7 +67,7 @@ public sealed class HotFolderService(AutomationServices automation, ISettingsSer
             }
 
             var output = current.HotFolderOutput.Trim() is { Length: > 0 } chosen ? chosen : null;
-            var folder = new HotFolder(automation.Runner, new HotFolderOptions(path, workflow, output, WorkingFolder: Path.Combine(paths.CacheDirectory, "automation")));
+            var folder = new HotFolder(automation.FileRunner, new HotFolderOptions(path, workflow, output, WorkingFolder: Path.Combine(paths.CacheDirectory, "automation")));
             try
             {
                 folder.Start();
@@ -150,7 +150,7 @@ public sealed class HotFolderService(AutomationServices automation, ISettingsSer
         else
         {
             Interlocked.Increment(ref _failed);
-            logger.LogWarning("A hot folder file failed: {ErrorType}", e.Error is { } error ? BatchRunner.Innermost(error).GetType().Name : "unknown");
+            logger.LogWarning("A hot folder file failed: {ErrorType}", e.Error is { } error ? BatchRunner.ErrorTypeName(error) : "unknown");
         }
 
         Status = Running();
