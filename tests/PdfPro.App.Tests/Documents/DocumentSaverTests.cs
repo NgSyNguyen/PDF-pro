@@ -346,6 +346,57 @@ public sealed class DocumentSaverTests : IDisposable
         (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
     }
 
+    [Fact]
+    public async Task Extract_OfAProtectedDocument_KeepsItsProtection_CheckedWithTheOpenPassword()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        Protect(workspace, new DocumentPasswords("mở-ra", "chủ-nhân"), DocumentPermissions.Print);
+        var target = Path.Combine(Path.GetDirectoryName(path)!, "a (trang 1).pdf");
+        MaterializeRequest? request = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(call => request = call.ArgAt<MaterializeRequest>(0));
+        _loader.LoadAsync(Arg.Any<string>(), "mở-ra", Arg.Any<CancellationToken>()).Returns(_ => Task.FromResult<IPdfDocument>(ProtectedFake(1)));
+
+        await _saver.ExtractAsync(workspace, [0], target, _progress, TestToken);
+
+        request.ShouldNotBeNull().Security.ShouldBe(new DocumentSecurity("mở-ra", "chủ-nhân", EncryptionAlgorithm.Aes256, DocumentPermissions.Print), "the pages keep the document's protection");
+        await _loader.Received(1).LoadAsync(Arg.Any<string>(), "mở-ra", Arg.Any<CancellationToken>());
+        (await File.ReadAllBytesAsync(target, TestToken)).ShouldBe(NewContent);
+        workspace.IsDirty.ShouldBeTrue("extracting pages does not save the document");
+    }
+
+    [Fact]
+    public async Task Extract_OfAProtectionWithoutItsPasswords_IsRefused_NeverWrittenUnprotected()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        var unknown = new ProtectionSetting(Guid.NewGuid(), EncryptionAlgorithm.Aes256, DocumentPermissions.All, HasOpenPassword: true);
+        workspace.Apply(TestOperations.Catalog().Get<SetProtectionOperation>(), new SetProtectionParams(unknown)).ShouldBeTrue();
+        var target = Path.Combine(Path.GetDirectoryName(path)!, "x.pdf");
+
+        await Should.ThrowAsync<InvalidOperationException>(() => _saver.ExtractAsync(workspace, [0], target, _progress, TestToken));
+
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        File.Exists(target).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Export_ForTheAppsOwnWork_IsNeverEncrypted()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        Protect(workspace, new DocumentPasswords("mở-ra", "chủ-nhân"), DocumentPermissions.Print);
+        MaterializeRequest? request = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(call => request = call.ArgAt<MaterializeRequest>(0));
+        _reopenedPages = 1;
+
+        await _saver.ExportAsync(workspace, [0], Path.Combine(Path.GetDirectoryName(path)!, "xem trước.pdf"), _progress, TestToken);
+
+        request.ShouldNotBeNull().Security.ShouldBeNull("a stamp preview or a merge input is read back by the app without a password");
+    }
+
     private static void Protect(DocumentWorkspace workspace, DocumentPasswords passwords, DocumentPermissions permissions)
     {
         var setting = new ProtectionSetting(workspace.Passwords.Add(passwords), EncryptionAlgorithm.Aes256, permissions, passwords.Open is not null);

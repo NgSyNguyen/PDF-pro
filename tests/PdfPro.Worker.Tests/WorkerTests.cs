@@ -111,10 +111,9 @@ public sealed class WorkerTests : IAsyncDisposable
     [Fact]
     public async Task ARunOverItsTimeLimit_StopsTheWorker()
     {
-        // Five seconds, not one: the limit also covers starting the worker, which took over a second on a busy Windows
-        // machine (the whole suite in parallel, an antivirus scanning fresh builds) and was then reported NotStarted.
-        // The run itself (1,000 pages redacted as pictures) takes far longer than five seconds.
-        await using var hurried = Client(TimeSpan.FromSeconds(5));
+        // The limit counts from the run's start (the worker is already connected): 1,000 pages redacted as pictures
+        // take far longer than a second.
+        await using var hurried = Client(TimeSpan.FromSeconds(1));
 
         var error = await Should.ThrowAsync<WorkerException>(() => hurried.RunAsync(LongRun(Path.Combine(_folder, "chậm.pdf")), new Recorded(), Token));
 
@@ -138,8 +137,14 @@ public sealed class WorkerTests : IAsyncDisposable
     private static WorkerRun Run(string operation, object parameters, string input, string output)
         => new(operation, JsonSerializer.Serialize(parameters, parameters.GetType(), ParameterSchema.Json), input, output);
 
+    /// <remarks>
+    /// Two minutes to start, not the app's twenty seconds: the worker runs below normal priority, and with the whole
+    /// suite running in parallel on every processor it was starved past twenty seconds on Windows (NotStarted).
+    /// </remarks>
     private WorkerClient Client(TimeSpan runTimeout)
-        => new(new WorkerOptions(Path.Combine(AppContext.BaseDirectory, "PdfPro.Worker.dll"), 0, runTimeout) { CancelGrace = TimeSpan.FromSeconds(20) }, NullLogger<WorkerClient>.Instance);
+        => new(
+            new WorkerOptions(Path.Combine(AppContext.BaseDirectory, "PdfPro.Worker.dll"), 0, runTimeout) { CancelGrace = TimeSpan.FromSeconds(20), StartTimeout = TimeSpan.FromMinutes(2) },
+            NullLogger<WorkerClient>.Instance);
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {

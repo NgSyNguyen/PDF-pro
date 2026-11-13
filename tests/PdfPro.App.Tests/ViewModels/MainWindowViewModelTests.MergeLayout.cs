@@ -159,6 +159,18 @@ public sealed partial class MainWindowViewModelTests
         kinds.ShouldBe([SheetLayoutKind.NUp, SheetLayoutKind.Booklet, SheetLayoutKind.Tile]);
     }
 
+    [Fact]
+    public async Task Layout_OfAProtectedDocument_IsRefused_BeforeItsDialog()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        viewModel.ActiveDocument!.Apply(TestOperations.Catalog().Get<PdfPro.Operations.Security.SetProtectionOperation>(), new PdfPro.Operations.Security.SetProtectionParams(Unknown)).ShouldBeTrue();
+
+        await viewModel.ActiveDocument.BookletCommand.ExecuteAsync(null);
+
+        await _messages.Received(1).ShowErrorAsync(Strings.Layout_Error_Title, Strings.Optimize_Error_Protected);
+        _pageDialogs.DidNotReceiveWithAnyArgs().ShowSheetLayout(default!);
+    }
+
     /// <summary>The merge service reads "x.pdf" files as fake 2-page documents and previews like the real one.</summary>
     private async Task PrepareMergeAsync()
     {

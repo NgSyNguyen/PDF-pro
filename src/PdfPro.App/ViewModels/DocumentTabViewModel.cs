@@ -966,18 +966,28 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>"Nhiều trang/tờ": N pages per sheet, written to a new file.</summary>
     [RelayCommand(CanExecute = nameof(CanSplit))]
-    private void NUp() => ShowSheetLayout(SheetLayoutKind.NUp);
+    private Task NUpAsync() => ShowSheetLayoutAsync(SheetLayoutKind.NUp);
 
     /// <summary>"Sổ gập": a booklet to print on both sides and fold, written to a new file.</summary>
     [RelayCommand(CanExecute = nameof(CanSplit))]
-    private void Booklet() => ShowSheetLayout(SheetLayoutKind.Booklet);
+    private Task BookletAsync() => ShowSheetLayoutAsync(SheetLayoutKind.Booklet);
 
     /// <summary>"Chia ô": large pages on several sheets, written to a new file.</summary>
     [RelayCommand(CanExecute = nameof(CanSplit))]
-    private void Tile() => ShowSheetLayout(SheetLayoutKind.Tile);
+    private Task TileAsync() => ShowSheetLayoutAsync(SheetLayoutKind.Tile);
 
-    private void ShowSheetLayout(SheetLayoutKind kind)
+    /// <summary>
+    /// The sheet layout dialog. A protected document is refused, as by the other commands that write new files: the laid
+    /// out sheets would lose its password.
+    /// </summary>
+    private async Task ShowSheetLayoutAsync(SheetLayoutKind kind)
     {
+        if (Workspace.Protection is not null)
+        {
+            await _messages.ShowErrorAsync(Strings.Layout_Error_Title, Strings.Optimize_Error_Protected);
+            return;
+        }
+
         var nUp = _operations.Get<NUpOperation>();
         var booklet = _operations.Get<BookletOperation>();
         var tile = _operations.Get<TileOperation>();

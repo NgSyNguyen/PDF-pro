@@ -63,6 +63,15 @@ public interface IDocumentSaver
     Task ExportAsync(DocumentWorkspace workspace, IReadOnlyList<int> pageIndices, string targetPath, IProgress<OperationProgress> progress, CancellationToken cancellationToken);
 
     /// <summary>
+    /// "Trích trang": pages written as a new file for the user to keep — as <see cref="ExportAsync"/>, but the pages of a
+    /// protected document keep its protection (the same passwords and permissions), so its passwords must be known.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The document is protected and its passwords are not all known.</exception>
+    /// <exception cref="DocumentSaveException">Writing failed; an existing file at the target is unchanged.</exception>
+    /// <exception cref="OperationCanceledException">Cancelled.</exception>
+    Task ExtractAsync(DocumentWorkspace workspace, IReadOnlyList<int> pageIndices, string targetPath, IProgress<OperationProgress> progress, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Saving keeps the document's digital signatures valid: its only changes are comments added in the session, which
     /// are appended to the file as an incremental update instead of writing it anew.
     /// </summary>
@@ -130,11 +139,36 @@ internal sealed class DocumentSaver(
         }
     }
 
-    public async Task ExportAsync(
+    public Task ExportAsync(
         DocumentWorkspace workspace,
         IReadOnlyList<int> pageIndices,
         string targetPath,
         IProgress<OperationProgress> progress,
+        CancellationToken cancellationToken)
+        => ExportAsync(workspace, pageIndices, targetPath, progress, security: null, cancellationToken);
+
+    public Task ExtractAsync(
+        DocumentWorkspace workspace,
+        IReadOnlyList<int> pageIndices,
+        string targetPath,
+        IProgress<OperationProgress> progress,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(workspace);
+
+        // Never extracted unprotected by mistake: a protection without its passwords stops the extraction.
+        var security = workspace.Protection is { } protection
+            ? workspace.Passwords.SecurityOf(protection) ?? throw new InvalidOperationException("The passwords of the document's protection are needed to extract its pages.")
+            : null;
+        return ExportAsync(workspace, pageIndices, targetPath, progress, security, cancellationToken);
+    }
+
+    private async Task ExportAsync(
+        DocumentWorkspace workspace,
+        IReadOnlyList<int> pageIndices,
+        string targetPath,
+        IProgress<OperationProgress> progress,
+        DocumentSecurity? security,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(workspace);
@@ -159,10 +193,11 @@ internal sealed class DocumentSaver(
             BaseSourceId = workspace.Session.BaseSourceId,
             SourcePaths = workspace.SourcePaths,
             WorkingDirectory = workspace.WorkDirectory,
+            Security = security,
         };
 
         await WriteAsync(workspace, request, path, progress, cancellationToken);
-        logger.LogInformation("Session {SessionId}: {PageCount} pages extracted", workspace.Session.Id, request.Plan.Count);
+        logger.LogInformation("Session {SessionId}: {PageCount} pages extracted (protected: {Protected})", workspace.Session.Id, request.Plan.Count, security is not null);
     }
 
     /// <summary>

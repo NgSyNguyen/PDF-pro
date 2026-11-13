@@ -97,6 +97,7 @@ internal sealed class SplitWriter(IPlanMaterializer materializer)
                 BaseSourceId = document.BaseSourceId,
                 SourcePaths = document.SourcePaths,
                 WorkingDirectory = document.WorkingDirectory,
+                Security = document.Security,
             };
             await materializer.MaterializeAsync(materialize, output, NoProgress.Instance, cancellationToken).ConfigureAwait(false);
             await output.FlushAsync(cancellationToken).ConfigureAwait(false);

@@ -26,7 +26,8 @@ public sealed partial class MainWindowViewModel
 
     /// <summary>
     /// Writes pages of a document to a new file chosen by the user, with progress and cancel in the status bar. The
-    /// document's own file cannot be the target. Returns true once the file is written.
+    /// document's own file cannot be the target. The pages of a protected document keep its protection (its passwords are
+    /// asked for when not all known). Returns true once the file is written.
     /// </summary>
     internal async Task<bool> ExtractPagesAsync(DocumentTabViewModel document, IReadOnlyList<int> pageIndices)
     {
@@ -56,11 +57,16 @@ public sealed partial class MainWindowViewModel
             return false;
         }
 
+        if (!EnsureProtectionPasswords(document))
+        {
+            return false;
+        }
+
         await WaitForBackgroundWorkAsync(cancelPrint: false);
         var fileName = Path.GetFileName(target);
         var task = StatusBar.StartTask(Format(Strings.Extract_Progress, fileName));
         var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, Format(Strings.Extract_Progress, fileName)));
-        var export = _saver.ExportAsync(document.Workspace, pageIndices, target, progress, task.Token);
+        var export = _saver.ExtractAsync(document.Workspace, pageIndices, target, progress, task.Token);
         _activeSave = export;
         NotifySaveCommands();
         SaveFailure? failure = null;
@@ -188,12 +194,21 @@ public sealed partial class MainWindowViewModel
             return false;
         }
 
+        // The parts of a protected document keep its protection: its passwords are needed (asked for when not all known).
+        if (!EnsureProtectionPasswords(document))
+        {
+            return false;
+        }
+
+        var split = document.Workspace.Protection is { } protection
+            ? request.Document with { Security = document.Workspace.Passwords.SecurityOf(protection) }
+            : request.Document;
         var choice = request.Choice;
         var folderName = Path.GetFileName(choice.OutputFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         var task = StatusBar.StartTask(Format(Strings.Split_Progress, document.FileName));
         var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, Format(Strings.Split_Progress, document.FileName)));
         IReadOnlyCollection<string> protectedPaths = document.FilePath.Length > 0 ? [document.FilePath] : [];
-        var write = request.Operation.WriteAsync(request.Document, choice.Segments, choice.Parameters, choice.OutputFolder, protectedPaths, progress, task.Token);
+        var write = request.Operation.WriteAsync(split, choice.Segments, choice.Parameters, choice.OutputFolder, protectedPaths, progress, task.Token);
         _activeSave = write;
         NotifySaveCommands();
         string error;
