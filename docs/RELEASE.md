@@ -67,4 +67,5 @@ chữ) là biểu tượng của `PdfPro.exe` (`ApplicationIcon`: cửa sổ, th
 
 ## Lịch sử phát hành thử
 
-- `v1.0.0-beta.1` (13/11/2026): bản phát hành thử đầu tiên, kênh `beta`/`beta-arm64` (pre-release).
+- `v1.0.0-beta.1` (13/11/2026): workflow hỏng ở bước Velopack (log cần đăng nhập mới đọc được) → không có bản trên GitHub; bộ cài beta.1 được đóng gói trên máy chủ dự án (cùng tham số `vpk pack`) để cài thử trên máy khác. Workflow giờ đưa phần cuối output của lệnh `vpk`/`gh` lỗi vào annotation của lần chạy.
+- `v1.0.0-beta.2` (13/11/2026): phát hành lại qua GitHub; bản beta.1 đã cài phải tự cập nhật lên bản này.

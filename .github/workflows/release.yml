@@ -86,7 +86,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          dotnet tool install -g vpk --version $env:VPK_VERSION
+          # Each tool's output is kept; when one fails, its last lines become an annotation of the run (readable without
+          # signing in, unlike the log), and the step stops.
+          function Invoke-Tool([string] $What, [string] $Exe, [string[]] $Arguments) {
+            $output = @(& $Exe @Arguments 2>&1 | ForEach-Object { "$_" })
+            $code = $LASTEXITCODE
+            $output | ForEach-Object { Write-Host $_ }
+            if ($code -ne 0) {
+              $tail = (($output | Select-Object -Last 20) -join "`n").Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+              Write-Host "::error title=$What failed (exit $code)::$tail"
+              throw "$What failed (exit $code)."
+            }
+          }
+
+          Invoke-Tool 'Installing vpk' dotnet @('tool', 'install', '-g', 'vpk', '--version', $env:VPK_VERSION)
+          $vpk = Join-Path $env:USERPROFILE '.dotnet\tools\vpk.exe'
           $version = '${{ steps.version.outputs.version }}'
           $repo = 'https://github.com/${{ github.repository }}'
           $pre = if ('${{ steps.version.outputs.prerelease }}' -eq 'true') { @('--pre') } else { @() }
@@ -98,16 +112,13 @@ jobs:
             $channel = '${{ steps.version.outputs.channel }}' + $(if ($rid -eq 'win-arm64') { '-arm64' } else { '' })
             $out = "releases/$rid"
             # The previous release of the channel, for delta updates (none before the first release).
-            vpk download github --repoUrl $repo --token $env:GITHUB_TOKEN --channel $channel --outputDir $out @pre
+            Invoke-Tool "Downloading the previous $channel release" $vpk (@('download', 'github', '--repoUrl', $repo, '--token', $env:GITHUB_TOKEN, '--channel', $channel, '--outputDir', $out) + $pre)
             # The pack id names the install folder (%LocalAppData%\PDF_Pro), which uninstalling deletes: it must not be
             # the app's data folder (%LOCALAPPDATA%\PdfPro: settings, logs, unsaved sessions).
-            vpk pack --packId PDF_Pro --packVersion $version --packDir "publish/$rid" --mainExe PdfPro.exe --icon assets/icon/PdfPro.ico --packTitle PDF_Pro --packAuthors PDF_Pro --runtime $rid --channel $channel --outputDir $out --releaseNotes CHANGELOG.md @sign
-            if ($LASTEXITCODE -ne 0) { throw "Packing $rid failed." }
-            vpk upload github --repoUrl $repo --token $env:GITHUB_TOKEN --channel $channel --outputDir $out --tag "v$version" --releaseName "PDF_Pro $version" --publish --merge @pre
-            if ($LASTEXITCODE -ne 0) { throw "Uploading $rid failed." }
+            Invoke-Tool "Packing $rid" $vpk (@('pack', '--packId', 'PDF_Pro', '--packVersion', $version, '--packDir', "publish/$rid", '--mainExe', 'PdfPro.exe', '--icon', 'assets/icon/PdfPro.ico', '--packTitle', 'PDF_Pro', '--packAuthors', 'PDF_Pro', '--runtime', $rid, '--channel', $channel, '--outputDir', $out, '--releaseNotes', 'CHANGELOG.md') + $sign)
+            Invoke-Tool "Uploading $rid" $vpk (@('upload', 'github', '--repoUrl', $repo, '--token', $env:GITHUB_TOKEN, '--channel', $channel, '--outputDir', $out, '--tag', "v$version", '--releaseName', "PDF_Pro $version", '--publish', '--merge') + $pre)
           }
-          gh release upload "v$version" (Get-ChildItem cli/*.zip).FullName --repo '${{ github.repository }}' --clobber
-          if ($LASTEXITCODE -ne 0) { throw "Uploading pdfpro failed." }
+          Invoke-Tool 'Attaching pdfpro' gh (@('release', 'upload', "v$version") + @((Get-ChildItem cli/*.zip).FullName) + @('--repo', '${{ github.repository }}', '--clobber'))
 
       - name: Remove the signing certificate
         if: always()
