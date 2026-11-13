@@ -2,9 +2,12 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using PdfPro.App.Resources;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Security;
 using PdfPro.App.ViewModels;
 using PdfPro.App.ViewModels.Editing;
+using PdfPro.App.ViewModels.Security;
 using PdfPro.Core.Operations;
+using PdfPro.Core.Security;
 using PdfPro.Core.Stamping;
 using PdfPro.Operations.Stamping;
 
@@ -59,6 +62,30 @@ public sealed partial class MainWindowViewModelTests
             Arg.Any<CancellationToken>());
         await _bates.Received(1).AddAsync(Arg.Is<string>(p => Path.GetFileName(p) == "a.pdf" && p != path), Format(Strings.Merge_CurrentDocument, "a.pdf"), Arg.Any<CancellationToken>());
         Directory.GetDirectories(document.Workspace.WorkDirectory, "bates-*").ShouldBeEmpty("the working copy is removed");
+    }
+
+    [Fact]
+    public async Task Bates_OfAProtectedDocument_LeavesItOut_AndSaysWhy()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("hồ sơ.pdf");
+        var document = viewModel.ActiveDocument!;
+        document.SetProtection(new ProtectionChoice(
+            new ProtectionSetting(Guid.Empty, EncryptionAlgorithm.Aes256, DocumentPermissions.Print, HasOpenPassword: true),
+            new DocumentPasswords("mo", "chu"),
+            KeepsSetting: false)).ShouldBeTrue();
+        BatesViewModel? shown = null;
+        _pageDialogs.ShowBates(Arg.Any<BatesViewModel>()).Returns(call =>
+        {
+            shown = call.Arg<BatesViewModel>();
+            return false;
+        });
+
+        await viewModel.BatesCommand.ExecuteAsync(null);
+
+        await _messages.Received(1).ShowErrorAsync(Strings.Bates_Error_AddTitle, Format(Strings.Bates_Error_Encrypted, "hồ sơ.pdf"));
+        shown.ShouldNotBeNull("other files can still be numbered");
+        await _saver.DidNotReceiveWithAnyArgs().ExportAsync(default!, default!, default!, default!, TestContext.Current.CancellationToken);
+        await _bates.DidNotReceiveWithAnyArgs().AddAsync(default!, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]

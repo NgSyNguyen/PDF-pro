@@ -443,7 +443,7 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 ## 7. Rủi ro / nợ đang mở
 
 - Gỡ dấu trên tài liệu lớn: không có tiến độ khi quét.
-- Tài liệu có mật khẩu đã mở khóa: Bates/Trộn biểu mẫu dùng tệp gốc khi không có gì chưa lưu → tệp gốc mã hóa bị từ chối (cần dùng bản sao như khi có thay đổi). Xuất trang của tài liệu có bảo vệ ra tệp **không** bảo vệ.
+- Tài liệu có mật khẩu: Bates và Trộn biểu mẫu giờ **từ chối** như 12 lệnh ghi tệp mới khác ("gỡ mật khẩu và lưu trước") — trước đó Bates của tài liệu đã sửa ghi bản đánh số **không** mật khẩu, Trộn biểu mẫu báo nhầm "không có trường". Còn: Xuất trang của tài liệu có bảo vệ ra tệp **không** bảo vệ.
 - SkiaSharp kéo theo `SkiaSharp.NativeAssets.macOS`: chỉ thư mục build (không RID) có `runtimes/osx*/`; bản publish theo RID `win-x64`/`win-arm64` không còn (đã kiểm).
 - Phát hành (P13): bộ cài, cập nhật tự động và hook "Mở bằng" **chưa chạy thử trên Windows**; chưa có biểu tượng `.ico`; Worker chưa nhận phần đo của công cụ scan, thao tác xuất, chạy lô/hot folder, vẽ trang tệp lạ.
 - `tools/fetch-tools.ps1` (tải qpdf) chưa chạy thử trên Windows: tên tệp zip/checksum của bản phát hành qpdf 12.2.0 là phỏng đoán theo quy ước của qpdf — chạy một lần, nếu khác thì sửa biến và ghim `-QpdfSha256`.

@@ -31,10 +31,19 @@ public sealed partial class MainWindowViewModel
             var initial = new List<BatesItemViewModel>();
             if (ActiveDocument is { IsReadOnly: false } document)
             {
-                (var file, workingFolder) = await DocumentForBatesAsync(bates, document);
-                if (file is not null)
+                if (document.Workspace.Protection is not null)
                 {
-                    initial.Add(new BatesItemViewModel(file));
+                    // Its numbered copy would be written without the password (as a file on disk it is refused anyway):
+                    // like the other commands, a protected document waits until its password is removed.
+                    await _messages.ShowErrorAsync(Strings.Bates_Error_AddTitle, Format(Strings.Bates_Error_Encrypted, document.FileName));
+                }
+                else
+                {
+                    (var file, workingFolder) = await DocumentForBatesAsync(bates, document);
+                    if (file is not null)
+                    {
+                        initial.Add(new BatesItemViewModel(file));
+                    }
                 }
             }
 

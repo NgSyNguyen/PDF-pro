@@ -6,11 +6,14 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Forms;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.Services.Security;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels;
 using PdfPro.App.ViewModels.Forms;
+using PdfPro.App.ViewModels.Security;
 using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Security;
 using PdfPro.Infrastructure.Settings;
 using PdfPro.Pdfium;
 
@@ -180,6 +183,24 @@ public sealed class FormDataCommandsTests : IDisposable
 
         shown.ShouldNotBeNull().OutputFolder.ShouldEndWith(" - " + Strings.FormMerge_FolderSuffix);
         requests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Merge_OfAProtectedDocument_IsRefused_BeforeTheDialog()
+    {
+        var tab = await OpenAsync();
+        tab.SetProtection(new ProtectionChoice(
+            new ProtectionSetting(Guid.Empty, EncryptionAlgorithm.Aes256, DocumentPermissions.All, HasOpenPassword: false),
+            new DocumentPasswords(null, "chu"),
+            KeepsSetting: false)).ShouldBeTrue();
+        var requests = new List<FormMergeRequest>();
+        tab.FormMergeRequested += (_, request) => requests.Add(request);
+
+        await tab.MergeFormDataCommand.ExecuteAsync(null);
+
+        await _messages.Received(1).ShowErrorAsync(Strings.FormMerge_Error_Title, Strings.Optimize_Error_Protected);
+        _dialogs.DidNotReceiveWithAnyArgs().ShowFormMerge(default!);
+        requests.ShouldBeEmpty("its copies would be written without the password");
     }
 
     [Fact]

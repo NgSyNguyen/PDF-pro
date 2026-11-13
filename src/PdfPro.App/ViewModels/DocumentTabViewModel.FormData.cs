@@ -97,10 +97,19 @@ public sealed partial class DocumentTabViewModel
         }
     }
 
-    /// <summary>"Trộn dữ liệu": the merge dialog, then the window writes one filled copy per row in the background.</summary>
+    /// <summary>
+    /// "Trộn dữ liệu": the merge dialog, then the window writes one filled copy per row in the background. A protected
+    /// document is refused, as by the other commands that write new files: its copies would lose the password.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(HasFormFields))]
-    private void MergeFormData()
+    private async Task MergeFormDataAsync()
     {
+        if (Workspace.Protection is not null)
+        {
+            await _messages.ShowErrorAsync(Strings.FormMerge_Error_Title, Strings.Optimize_Error_Protected);
+            return;
+        }
+
         var dialog = new FormMergeViewModel(_services.FileDialogs, Forms.Fields, FilePath, FileName);
         if (_services.PageDialogs.ShowFormMerge(dialog) && dialog.Result is { } choice)
         {

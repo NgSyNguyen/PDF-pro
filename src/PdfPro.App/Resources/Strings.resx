@@ -951,7 +951,7 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Bates_Error_Output" xml:space="preserve"><value>Hãy chọn thư mục lưu bản đánh số.</value></data>
   <data name="Bates_Error_OutputIsInput" xml:space="preserve"><value>Khi ghi đè, thư mục lưu không được là thư mục chứa tệp gốc (bản đánh số sẽ thay mất tệp gốc).</value></data>
   <data name="Bates_Error_AddTitle" xml:space="preserve"><value>Không thêm được tệp</value></data>
-  <data name="Bates_Error_Encrypted" xml:space="preserve"><value>Tệp "{0}" có mật khẩu. Đánh số Bates cho tệp có mật khẩu sẽ có khi ứng dụng hỗ trợ mã hóa.</value></data>
+  <data name="Bates_Error_Encrypted" xml:space="preserve"><value>Tệp "{0}" có mật khẩu. Hãy gỡ mật khẩu (Mật khẩu &amp; quyền) và lưu rồi mới đánh số Bates.</value></data>
   <data name="Bates_Progress" xml:space="preserve"><value>Đang đánh số Bates {0} tệp…</value></data>
   <data name="Bates_Done" xml:space="preserve"><value>Đã đánh số Bates {0} tệp: {1} → {2}</value></data>
   <data name="Bates_Cancelled" xml:space="preserve"><value>Đã hủy đánh số Bates</value></data>
