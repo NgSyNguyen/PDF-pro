@@ -153,6 +153,7 @@ internal static class AppHost
                 sp.GetRequiredService<ILogger<PdfPro.Infrastructure.Worker.WorkerClient>>());
         });
         services.AddSingleton<IOperationIsolation, WorkerIsolation>();
+        services.AddSingleton<Services.Optimizing.IExportRunner, Services.Optimizing.WorkerExportRunner>();
         services.AddSingleton<IMergeService, MergeService>();
         services.AddSingleton<IBatesService, BatesService>();
         services.AddSingleton<ICertificateStore, CertificateStore>();

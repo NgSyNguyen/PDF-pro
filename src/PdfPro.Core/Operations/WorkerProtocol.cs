@@ -59,8 +59,20 @@ public sealed record WorkerMessage(WorkerMessageKind Kind, int Id)
     /// <summary>Run: the file the operation reads.</summary>
     public string? Input { get; init; }
 
-    /// <summary>Run: the file a content operation writes.</summary>
+    /// <summary>Run: the file a content operation writes (the file or folder of an export).</summary>
     public string? Output { get; init; }
+
+    /// <summary>Run: an export (compress, convert…) rather than a content operation; its result comes back as the report.</summary>
+    public bool Export { get; init; }
+
+    /// <summary>Run: the files an export reads, when it reads several (else <see cref="Input"/>).</summary>
+    public IReadOnlyList<string>? Inputs { get; init; }
+
+    /// <summary>Run: the password of an export's protected input (in memory only).</summary>
+    public string? Password { get; init; }
+
+    /// <summary>Run: what an export names its files after.</summary>
+    public string? Name { get; init; }
 
     /// <summary>Progress.</summary>
     public int Done { get; init; }

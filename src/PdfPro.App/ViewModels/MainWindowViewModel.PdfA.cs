@@ -5,6 +5,7 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.ViewModels.Converting;
 using PdfPro.Core.Organizing;
+using PdfPro.Operations;
 using PdfPro.Operations.Converting;
 using PdfPro.Operations.Security;
 
@@ -77,7 +78,7 @@ public sealed partial class MainWindowViewModel
                 Format(Strings.PdfA_Progress, document.FileName),
                 async (progress, token) =>
                 {
-                    report = await toPdfA.ConvertAsync(input, null, output, choice.Parameters, token);
+                    report = await Exports.RunAsync<PdfAReport>(toPdfA, new ExportCall([input], output), choice.Parameters, progress, token);
                     if (choice.Validate && _optimizing.VeraPdf is { } validator)
                     {
                         try

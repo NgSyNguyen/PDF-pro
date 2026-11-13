@@ -25,9 +25,17 @@ namespace PdfPro.Operations.Converting;
 /// </summary>
 /// <param name="gate">PDFium, for the pages PDF/A-1 makes pictures of.</param>
 /// <param name="fonts">The fonts embedded for fonts that are not (null: those of this computer and the bundled ones).</param>
-public sealed class ToPdfAOperation(PdfiumGate gate, FontLibrary? fonts = null) : PdfOperation<ToPdfAParams>
+public sealed class ToPdfAOperation(PdfiumGate gate, FontLibrary? fonts = null) : PdfOperation<ToPdfAParams>, IExportOperation
 {
     public const string OperationId = "convert.toPdfA";
+
+    Type IExportOperation.ResultType => typeof(PdfAReport);
+
+    async Task<object> IExportOperation.ExportAsync(ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(call);
+        return await ConvertAsync(call.Input, call.Password, call.Output, (ToPdfAParams)parameters, cancellationToken).ConfigureAwait(false);
+    }
 
     public const string Stage = "Stage_ToPdfA";
 

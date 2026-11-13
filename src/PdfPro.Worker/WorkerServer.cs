@@ -4,7 +4,10 @@ using PdfPro.Core.Ocr;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfPro.Operations;
+using PdfPro.Core.ExternalTools;
 using PdfPro.Operations.Automation;
+using PdfPro.Operations.Converting;
+using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.Worker;
 
@@ -78,6 +81,9 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog)
                 {
                     OperationValidationException validation => JsonSerializer.Serialize(validation.Errors),
                     OcrException ocr => ocr.Detail is null ? ocr.Failure.ToString() : $"{ocr.Failure}\n{ocr.Detail}",
+                    ImageFileException image => $"{image.FileIndex}\n{image.Problem}",
+                    RepairFailedException repair => JsonSerializer.Serialize(repair.Attempts.Select(a => new[] { a.Method.ToString(), a.Failure.ToString() })),
+                    ExternalToolNotFoundException tool => tool.ToolName,
                     _ => null,
                 },
             };
@@ -93,6 +99,11 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog)
     /// <summary>Runs the operation; its report as JSON, or null.</summary>
     private async Task<string?> ApplyAsync(WorkerMessage request, CancellationToken cancellationToken)
     {
+        if (request.Export)
+        {
+            return await ExportAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
         if (request is not { Operation: { } id, Parameters: { } json, Input: { } input, Output: { } output })
         {
             throw new InvalidDataException("A run needs an operation, its parameters, an input and an output.");
@@ -115,6 +126,25 @@ internal sealed class WorkerServer(Stream pipe, OperationCatalog catalog)
         return operation is IReportingOperation reporting && reporting.ReportOf(parameters) is { } report
             ? JsonSerializer.Serialize(report, reporting.ReportType, ParameterSchema.ReportJson)
             : null;
+    }
+
+    /// <summary>Runs an export (compress, convert…); its result as JSON.</summary>
+    private async Task<string?> ExportAsync(WorkerMessage request, CancellationToken cancellationToken)
+    {
+        if (request is not { Operation: { } id, Parameters: { } json, Output: { } output })
+        {
+            throw new InvalidDataException("An export needs an operation, its parameters and an output.");
+        }
+
+        if (catalog.Find(id) is not IExportOperation operation || catalog.ParameterType(id) is not { } type)
+        {
+            throw new NotSupportedException($"'{id}' does not run in the worker.");
+        }
+
+        var inputs = request.Inputs ?? (request.Input is { } input ? [input] : []);
+        var parameters = JsonSerializer.Deserialize(json, type, ParameterSchema.Json) ?? throw new InvalidDataException("The parameters are missing.");
+        var result = await operation.ExportAsync(new ExportCall(inputs, output, request.Password, request.Name), parameters, new SentProgress(this, request.Id), cancellationToken).ConfigureAwait(false);
+        return JsonSerializer.Serialize(result, operation.ResultType, ParameterSchema.ReportJson);
     }
 
     private async Task SendAsync(WorkerMessage message)

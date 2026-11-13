@@ -5,10 +5,12 @@ using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Optimizing;
 using PdfPro.App.ViewModels.Optimizing;
 using PdfPro.Core.ExternalTools;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Text;
+using PdfPro.Operations;
 using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.App.ViewModels;
@@ -63,7 +65,7 @@ public sealed partial class MainWindowViewModel
             var fileName = Path.GetFileName(output);
             await RunOptimizingAsync(
                 Format(Strings.Linearize_Progress, fileName),
-                (_, token) => optimizing.Linearize.WriteAsync(input, output, token),
+                (progress, token) => Exports.RunAsync<string>(optimizing.Linearize, new ExportCall([input], output), new LinearizeParams(), progress, token),
                 Format(Strings.Linearize_Done, fileName),
                 Strings.Linearize_Error_Title);
         }
@@ -106,7 +108,7 @@ public sealed partial class MainWindowViewModel
         var fileName = Path.GetFileName(output);
         var done = await RunOptimizingAsync(
             Format(Strings.Repair_Progress, Path.GetFileName(input)),
-            async (_, token) => report = await optimizing.Repair.RepairAsync(input, output, token),
+            async (progress, token) => report = await Exports.RunAsync<RepairReport>(optimizing.Repair, new ExportCall([input], output), new RepairParams(), progress, token),
             Format(Strings.Repair_Done, fileName),
             Strings.Repair_Error_Title);
         if (!done || report is null)
@@ -188,7 +190,7 @@ public sealed partial class MainWindowViewModel
             var fileName = Path.GetFileName(output);
             var done = await RunOptimizingAsync(
                 Format(Strings.Compress_Progress, document.FileName),
-                async (progress, token) => report = await compress.WriteAsync(input, output, parameters, progress, token),
+                async (progress, token) => report = await Exports.RunAsync<CompressReport>(compress, new ExportCall([input], output), parameters, progress, token),
                 Format(Strings.Compress_Done, fileName),
                 Strings.Compress_Error_Title);
             if (!done || report is null)
@@ -277,7 +279,7 @@ public sealed partial class MainWindowViewModel
             var fileName = Path.GetFileName(output);
             var done = await RunOptimizingAsync(
                 Format(Strings.Grayscale_Progress, document.FileName),
-                async (progress, token) => report = await grayscale.WriteAsync(input, output, parameters, progress, token),
+                async (progress, token) => report = await Exports.RunAsync<GrayscaleReport>(grayscale, new ExportCall([input], output), parameters, progress, token),
                 Format(Strings.Grayscale_Done, fileName),
                 Strings.Grayscale_Error_Title);
             if (!done || report is null)
@@ -342,6 +344,9 @@ public sealed partial class MainWindowViewModel
     /// explained (<paramref name="explain"/> gives the message of failures only this work has, or null). True when it
     /// finished.
     /// </summary>
+    /// <summary>Runs the file tools' operations: in the worker process when it is on (the app's own process in tests).</summary>
+    private IExportRunner Exports => _exports ?? InProcessExportRunner.Instance;
+
     private async Task<bool> RunOptimizingAsync(
         string progressText,
         Func<IProgress<OperationProgress>, CancellationToken, Task> work,
@@ -367,6 +372,12 @@ public sealed partial class MainWindowViewModel
         {
             task.Complete(Strings.Optimize_Cancelled);
             return false;
+        }
+        catch (Core.Operations.WorkerException ex) when (ex.Failure != Core.Operations.WorkerFailure.NotStarted)
+        {
+            _logger.LogWarning("The worker failed a file tool: {Failure}", ex.Failure);
+            task.Complete(Strings.Optimize_FailedStatus);
+            error = ex.Failure == Core.Operations.WorkerFailure.TimedOut ? Strings.Content_Error_WorkerTimedOut : Strings.Content_Error_WorkerStopped;
         }
         catch (ExternalToolNotFoundException)
         {

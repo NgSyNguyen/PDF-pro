@@ -51,9 +51,17 @@ public sealed record ToImagesResult(IReadOnlyList<string> Files, int PageCount, 
 /// per page; colour and grey with LZW, black and white with CCITT G4). Files are written under temporary names and
 /// renamed only when every page is done: a failure or a cancel leaves the output folder as it was.
 /// </summary>
-public sealed class ToImagesOperation(PdfiumGate gate) : PdfOperation<ToImagesParams>
+public sealed class ToImagesOperation(PdfiumGate gate) : PdfOperation<ToImagesParams>, IExportOperation
 {
     public const string OperationId = "convert.toImages";
+
+    Type IExportOperation.ResultType => typeof(ToImagesResult);
+
+    async Task<object> IExportOperation.ExportAsync(ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(call);
+        return await WriteAsync(call.Input, call.Password, call.Output, call.BaseName, (ToImagesParams)parameters, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     public const string Stage = "Stage_ToImages";
 

@@ -39,6 +39,41 @@ public sealed class WorkerTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task AnExport_RunsInTheWorker_AndItsResultComesBack()
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(_folder, "văn bản")).FullName;
+        var run = new WorkerRun(PdfPro.Operations.Converting.ToTextOperation.OperationId, JsonSerializer.Serialize(new PdfPro.Operations.Converting.ToTextParams(), ParameterSchema.Json), Sample("basic-vi.pdf"), folder)
+        {
+            Export = true,
+            Name = "hồ sơ",
+        };
+
+        var json = await _client.RunAsync(run, new Recorded(), Token);
+
+        var result = JsonSerializer.Deserialize<PdfPro.Operations.Converting.ToTextResult>(json.ShouldNotBeNull(), ParameterSchema.ReportJson).ShouldNotBeNull();
+        result.PageCount.ShouldBe(6);
+        result.Files.ShouldHaveSingleItem().ShouldBe(Path.Combine(folder, "hồ sơ.txt"));
+        File.ReadAllText(result.Files[0]).ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public async Task AnExportsError_ComesBackWithWhatTheAppExplains()
+    {
+        var notAPicture = Path.Combine(_folder, "ảnh.png");
+        await File.WriteAllTextAsync(notAPicture, "không phải ảnh", Token);
+        var run = new WorkerRun(PdfPro.Operations.Converting.FromImagesOperation.OperationId, JsonSerializer.Serialize(new PdfPro.Operations.Converting.FromImagesParams(), ParameterSchema.Json), notAPicture, Path.Combine(_folder, "ảnh.pdf"))
+        {
+            Export = true,
+            Inputs = [Sample("basic-vi.pdf"), notAPicture],
+        };
+
+        var error = await Should.ThrowAsync<WorkerOperationException>(() => _client.RunAsync(run, new Recorded(), Token));
+
+        error.ErrorType.ShouldBe(typeof(PdfPro.Operations.Converting.ImageFileException).FullName);
+        error.Detail.ShouldNotBeNull().Split('\n')[0].ShouldBe("0", "the first file is not a picture");
+    }
+
+    [Fact]
     public async Task AContentOperation_RunsInTheWorker_WithItsProgress()
     {
         var output = Path.Combine(_folder, "số trang.pdf");

@@ -6,6 +6,7 @@ using PdfPro.App.ViewModels.Converting;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Splitting;
+using PdfPro.Operations;
 using PdfPro.Operations.Converting;
 
 namespace PdfPro.App.ViewModels;
@@ -66,7 +67,7 @@ public sealed partial class MainWindowViewModel
             ToImagesResult? result = null;
             var done = await RunOptimizingAsync(
                 Format(Strings.ToImages_Progress, document.FileName),
-                async (progress, token) => result = await toImages.WriteAsync(input, null, choice.OutputFolder, stem, choice.Parameters, progress, token),
+                async (progress, token) => result = await Exports.RunAsync<ToImagesResult>(toImages, new ExportCall([input], choice.OutputFolder, Name: stem), choice.Parameters, progress, token),
                 Format(Strings.ToImages_Done, choice.OutputFolder),
                 Strings.ToImages_Error_Title);
             if (!done || result is null)
@@ -123,7 +124,7 @@ public sealed partial class MainWindowViewModel
         FromImagesResult? result = null;
         var done = await RunOptimizingAsync(
             Format(Strings.FromImages_Progress, choice.Files.Count),
-            async (progress, token) => result = await fromImages.WriteAsync(choice.Files, choice.OutputPath, choice.Parameters, progress, token),
+            async (progress, token) => result = await Exports.RunAsync<FromImagesResult>(fromImages, new ExportCall(choice.Files, choice.OutputPath), choice.Parameters, progress, token),
             Format(Strings.FromImages_Done, Path.GetFileName(choice.OutputPath)),
             Strings.FromImages_Error_Title,
             ex => ex is ImageFileException picture ? PictureProblem(picture, choice.Files) : null);
@@ -182,7 +183,7 @@ public sealed partial class MainWindowViewModel
             ToTextResult? result = null;
             var done = await RunOptimizingAsync(
                 Format(Strings.ToText_Progress, document.FileName),
-                async (progress, token) => result = await toText.WriteAsync(input, null, choice.OutputFolder, Path.GetFileNameWithoutExtension(document.FileName), choice.Parameters, progress, token),
+                async (progress, token) => result = await Exports.RunAsync<ToTextResult>(toText, new ExportCall([input], choice.OutputFolder, Name: Path.GetFileNameWithoutExtension(document.FileName)), choice.Parameters, progress, token),
                 Format(Strings.ToText_Done, choice.OutputFolder),
                 Strings.ToText_Error_Title);
             if (!done || result is null)

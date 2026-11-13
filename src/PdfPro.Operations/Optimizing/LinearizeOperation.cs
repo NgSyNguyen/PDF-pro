@@ -10,9 +10,18 @@ public sealed record LinearizeParams(bool Overwrite = false);
 /// optimize.linearize (<see cref="OperationKind.Export"/>, "Tối ưu cho web"): copies of files laid out for Fast Web
 /// View by qpdf — a browser shows the first page before the rest has arrived.
 /// </summary>
-public sealed class LinearizeOperation(Qpdf qpdf) : PdfOperation<LinearizeParams>
+public sealed class LinearizeOperation(Qpdf qpdf) : PdfOperation<LinearizeParams>, IExportOperation
 {
     public const string OperationId = "optimize.linearize";
+
+    Type IExportOperation.ResultType => typeof(string);
+
+    async Task<object> IExportOperation.ExportAsync(ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(call);
+        await WriteAsync(call.Input, call.Output, cancellationToken).ConfigureAwait(false);
+        return call.Output;
+    }
 
     public const string Stage = "Stage_Linearize";
 

@@ -81,9 +81,17 @@ public sealed record CompressPreview(byte[] Before, byte[] After, CompressReport
 /// anew (<see cref="ImageRecompressor"/>); other streams are deflated at the highest level; qpdf, when installed, packs
 /// the objects into object streams. A result that is not smaller is not written: the original is.
 /// </summary>
-public sealed class CompressOperation(Qpdf? qpdf = null) : PdfOperation<CompressParams>
+public sealed class CompressOperation(Qpdf? qpdf = null) : PdfOperation<CompressParams>, IExportOperation
 {
     public const string OperationId = "optimize.compress";
+
+    Type IExportOperation.ResultType => typeof(CompressReport);
+
+    async Task<object> IExportOperation.ExportAsync(ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(call);
+        return await WriteAsync(call.Input, call.Output, (CompressParams)parameters, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     public const string Stage = "Stage_Compress";
 

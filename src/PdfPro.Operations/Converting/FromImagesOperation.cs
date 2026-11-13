@@ -66,9 +66,17 @@ public sealed class ImageFileException(int fileIndex, ImageFileProblem problem, 
 /// strips kept as coded. Pages fit the picture or an A4 sheet. The PDF is written as it goes (one picture in memory
 /// at a time) to a temporary file that replaces the output at the end.
 /// </summary>
-public sealed class FromImagesOperation : PdfOperation<FromImagesParams>
+public sealed class FromImagesOperation : PdfOperation<FromImagesParams>, IExportOperation
 {
     public const string OperationId = "convert.fromImages";
+
+    Type IExportOperation.ResultType => typeof(FromImagesResult);
+
+    async Task<object> IExportOperation.ExportAsync(ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(call);
+        return await WriteAsync(call.Inputs, call.Output, (FromImagesParams)parameters, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     public const string Stage = "Stage_FromImages";
 

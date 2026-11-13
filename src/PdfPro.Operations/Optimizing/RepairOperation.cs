@@ -58,9 +58,17 @@ public sealed record RepairParams(bool Overwrite = false);
 /// found (<see cref="CrossReferenceRebuilder"/>, for files that lost theirs and their trailer) and PdfPig (lenient
 /// parsing, pages copied); the first way whose result opens in PDFium with pages is kept, and the report says which.
 /// </summary>
-public sealed class RepairOperation(PdfiumGate gate, Qpdf? qpdf = null) : PdfOperation<RepairParams>
+public sealed class RepairOperation(PdfiumGate gate, Qpdf? qpdf = null) : PdfOperation<RepairParams>, IExportOperation
 {
     public const string OperationId = "optimize.repair";
+
+    Type IExportOperation.ResultType => typeof(RepairReport);
+
+    async Task<object> IExportOperation.ExportAsync(ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(call);
+        return await RepairAsync(call.Input, call.Output, cancellationToken).ConfigureAwait(false);
+    }
 
     public const string Stage = "Stage_Repair";
 

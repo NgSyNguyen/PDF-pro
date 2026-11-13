@@ -47,9 +47,17 @@ public sealed record GrayscaleReport(
 /// colour is left; pages it could not convert or that still show colour are rendered grey from the original and replace
 /// themselves (their annotations stay; if one of those still shows colour, it is drawn into the picture and removed).
 /// </summary>
-public sealed class GrayscaleOperation(PdfiumGate gate) : PdfOperation<GrayscaleParams>
+public sealed class GrayscaleOperation(PdfiumGate gate) : PdfOperation<GrayscaleParams>, IExportOperation
 {
     public const string OperationId = "optimize.grayscale";
+
+    Type IExportOperation.ResultType => typeof(GrayscaleReport);
+
+    async Task<object> IExportOperation.ExportAsync(ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(call);
+        return await WriteAsync(call.Input, call.Output, (GrayscaleParams)parameters, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     public const string Stage = "Stage_Grayscale";
 

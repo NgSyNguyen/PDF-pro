@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using PdfPro.Core.ExternalTools;
 using PdfPro.Core.Ocr;
 using PdfPro.Core.Operations;
 
@@ -28,7 +29,20 @@ public sealed record WorkerOptions(string Program, long MemoryLimitBytes, TimeSp
 /// <param name="Parameters">Its parameters as JSON (the operation's own serialization).</param>
 /// <param name="Input">The file it reads.</param>
 /// <param name="Output">The file a content operation writes.</param>
-public sealed record WorkerRun(string Operation, string Parameters, string Input, string Output);
+public sealed record WorkerRun(string Operation, string Parameters, string Input, string Output)
+{
+    /// <summary>An export (compress, convert…): its result comes back as the report.</summary>
+    public bool Export { get; init; }
+
+    /// <summary>The files an export reads, when it reads several.</summary>
+    public IReadOnlyList<string>? Inputs { get; init; }
+
+    /// <summary>The password of an export's protected input.</summary>
+    public string? Password { get; init; }
+
+    /// <summary>What an export names its files after.</summary>
+    public string? Name { get; init; }
+}
 
 /// <summary>Runs operations in the worker process (seam for tests).</summary>
 public interface IWorkerClient : IAsyncDisposable
@@ -77,7 +91,18 @@ public sealed class WorkerClient(WorkerOptions options, ILogger<WorkerClient> lo
             var clock = Stopwatch.StartNew();
             try
             {
-                await connection.SendAsync(new WorkerMessage(WorkerMessageKind.Run, id) { Operation = run.Operation, Parameters = run.Parameters, Input = run.Input, Output = run.Output }, CancellationToken.None).ConfigureAwait(false);
+                var message = new WorkerMessage(WorkerMessageKind.Run, id)
+                {
+                    Operation = run.Operation,
+                    Parameters = run.Parameters,
+                    Input = run.Input,
+                    Output = run.Output,
+                    Export = run.Export,
+                    Inputs = run.Inputs,
+                    Password = run.Password,
+                    Name = run.Name,
+                };
+                await connection.SendAsync(message, CancellationToken.None).ConfigureAwait(false);
             }
             catch (IOException ex)
             {
@@ -333,6 +358,11 @@ public sealed class WorkerClient(WorkerOptions options, ILogger<WorkerClient> lo
         catch (JsonException)
         {
             // Told as it is below.
+        }
+
+        if (type == typeof(ExternalToolNotFoundException).FullName)
+        {
+            return new ExternalToolNotFoundException(reply.ErrorDetail ?? "qpdf");
         }
 
         return type switch

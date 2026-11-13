@@ -66,7 +66,7 @@ public static class ParameterSchema
     /// written: a report record may have a nullable member with no default (OcrPageReport.MeanConfidence of a page
     /// not recognised), which <see cref="Json"/> would leave out and then refuse as missing when reading it back.
     /// </summary>
-    public static JsonSerializerOptions ReportJson { get; } = new(Json) { DefaultIgnoreCondition = JsonIgnoreCondition.Never };
+    public static JsonSerializerOptions ReportJson { get; } = new(Json) { DefaultIgnoreCondition = JsonIgnoreCondition.Never, IncludeFields = true };
 
     /// <summary>The fields of a parameter record, in constructor order.</summary>
     public static IReadOnlyList<ParameterField> Of(Type parameters)

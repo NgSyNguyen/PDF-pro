@@ -66,9 +66,17 @@ public sealed record ToTextResult(IReadOnlyList<string> Files, int PageCount, lo
 /// Files are written under temporary names and renamed when everything is done: a failure or a cancel leaves the output
 /// folder as it was.
 /// </summary>
-public sealed class ToTextOperation : PdfOperation<ToTextParams>
+public sealed class ToTextOperation : PdfOperation<ToTextParams>, IExportOperation
 {
     public const string OperationId = "convert.toText";
+
+    Type IExportOperation.ResultType => typeof(ToTextResult);
+
+    async Task<object> IExportOperation.ExportAsync(ExportCall call, object parameters, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(call);
+        return await WriteAsync(call.Input, call.Password, call.Output, call.BaseName, (ToTextParams)parameters, progress, cancellationToken).ConfigureAwait(false);
+    }
 
     public const string Stage = "Stage_ToText";
 
