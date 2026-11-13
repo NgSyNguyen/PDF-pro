@@ -26,6 +26,10 @@ public sealed record SignatureAppearance(int Page, PdfRect Rect, IReadOnlyList<s
 /// A PAdES signature (ETSI EN 319 142, SubFilter ETSI.CAdES.detached with the signing certificate as a signed attribute)
 /// instead of adbe.pkcs7.detached; with a timestamp it is PAdES-B-T.
 /// </param>
+/// <param name="LongTerm">
+/// After signing, the validation material (certificates, revocation lists) is appended in a DSS (LTV, PAdES-B-LT with
+/// PAdES and a timestamp): see <see cref="LongTermValidation"/>.
+/// </param>
 public sealed record SignRequest(
     string FieldName,
     SignatureAppearance? Appearance = null,
@@ -34,9 +38,10 @@ public sealed record SignRequest(
     string? ContactInfo = null,
     Uri? TimestampServer = null,
     int? Certification = null,
-    bool Pades = false)
+    bool Pades = false,
+    bool LongTerm = false)
 {
-    public override string ToString() => $"SignRequest {{ Field = {FieldName}, Visible = {Appearance is not null}, Timestamp = {TimestampServer is not null}, Certification = {Certification}, Pades = {Pades} }}";
+    public override string ToString() => $"SignRequest {{ Field = {FieldName}, Visible = {Appearance is not null}, Timestamp = {TimestampServer is not null}, Certification = {Certification}, Pades = {Pades}, LongTerm = {LongTerm} }}";
 }
 
 /// <summary>Why a document could not be signed.</summary>

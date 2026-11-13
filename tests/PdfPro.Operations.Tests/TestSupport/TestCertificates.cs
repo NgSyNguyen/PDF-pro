@@ -35,14 +35,22 @@ internal static class TestCertificates
         return X509CertificateLoader.LoadPkcs12(certificate.Export(X509ContentType.Pkcs12, "ca"), "ca", X509KeyStorageFlags.Exportable);
     }
 
-    /// <summary>A signing certificate issued by <paramref name="authority"/>, with its private key.</summary>
-    public static X509Certificate2 IssuedBy(X509Certificate2 authority, string name = "Nguyễn Văn A")
+    /// <summary>
+    /// A signing certificate issued by <paramref name="authority"/>, with its private key; with
+    /// <paramref name="crl"/>, its CRL distribution point.
+    /// </summary>
+    public static X509Certificate2 IssuedBy(X509Certificate2 authority, string name = "Nguyễn Văn A", string? crl = null)
     {
         using var key = RSA.Create(2048);
         var request = new CertificateRequest(new X500DistinguishedName($"CN={name}, O=PDF_Pro Test, C=VN"), key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         request.CertificateExtensions.Add(new X509BasicConstraintsExtension(certificateAuthority: false, hasPathLengthConstraint: false, pathLengthConstraint: 0, critical: true));
         request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.NonRepudiation, critical: true));
         request.CertificateExtensions.Add(X509AuthorityKeyIdentifierExtension.CreateFromCertificate(authority, includeKeyIdentifier: true, includeIssuerAndSerial: false));
+        if (crl is not null)
+        {
+            request.CertificateExtensions.Add(CertificateRevocationListBuilder.BuildCrlDistributionPointExtension([crl]));
+        }
+
         var serial = RandomNumberGenerator.GetBytes(8);
         serial[0] &= 0x7F;
         using var issued = request.Create(authority, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1), serial);

@@ -49,7 +49,8 @@ public sealed partial class MainWindowViewModel
             _settings.Current.TimestampServer,
             _settings.Current.UseTimestamp,
             files.Count,
-            usePades: _settings.Current.UsePades);
+            usePades: _settings.Current.UsePades,
+            useLongTerm: _settings.Current.UseLongTermValidation);
         if (!_pageDialogs.ShowSign(dialog) || dialog.Result is not { } choice)
         {
             return;
@@ -172,8 +173,8 @@ public sealed partial class MainWindowViewModel
             appearance = new SignatureAppearance(page, rect, choice.Lines(time), choice.Image);
         }
 
-        var request = new SignRequest(FreeSignatureFieldName(FieldsOf(file)), appearance, choice.Reason, choice.Location, choice.Contact, server, Pades: choice.Pades);
-        await SignOperation.SignFileAsync(input, output, request, certificate, signing.Timestamps, time, cancellationToken).ConfigureAwait(false);
+        var request = new SignRequest(FreeSignatureFieldName(FieldsOf(file)), appearance, choice.Reason, choice.Location, choice.Contact, server, Pades: choice.Pades, LongTerm: choice.LongTerm);
+        await SignOperation.SignFileAsync(input, output, request, certificate, signing.Timestamps, signing.Revocation, time, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>The form fields of a file, or none when it cannot be read that way (signing will say why).</summary>

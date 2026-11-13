@@ -137,6 +137,7 @@ internal static class AppHost
         services.AddOperation<RedactOperation>();
         services.AddOperation<SanitizeOperation>();
         services.AddSingleton<ITimestampClient>(_ => new HttpTimestampClient(new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
+        services.AddSingleton<IRevocationFetcher>(_ => new HttpRevocationFetcher(new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
         services.AddOperation<SignOperation>();
         services.AddSingleton<OperationCatalog>();
         services.AddSingleton<IDocumentWorkspaceService, DocumentWorkspaceService>();
@@ -230,7 +231,8 @@ internal static class AppHost
             sp.GetRequiredService<ICertificateStore>(),
             sp.GetRequiredService<ITimestampClient>(),
             new PdfFormSource(),
-            sp.GetRequiredService<SignatureLibrary>()));
+            sp.GetRequiredService<SignatureLibrary>(),
+            sp.GetRequiredService<IRevocationFetcher>()));
         services.AddSingleton(sp => new Services.Automation.AutomationServices(
             sp.GetRequiredService<OperationCatalog>(),
             new Operations.Automation.WorkflowRunner(sp.GetRequiredService<OperationCatalog>(), sp.GetRequiredService<PdfPro.Pdfium.PdfiumGate>(), sp.GetRequiredService<PdfPro.Core.Ocr.IOcrEngine>()),

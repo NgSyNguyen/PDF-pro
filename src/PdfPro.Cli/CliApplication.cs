@@ -434,7 +434,9 @@ public static class CliApplication
         var location = new Option<string?>("--location") { Description = CliStrings.Option_Location };
         var contact = new Option<string?>("--contact") { Description = CliStrings.Option_Contact };
         var timestamp = new Option<Uri?>("--tsa") { Description = CliStrings.Option_Tsa };
-        var command = new Command("sign", CliStrings.Command_Sign) { inputs, reason, location, contact, timestamp };
+        var pades = new Option<bool>("--pades") { Description = CliStrings.Option_Pades };
+        var longTerm = new Option<bool>("--ltv") { Description = CliStrings.Option_Ltv };
+        var command = new Command("sign", CliStrings.Command_Sign) { inputs, reason, location, contact, timestamp, pades, longTerm };
         common.AddSigning(command);
         command.SetAction(async (parse, token) =>
         {
@@ -450,6 +452,8 @@ public static class CliApplication
                 ["location"] = parse.GetValue(location),
                 ["contactInfo"] = parse.GetValue(contact),
                 ["timestampServer"] = parse.GetValue(timestamp)?.AbsoluteUri,
+                ["pades"] = parse.GetValue(pades),
+                ["longTerm"] = parse.GetValue(longTerm),
             };
             using var secrets = Secrets(env, parse, common, null);
             return await CliRun.OperationAsync(env, common.Read(parse, env), SignOperation.OperationId, new JsonObject { ["request"] = request }, parse.GetValue(inputs)!, secrets, token).ConfigureAwait(false);

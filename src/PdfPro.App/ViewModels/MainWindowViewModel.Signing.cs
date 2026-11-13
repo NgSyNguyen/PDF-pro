@@ -52,6 +52,7 @@ public sealed partial class MainWindowViewModel
             _settings.Current.TimestampServer,
             _settings.Current.UseTimestamp,
             usePades: _settings.Current.UsePades,
+            useLongTerm: _settings.Current.UseLongTermValidation,
             canCertify: !form.Fields.Any(f => f.IsSigned) && !document.Document.Features.HasDigitalSignatures);
         if (!_pageDialogs.ShowSign(dialog) || dialog.Result is not { } choice)
         {
@@ -99,7 +100,7 @@ public sealed partial class MainWindowViewModel
             _ => null,
         };
         var fieldName = choice.Placement == SignaturePlacementKind.Field && choice.FieldName is { } name ? name : FreeSignatureFieldName(form.Fields);
-        var request = new SignRequest(fieldName, appearance, choice.Reason, choice.Location, choice.Contact, choice.TimestampServer, choice.Certification, choice.Pades);
+        var request = new SignRequest(fieldName, appearance, choice.Reason, choice.Location, choice.Contact, choice.TimestampServer, choice.Certification, choice.Pades, choice.LongTerm);
         if (!await WriteSignedAsync(signing, input, output, request, certificate, time))
         {
             return;
@@ -151,14 +152,20 @@ public sealed partial class MainWindowViewModel
         await WaitForBackgroundWorkAsync(cancelPrint: false);
         var fileName = Path.GetFileName(output);
         var task = StatusBar.StartTask(Format(Strings.Sign_Progress, fileName));
-        var writing = Task.Run(() => SignOperation.SignFileAsync(input, output, request, certificate, signing.Timestamps, time, task.Token), task.Token);
+        var writing = Task.Run(() => SignOperation.SignFileAsync(input, output, request, certificate, signing.Timestamps, signing.Revocation, time, task.Token), task.Token);
         _activeSave = writing;
         NotifySaveCommands();
         string error;
         try
         {
-            await writing;
+            var longTerm = await writing;
             task.Complete(Format(Strings.Sign_Done, fileName));
+            if (longTerm is { Missing.Count: > 0 })
+            {
+                // Signed all the same: the revocation lists that could not be had are said, for the user to know.
+                await _messages.ShowInfoAsync(Strings.Sign_Ltv_Title, Format(Strings.Sign_Ltv_Missing, string.Join(", ", longTerm.Missing)));
+            }
+
             return true;
         }
         catch (OperationCanceledException)
@@ -204,14 +211,15 @@ public sealed partial class MainWindowViewModel
     private async Task RememberTimestampSettingsAsync(SignDialogViewModel dialog)
     {
         var server = dialog.TimestampServer.Trim();
-        if (server == _settings.Current.TimestampServer && dialog.UseTimestamp == _settings.Current.UseTimestamp && dialog.UsePades == _settings.Current.UsePades)
+        if (server == _settings.Current.TimestampServer && dialog.UseTimestamp == _settings.Current.UseTimestamp && dialog.UsePades == _settings.Current.UsePades
+            && dialog.UseLongTerm == _settings.Current.UseLongTermValidation)
         {
             return;
         }
 
         try
         {
-            await _settings.UpdateAsync(s => s with { TimestampServer = server, UseTimestamp = dialog.UseTimestamp, UsePades = dialog.UsePades });
+            await _settings.UpdateAsync(s => s with { TimestampServer = server, UseTimestamp = dialog.UseTimestamp, UsePades = dialog.UsePades, UseLongTermValidation = dialog.UseLongTerm });
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

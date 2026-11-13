@@ -74,6 +74,9 @@ public sealed record SignDialogResult(
     /// <summary>A PAdES signature (ETSI.CAdES.detached).</summary>
     public bool Pades { get; init; }
 
+    /// <summary>The validation material is added after signing (LTV).</summary>
+    public bool LongTerm { get; init; }
+
     /// <summary>The signer's common name, as the certificate gives it.</summary>
     public string SignerName => Certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false);
 
@@ -135,6 +138,7 @@ public sealed partial class SignDialogViewModel : ObservableObject
     /// <param name="fileCount">More than one: the same signature goes on that many files (in a corner, or invisible).</param>
     /// <param name="usePades">Signatures were last PAdES.</param>
     /// <param name="canCertify">The document has no signature yet: this one may certify it.</param>
+    /// <param name="useLongTerm">Signed files last got their validation material (LTV).</param>
     public SignDialogViewModel(
         ICertificateStore store,
         IFileDialogService files,
@@ -145,7 +149,8 @@ public sealed partial class SignDialogViewModel : ObservableObject
         bool useTimestamp,
         int fileCount = 1,
         bool usePades = false,
-        bool canCertify = false)
+        bool canCertify = false,
+        bool useLongTerm = false)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(emptyFields);
@@ -177,6 +182,7 @@ public sealed partial class SignDialogViewModel : ObservableObject
         TimestampServer = timestampServer;
         UseTimestamp = useTimestamp;
         UsePades = usePades;
+        UseLongTerm = useLongTerm;
         CanCertify = canCertify && !IsBatch;
         Certifications =
         [
@@ -203,6 +209,10 @@ public sealed partial class SignDialogViewModel : ObservableObject
     /// <summary>"Chữ ký chuẩn PAdES": ETSI.CAdES.detached (PAdES-B-T with a timestamp).</summary>
     [ObservableProperty]
     public partial bool UsePades { get; set; }
+
+    /// <summary>"Thêm dữ liệu xác minh lâu dài (LTV)": certificates and revocation lists appended after signing.</summary>
+    [ObservableProperty]
+    public partial bool UseLongTerm { get; set; }
 
     public event EventHandler<bool>? CloseRequested;
 
@@ -337,6 +347,7 @@ public sealed partial class SignDialogViewModel : ObservableObject
             CornerPage = SelectedPlacement.Page,
             Certification = CanCertify && Certify ? SelectedCertification.Permission : null,
             Pades = UsePades,
+            LongTerm = UseLongTerm,
         };
         Error = null;
         Forget();

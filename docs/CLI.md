@@ -92,7 +92,7 @@ pdfpro redact ho-so\ -r --pattern cccd,phone,email,account,date --label "Đã x�
 $env:PDFPRO_PFX_PASSWORD = "..."; pdfpro sign *.pdf --pfx ky.pfx --visible last --reason "Phê duyệt" --tsa http://timestamp.digicert.com
 ```
 - `redact` mặc định biến trang có vùng xóa thành ảnh (an toàn tuyệt đối); `--keep-text` giữ chữ và hình vẽ còn lại (nâng cao).
-- `sign` mặc định chữ ký ẩn; `--visible first|last` đặt chữ ký ở góc dưới phải trang đầu/cuối.
+- `sign` mặc định chữ ký ẩn; `--visible first|last` đặt chữ ký ở góc dưới phải trang đầu/cuối; `--pades` ký chuẩn PAdES (`ETSI.CAdES.detached`, có `--tsa` là PAdES-B-T); `--ltv` thêm dữ liệu xác minh lâu dài (chứng thư + danh sách thu hồi tải qua mạng vào DSS; với `--pades --tsa` là PAdES-B-LT).
 
 ### Thao tác bất kỳ
 ```powershell

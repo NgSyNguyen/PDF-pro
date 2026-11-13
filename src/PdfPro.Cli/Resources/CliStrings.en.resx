@@ -135,6 +135,8 @@
   <data name="Option_TableOfContents" xml:space="preserve"><value>Add a table of contents.</value></data>
   <data name="Option_To" xml:space="preserve"><value>Target: pdf, png, jpeg, tiff, text, markdown, pdfa, pdfa1b, grayscale, web.</value></data>
   <data name="Option_Tsa" xml:space="preserve"><value>A time-stamping server (RFC 3161).</value></data>
+  <data name="Option_Pades" xml:space="preserve"><value>A PAdES signature (ETSI.CAdES.detached); with --tsa, PAdES-B-T.</value></data>
+  <data name="Option_Ltv" xml:space="preserve"><value>Add long-term validation data (certificates, revocation lists downloaded).</value></data>
   <data name="Option_UserPassword" xml:space="preserve"><value>The open password (or PDFPRO_USER_PASSWORD); none = anyone opens it.</value></data>
   <data name="Option_Visible" xml:space="preserve"><value>A visible signature in the bottom right corner of the first or last page (default: invisible).</value></data>
   <data name="Option_WatermarkText" xml:space="preserve"><value>The watermark text.</value></data>

@@ -227,6 +227,18 @@
         Text="{loc:Tr Sign_Pades_Note}"
         TextWrapping="Wrap" />
 
+      <!-- LTV: the certificates and revocation lists are appended after signing (DSS). -->
+      <CheckBox
+        Margin="0,12,0,0"
+        AutomationProperties.AutomationId="SignLtv"
+        Content="{loc:Tr Sign_Ltv}"
+        IsChecked="{Binding UseLongTerm}" />
+      <TextBlock
+        Margin="28,2,0,0"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr Sign_Ltv_Note}"
+        TextWrapping="Wrap" />
+
       <!-- The certification (DocMDP): only a document without a signature yet. -->
       <StackPanel Margin="0,12,0,0" Visibility="{Binding CanCertify, Converter={StaticResource BoolToVisibility}}">
         <CheckBox

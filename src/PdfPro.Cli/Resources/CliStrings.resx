@@ -135,6 +135,8 @@
   <data name="Option_TableOfContents" xml:space="preserve"><value>Thêm trang mục lục.</value></data>
   <data name="Option_To" xml:space="preserve"><value>Đích: pdf, png, jpeg, tiff, text, markdown, pdfa, pdfa1b, grayscale, web.</value></data>
   <data name="Option_Tsa" xml:space="preserve"><value>Máy chủ dấu thời gian (RFC 3161).</value></data>
+  <data name="Option_Pades" xml:space="preserve"><value>Chữ ký chuẩn PAdES (ETSI.CAdES.detached); có --tsa là PAdES-B-T.</value></data>
+  <data name="Option_Ltv" xml:space="preserve"><value>Thêm dữ liệu xác minh lâu dài (chứng thư, danh sách thu hồi tải qua mạng).</value></data>
   <data name="Option_UserPassword" xml:space="preserve"><value>Mật khẩu mở (hoặc PDFPRO_USER_PASSWORD); bỏ trống = ai cũng mở được.</value></data>
   <data name="Option_Visible" xml:space="preserve"><value>Chữ ký hiện ở góc dưới phải của trang first hoặc last (mặc định: ẩn).</value></data>
   <data name="Option_WatermarkText" xml:space="preserve"><value>Chữ của hình mờ.</value></data>

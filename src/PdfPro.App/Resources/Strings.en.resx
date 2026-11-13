@@ -2456,4 +2456,8 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Sign_Certify_Comments" xml:space="preserve"><value>Afterwards allow filling in forms, signing and comments</value></data>
   <data name="Sign_Certify_NoChanges" xml:space="preserve"><value>Afterwards allow no change at all</value></data>
   <data name="Sign_Error_AlreadySigned" xml:space="preserve"><value>The document is already signed: only its first signature can certify it. Sign it as usual.</value></data>
+  <data name="Sign_Ltv" xml:space="preserve"><value>Add long-term validation data (LTV)</value></data>
+  <data name="Sign_Ltv_Note" xml:space="preserve"><value>Embeds the certificates and revocation lists (CRLs) so the signature can still be checked once its certificate expires; the CRLs are downloaded.</value></data>
+  <data name="Sign_Ltv_Title" xml:space="preserve"><value>Long-term validation</value></data>
+  <data name="Sign_Ltv_Missing" xml:space="preserve"><value>Signed. The revocation lists of these could not be downloaded: {0} — the signature is valid, but long-term validation lacks their data.</value></data>
 </root>

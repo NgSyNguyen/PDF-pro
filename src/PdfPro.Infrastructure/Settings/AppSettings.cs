@@ -71,6 +71,9 @@ public sealed record AppSettings
     /// <summary>Signatures are PAdES (ETSI.CAdES.detached) rather than adbe.pkcs7.detached.</summary>
     public bool UsePades { get; init; }
 
+    /// <summary>Signed files get their validation material (certificates, revocation lists) for long-term validation.</summary>
+    public bool UseLongTermValidation { get; init; }
+
     /// <summary>
     /// Where LibreOffice is ("Office sang PDF"): its soffice program, its "program" folder or its installation folder;
     /// blank: looked for where it is usually installed.

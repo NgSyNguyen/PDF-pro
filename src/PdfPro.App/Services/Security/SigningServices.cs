@@ -8,4 +8,4 @@ namespace PdfPro.App.Services.Security;
 /// What signing documents needs: certificates, a time-stamping client, the document's form (its empty signature fields)
 /// and the saved handwritten signatures.
 /// </summary>
-public sealed record SigningServices(ICertificateStore Certificates, ITimestampClient Timestamps, IFormSource Forms, SignatureLibrary? Signatures = null);
+public sealed record SigningServices(ICertificateStore Certificates, ITimestampClient Timestamps, IFormSource Forms, SignatureLibrary? Signatures = null, IRevocationFetcher? Revocation = null);

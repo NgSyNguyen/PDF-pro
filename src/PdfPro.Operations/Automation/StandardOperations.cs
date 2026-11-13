@@ -31,6 +31,7 @@ namespace PdfPro.Operations.Automation;
 /// <param name="LibreOffice">Finds LibreOffice, or null for the usual places.</param>
 /// <param name="Timestamps">The time-stamping client of signatures, or null for none.</param>
 /// <param name="Fonts">The font library (fonts installed on the computer for PDF/A), or null for the bundled fonts only.</param>
+/// <param name="Revocation">Downloads revocation lists for long-term validation of signatures, or null: no LTV.</param>
 public sealed record StandardOperationServices(
     PdfiumGate Gate,
     IExternalToolRunner Tools,
@@ -38,7 +39,8 @@ public sealed record StandardOperationServices(
     IOcrEngine? Ocr = null,
     ILibreOfficeLocator? LibreOffice = null,
     ITimestampClient? Timestamps = null,
-    FontLibrary? Fonts = null);
+    FontLibrary? Fonts = null,
+    IRevocationFetcher? Revocation = null);
 
 /// <summary>
 /// Every operation of PDF_Pro built without the app (the command line, batch runs, tests): the same classes the app
@@ -97,7 +99,7 @@ public static class StandardOperations
             new SetProtectionOperation(materializer, loader),
             new RedactOperation(gate),
             new SanitizeOperation(gate),
-            new SignOperation(services.Timestamps),
+            new SignOperation(services.Timestamps, services.Revocation),
             new LinearizeOperation(qpdf),
             new RepairOperation(gate, qpdf),
             new CompressOperation(qpdf),

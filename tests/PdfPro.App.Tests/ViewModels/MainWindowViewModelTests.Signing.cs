@@ -21,6 +21,7 @@ public sealed partial class MainWindowViewModelTests
 {
     private readonly ICertificateStore _certificates = Substitute.For<ICertificateStore>();
     private readonly ITimestampClient _timestamps = Substitute.For<ITimestampClient>();
+    private readonly IRevocationFetcher _revocation = Substitute.For<IRevocationFetcher>();
 
     [Fact]
     public async Task Sign_InvisibleSignature_SignsTheSavedFile_IntoTheChosenCopy_WhichOpens()
@@ -301,6 +302,27 @@ public sealed partial class MainWindowViewModelTests
 
         System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(output)).ShouldContain("/SubFilter /ETSI.CAdES.detached");
         _settings.Current.UsePades.ShouldBeTrue("the choice is remembered");
+    }
+
+    [Fact]
+    public async Task Sign_WithLongTermValidation_AppendsADss_AndTheChoiceIsRemembered()
+    {
+        var (viewModel, path) = await CreateSignableAsync();
+        var output = SignedPath(path);
+        ChooseInDialog(
+            d =>
+            {
+                d.SelectedPlacement = d.Placements.Single(p => p.Kind == SignaturePlacementKind.Invisible);
+                d.UseLongTerm = true;
+            },
+            useTimestamp: false);
+
+        await viewModel.SignCommand.ExecuteAsync(null);
+
+        System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(output)).ShouldContain("/Type /DSS");
+        _settings.Current.UseLongTermValidation.ShouldBeTrue("the choice is remembered");
+        await _revocation.DidNotReceiveWithAnyArgs().GetCrlAsync(default!, TestToken);
+        await _messages.DidNotReceive().ShowInfoAsync(Strings.Sign_Ltv_Title, Arg.Any<string>());
     }
 
     private void ChooseInDialog(Action<SignDialogViewModel> choose, bool useTimestamp)

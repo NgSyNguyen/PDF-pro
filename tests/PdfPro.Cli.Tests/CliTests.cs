@@ -25,7 +25,7 @@ public sealed class CliFixture : IDisposable
         var locator = new TesseractLocator(Path.Combine(RepositoryRoot, "tools"));
         Tesseract = locator.Find(null, OcrDataKind.Best) is { } found && found.Languages.Contains("vie");
         Ocr = new TesseractEngine(runner, locator, () => new TesseractSettings());
-        Catalog = StandardOperations.Create(new StandardOperationServices(Gate, runner, Path.Combine(RepositoryRoot, "tools"), Ocr));
+        Catalog = StandardOperations.Create(new StandardOperationServices(Gate, runner, Path.Combine(RepositoryRoot, "tools"), Ocr, Revocation: new NoRevocationLists()));
     }
 
     public static string RepositoryRoot { get; } = FindRoot();
@@ -229,6 +229,11 @@ public sealed class CliTests(CliFixture fixture) : IDisposable
         code.ShouldBe(ExitCodes.Success);
         var info = await RunAsync("info", output.Trim(), "--json");
         JsonNode.Parse(info.Output)!["signatures"]!.GetValue<int>().ShouldBe(1);
+        var longTerm = await RunAsync("sign", CliFixture.Sample("basic-vi.pdf"), "--pfx", pfx, "--pades", "--ltv", "-o", "ký-ltv", "-q");
+        longTerm.Code.ShouldBe(ExitCodes.Success);
+        var signed = System.Text.Encoding.Latin1.GetString(await File.ReadAllBytesAsync(longTerm.Output.Trim(), Token));
+        signed.ShouldContain("/SubFilter /ETSI.CAdES.detached");
+        signed.ShouldContain("/Type /DSS", customMessage: "the validation material is appended");
         _variables[CliApplication.PfxPasswordVariable] = "sai";
         (await RunAsync("sign", CliFixture.Sample("basic-vi.pdf"), "--pfx", pfx, "-o", "ký2", "-q")).Code.ShouldBe(ExitCodes.Usage, "the certificate does not load");
     }
@@ -285,4 +290,10 @@ public sealed class CliTests(CliFixture fixture) : IDisposable
         var code = await CliApplication.RunAsync(args, env, Token);
         return (code, output.ToString(), error.ToString());
     }
+}
+
+/// <summary>No revocation list is ever downloaded in tests.</summary>
+internal sealed class NoRevocationLists : PdfPro.Operations.Signing.IRevocationFetcher
+{
+    public Task<byte[]?> GetCrlAsync(Uri address, CancellationToken cancellationToken) => Task.FromResult<byte[]?>(null);
 }

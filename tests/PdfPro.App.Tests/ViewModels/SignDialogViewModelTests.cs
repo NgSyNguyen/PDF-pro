@@ -157,12 +157,26 @@ public sealed class SignDialogViewModelTests : IDisposable
         result.Reason.ShouldBe("Phê duyệt hợp đồng");
         result.Location.ShouldBe("Hà Nội");
         result.Contact.ShouldBeNull();
+        result.LongTerm.ShouldBeFalse("LTV is asked for");
         result.Lines(DateTimeOffset.Now).ShouldBe(
         [
             string.Format(CultureInfo.CurrentCulture, Strings.Sign_Line_SignedBy, "Nguyễn Văn A"),
             string.Format(CultureInfo.CurrentCulture, Strings.Sign_Line_Reason, "Phê duyệt hợp đồng"),
             string.Format(CultureInfo.CurrentCulture, Strings.Sign_Line_Location, "Hà Nội"),
         ]);
+        result.Certificate.Dispose();
+    }
+
+    [Fact]
+    public void TheLongTermChoice_StartsAsLastTime_AndIsInTheResult()
+    {
+        var dialog = new SignDialogViewModel(_store, _files, [], [], _ => null, Server, useTimestamp: true, useLongTerm: true);
+        dialog.UseLongTerm.ShouldBeTrue("as the settings remember it");
+
+        dialog.SignCommand.Execute(null);
+
+        var result = dialog.Result.ShouldNotBeNull();
+        result.LongTerm.ShouldBeTrue();
         result.Certificate.Dispose();
     }
 

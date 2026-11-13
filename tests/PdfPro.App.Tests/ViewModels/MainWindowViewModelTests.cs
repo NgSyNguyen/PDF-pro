@@ -639,7 +639,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _merge,
             NullLogger<MainWindowViewModel>.Instance,
             withBates ? _bates : null,
-            new SigningServices(_certificates, _timestamps, _forms),
+            new SigningServices(_certificates, _timestamps, _forms, Revocation: _revocation),
             new OptimizingServices(
                 new LinearizeOperation(new Qpdf(_tools, new QpdfOptions("qpdf"))),
                 new RepairOperation(TestOperations.PdfiumGate),

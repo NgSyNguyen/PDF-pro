@@ -19,7 +19,7 @@ public sealed record SignParams(SignRequest Request, [property: JsonIgnore] X509
 /// signature appended as an incremental update (<see cref="PdfSigner"/>). Never part of a session's history: a signed
 /// file is a new file, and the certificate is never stored.
 /// </summary>
-public sealed class SignOperation(ITimestampClient? timestamps = null) : PdfOperation<SignParams>
+public sealed class SignOperation(ITimestampClient? timestamps = null, IRevocationFetcher? revocation = null) : PdfOperation<SignParams>
 {
     public const string OperationId = "security.sign";
 
@@ -34,11 +34,35 @@ public sealed class SignOperation(ITimestampClient? timestamps = null) : PdfOper
     /// temporary file of the output's folder first, then moved into place, so a failure leaves the output as it was.
     /// </summary>
     /// <exception cref="SigningException">The document cannot be signed this way.</exception>
-    public static async Task SignFileAsync(string input, string output, SignRequest request, X509Certificate2 certificate, ITimestampClient? timestamps, DateTimeOffset signingTime, CancellationToken cancellationToken)
+    public static Task SignFileAsync(string input, string output, SignRequest request, X509Certificate2 certificate, ITimestampClient? timestamps, DateTimeOffset signingTime, CancellationToken cancellationToken)
+        => SignFileAsync(input, output, request, certificate, timestamps, null, signingTime, cancellationToken);
+
+    /// <summary>
+    /// As the other overload; when <paramref name="request"/> asks for it and <paramref name="revocation"/> is given, the
+    /// validation material is appended after the signature (LTV) before the file is written. Returns what LTV added, or
+    /// null when it was not asked for.
+    /// </summary>
+    /// <exception cref="SigningException">The document cannot be signed this way.</exception>
+    public static async Task<LtvResult?> SignFileAsync(string input, string output, SignRequest request, X509Certificate2 certificate, ITimestampClient? timestamps, IRevocationFetcher? revocation, DateTimeOffset signingTime, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(input);
         ArgumentException.ThrowIfNullOrWhiteSpace(output);
+        ArgumentNullException.ThrowIfNull(request);
         var signed = await PdfSigner.SignAsync(await File.ReadAllBytesAsync(input, cancellationToken).ConfigureAwait(false), request, certificate, timestamps, signingTime, cancellationToken).ConfigureAwait(false);
+        LtvResult? longTerm = null;
+        if (request.LongTerm && revocation is not null)
+        {
+            try
+            {
+                longTerm = await LongTermValidation.AddAsync(signed, revocation, cancellationToken).ConfigureAwait(false);
+                signed = longTerm.File;
+            }
+            catch (InvalidDataException ex)
+            {
+                throw new SigningException(SigningFailure.Unreadable, "The validation material could not be added.", ex);
+            }
+        }
+
         var folder = Path.GetDirectoryName(Path.GetFullPath(output)) ?? throw new ArgumentException("The output has no folder.", nameof(output));
         var temporary = Path.Combine(folder, $".{Path.GetFileName(output)}.{Guid.NewGuid():N}.tmp");
         try
@@ -65,6 +89,8 @@ public sealed class SignOperation(ITimestampClient? timestamps = null) : PdfOper
                 File.Delete(temporary);
             }
         }
+
+        return longTerm;
     }
 
     protected override OperationValidationResult ValidateCore(SignParams parameters, DocumentInfo document)
@@ -110,7 +136,7 @@ public sealed class SignOperation(ITimestampClient? timestamps = null) : PdfOper
                 throw new InvalidOperationException("The output would overwrite the input file; choose another output folder.");
             }
 
-            await SignFileAsync(inputs[i], output, parameters.Request, parameters.Certificate, timestamps, DateTimeOffset.Now, cancellationToken).ConfigureAwait(false);
+            await SignFileAsync(inputs[i], output, parameters.Request, parameters.Certificate, timestamps, revocation, DateTimeOffset.Now, cancellationToken).ConfigureAwait(false);
             outputs.Add(output);
         }
 
