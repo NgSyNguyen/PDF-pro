@@ -1,3 +1,4 @@
+using System.Formats.Asn1;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -168,6 +169,78 @@ public sealed class LongTermValidationTests : IDisposable
     }
 
     [Fact]
+    public async Task AMissingIssuer_IsDownloaded_AndTheStatusIsAskedOfTheOcspResponderFirst_WithAVriEntry()
+    {
+        const string Responder = "http://ocsp.example.vn/";
+        const string Issuer = "http://ca.example.vn/pdfpro-test-ca.cer";
+        using var signer = TestCertificates.IssuedBy(_authority, "Lê Văn C", CrlAddress, Responder, Issuer);
+        var answer = OcspResponse(0);
+        var fetcher = new FakeFetcher(new Dictionary<string, byte[]?> { [Responder] = answer, [Issuer] = _authority.RawData, [CrlAddress] = Crl() });
+        var output = Path.Combine(_folder, "ocsp.pdf");
+
+        var result = await SignOperation.SignFileAsync(Samples.Pii, output, new SignRequest("ChuKy", LongTerm: true), signer, null, fetcher, DateTimeOffset.Now, Token);
+
+        result.ShouldNotBeNull();
+        (result.Ocsps, result.Crls, result.Missing.Count).ShouldBe((1, 0, 0), "OCSP answered: the CRL is not needed; the root needs neither");
+        fetcher.Requested.ShouldBeEmpty();
+        var (responder, request) = fetcher.OcspRequests.ShouldHaveSingleItem();
+        responder.ShouldBe(new Uri(Responder));
+        var certId = new AsnReader(request, AsnEncodingRules.DER).ReadSequence().ReadSequence().ReadSequence().ReadSequence().ReadSequence();
+        certId.ReadSequence();
+        certId.ReadOctetString().ShouldBe(SHA1.HashData(signer.IssuerName.RawData));
+        certId.ReadOctetString().ShouldBe(SHA1.HashData(_authority.PublicKey.EncodedKeyValue.RawData), "the issuer's key, from the certificate downloaded");
+        certId.ReadIntegerBytes().ToArray().ShouldBe(signer.SerialNumberBytes.ToArray());
+
+        var file = await File.ReadAllBytesAsync(output, Token);
+        var (certificates, crls) = Dss(file);
+        certificates.Any(c => c.AsSpan().SequenceEqual(_authority.RawData)).ShouldBeTrue("the issuer downloaded is in the DSS");
+        crls.ShouldBeEmpty();
+        using (var pdf = PdfReader.Open(new MemoryStream(file), PdfDocumentOpenMode.Import))
+        {
+            StreamsOf(((PdfDictionary)Resolve(pdf.Internals.Catalog.Elements["/DSS"])!).Elements["/OCSPs"]).ShouldHaveSingleItem().ShouldBe(answer);
+        }
+
+        var (vri, key) = Vri(file, "ChuKy");
+        vri.Elements.Keys.ShouldBe(["/" + key], "one entry, keyed by the SHA-1 of the signature's /Contents");
+        var entry = (PdfDictionary)Resolve(vri.Elements["/" + key])!;
+        StreamsOf(entry.Elements["/Cert"]).Count.ShouldBe(2, "the signer and its issuer");
+        StreamsOf(entry.Elements["/OCSP"]).ShouldHaveSingleItem().ShouldBe(answer);
+        StreamsOf(entry.Elements["/CRL"]).ShouldBeEmpty();
+        (await SignatureVerifier.VerifyAsync(_pdfium.Gate, file, Token)).ShouldHaveSingleItem().IsIntact.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AnOcspResponderThatRefuses_LeavesTheStatusToTheCrl()
+    {
+        const string Responder = "http://ocsp.example.vn/";
+        using var signer = TestCertificates.IssuedBy(_authority, "Lê Văn C", CrlAddress, Responder);
+        var crl = Crl();
+        var fetcher = new FakeFetcher(new Dictionary<string, byte[]?> { [Responder] = OcspResponse(6), [CrlAddress] = crl });
+        var output = Path.Combine(_folder, "từ chối.pdf");
+
+        // The issuer is in the chain this computer builds only when the CMS carries it: here it is given beside.
+        var result = await LongTermValidation.AddAsync(
+            await PdfSigner.SignAsync(await File.ReadAllBytesAsync(Samples.Pii, Token), new SignRequest("ChuKy"), signer, null, DateTimeOffset.Now, Token),
+            fetcher,
+            Token);
+
+        (result.Ocsps, result.Crls).ShouldBe((0, 1));
+        fetcher.OcspRequests.ShouldBeEmpty("without its issuer's key no OCSP request can be made");
+        Dss(result.File).Crls.ShouldHaveSingleItem().ShouldBe(crl);
+
+        // With the issuer reachable, the refusal is what sends it to the CRL.
+        using var reachable = TestCertificates.IssuedBy(_authority, "Lê Văn D", CrlAddress, Responder, "http://ca.example.vn/ca.cer");
+        var second = new FakeFetcher(new Dictionary<string, byte[]?> { [Responder] = OcspResponse(6), [CrlAddress] = crl, ["http://ca.example.vn/ca.cer"] = _authority.RawData });
+        var withIssuer = await LongTermValidation.AddAsync(
+            await PdfSigner.SignAsync(await File.ReadAllBytesAsync(Samples.Pii, Token), new SignRequest("ChuKy"), reachable, null, DateTimeOffset.Now, Token),
+            second,
+            Token);
+        second.OcspRequests.ShouldHaveSingleItem();
+        (withIssuer.Ocsps, withIssuer.Crls, withIssuer.Missing.Count).ShouldBe((0, 1, 0));
+        await File.WriteAllBytesAsync(output, withIssuer.File, Token);
+    }
+
+    [Fact]
     public void DistributionPoints_AreTheHttpAddressesOfTheCertificate()
     {
         LongTermValidation.DistributionPoints(_signer).ShouldBe([new Uri(CrlAddress)]);
@@ -210,12 +283,73 @@ public sealed class LongTermValidationTests : IDisposable
     /// <summary>Answers from a table; records what was asked.</summary>
     private sealed class FakeFetcher(Dictionary<string, byte[]?> answers) : IRevocationFetcher
     {
+        /// <summary>The CRLs asked for.</summary>
         public List<Uri> Requested { get; } = [];
+
+        /// <summary>The OCSP requests sent, by responder.</summary>
+        public List<(Uri Responder, byte[] Request)> OcspRequests { get; } = [];
 
         public Task<byte[]?> GetCrlAsync(Uri address, CancellationToken cancellationToken)
         {
             Requested.Add(address);
             return Task.FromResult(answers.GetValueOrDefault(address.AbsoluteUri));
         }
+
+        public Task<byte[]?> GetOcspAsync(Uri responder, byte[] request, CancellationToken cancellationToken)
+        {
+            OcspRequests.Add((responder, request));
+            return Task.FromResult(answers.GetValueOrDefault(responder.AbsoluteUri));
+        }
+
+        public Task<byte[]?> GetIssuerAsync(Uri address, CancellationToken cancellationToken)
+            => Task.FromResult(answers.GetValueOrDefault(address.AbsoluteUri));
     }
+
+    /// <summary>An OCSP response (RFC 6960 4.2.1) with this status and, when successful, a basic response body.</summary>
+    private static byte[] OcspResponse(int status)
+    {
+        var writer = new AsnWriter(AsnEncodingRules.DER);
+        using (writer.PushSequence())
+        {
+            writer.WriteEnumeratedValue((OcspStatus)status);
+            if (status == 0)
+            {
+                using (writer.PushSequence(new Asn1Tag(TagClass.ContextSpecific, 0, isConstructed: true)))
+                {
+                    using (writer.PushSequence())
+                    {
+                        writer.WriteObjectIdentifier("1.3.6.1.5.5.7.48.1.1");
+                        writer.WriteOctetString([0x30, 0x03, 0x02, 0x01, 0x00]);
+                    }
+                }
+            }
+        }
+
+        return writer.Encode();
+    }
+
+    private enum OcspStatus
+    {
+        Successful = 0,
+        Unauthorized = 6,
+    }
+
+    /// <summary>The /VRI dictionary of the file's DSS, and the /VRI key of its signature named <paramref name="field"/>.</summary>
+    private static (PdfDictionary Vri, string Key) Vri(byte[] file, string field)
+    {
+        using var pdf = PdfReader.Open(new MemoryStream(file), PdfDocumentOpenMode.Import);
+        var dss = (PdfDictionary)Resolve(pdf.Internals.Catalog.Elements["/DSS"])!;
+        var form = (PdfDictionary)Resolve(pdf.Internals.Catalog.Elements["/AcroForm"])!;
+        var signature = ((PdfArray)Resolve(form.Elements["/Fields"])!).Elements.Select(Resolve).OfType<PdfDictionary>()
+            .Single(f => f.Elements.GetString("/T") == field);
+        var range = (PdfArray)Resolve(((PdfDictionary)Resolve(signature.Elements["/V"])!).Elements["/ByteRange"])!;
+        var start = ((PdfInteger)range.Elements[1]).Value;
+        var end = ((PdfInteger)range.Elements[2]).Value;
+        var contents = Convert.FromHexString(System.Text.Encoding.ASCII.GetString(file, start + 1, end - start - 2));
+        return ((PdfDictionary)Resolve(dss.Elements["/VRI"])!, Convert.ToHexString(SHA1.HashData(contents)));
+    }
+
+    /// <summary>The data of the streams an array refers to.</summary>
+    private static List<byte[]> StreamsOf(PdfItem? item)
+        => Resolve(item) is PdfArray array ? [.. array.Elements.Select(Resolve).OfType<PdfDictionary>().Select(d => d.Stream.Value)] : [];
 }

@@ -11,19 +11,51 @@ using static PdfPro.Operations.Materializing.PdfGraph;
 
 namespace PdfPro.Operations.Signing;
 
-/// <summary>Fetches certificate revocation lists over the network (seam for tests).</summary>
+/// <summary>Fetches validation material over the network: revocation lists, OCSP answers, issuers' certificates (seam for tests).</summary>
 public interface IRevocationFetcher
 {
     /// <summary>The DER CRL published at <paramref name="address"/>, or null when it cannot be had.</summary>
     Task<byte[]?> GetCrlAsync(Uri address, CancellationToken cancellationToken);
+
+    /// <summary>The OCSP responder's answer to <paramref name="request"/> (RFC 6960), or null when it cannot be had.</summary>
+    Task<byte[]?> GetOcspAsync(Uri responder, byte[] request, CancellationToken cancellationToken) => Task.FromResult<byte[]?>(null);
+
+    /// <summary>What a caIssuers address serves (a certificate or a PKCS #7 bundle), or null when it cannot be had.</summary>
+    Task<byte[]?> GetIssuerAsync(Uri address, CancellationToken cancellationToken) => Task.FromResult<byte[]?>(null);
 }
 
-/// <summary>Fetches CRLs with HTTP(S) GET, as their issuers publish them (at most 10 MB, 20 s).</summary>
+/// <summary>
+/// Fetches CRLs and issuers' certificates with HTTP(S) GET (at most 10 MB) and OCSP answers with POST (at most 1 MB), 20 s
+/// each, as their authorities publish them; never anything but http and https.
+/// </summary>
 public sealed class HttpRevocationFetcher(HttpClient http) : IRevocationFetcher
 {
     private const int MaxBytes = 10 * 1024 * 1024;
 
-    public async Task<byte[]?> GetCrlAsync(Uri address, CancellationToken cancellationToken)
+    private const int MaxOcspBytes = 1024 * 1024;
+
+    public Task<byte[]?> GetCrlAsync(Uri address, CancellationToken cancellationToken)
+        => SendAsync(address, () => new HttpRequestMessage(HttpMethod.Get, address), MaxBytes, cancellationToken);
+
+    public Task<byte[]?> GetIssuerAsync(Uri address, CancellationToken cancellationToken)
+        => SendAsync(address, () => new HttpRequestMessage(HttpMethod.Get, address), MaxBytes, cancellationToken);
+
+    public Task<byte[]?> GetOcspAsync(Uri responder, byte[] request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return SendAsync(
+            responder,
+            () =>
+            {
+                var content = new ByteArrayContent(request);
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/ocsp-request");
+                return new HttpRequestMessage(HttpMethod.Post, responder) { Content = content };
+            },
+            MaxOcspBytes,
+            cancellationToken);
+    }
+
+    private async Task<byte[]?> SendAsync(Uri address, Func<HttpRequestMessage> message, int maxBytes, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(address);
         if (address.Scheme is not ("http" or "https"))
@@ -35,14 +67,15 @@ public sealed class HttpRevocationFetcher(HttpClient http) : IRevocationFetcher
         timeout.CancelAfter(TimeSpan.FromSeconds(20));
         try
         {
-            using var response = await http.GetAsync(address, HttpCompletionOption.ResponseHeadersRead, timeout.Token).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode || response.Content.Headers.ContentLength > MaxBytes)
+            using var request = message();
+            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode || response.Content.Headers.ContentLength > maxBytes)
             {
                 return null;
             }
 
             var data = await response.Content.ReadAsByteArrayAsync(timeout.Token).ConfigureAwait(false);
-            return data.Length is > 0 and <= MaxBytes ? data : null;
+            return data.Length is > 0 && data.Length <= maxBytes ? data : null;
         }
         catch (Exception ex) when (ex is HttpRequestException or IOException || (ex is OperationCanceledException && !cancellationToken.IsCancellationRequested))
         {
@@ -55,9 +88,12 @@ public sealed class HttpRevocationFetcher(HttpClient http) : IRevocationFetcher
 /// <param name="File">The file with its DSS appended.</param>
 /// <param name="Certificates">Certificates in the DSS.</param>
 /// <param name="Crls">Revocation lists in the DSS.</param>
-/// <param name="Missing">The certificates (their subject's common name) whose revocation list could not be had.</param>
+/// <param name="Missing">The certificates (their subject's common name) whose revocation status could not be had.</param>
 public sealed record LtvResult(byte[] File, int Certificates, int Crls, IReadOnlyList<string> Missing)
 {
+    /// <summary>OCSP answers in the DSS.</summary>
+    public int Ocsps { get; init; }
+
     /// <summary>A document timestamp was added after the material (PAdES-B-LTA).</summary>
     public bool DocumentTimestamp { get; init; }
 }
@@ -67,7 +103,9 @@ public sealed record LtvResult(byte[] File, int Certificates, int Crls, IReadOnl
 /// certificate of their chains and of their timestamps' chains, and the revocation lists their issuers publish (CRL
 /// distribution points) — appended in a Document Security Store (/DSS of the catalog) as an incremental update, so the
 /// signatures can be checked after their certificates expire or their servers go away. The signatures stay valid.
-/// OCSP is not fetched.
+/// Issuers missing from a chain are downloaded from the addresses their certificates name (caIssuers); each
+/// certificate's status is asked of its OCSP responder first, else read from its CRL. Each signature gets its /VRI entry
+/// (the material of its own chains).
 /// </summary>
 public static class LongTermValidation
 {
@@ -88,25 +126,30 @@ public static class LongTermValidation
         }
 
         var certificates = new List<X509Certificate2>();
+        var signatures = new List<(string Key, List<X509Certificate2> Chain)>();
         try
         {
-            foreach (var cms in Signatures(file))
+            foreach (var (cms, key) in Signatures(file))
             {
-                Add(certificates, cms.Certificates.Cast<X509Certificate2>());
+                var own = new List<X509Certificate2>();
+                Add(own, cms.Certificates.Cast<X509Certificate2>());
                 foreach (var signer in cms.SignerInfos)
                 {
-                    Add(certificates, Chain(signer.Certificate));
+                    Add(own, Chain(signer.Certificate));
                     foreach (var attribute in signer.UnsignedAttributes.Cast<CryptographicAttributeObject>().Where(a => a.Oid.Value == TimestampTokenAttribute))
                     {
                         foreach (var value in attribute.Values)
                         {
                             var token = new SignedCms();
                             token.Decode(value.RawData);
-                            Add(certificates, token.Certificates.Cast<X509Certificate2>());
-                            Add(certificates, token.SignerInfos.Cast<SignerInfo>().SelectMany(s => Chain(s.Certificate)));
+                            Add(own, token.Certificates.Cast<X509Certificate2>());
+                            Add(own, token.SignerInfos.Cast<SignerInfo>().SelectMany(s => Chain(s.Certificate)));
                         }
                     }
                 }
+
+                Add(certificates, own);
+                signatures.Add((key, own));
             }
 
             if (certificates.Count == 0)
@@ -114,41 +157,49 @@ public static class LongTermValidation
                 throw new InvalidDataException("The file has no signature.");
             }
 
-            var crls = new List<byte[]>();
-            var missing = new List<string>();
-            var fetched = new Dictionary<string, byte[]?>(StringComparer.OrdinalIgnoreCase);
-            foreach (var certificate in certificates.Where(c => c.SubjectName.RawData.AsSpan().SequenceEqual(c.IssuerName.RawData) is false))
+            await AddIssuersAsync(certificates, fetcher, cancellationToken).ConfigureAwait(false);
+            foreach (var (_, chain) in signatures)
             {
-                byte[]? crl = null;
-                foreach (var address in DistributionPoints(certificate))
+                // Each signature's chains, up to their roots, as far as they are known now.
+                for (var i = 0; i < chain.Count; i++)
                 {
-                    if (!fetched.TryGetValue(address.AbsoluteUri, out crl))
+                    if (!Revocation.IsSelfIssued(chain[i]) && certificates.FirstOrDefault(c => Revocation.Issued(c, chain[i])) is { } issuer)
                     {
-                        crl = await fetcher.GetCrlAsync(address, cancellationToken).ConfigureAwait(false);
-                        fetched[address.AbsoluteUri] = crl = crl is [0x30, ..] ? crl : null;
+                        Add(chain, [issuer]);
                     }
-
-                    if (crl is not null)
-                    {
-                        break;
-                    }
-                }
-
-                if (crl is null)
-                {
-                    missing.Add(certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false));
-                }
-                else if (!crls.Any(c => c.AsSpan().SequenceEqual(crl)))
-                {
-                    crls.Add(crl);
                 }
             }
 
-            return new LtvResult(Append(file, trailer, certificates, crls), certificates.Count, crls.Count, missing);
+            // By thumbprint: each signature's lists hold copies of the certificates.
+            var status = new Dictionary<string, (byte[] Data, bool IsOcsp)>(StringComparer.Ordinal);
+            var missing = new List<string>();
+            var crlsFetched = new Dictionary<string, byte[]?>(StringComparer.OrdinalIgnoreCase);
+            foreach (var certificate in certificates.Where(c => !Revocation.IsSelfIssued(c)))
+            {
+                if (await OcspAsync(certificate, certificates, fetcher, cancellationToken).ConfigureAwait(false) is { } answer)
+                {
+                    status[certificate.Thumbprint] = (answer, true);
+                }
+                else if (await CrlAsync(certificate, crlsFetched, fetcher, cancellationToken).ConfigureAwait(false) is { } crl)
+                {
+                    status[certificate.Thumbprint] = (crl, false);
+                }
+                else
+                {
+                    missing.Add(certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false));
+                }
+            }
+
+            var material = new DssMaterial(
+                certificates,
+                [.. status.Values.Where(v => !v.IsOcsp).Select(v => v.Data).Distinct(ByteComparer.Instance)],
+                [.. status.Values.Where(v => v.IsOcsp).Select(v => v.Data).Distinct(ByteComparer.Instance)],
+                [.. signatures.Select(s => new VriEntry(s.Key, s.Chain, [.. s.Chain.Where(c => status.ContainsKey(c.Thumbprint)).Select(c => status[c.Thumbprint])]))]);
+            return new LtvResult(Append(file, trailer, material), certificates.Count, material.Crls.Count, missing) { Ocsps = material.Ocsps.Count };
         }
         finally
         {
-            foreach (var certificate in certificates)
+            foreach (var certificate in certificates.Concat(signatures.SelectMany(s => s.Chain)))
             {
                 certificate.Dispose();
             }
@@ -156,38 +207,182 @@ public static class LongTermValidation
     }
 
     /// <summary>
-    /// The DSS (with what one already holds, a certificate or CRL it holds not added twice) and the catalog naming it,
-    /// appended.
+    /// Completes the chains: the issuer of a certificate that is not in <paramref name="certificates"/> is downloaded from
+    /// the caIssuers addresses it names (a few levels up at most).
     /// </summary>
-    private static byte[] Append(byte[] file, FileTrailer trailer, List<X509Certificate2> certificates, List<byte[]> crls)
+    private static async Task AddIssuersAsync(List<X509Certificate2> certificates, IRevocationFetcher fetcher, CancellationToken cancellationToken)
+    {
+        var asked = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (var level = 0; level < 5; level++)
+        {
+            var orphans = certificates.Where(c => !Revocation.IsSelfIssued(c) && !certificates.Any(i => Revocation.Issued(i, c))).ToList();
+            var found = false;
+            foreach (var orphan in orphans)
+            {
+                foreach (var address in Revocation.IssuerAddresses(orphan).Where(a => asked.Add(a.AbsoluteUri)))
+                {
+                    var served = Revocation.CertificatesIn(await fetcher.GetIssuerAsync(address, cancellationToken).ConfigureAwait(false));
+                    var issuers = served.Where(c => Revocation.Issued(c, orphan)).ToList();
+                    Add(certificates, issuers);
+                    foreach (var certificate in served)
+                    {
+                        certificate.Dispose();
+                    }
+
+                    if (issuers.Count > 0)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                return;
+            }
+        }
+    }
+
+    /// <summary>A successful answer of the certificate's OCSP responder, when its issuer is known; else null.</summary>
+    private static async Task<byte[]?> OcspAsync(X509Certificate2 certificate, List<X509Certificate2> certificates, IRevocationFetcher fetcher, CancellationToken cancellationToken)
+    {
+        if (certificates.FirstOrDefault(c => Revocation.Issued(c, certificate)) is not { } issuer)
+        {
+            return null;
+        }
+
+        var request = Revocation.OcspRequest(certificate, issuer);
+        foreach (var responder in Revocation.OcspResponders(certificate))
+        {
+            var answer = await fetcher.GetOcspAsync(responder, request, cancellationToken).ConfigureAwait(false);
+            if (Revocation.IsSuccessfulOcspResponse(answer))
+            {
+                return answer;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>The CRL of the certificate's first distribution point that serves one (each address asked once), else null.</summary>
+    private static async Task<byte[]?> CrlAsync(X509Certificate2 certificate, Dictionary<string, byte[]?> fetched, IRevocationFetcher fetcher, CancellationToken cancellationToken)
+    {
+        foreach (var address in DistributionPoints(certificate))
+        {
+            if (!fetched.TryGetValue(address.AbsoluteUri, out var crl))
+            {
+                crl = await fetcher.GetCrlAsync(address, cancellationToken).ConfigureAwait(false);
+                fetched[address.AbsoluteUri] = crl = crl is [0x30, ..] ? crl : null;
+            }
+
+            if (crl is not null)
+            {
+                return crl;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>What goes into the DSS: certificates, CRLs, OCSP answers, and each signature's own part of them.</summary>
+    private sealed record DssMaterial(List<X509Certificate2> Certificates, List<byte[]> Crls, List<byte[]> Ocsps, List<VriEntry> Signatures);
+
+    /// <summary>One signature's /VRI entry: its key, its chains' certificates, and their revocation data.</summary>
+    private sealed record VriEntry(string Key, List<X509Certificate2> Certificates, List<(byte[] Data, bool IsOcsp)> Status);
+
+    private sealed class ByteComparer : IEqualityComparer<byte[]>
+    {
+        public static ByteComparer Instance { get; } = new();
+
+        public bool Equals(byte[]? x, byte[]? y) => x is null ? y is null : y is not null && x.AsSpan().SequenceEqual(y);
+
+        public int GetHashCode(byte[] obj)
+        {
+            var hash = new HashCode();
+            hash.AddBytes(obj.AsSpan(0, Math.Min(obj.Length, 64)));
+            return hash.ToHashCode() ^ obj.Length;
+        }
+    }
+
+    /// <summary>
+    /// The DSS (with what one already holds: a certificate, CRL or OCSP answer it holds is not added twice, its /VRI
+    /// entries are kept) and the catalog naming it, appended.
+    /// </summary>
+    private static byte[] Append(byte[] file, FileTrailer trailer, DssMaterial material)
     {
         using var pdf = PdfSafeReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
         var catalog = pdf.Internals.Catalog;
         var names = new PdfObjectWriter(r => $"{r.ObjectNumber} {r.GenerationNumber} R");
         var objects = new List<UpdatedObject>();
         var next = trailer.Size;
-        var heldCertificates = Existing(catalog, "/Certs", names);
-        var heldCrls = Existing(catalog, "/CRLs", names);
-        var heldOcsps = Existing(catalog, "/OCSPs", names);
-        var certificateRefs = heldCertificates.Select(h => h.Reference).ToList();
-        var crlRefs = heldCrls.Select(h => h.Reference).ToList();
-        static bool Held(List<(string Reference, byte[] Data)> held, byte[] data) => held.Any(h => h.Data.AsSpan().SequenceEqual(data));
-        var added = certificates.Select(c => c.RawData).Where(d => !Held(heldCertificates, d)).Select(d => (Data: d, Refs: certificateRefs))
-            .Concat(crls.Where(d => !Held(heldCrls, d)).Select(d => (Data: d, Refs: crlRefs)));
-        foreach (var (data, refs) in added)
+        var held = new Dictionary<string, List<(string Reference, byte[] Data)>>
         {
+            ["/Certs"] = Existing(catalog, "/Certs", names),
+            ["/CRLs"] = Existing(catalog, "/CRLs", names),
+            ["/OCSPs"] = Existing(catalog, "/OCSPs", names),
+        };
+        var references = held.ToDictionary(h => h.Key, h => h.Value.Select(v => v.Reference).ToList());
+
+        // The stream holding these bytes in the DSS: the one it has, or a new one.
+        string Reference(string key, byte[] data)
+        {
+            if (held[key].FirstOrDefault(h => h.Data.AsSpan().SequenceEqual(data)) is { Reference: { } existing })
+            {
+                return existing;
+            }
+
             var number = next++;
             var body = new MemoryStream();
             body.Write(Encoding.ASCII.GetBytes(string.Create(CultureInfo.InvariantCulture, $"<< /Length {data.Length} >>\nstream\n")));
             body.Write(data);
             body.Write("\nendstream"u8);
             objects.Add(new UpdatedObject(number, 0, body.ToArray()));
-            refs.Add($"{number} 0 R");
+            var reference = $"{number} 0 R";
+            held[key].Add((reference, data));
+            references[key].Add(reference);
+            return reference;
         }
 
+        foreach (var certificate in material.Certificates)
+        {
+            Reference("/Certs", certificate.RawData);
+        }
+
+        foreach (var crl in material.Crls)
+        {
+            Reference("/CRLs", crl);
+        }
+
+        foreach (var ocsp in material.Ocsps)
+        {
+            Reference("/OCSPs", ocsp);
+        }
+
+        var vri = new StringBuilder("<<");
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var signature in material.Signatures.Where(s => keys.Add(s.Key)))
+        {
+            static string Array(IEnumerable<string> items) => $"[{string.Join(' ', items.Distinct())}]";
+            vri.Append(" /").Append(signature.Key).Append(" << /Cert ").Append(Array(signature.Certificates.Select(c => Reference("/Certs", c.RawData))));
+            vri.Append(" /CRL ").Append(Array(signature.Status.Where(s => !s.IsOcsp).Select(s => Reference("/CRLs", s.Data))));
+            vri.Append(" /OCSP ").Append(Array(signature.Status.Where(s => s.IsOcsp).Select(s => Reference("/OCSPs", s.Data)))).Append(" >>");
+        }
+
+        if (AsDictionary(AsDictionary(catalog.Elements["/DSS"])?.Elements["/VRI"]) is { } previous)
+        {
+            // The entries of signatures this update does not describe again.
+            foreach (var key in previous.Elements.Keys.Where(k => !keys.Contains(k.TrimStart('/'))))
+            {
+                vri.Append(' ').Append(key).Append(' ');
+                names.Write(vri, previous.Elements[key]);
+            }
+        }
+
+        vri.Append(" >>");
         var dss = next++;
-        var ocsps = heldOcsps.Count == 0 ? string.Empty : $" /OCSPs [{string.Join(' ', heldOcsps.Select(h => h.Reference))}]";
-        objects.Add(new UpdatedObject(dss, 0, Encoding.ASCII.GetBytes($"<< /Type /DSS /Certs [{string.Join(' ', certificateRefs)}] /CRLs [{string.Join(' ', crlRefs)}]{ocsps} >>")));
+        objects.Add(new UpdatedObject(dss, 0, Encoding.ASCII.GetBytes(
+            $"<< /Type /DSS /Certs [{string.Join(' ', references["/Certs"])}] /CRLs [{string.Join(' ', references["/CRLs"])}] /OCSPs [{string.Join(' ', references["/OCSPs"])}] /VRI {vri} >>")));
         catalog.Elements["/DSS"] = new PdfLiteral($"{dss} 0 R");
         objects.Add(new UpdatedObject(catalog.Reference!.ObjectNumber, catalog.Reference.GenerationNumber, names.Body(catalog)));
         return IncrementalUpdate.Append(file, trailer, objects, out _);
@@ -218,10 +413,14 @@ public static class LongTermValidation
         return list;
     }
 
-    /// <summary>The CMS of every signature of the file, read where each /ByteRange leaves its hole.</summary>
-    private static List<SignedCms> Signatures(byte[] file)
+    /// <summary>
+    /// The CMS of every signature of the file (document timestamps' tokens included), read where each /ByteRange leaves
+    /// its hole, with its /VRI key: the upper-case hex SHA-1 of the /Contents bytes — all of them for a signature, the
+    /// token alone for a document timestamp (ETSI EN 319 142-1 5.4.2.2, as readers compute it).
+    /// </summary>
+    private static List<(SignedCms Cms, string VriKey)> Signatures(byte[] file)
     {
-        var result = new List<SignedCms>();
+        var result = new List<(SignedCms, string)>();
         using var pdf = PdfSafeReader.Open(new MemoryStream(file, writable: false), PdfDocumentOpenMode.Import);
         foreach (var dictionary in SignatureDictionaries(pdf.Internals.Catalog))
         {
@@ -240,7 +439,8 @@ public static class LongTermValidation
                 AsnDecoder.ReadEncodedValue(bytes, AsnEncodingRules.BER, out _, out _, out var length);
                 var cms = new SignedCms();
                 cms.Decode(bytes.AsSpan(0, length));
-                result.Add(cms);
+                var timestamp = dictionary.Elements["/SubFilter"] is PdfName { Value: "/ETSI.RFC3161" };
+                result.Add((cms, Convert.ToHexString(SHA1.HashData(timestamp ? bytes.AsSpan(0, length) : bytes))));
             }
             catch (Exception ex) when (ex is FormatException or AsnContentException or CryptographicException)
             {

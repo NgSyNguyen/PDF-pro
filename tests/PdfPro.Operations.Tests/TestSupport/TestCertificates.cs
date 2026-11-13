@@ -39,7 +39,7 @@ internal static class TestCertificates
     /// A signing certificate issued by <paramref name="authority"/>, with its private key; with
     /// <paramref name="crl"/>, its CRL distribution point.
     /// </summary>
-    public static X509Certificate2 IssuedBy(X509Certificate2 authority, string name = "Nguyễn Văn A", string? crl = null)
+    public static X509Certificate2 IssuedBy(X509Certificate2 authority, string name = "Nguyễn Văn A", string? crl = null, string? ocsp = null, string? caIssuers = null)
     {
         using var key = RSA.Create(2048);
         var request = new CertificateRequest(new X500DistinguishedName($"CN={name}, O=PDF_Pro Test, C=VN"), key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
@@ -49,6 +49,11 @@ internal static class TestCertificates
         if (crl is not null)
         {
             request.CertificateExtensions.Add(CertificateRevocationListBuilder.BuildCrlDistributionPointExtension([crl]));
+        }
+
+        if (ocsp is not null || caIssuers is not null)
+        {
+            request.CertificateExtensions.Add(new X509AuthorityInformationAccessExtension(ocsp is null ? null : [ocsp], caIssuers is null ? null : [caIssuers]));
         }
 
         var serial = RandomNumberGenerator.GetBytes(8);
