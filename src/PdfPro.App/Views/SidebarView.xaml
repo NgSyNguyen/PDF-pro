@@ -77,6 +77,11 @@
                 <RotateTransform Angle="{Binding Angle}" />
               </Image.LayoutTransform>
             </Image>
+            <!-- Annotations made in the session: the image comes from the file, which does not have them yet. -->
+            <controls:AnnotationLayer
+              Annotations="{Binding DataContext.ActiveDocument.Annotations, RelativeSource={RelativeSource AncestorType=ListBox}}"
+              IsThumbnail="True"
+              PageKey="{Binding Key}" />
             <ui:SymbolIcon
               HorizontalAlignment="Center"
               VerticalAlignment="Center"

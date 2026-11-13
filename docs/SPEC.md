@@ -354,7 +354,7 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 **Chú thích của phiên — thao tác trang, tức thì**
 - Chú thích mới nằm trên `PageRef.Annotations` (đi theo trang khi di chuyển/xoay/cắt/nhân bản; là nội dung: `HasSameContent`, `IsIdentity`), trong **không gian PDF của trang nguồn**. Thêm/sửa/xóa = `annotate.add/update/delete` (thao tác plan, một bước hoàn tác, tài liệu "chưa lưu"); manifest phiên lưu chúng (`PageDto.Annotations`); ảnh của con dấu ảnh nằm trong thư mục phiên.
 - Mọi lần vật chất hóa (lưu, xuất, xem trước đóng dấu, đầu vào của thao tác nội dung) ghi chúng vào tệp bằng `AnnotationWriter` → sau một thao tác nội dung chúng trở thành chú thích có sẵn trong tệp.
-- Hiển thị: ảnh trang do PDFium vẽ từ tệp nguồn (chưa có chúng) → `AnnotationLayer` vẽ đè bằng WPF (`AnnotationDrawing`, cùng hình như bản ghi; tô sáng vẽ trong suốt 40 % vì WPF không nhân màu); in ấn vẽ đè như vậy. **Thumbnail chưa hiện chú thích của phiên.**
+- Hiển thị: ảnh trang do PDFium vẽ từ tệp nguồn (chưa có chúng) → `AnnotationLayer` vẽ đè bằng WPF (`AnnotationDrawing`, cùng hình như bản ghi; tô sáng vẽ trong suốt 40 % vì WPF không nhân màu); in ấn vẽ đè như vậy; thumbnail cũng vậy (`AnnotationLayer IsThumbnail`: chỉ vẽ chú thích, không khung chọn, không đọc chú thích của tệp — ảnh thu nhỏ đã có chúng).
 - Công cụ (ribbon "Chú thích" + thanh công cụ trên trang): đánh dấu vùng chọn ngay hoặc bật công cụ rồi kéo qua chữ; ghi chú (bấm đặt, nhả chuột mở ô bình luận — Popup `StaysOpen=False` chỉ mở sau `Release`, bấm ra ngoài giữ chữ, Esc bỏ, Ctrl+Enter xong); hộp chữ (kéo khung → gõ → tự cao theo chữ); vẽ tay (mỗi lần kéo một nét); chữ nhật/elip, đường/mũi tên (kéo; bấm = cỡ mặc định); đa giác/đường gấp khúc (bấm thêm điểm, đúp xong); con dấu (ĐÃ DUYỆT, ĐÃ XEM, KHÔNG DUYỆT, KHẨN, MẬT, BẢN NHÁP, SAO Y BẢN CHÍNH hoặc chữ gõ, kèm ngày). Bấm chọn, kéo di chuyển (markup đứng yên trên chữ), Delete, màu, nét, "Bình luận…". Chuột: `DocumentView` gọi `Annotations.Press` trước, không trúng chú thích mới tới chọn chữ.
 
 **Chú thích có sẵn trong tệp — thao tác nội dung (revision)**
@@ -373,7 +373,7 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 **Quyết định / giới hạn**
 - **Lưu incremental để không phá chữ ký số** — làm ở P8 lát 8a (xem mục Phase 8 "Lưu tệp đã ký"): khi thay đổi chỉ là chú thích của phiên, chúng được nối vào tệp bằng cập nhật gia tăng; mọi thay đổi khác vẫn ghi lại toàn bộ và cảnh báo như P3.
 - Panel không lọc theo màu (màu chú thích của tệp không đọc được qua PDFium khi có `/AP`).
-- Thumbnail chưa vẽ chú thích của phiên; tô sáng trên màn hình vẽ bằng độ trong suốt thay vì nhân màu.
+- Tô sáng trên màn hình vẽ bằng độ trong suốt thay vì nhân màu.
 - Namespace `PdfPro.Operations.Annotating` (không phải `Annotations`: đụng `PdfGraph.Annotations(page)`). `PdfRect` có `[JsonConstructor]` và `[JsonIgnore]` cho thuộc tính tính toán (struct deserialize ra toàn 0 nếu thiếu).
 
 **Nghiệm thu**

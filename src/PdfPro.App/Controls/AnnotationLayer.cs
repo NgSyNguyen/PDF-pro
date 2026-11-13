@@ -12,6 +12,7 @@ namespace PdfPro.App.Controls;
 /// which does not have them yet), the one being moved where the mouse has it, and a frame around the selected one —
 /// for an annotation already in the file (drawn by the page image), the frame alone.
 /// Purely visual: the mouse goes to the viewer, which hands it to <see cref="AnnotationToolsViewModel"/>.
+/// Over a thumbnail (<see cref="IsThumbnail"/>) it draws the annotations alone, small.
 /// </summary>
 public sealed class AnnotationLayer : FrameworkElement
 {
@@ -20,6 +21,9 @@ public sealed class AnnotationLayer : FrameworkElement
 
     public static readonly DependencyProperty PageKeyProperty = DependencyProperty.Register(
         nameof(PageKey), typeof(Guid), typeof(AnnotationLayer), new PropertyMetadata(Guid.Empty, (d, _) => ((AnnotationLayer)d).InvalidateVisual()));
+
+    public static readonly DependencyProperty IsThumbnailProperty = DependencyProperty.Register(
+        nameof(IsThumbnail), typeof(bool), typeof(AnnotationLayer), new PropertyMetadata(false, (d, _) => ((AnnotationLayer)d).InvalidateVisual()));
 
     private static readonly Pen SelectionPen = Freeze(new Pen(Freeze(new SolidColorBrush(Color.FromRgb(0x00, 0x78, 0xD4))), 1) { DashStyle = DashStyles.Dash });
 
@@ -44,6 +48,16 @@ public sealed class AnnotationLayer : FrameworkElement
         set => SetValue(PageKeyProperty, value);
     }
 
+    /// <summary>
+    /// Over a thumbnail: the session's annotations only — no frames, no drawing in progress, and the file's own
+    /// annotations (drawn by the thumbnail image) are not read.
+    /// </summary>
+    public bool IsThumbnail
+    {
+        get => (bool)GetValue(IsThumbnailProperty);
+        set => SetValue(IsThumbnailProperty, value);
+    }
+
     protected override void OnRender(DrawingContext drawingContext)
     {
         if (Annotations is not { } annotations || ActualWidth <= 0)
@@ -51,10 +65,15 @@ public sealed class AnnotationLayer : FrameworkElement
             return;
         }
 
+        var thumbnail = IsThumbnail;
         var items = annotations.AnnotationsOn(PageKey);
-        var preview = annotations.PreviewOn(PageKey);
-        var fileSelection = annotations.FileSelectionOn(PageKey);
-        _ = annotations.FileAnnotationsOn(PageKey); // read in the background, so that a click can pick them
+        var preview = thumbnail ? null : annotations.PreviewOn(PageKey);
+        var fileSelection = thumbnail ? null : annotations.FileSelectionOn(PageKey);
+        if (!thumbnail)
+        {
+            _ = annotations.FileAnnotationsOn(PageKey); // read in the background, so that a click can pick them
+        }
+
         if ((items.Count == 0 && preview is null && fileSelection is null) || annotations.GeometryOf(PageKey) is not { } geometry)
         {
             return;
@@ -62,7 +81,7 @@ public sealed class AnnotationLayer : FrameworkElement
 
         var mapper = new PageCoordinateMapper(geometry, ActualWidth / geometry.DisplaySize.Width);
         var pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-        var selected = annotations.Selected is { } target && target.PageKey == PageKey ? target.Id : null;
+        var selected = !thumbnail && annotations.Selected is { } target && target.PageKey == PageKey ? target.Id : null;
         foreach (var item in items)
         {
             var shown = annotations.Shown(PageKey, item);
