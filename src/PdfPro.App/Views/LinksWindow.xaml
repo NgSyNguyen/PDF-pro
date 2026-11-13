@@ -53,6 +53,40 @@
           Content="{loc:Tr Bookmarks_Remove}"
           Icon="{ui:SymbolIcon Delete24}" />
       </WrapPanel>
+      <!-- A link over the text selected in the viewer. -->
+      <Border
+        Margin="0,10,0,0"
+        Padding="12,8"
+        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+        CornerRadius="4"
+        Visibility="{Binding HasSelectionToLink, Converter={StaticResource BoolToVisibility}}">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="{loc:Tr Links_FromSelection}" />
+          <TextBlock
+            Margin="0,2,0,6"
+            AutomationProperties.AutomationId="LinksSelection"
+            Text="{Binding SelectionText}"
+            TextTrimming="CharacterEllipsis" />
+          <DockPanel>
+            <ui:Button
+              Margin="8,0,0,0"
+              AutomationProperties.AutomationId="LinksMake"
+              Command="{Binding MakeLinkCommand}"
+              Content="{loc:Tr Links_MakeLink}"
+              DockPanel.Dock="Right"
+              Icon="{ui:SymbolIcon Link24}" />
+            <ui:TextBox
+              AutomationProperties.AutomationId="LinksNewTarget"
+              AutomationProperties.Name="{loc:Tr Links_NewTarget}"
+              PlaceholderText="{loc:Tr Links_NewTarget}"
+              Text="{Binding NewTarget, UpdateSourceTrigger=PropertyChanged}">
+              <ui:TextBox.InputBindings>
+                <KeyBinding Key="Enter" Command="{Binding MakeLinkCommand}" />
+              </ui:TextBox.InputBindings>
+            </ui:TextBox>
+          </DockPanel>
+        </StackPanel>
+      </Border>
     </StackPanel>
 
     <Grid Grid.Row="2" Margin="24,0,24,0">

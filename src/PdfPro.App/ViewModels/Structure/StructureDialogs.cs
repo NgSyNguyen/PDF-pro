@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
+using PdfPro.Core.Geometry;
 using PdfPro.Core.Structure;
 using PdfPro.Operations.Security;
 using PdfPro.Operations.Structure;
@@ -360,8 +361,11 @@ public sealed partial class LinkItemViewModel : ObservableObject
 
     public static LinkItemViewModel Of(LinkInfo link) => new(link, null, link.Page, link.Text, link.Target);
 
-    public static LinkItemViewModel Of(LinkSpec link) => new(null, link, link.Page, null, link.Target);
+    public static LinkItemViewModel Of(LinkSpec link, string? text = null) => new(null, link, link.Page, text, link.Target);
 }
+
+/// <summary>The text selected in the viewer when the links dialog opened: its words and where they are, line by line.</summary>
+public sealed record LinkSelection(string Text, IReadOnlyList<(int Page, PdfRect Rect)> Areas);
 
 /// <summary>
 /// "Liên kết" (structure.links): the links of the document listed with the words they are over and where they go,
@@ -374,17 +378,94 @@ public sealed partial class LinksViewModel : ObservableObject
     private readonly ILogger _logger;
     private readonly List<LinkRef> _removed = [];
 
-    public LinksViewModel(string fileName, string input, IReadOnlyList<LinkInfo> links, ILogger logger)
+    /// <param name="pageCount">Pages of the document, for links to a page.</param>
+    /// <param name="selection">The text selected in the viewer, which a new link can be made over.</param>
+    public LinksViewModel(string fileName, string input, IReadOnlyList<LinkInfo> links, ILogger logger, int pageCount = 0, LinkSelection? selection = null)
     {
         FileName = fileName;
         _input = input;
         _logger = logger;
+        PageCount = pageCount;
+        Selection = selection is { Areas.Count: > 0 } ? selection : null;
         foreach (var link in links)
         {
             Items.Add(LinkItemViewModel.Of(link));
         }
 
         UpdateEmpty();
+    }
+
+    public int PageCount { get; }
+
+    /// <summary>The selected text a link can be made over, or null.</summary>
+    public LinkSelection? Selection { get; }
+
+    public bool HasSelectionToLink => Selection is not null;
+
+    /// <summary>"“Điều 3. Hiệu lực”" — the selected words, shortened.</summary>
+    public string SelectionText => Selection is { } selection
+        ? string.Format(CultureInfo.CurrentCulture, Strings.Links_Selection, selection.Text.Length > 80 ? selection.Text[..80].TrimEnd() + "…" : selection.Text)
+        : string.Empty;
+
+    /// <summary>Where the new link goes, as typed: a web address, an e-mail address or a page number.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(MakeLinkCommand))]
+    public partial string NewTarget { get; set; } = string.Empty;
+
+    /// <summary>
+    /// "Tạo liên kết": a link over each line of the selected text, to what was typed — "https://…" or "www.…" (made
+    /// https), an e-mail address (made mailto:), or a page number. Anything else is explained, never written.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanMakeLink))]
+    private void MakeLink()
+    {
+        if (Selection is not { } selection)
+        {
+            return;
+        }
+
+        if (TargetOf(NewTarget, PageCount) is not { } target)
+        {
+            ErrorText = string.Format(CultureInfo.CurrentCulture, Strings.Links_Error_Target, PageCount);
+            return;
+        }
+
+        ErrorText = null;
+        LinkItemViewModel? first = null;
+        foreach (var (page, rect) in selection.Areas)
+        {
+            if (!Items.Any(i => i.Found is { } other && other.Page == page && other.Rect == rect))
+            {
+                var item = LinkItemViewModel.Of(new LinkSpec(page, rect, target), selection.Text);
+                Items.Add(item);
+                first ??= item;
+            }
+        }
+
+        if (first is not null)
+        {
+            Selected = first;
+            StatusText = Strings.Links_Made;
+        }
+
+        Changed();
+    }
+
+    private bool CanMakeLink() => Selection is not null && NewTarget.Trim().Length > 0;
+
+    /// <summary>What a typed target means: a page (1-based number), a web or e-mail address, or null.</summary>
+    internal static LinkTarget? TargetOf(string typed, int pageCount)
+    {
+        var text = typed.Trim();
+        if (int.TryParse(text, NumberStyles.Integer, CultureInfo.CurrentCulture, out var number))
+        {
+            return number >= 1 && number <= pageCount ? new LinkTarget(Page: number - 1) : null;
+        }
+
+        var url = text.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? "https://" + text
+            : !text.Contains("://", StringComparison.Ordinal) && !text.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase) && text.Contains('@', StringComparison.Ordinal) && !text.Contains(' ', StringComparison.Ordinal) ? "mailto:" + text
+            : text;
+        return EditLinksOperation.IsAllowedUrl(url) ? new LinkTarget(Url: new Uri(url).AbsoluteUri) : null;
     }
 
     public event EventHandler<bool>? CloseRequested;

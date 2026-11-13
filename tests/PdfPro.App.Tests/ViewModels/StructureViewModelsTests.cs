@@ -112,6 +112,56 @@ public sealed class StructureViewModelsTests : IDisposable
         dialog.Result.ShouldNotBeNull().Bookmarks.Select(n => n.Title).ShouldBe(["B", "C"]);
     }
 
+    [Theory]
+    [InlineData("https://example.com/a", "https://example.com/a", null)]
+    [InlineData(" www.example.com ", "https://www.example.com/", null)]
+    [InlineData("lan@example.com", "mailto:lan@example.com", null)]
+    [InlineData("3", null, 2)]
+    public void ATypedLinkTarget_IsAnAddressOrAPage(string typed, string? url, int? page)
+    {
+        var target = LinksViewModel.TargetOf(typed, 6).ShouldNotBeNull();
+
+        target.Url.ShouldBe(url);
+        target.Page.ShouldBe(page);
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("7")]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("file:///C:/Windows/notepad.exe")]
+    [InlineData("trang ba")]
+    public void ALinkTargetGoingNowhereAllowed_IsRefused(string typed)
+        => LinksViewModel.TargetOf(typed, 6).ShouldBeNull();
+
+    [Fact]
+    public void ALink_IsMadeOverEachLineOfTheSelectedText_Once()
+    {
+        PdfRect first = new(72, 700, 300, 714), second = new(72, 684, 180, 698);
+        var dialog = new LinksViewModel("hồ sơ.pdf", Samples.Basic, [], NullLogger.Instance, 6, new LinkSelection("Điều 3. Hiệu lực", [(1, first), (1, second)]));
+
+        dialog.HasSelectionToLink.ShouldBeTrue();
+        dialog.MakeLinkCommand.CanExecute(null).ShouldBeFalse("nothing typed yet");
+        dialog.NewTarget = "trang ba";
+        dialog.MakeLinkCommand.Execute(null);
+        dialog.ErrorText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Links_Error_Target, 6));
+        dialog.Items.ShouldBeEmpty();
+
+        dialog.NewTarget = "www.example.com";
+        dialog.MakeLinkCommand.Execute(null);
+        dialog.MakeLinkCommand.Execute(null);
+
+        dialog.ErrorText.ShouldBeNull();
+        dialog.Items.Count.ShouldBe(2, "one link a line, made once");
+        dialog.Items.ShouldAllBe(i => i.IsNew && i.Text == "Điều 3. Hiệu lực" && i.TargetText == "https://www.example.com/");
+        dialog.ApplyCommand.Execute(null);
+        dialog.Result.ShouldNotBeNull().Add.ShouldNotBeNull().Select(l => (l.Page, l.Rect)).ShouldBe([(1, first), (1, second)]);
+    }
+
+    [Fact]
+    public void WithoutSelectedText_NoLinkIsOfferedForIt()
+        => new LinksViewModel("hồ sơ.pdf", Samples.Basic, [], NullLogger.Instance, 6).HasSelectionToLink.ShouldBeFalse();
+
     [Fact]
     public async Task Bookmarks_AreMadeFromTheHeadings_ByPatterns()
     {

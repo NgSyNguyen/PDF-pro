@@ -690,7 +690,11 @@ sessions\{id}\session.lock        mở độc quyền khi phiên đang sống; t
 - Cây bookmark **kéo-thả được** (gong-wpf-dragdrop): thả lên giữa một mục = thành mục con cuối của nó (mục đó mở ra),
   thả phía trên/dưới = đứng trước/sau nó cùng cấp, thả dưới cây = cuối cấp ngoài cùng; không bao giờ vào chính nó hay
   con của nó. Các nút Lên/Xuống/Lùi vào/ra vẫn còn (bàn phím, trình đọc màn hình).
-- Chưa làm: tạo liên kết bằng cách vẽ vùng trên trang; tài liệu có mật khẩu bị từ chối ở các lệnh trích xuất/cấu trúc như các lệnh xuất khác.
+- **Liên kết từ chữ đang chọn**: mở "Liên kết" khi đang chọn chữ trên viewer → khung "Liên kết từ chữ đang chọn" (chữ đó +
+  ô "Đi tới"): gõ địa chỉ web (`https://…`, `www.…` → https), email (→ `mailto:`) hoặc số trang → "Tạo liên kết" = một
+  liên kết trên **mỗi dòng** của vùng chọn (không tạo trùng), in nghiêng trong bảng; Áp dụng như mọi liên kết mới. Đích
+  khác (`javascript:`, `file:`, số trang ngoài tài liệu) bị từ chối kèm giải thích.
+- Chưa làm: tạo liên kết bằng cách vẽ vùng trên trang (đã có: từ chữ đang chọn); tài liệu có mật khẩu bị từ chối ở các lệnh trích xuất/cấu trúc như các lệnh xuất khác.
 
 **Nghiệm thu (Phase 11)**
 - Test tự động: `contract-v1` vs `contract-v2` (chèn 1 trang + sửa 3 chỗ) báo **đúng 4 thay đổi** đúng loại/chữ/trang, ghép trang (0,0)(1,1)(–,2)(2,3)(3,4); tài liệu so với chính nó = 0 thay đổi, mọi cặp trang trông giống nhau; vùng khác về hình ảnh đè đúng chữ giá tiền; `tables.pdf`: bảng kẻ 7×4 và bảng không kẻ 9×4 đúng từng ô tiếng Việt, workbook 2 sheet (số kiểu Việt thành số), CSV `;` có BOM; 18 ảnh JPEG của `scan-vi` trùng SHA-256 từng byte; tệp đính kèm tên tiếng Việt thêm/thay/gỡ, PdfPig đọc đúng; bookmark đọc lại bằng PDFium; hợp đồng → "HỢP ĐỒNG…" với 9 "Điều n" theo regex và theo cỡ chữ; mô tả tiếng Việt vào Info + XMP giữ `pdfaid:part`; nhãn i, ii, 1, 2, 3, "Phụ lục"; tự nhận 3 địa chỉ → tạo → nhận lần hai = 0.

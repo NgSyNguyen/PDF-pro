@@ -2035,6 +2035,12 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Links_Found" xml:space="preserve"><value>Tìm thấy {0} địa chỉ chưa có liên kết (in nghiêng); bấm Áp dụng để tạo liên kết.</value></data>
   <data name="Links_NoneFound" xml:space="preserve"><value>Không có địa chỉ nào chưa có liên kết.</value></data>
   <data name="Links_Error_Read" xml:space="preserve"><value>Không đọc được chữ của tài liệu.</value></data>
+  <data name="Links_FromSelection" xml:space="preserve"><value>Liên kết từ chữ đang chọn</value></data>
+  <data name="Links_Selection" xml:space="preserve"><value>“{0}”</value></data>
+  <data name="Links_NewTarget" xml:space="preserve"><value>Đi tới (địa chỉ web, email hoặc số trang)</value></data>
+  <data name="Links_MakeLink" xml:space="preserve"><value>Tạo liên kết</value></data>
+  <data name="Links_Made" xml:space="preserve"><value>Đã thêm liên kết cho chữ đang chọn (in nghiêng); bấm Áp dụng để ghi.</value></data>
+  <data name="Links_Error_Target" xml:space="preserve"><value>Gõ một địa chỉ web (https://… hoặc www.…), một email hoặc một số trang từ 1 đến {0}.</value></data>
   <data name="History_Bookmarks" xml:space="preserve"><value>Sửa bookmark</value></data>
   <data name="History_Metadata" xml:space="preserve"><value>Sửa thuộc tính tài liệu</value></data>
   <data name="History_OpenSettings" xml:space="preserve"><value>Đổi cách mở tài liệu</value></data>

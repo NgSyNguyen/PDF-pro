@@ -2035,6 +2035,12 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Links_Found" xml:space="preserve"><value>{0} addresses without a link found (in italics); click Apply to make their links.</value></data>
   <data name="Links_NoneFound" xml:space="preserve"><value>No address is without a link.</value></data>
   <data name="Links_Error_Read" xml:space="preserve"><value>The text of the document cannot be read.</value></data>
+  <data name="Links_FromSelection" xml:space="preserve"><value>Link from the selected text</value></data>
+  <data name="Links_Selection" xml:space="preserve"><value>“{0}”</value></data>
+  <data name="Links_NewTarget" xml:space="preserve"><value>Goes to (web address, e-mail or page number)</value></data>
+  <data name="Links_MakeLink" xml:space="preserve"><value>Make link</value></data>
+  <data name="Links_Made" xml:space="preserve"><value>A link for the selected text was added (in italics); press Apply to write it.</value></data>
+  <data name="Links_Error_Target" xml:space="preserve"><value>Type a web address (https://… or www.…), an e-mail address or a page number from 1 to {0}.</value></data>
   <data name="History_Bookmarks" xml:space="preserve"><value>Edit bookmarks</value></data>
   <data name="History_Metadata" xml:space="preserve"><value>Edit the description</value></data>
   <data name="History_OpenSettings" xml:space="preserve"><value>Change how the document opens</value></data>

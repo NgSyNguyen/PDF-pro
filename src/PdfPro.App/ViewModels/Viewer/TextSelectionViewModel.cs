@@ -206,6 +206,21 @@ public sealed class TextSelectionViewModel
         return null;
     }
 
+    /// <summary>Where the selection is, page by page (PDF space, one rectangle per line), on the pages whose text is read.</summary>
+    public IReadOnlyList<(int Page, PdfRect Rect)> Areas()
+    {
+        var areas = new List<(int Page, PdfRect Rect)>();
+        for (var page = 0; HasSelection && page < _viewer.PageCount; page++)
+        {
+            if (RangeOn(page) is { } range && _layers.TryGet(_viewer.Document.Pages[page]) is { } layer)
+            {
+                areas.AddRange(layer.Rects(Clamp(range, layer)).Select(rect => (page, rect)));
+            }
+        }
+
+        return areas;
+    }
+
     /// <summary>Where the selection is on a page, in its PDF space (one rectangle per line); empty when it is not there.</summary>
     public IReadOnlyList<PdfRect> RectsOn(Guid pageKey)
     {

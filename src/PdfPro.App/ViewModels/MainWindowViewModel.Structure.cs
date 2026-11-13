@@ -98,17 +98,29 @@ public sealed partial class MainWindowViewModel
             }
         });
 
+    /// <summary>"Liên kết": the links of the document; a link can also be made over the text selected in the viewer.</summary>
     [RelayCommand(CanExecute = nameof(CanChangeStructure))]
-    private Task LinksAsync()
-        => WithStructureAsync(Strings.Links_Title, "links", async (document, input) =>
+    private async Task LinksAsync()
+    {
+        if (ActiveDocument is not { } shown)
+        {
+            return;
+        }
+
+        // Read before pending edits are applied: a new revision clears the selection.
+        var selection = shown.TextSelection.Areas() is { Count: > 0 } areas
+            ? new LinkSelection(FirstLine(await shown.TextSelection.GetTextAsync()), areas)
+            : null;
+        await WithStructureAsync(Strings.Links_Title, "links", async (document, input) =>
         {
             var structure = await Task.Run(() => DocumentStructureReader.Read(input));
-            var dialog = new LinksViewModel(document.FileName, input, structure.Links, _logger);
+            var dialog = new LinksViewModel(document.FileName, input, structure.Links, _logger, document.Viewer.PageCount, selection);
             if (_pageDialogs.ShowLinks(dialog) && dialog.Result is { } result)
             {
                 document.ChangeStructure<EditLinksOperation>(result);
             }
         });
+    }
 
     private bool CanChangeStructure() => ActiveDocument is { IsReadOnly: false, CanChangeAttachments: true } && _activeSave is null && !StatusBar.IsTaskRunning;
 
