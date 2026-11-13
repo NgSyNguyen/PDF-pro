@@ -52,6 +52,9 @@ public enum SigningFailure
 
     /// <summary>The time-stamping authority could not be reached or gave no valid timestamp.</summary>
     Timestamp,
+
+    /// <summary>The document is certified and its certification allows no change, not even another signature.</summary>
+    Certified,
 }
 
 /// <summary>A document could not be signed; nothing was written.</summary>

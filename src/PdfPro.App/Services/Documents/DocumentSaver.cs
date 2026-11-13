@@ -88,7 +88,7 @@ internal sealed class DocumentSaver(
         var session = workspace.Session;
         return workspace.Protection is null
             && session.BaseSourceId == SourceIds.Original
-            && workspace.BaseDocument.Features.HasDigitalSignatures
+            && workspace.BaseDocument.Features is { HasDigitalSignatures: true, CertificationAllowsAnnotations: true }
             && session.Plan.AddsOnlyAnnotations(session.BaseSourceId, workspace.BaseDocument.PageCount);
     }
 

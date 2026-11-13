@@ -1226,6 +1226,7 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Sign_Error_Encrypted" xml:space="preserve"><value>Tài liệu đang có mật khẩu. Hãy gỡ mật khẩu (Mật khẩu &amp; quyền) và lưu trước khi ký.</value></data>
   <data name="Sign_Error_NoSuchPage" xml:space="preserve"><value>Trang đặt chữ ký không còn trong tài liệu.</value></data>
   <data name="Sign_Error_FieldSigned" xml:space="preserve"><value>Trường chữ ký này đã được ký.</value></data>
+  <data name="Sign_Error_Certified" xml:space="preserve"><value>Tài liệu đã được chứng nhận và không cho phép thay đổi nào, kể cả thêm chữ ký.</value></data>
   <data name="Sign_Error_NotSignatureField" xml:space="preserve"><value>Đã có một trường cùng tên nhưng không phải trường chữ ký.</value></data>
   <data name="Sign_Error_Unreadable" xml:space="preserve"><value>Không đọc hoặc không ghi được tệp để ký.</value></data>
   <data name="Sign_Error_Key" xml:space="preserve"><value>Không dùng được khóa riêng của chứng thư (thẻ/USB token chưa cắm, sai PIN hoặc không cho phép ký).</value></data>

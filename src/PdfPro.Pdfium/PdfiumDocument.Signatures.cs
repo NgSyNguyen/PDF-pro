@@ -18,6 +18,25 @@ public sealed partial class PdfiumDocument
     /// <summary>Upper bound for the bytes of one signature (defends against hostile files).</summary>
     private const int MaxSignatureBytes = 16 << 20;
 
+    /// <summary>The DocMDP permission of the document's certification signature (1–3), or 0 when none has one.</summary>
+    private int CertificationPermission()
+    {
+        var native = Native;
+        var count = Math.Min(Math.Max(0, fpdf_signature.FPDF_GetSignatureCount(native)), 1024);
+        var permission = 0;
+        for (var i = 0; i < count; i++)
+        {
+            var signature = fpdf_signature.FPDF_GetSignatureObject(native, i);
+            if (signature is not null && signature.__Instance != IntPtr.Zero
+                && (int)fpdf_signature.FPDFSignatureObjGetDocMDPPermission(signature) is >= 1 and <= 3 and var value)
+            {
+                permission = permission == 0 ? value : Math.Min(permission, value);
+            }
+        }
+
+        return permission;
+    }
+
     /// <summary>Every signature of the document, in the order of its fields.</summary>
     public unsafe IReadOnlyList<PdfSignatureData> GetSignatures()
     {

@@ -1226,6 +1226,7 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Sign_Error_Encrypted" xml:space="preserve"><value>The document has a password. Remove it (Password &amp; permissions) and save before signing.</value></data>
   <data name="Sign_Error_NoSuchPage" xml:space="preserve"><value>The page of the signature is no longer in the document.</value></data>
   <data name="Sign_Error_FieldSigned" xml:space="preserve"><value>This signature field is already signed.</value></data>
+  <data name="Sign_Error_Certified" xml:space="preserve"><value>The document is certified to allow no change, not even another signature.</value></data>
   <data name="Sign_Error_NotSignatureField" xml:space="preserve"><value>A field of the same name exists but is not a signature field.</value></data>
   <data name="Sign_Error_Unreadable" xml:space="preserve"><value>The file cannot be read or written to sign it.</value></data>
   <data name="Sign_Error_Key" xml:space="preserve"><value>The certificates private key cannot be used (card or USB token not inserted, wrong PIN, or signing not allowed).</value></data>

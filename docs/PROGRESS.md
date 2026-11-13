@@ -15,7 +15,7 @@ Sau lần 8 (máy Windows), phiên cloud làm tiếp — **chỉ App.Tests chạ
 - `98ffe91` **sửa mất nhãn trang khi lưu** sau khi chỉ xoay/chú thích/điền biểu mẫu (`PagePlan.KeepsPageOrder`).
 - `1e0daa4` + `2f20ee2` ô số trang hiện **nhãn trang** ("iii (3/20)"), gõ nhãn để nhảy trang.
 - `462da51` **Ctrl+B "Thêm bookmark"** ở chữ đang chọn / trang đang xem (ribbon Chỉnh sửa › Cấu trúc).
-- `6a9aeb1` **thumbnail hiện chú thích của phiên**; `99c2608` **kéo-thả trong cây bookmark**; **liên kết từ chữ đang chọn** (hộp thoại Liên kết).
+- `6a9aeb1` **thumbnail hiện chú thích của phiên**; `99c2608` **kéo-thả trong cây bookmark**; **liên kết từ chữ đang chọn** (hộp thoại Liên kết); **kiểm quyền DocMDP** của chữ ký chứng nhận (`Signing/DocMdp.cs`, `PdfDocumentFeatures.CertificationPermission`).
 
 **Kiểm tay trên Windows (mới):** biểu tượng ở thanh tác vụ/Explorer/khay; mở `samples/links-annots.pdf` → ô trang hiện "i (1/6)", gõ "3" nhảy tới trang 4; chọn một dòng chữ → Ctrl+B → mục mới mang dòng đó; kéo một bookmark lên giữa bookmark khác; chọn chữ → Liên kết → gõ "www.example.com" → Tạo liên kết → Áp dụng → bấm vào chữ trong Acrobat; tô sáng một đoạn → thumbnail hiện ngay.
 
@@ -462,5 +462,5 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 - `tools/fetch-tools.ps1` (tải qpdf) chưa chạy thử trên Windows: tên tệp zip/checksum của bản phát hành qpdf 12.2.0 là phỏng đoán theo quy ước của qpdf — chạy một lần, nếu khác thì sửa biến và ghim `-QpdfSha256`.
 - Bản cài tạm trên Desktop của chủ dự án còn ở `464d0de` (rất cũ) — thay bằng bản cài Velopack khi phát hành thử.
 - PDF/A: chưa kiểm bằng veraPDF (9a-3) — mọi quy tắc khác của ISO 19005 (giới hạn cài đặt, glyph phải có trong phông nhúng sẵn, `/Differences` ngoài AGL…) chưa được PDF_Pro tự kiểm; 1b biến trang có trong suốt thành ảnh (mất chữ chọn được, tệp lớn); phông thay thế làm chữ lệch; bản PDF/A làm mất hiệu lực chữ ký số; 2b: chú thích (trừ ghi chú) thiếu `/AP` được hình **rỗng** (không còn hiện); tệp PDFsharp không đọc được (như `broken.pdf`) phải Sửa tệp hỏng trước.
-- Tệp đã ký: chỉ "thêm chú thích" được lưu gia tăng; điền biểu mẫu, sửa/xóa chú thích có sẵn, thao tác trang sau khi ký vẫn ghi toàn bộ (cảnh báo trước). Chữ ký chứng nhận DocMDP P=1 chưa được kiểm trước khi lưu gia tăng.
+- Tệp đã ký: chỉ "thêm chú thích" được lưu gia tăng; điền biểu mẫu, sửa/xóa chú thích có sẵn, thao tác trang sau khi ký vẫn ghi toàn bộ (cảnh báo trước). Quyền DocMDP của chữ ký chứng nhận được kiểm từ 13/11 (ký thêm vào tệp P=1 bị từ chối; lưu chú thích gia tăng chỉ khi P=3).
 - OCR (P10): phần tải Tesseract/tessdata của `tools/fetch-tools.ps1` **chưa chạy thử trên Windows** (tên bộ cài UB Mannheim 5.5.0.20241111 và thẻ tessdata 4.1.0 theo quy ước đã biết; không có 7-Zip thì bộ cài chạy im lặng và có thể hỏi quyền quản trị), SHA-256 chưa ghim; CI Windows chưa có Tesseract nên test OCR thật chỉ chạy ở cloud (cân nhắc cho CI chạy `fetch-tools.ps1` để kiểm luôn script); trang quay 90° mà OSD báo 0° không được "Xoay đúng chiều"; "Xóa viền đen" có thể coi ảnh tối tràn lề là viền (có danh sách hỏi trước, hoàn tác được); xóa chữ ẩn cũ xử lý form một tầng.

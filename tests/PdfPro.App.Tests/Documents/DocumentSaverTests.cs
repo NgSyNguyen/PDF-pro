@@ -398,17 +398,29 @@ public sealed class DocumentSaverTests : IDisposable
         _saver.KeepsSignatures(unsigned).ShouldBeFalse("only signed files are updated this way");
     }
 
+    [Theory]
+    [InlineData(1, false)]
+    [InlineData(2, false)]
+    [InlineData(3, true)]
+    public async Task KeepsSignatures_OfACertifiedFile_OnlyWhenItsCertificationAllowsComments(int permission, bool keeps)
+    {
+        var (workspace, _, _) = await SignedWorkspaceAsync(permission);
+        workspace.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+
+        _saver.KeepsSignatures(workspace).ShouldBe(keeps, "a comment breaks a certification that does not allow comments: saving warns instead");
+    }
+
     private static NoteAnnotation Note()
         => new("n1", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.Now, DateTimeOffset.Now, "Đã xem", new PdfPoint(100, 700));
 
     /// <summary>An open document whose file is a real signed PDF (six pages), the session holding the same bytes.</summary>
-    private async Task<(DocumentWorkspace Workspace, string Path, byte[] Signed)> SignedWorkspaceAsync()
+    private async Task<(DocumentWorkspace Workspace, string Path, byte[] Signed)> SignedWorkspaceAsync(int certification = 0)
     {
         using var certificate = SigningCertificates.Signer();
         var signed = await PdfSigner.SignAsync(await File.ReadAllBytesAsync(Samples.Basic, TestToken), new SignRequest("ChuKy1"), certificate, null, DateTimeOffset.Now, TestToken);
         var path = _fixture.CreateFile("đã ký.pdf", signed);
         var document = FakePdfDocument.WithPages(6);
-        document.Features = FakePdfDocument.PlainFeatures with { SignatureCount = 1 };
+        document.Features = FakePdfDocument.PlainFeatures with { SignatureCount = 1, CertificationPermission = certification };
         _reopenedPages = 6;
         return (await _fixture.CreateAsync(document, path, signed), path, signed);
     }

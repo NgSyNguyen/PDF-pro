@@ -117,6 +117,12 @@ public static class PdfSigner
 
         using (pdf)
         {
+            if (DocMdp.PermissionOf(pdf) == DocMdp.NoChanges)
+            {
+                // Another signature would break the certification (ISO 32000-1 12.8.2.2).
+                throw new SigningException(SigningFailure.Certified, "The document's certification allows no change.");
+            }
+
             var next = trailer.Size;
             var signature = next++;
             var changed = new HashSet<PdfObject>(ReferenceEqualityComparer.Instance);

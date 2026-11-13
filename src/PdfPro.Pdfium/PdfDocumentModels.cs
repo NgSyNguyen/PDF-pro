@@ -29,6 +29,10 @@ public enum PdfFormType
 /// <param name="FormType">AcroForm, XFA or none.</param>
 /// <param name="HasJavaScript">The file has document-level JavaScript.</param>
 /// <param name="UserPermissions">What the file allows without the owner password (/P), whatever it was opened with.</param>
+/// <param name="CertificationPermission">
+/// What the certification signature allows (DocMDP): 1 no change, 2 forms and signing, 3 also annotations; 0 when the
+/// document is not certified.
+/// </param>
 public sealed record PdfDocumentFeatures(
     string FileVersion,
     int SecurityHandlerRevision,
@@ -36,8 +40,12 @@ public sealed record PdfDocumentFeatures(
     int SignatureCount,
     PdfFormType FormType,
     bool HasJavaScript,
-    uint UserPermissions = uint.MaxValue)
+    uint UserPermissions = uint.MaxValue,
+    int CertificationPermission = 0)
 {
+    /// <summary>Annotations may be added without breaking a certification (none, or one that allows them).</summary>
+    public bool CertificationAllowsAnnotations => CertificationPermission is 0 or 3;
+
     private const uint PrintPermission = 1 << 2;
     private const uint CopyPermission = 1 << 4;
     private const uint AssemblePermission = 1 << 10;

@@ -196,6 +196,7 @@ public sealed partial class MainWindowViewModel
         SigningFailure.FieldAlreadySigned => Strings.Sign_Error_FieldSigned,
         SigningFailure.NotASignatureField => Strings.Sign_Error_NotSignatureField,
         SigningFailure.NoSuchPage => Strings.Sign_Error_NoSuchPage,
+        SigningFailure.Certified => Strings.Sign_Error_Certified,
         _ => Strings.Sign_Error_Unreadable,
     };
 }
