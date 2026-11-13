@@ -135,9 +135,10 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
             Forms.FormWriter.SetValues(baseDocument, [.. plan.FormValues.Values]);
         }
 
-        if (!plan.IsIdentity(request.BaseSourceId, basePageCount))
+        if (!plan.KeepsPageOrder(request.BaseSourceId, basePageCount))
         {
-            // Labels ("i, ii, 1, 2…") describe the old page sequence; they would now be wrong.
+            // Labels ("i, ii, 1, 2…") describe the old page sequence; they would now be wrong. Rotating, cropping,
+            // annotating or filling in pages keeps the sequence, and the labels.
             baseDocument.Internals.Catalog.Elements.Remove("/PageLabels");
         }
 

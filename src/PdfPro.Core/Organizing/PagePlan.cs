@@ -142,6 +142,30 @@ public sealed class PagePlan : IReadOnlyList<PageRef>
     }
 
     /// <summary>
+    /// True when the plan shows every page of the source once and in order — rotated, cropped, annotated or with form
+    /// values perhaps, but no page moved, removed, added or repeated. What describes the pages by their position (page
+    /// labels "i, ii, 1, 2…") still holds for such a plan.
+    /// </summary>
+    public bool KeepsPageOrder(string sourceId, int pageCount)
+    {
+        if (_pages.Length != pageCount)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < _pages.Length; i++)
+        {
+            var page = _pages[i];
+            if (page.IsBlank || page.SourcePageIndex != i || !string.Equals(page.SourceId, sourceId, StringComparison.Ordinal))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
     /// True when the only change the plan makes to the source is annotations added in the session: every page once, in
     /// order, without rotation, crop or form values, and at least one annotation. Such a plan can be written as an
     /// incremental update of the source, which keeps its digital signatures valid.
