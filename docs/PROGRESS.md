@@ -437,6 +437,7 @@ Phase 6 xong về code. Còn việc của chủ dự án: chạy `Phase6Acceptan
 
 - **`{StaticResource}` thiếu chỉ lỗi lúc mở view** (test ViewModel không bắt được) → `XamlResourceTests` canh. Bộ chuyển đổi đảo bool không có: thêm thuộc tính bool vào ViewModel.
 - **`Border`, `Panel` không có automation peer**: `AutomationId`/`Name` đặt trên chúng không vào cây UIA (FlaUI không thấy, trình đọc màn hình cũng không) → đặt trên control (`UserControl`, `GroupBox`…).
+- **`XamlValueTests` (App.Tests) đọc mọi XAML của App như WPF khi nạp view**: giá trị enum (cả biểu tượng WPF-UI), bool, `{x:Static}`, `{x:Type}`, thuộc tính của Setter/Trigger (theo `TargetType`/`TargetName`), tham số enum của markup extension (`{Binding Mode=…}`, `{RelativeSource …}`), thuộc tính gắn (`Grid.Row`), kiểu phần tử. Enum có `TypeConverter` riêng (`ModifierKeys` "Control+Shift", `Key`) không bị kiểm. `XamlValueChecker` chỉ dùng phản chiếu mà `MetadataLoadContext` cũng có → thử được trên Linux với DLL WPF thật trong `~/.nuget/packages/microsoft.windowsdesktop.app.runtime.win-x64/*/runtimes/win-x64/lib/net10.0` (dự án console nhỏ trong scratchpad, `<Compile Include>` tệp checker).
 - **Test FlaUI không được dùng chuột/bàn phím thật** (`Keyboard.*`, `Mouse.*`, `.Click()`): dùng `Invoke`, `SetText`, `AppUnderTest.PressKey/PressEnter` (PostMessage).
 
 ## 7. Rủi ro / nợ đang mở
