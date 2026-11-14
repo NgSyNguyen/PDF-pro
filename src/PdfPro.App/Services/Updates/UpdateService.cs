@@ -40,6 +40,22 @@ public static class UpdateChannels
 
     public const string Repository = "https://github.com/NgSyNguyen/PDF-pro";
 
+    /// <summary>
+    /// The choice in force: the one made in Settings, or, when none was made, the channel of the running version
+    /// ("1.0.0-beta.2+abc" is a beta, "1.0.0" or "1.0.0+abc" stable).
+    /// </summary>
+    public static string Resolve(string? choice, string runningVersion)
+    {
+        if (choice is Stable or Beta)
+        {
+            return choice;
+        }
+
+        var version = runningVersion ?? string.Empty;
+        var metadata = version.IndexOf('+', StringComparison.Ordinal);
+        return (metadata >= 0 ? version[..metadata] : version).Contains('-', StringComparison.Ordinal) ? Beta : Stable;
+    }
+
     /// <summary>The Velopack channel of a choice on this processor: "win", "win-arm64", "beta", "beta-arm64".</summary>
     public static string Of(string choice, Architecture architecture)
         => (choice == Beta ? "beta" : "win") + (architecture == Architecture.Arm64 ? "-arm64" : string.Empty);
@@ -72,7 +88,7 @@ internal sealed class VelopackUpdateService(ISettingsService settings, ILogger<V
         {
             var manager = Manager();
             var info = await manager.CheckForUpdatesAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
-            logger.LogInformation("Update check on {Channel}: {Found}", settings.Current.UpdateChannel, info?.TargetFullRelease.Version.ToString() ?? "none");
+            logger.LogInformation("Update check on {Channel}: {Found}", Choice, info?.TargetFullRelease.Version.ToString() ?? "none");
             return info is null ? null : new AvailableUpdate(info.TargetFullRelease.Version.ToString(), info);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not OutOfMemoryException)
@@ -102,9 +118,11 @@ internal sealed class VelopackUpdateService(ISettingsService settings, ILogger<V
         Manager().WaitExitThenApplyUpdates(((UpdateInfo)update.Info).TargetFullRelease, true, false, []);
     }
 
+    private string Choice => UpdateChannels.Resolve(settings.Current.UpdateChannel, Hosting.AppBuildInfo.Current.Version);
+
     private UpdateManager Manager()
     {
-        var choice = settings.Current.UpdateChannel;
+        var choice = Choice;
         return new UpdateManager(
             new GithubSource(UpdateChannels.Repository, null, choice == UpdateChannels.Beta),
             new UpdateOptions { ExplicitChannel = UpdateChannels.Of(choice, RuntimeInformation.ProcessArchitecture) });

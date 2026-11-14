@@ -125,8 +125,11 @@ public sealed record AppSettings
     /// <summary>Look for a newer version when the app starts (an installed copy only; nothing is sent but the request).</summary>
     public bool CheckForUpdates { get; init; } = true;
 
-    /// <summary>"stable" or "beta" (pre-releases too).</summary>
-    public string UpdateChannel { get; init; } = "stable";
+    /// <summary>
+    /// "stable" or "beta" (pre-releases too); null until chosen in Settings: the channel of the running copy, so a beta
+    /// installed on a new computer keeps updating to the next beta.
+    /// </summary>
+    public string? UpdateChannel { get; init; }
 
     /// <summary>The quick-start guide of the start page was put away ("Ẩn hướng dẫn").</summary>
     public bool GuideHidden { get; init; }

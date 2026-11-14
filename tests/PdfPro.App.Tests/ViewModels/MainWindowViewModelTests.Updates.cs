@@ -82,4 +82,15 @@ public sealed partial class MainWindowViewModelTests
     [InlineData(UpdateChannels.Beta, System.Runtime.InteropServices.Architecture.Arm64, "beta-arm64")]
     public void TheVelopackChannel_FollowsTheChoiceAndTheProcessor(string choice, System.Runtime.InteropServices.Architecture architecture, string channel)
         => UpdateChannels.Of(choice, architecture).ShouldBe(channel);
+
+    [Theory]
+    [InlineData(null, "1.0.0-beta.2+d68e79e", UpdateChannels.Beta)]
+    [InlineData(null, "1.0.0-beta.1", UpdateChannels.Beta)]
+    [InlineData(null, "1.0.0", UpdateChannels.Stable)]
+    [InlineData(null, "1.2.3+build-7", UpdateChannels.Stable)]
+    [InlineData("", "1.0.0-beta.1", UpdateChannels.Beta)]
+    [InlineData(UpdateChannels.Stable, "1.0.0-beta.2", UpdateChannels.Stable)]
+    [InlineData(UpdateChannels.Beta, "1.0.0", UpdateChannels.Beta)]
+    public void WithoutAChoice_ACopyFollowsTheChannelOfItsOwnVersion(string? choice, string version, string expected)
+        => UpdateChannels.Resolve(choice, version).ShouldBe(expected);
 }

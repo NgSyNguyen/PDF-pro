@@ -34,7 +34,7 @@ public sealed partial class SettingsViewModel
     {
         _shell = shell;
         CheckForUpdates = current.CheckForUpdates;
-        UpdateChannel = current.UpdateChannel == UpdateChannels.Beta ? UpdateChannels.Beta : UpdateChannels.Stable;
+        UpdateChannel = UpdateChannels.Resolve(current.UpdateChannel, Hosting.AppBuildInfo.Current.Version);
         ExplorerContextMenu = TryRead(() => shell?.HasContextMenu == true);
     }
 

@@ -3,6 +3,10 @@
 Mọi thay đổi đáng kể của PDF_Pro. Định dạng theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), phiên bản
 theo [Semantic Versioning](https://semver.org/lang/vi/). Mục đầu tiên là ghi chú phát hành của bộ cài.
 
+## [Chưa phát hành]
+
+- Bản thử nghiệm cài trên máy mới tự theo kênh thử nghiệm (trước đây theo kênh ổn định nên không thấy bản beta sau).
+
 ## [1.0.0-beta.2] — 13/11/2026 (bản thử nghiệm)
 
 Bản thử nghiệm thứ hai: như 1.0.0-beta.1, phát hành lại qua GitHub (bản beta.1 đã cài tự cập nhật lên bản này khi đóng
