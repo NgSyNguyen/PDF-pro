@@ -5,6 +5,11 @@ theo [Semantic Versioning](https://semver.org/lang/vi/). Mục đầu tiên là 
 
 ## [Chưa phát hành]
 
+- **Word sang PDF không cần cài thêm gì** khi máy có Microsoft Word hoặc WPS Office: tài liệu Word được chính trình soạn
+  thảo đó chuyển (dàn trang đúng như khi mở bằng Word); bảng tính, bản trình chiếu — và tài liệu Word khi không có hai
+  chương trình đó — vẫn dùng LibreOffice. Mở thẳng tệp Word (Ctrl+O, kéo thả vào cửa sổ) là có bản PDF cạnh
+  nó và mở ngay; nút "Chuyển Word sang PDF" ở màn hình chính.
+- Sửa các biểu tượng hiện thành chữ lạ trên ribbon (Từ Office, Liên kết, Tối ưu cho web, Workflow, Xuất dữ liệu biểu mẫu).
 - Bản thử nghiệm cài trên máy mới tự theo kênh thử nghiệm (trước đây theo kênh ổn định nên không thấy bản beta sau).
 
 ## [1.0.0-beta.2] — 13/11/2026 (bản thử nghiệm)

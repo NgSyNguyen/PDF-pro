@@ -550,7 +550,7 @@
             Visibility="{Binding IsForLink, Converter={StaticResource InverseBoolToVisibility}}" />
           <ui:SymbolIcon
             Margin="0,0,8,0"
-            Symbol="GlobeArrowForward24"
+            Symbol="Link24"
             Visibility="{Binding IsForLink, Converter={StaticResource BoolToVisibility}}" />
           <TextBlock
             VerticalAlignment="Center"

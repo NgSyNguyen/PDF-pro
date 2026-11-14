@@ -120,9 +120,9 @@
         DockPanel.Dock="Bottom"
         FontSize="12"
         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-        Text="{Binding LibreOfficeText}"
-        TextTrimming="CharacterEllipsis"
-        ToolTip="{Binding LibreOfficeText}" />
+        Text="{Binding ConvertersText}"
+        TextWrapping="Wrap"
+        ToolTip="{Binding ConvertersToolTip}" />
       <TextBlock
         Margin="0,10,0,0"
         DockPanel.Dock="Bottom"

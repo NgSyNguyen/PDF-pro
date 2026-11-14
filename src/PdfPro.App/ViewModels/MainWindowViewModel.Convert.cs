@@ -214,27 +214,20 @@ public sealed partial class MainWindowViewModel
     private bool CanConvertToText() => _optimizing?.ToText is not null && CanLinearize();
 
     /// <summary>
-    /// Finds LibreOffice (where Settings say, else where it is installed) — without it, says how to get it — then the
-    /// dialog (documents, folder), then each document converted in the background, one after the other; documents that
-    /// fail are listed at the end, the others are kept. Needs no open document.
+    /// Finds what converts — the word processor installed (Microsoft Word, WPS Office) for Word documents, LibreOffice
+    /// (where Settings say, else where it is installed) — and, with neither, says how to get one; then the dialog
+    /// (documents, folder), then each document converted in the background, one after the other; documents that fail
+    /// are listed at the end, the others are kept. Needs no open document.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanConvertOffice))]
     private async Task OfficeToPdfAsync()
     {
-        if (_optimizing is not { OfficeToPdf: { } office, LibreOffice: { } locator })
+        if (await OfficeConvertersAsync() is not { } converters)
         {
             return;
         }
 
-        var chosen = _settings.Current.LibreOfficePath;
-        if (locator.Find(chosen) is not { } soffice)
-        {
-            _logger.LogInformation("LibreOffice was not found (a path was set: {Chosen})", !string.IsNullOrWhiteSpace(chosen));
-            await _messages.ShowErrorAsync(Strings.OfficeToPdf_Error_Title, string.IsNullOrWhiteSpace(chosen) ? Strings.OfficeToPdf_Error_NoLibreOffice : Format(Strings.OfficeToPdf_Error_NotAtPath, chosen));
-            return;
-        }
-
-        var dialog = new OfficeToPdfViewModel(_fileDialogs, soffice);
+        var dialog = new OfficeToPdfViewModel(_fileDialogs, converters.LibreOffice, word: converters.Word);
         if (!_pageDialogs.ShowOfficeToPdf(dialog) || dialog.Result is not { } choice)
         {
             return;
@@ -250,51 +243,10 @@ public sealed partial class MainWindowViewModel
             return;
         }
 
-        var parameters = new OfficeToPdfParams(LibreOfficePath: soffice, Overwrite: choice.Overwrite);
-        var written = new List<string>();
-        var failures = new List<(string File, string Reason)>();
-        var done = await RunOptimizingAsync(
-            Format(Strings.OfficeToPdf_Progress, choice.Files.Count),
-            async (progress, token) =>
-            {
-                for (var i = 0; i < choice.Files.Count; i++)
-                {
-                    progress.Report(new OperationProgress(i, choice.Files.Count, OfficeToPdfOperation.Stage));
-                    try
-                    {
-                        Directory.CreateDirectory(choice.OutputFolder);
-                        written.Add((await office.ConvertAsync(choice.Files[i], outputs[i], parameters, token)).Output);
-                    }
-                    catch (Exception ex) when (OfficeFailure(ex) is { } reason)
-                    {
-                        _logger.LogWarning("A document could not be converted to PDF: {ErrorType} {Failure}", ex.GetType().Name, (ex as OfficeConversionException)?.Failure);
-                        failures.Add((Path.GetFileName(choice.Files[i]), reason));
-                    }
-                }
-
-                progress.Report(new OperationProgress(choice.Files.Count, choice.Files.Count, OfficeToPdfOperation.Stage));
-                if (written.Count == 0)
-                {
-                    throw new NothingConvertedException();
-                }
-            },
-            Format(Strings.OfficeToPdf_Done, choice.OutputFolder),
-            Strings.OfficeToPdf_Error_Title,
-            ex => ex switch
-            {
-                LibreOfficeNotFoundException => Strings.OfficeToPdf_Error_NoLibreOffice,
-                NothingConvertedException => OfficeFailures(failures, written.Count, choice.Files.Count),
-                _ => null,
-            });
-        _logger.LogInformation("Office documents were converted to PDF: {Written} written, {Failed} failed", written.Count, failures.Count);
-        if (!done)
+        var written = await ConvertOfficeAsync(choice.Files, outputs, converters, choice.Overwrite, Format(Strings.OfficeToPdf_Done, choice.OutputFolder));
+        if (written is null)
         {
             return;
-        }
-
-        if (failures.Count > 0)
-        {
-            await _messages.ShowErrorAsync(Strings.OfficeToPdf_Error_Title, OfficeFailures(failures, written.Count, choice.Files.Count));
         }
 
         if (choice.OpenWhenDone && written.Count == 1)
@@ -308,6 +260,120 @@ public sealed partial class MainWindowViewModel
     }
 
     private bool CanConvertOffice() => _optimizing is { OfficeToPdf: not null, LibreOffice: not null } && _activeSave is null && !StatusBar.IsTaskRunning;
+
+    /// <summary>
+    /// The programs that convert office documents: the word processor installed and LibreOffice (where Settings say,
+    /// else where it is installed), at least one of them; null when there is neither (the user was told how to get one).
+    /// </summary>
+    private async Task<OfficeConverters?> OfficeConvertersAsync()
+    {
+        if (_optimizing is not { OfficeToPdf: not null, LibreOffice: { } locator })
+        {
+            return null;
+        }
+
+        var chosen = _settings.Current.LibreOfficePath;
+        var soffice = locator.Find(chosen);
+        var word = _optimizing.Word?.Find();
+        if (soffice is null && word is null)
+        {
+            _logger.LogInformation("Nothing converts office documents (a LibreOffice path was set: {Chosen})", !string.IsNullOrWhiteSpace(chosen));
+            await _messages.ShowErrorAsync(Strings.OfficeToPdf_Error_Title, string.IsNullOrWhiteSpace(chosen) ? Strings.OfficeToPdf_Error_NoLibreOffice : Format(Strings.OfficeToPdf_Error_NotAtPath, chosen));
+            return null;
+        }
+
+        return new OfficeConverters(word, soffice, chosen);
+    }
+
+    /// <summary>
+    /// Converts each document into its PDF (<paramref name="outputs"/>), one after the other in the background; the
+    /// documents that fail are named at the end, the others kept. The PDFs written, in order; null when none was (the
+    /// user was told why) or the run was cancelled.
+    /// </summary>
+    private async Task<IReadOnlyList<string>?> ConvertOfficeAsync(IReadOnlyList<string> files, IReadOnlyList<string> outputs, OfficeConverters converters, bool overwrite, string doneText)
+    {
+        var office = _optimizing!.OfficeToPdf!;
+
+        // What Settings name is the only place LibreOffice is looked for (not found there: it is not used).
+        var parameters = new OfficeToPdfParams(LibreOfficePath: converters.LibreOffice ?? NullIfEmpty(converters.ChosenLibreOffice), Overwrite: overwrite);
+        var written = new List<string>();
+        var failures = new List<(string File, string Reason)>();
+        var done = await RunOptimizingAsync(
+            Format(Strings.OfficeToPdf_Progress, files.Count),
+            async (progress, token) =>
+            {
+                for (var i = 0; i < files.Count; i++)
+                {
+                    progress.Report(new OperationProgress(i, files.Count, OfficeToPdfOperation.Stage));
+                    try
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(outputs[i])!);
+                        var result = await office.ConvertAsync(files[i], outputs[i], parameters, token);
+                        _logger.LogInformation("A document was converted to PDF by {Converter}", result.ConvertedBy);
+                        written.Add(result.Output);
+                    }
+                    catch (Exception ex) when (OfficeFailure(ex) is { } reason)
+                    {
+                        _logger.LogWarning("A document could not be converted to PDF: {ErrorType} {Failure}", ex.GetType().Name, (ex as OfficeConversionException)?.Failure);
+                        failures.Add((Path.GetFileName(files[i]), reason));
+                    }
+                }
+
+                progress.Report(new OperationProgress(files.Count, files.Count, OfficeToPdfOperation.Stage));
+                if (written.Count == 0)
+                {
+                    throw new NothingConvertedException();
+                }
+            },
+            doneText,
+            Strings.OfficeToPdf_Error_Title,
+            ex => ex switch
+            {
+                NothingConvertedException => OfficeFailures(failures, written.Count, files.Count),
+                _ => null,
+            });
+        _logger.LogInformation("Office documents were converted to PDF: {Written} written, {Failed} failed", written.Count, failures.Count);
+        if (!done)
+        {
+            return null;
+        }
+
+        if (failures.Count > 0)
+        {
+            await _messages.ShowErrorAsync(Strings.OfficeToPdf_Error_Title, OfficeFailures(failures, written.Count, files.Count));
+        }
+
+        return written;
+    }
+
+    /// <summary>
+    /// Office documents given to open (Ctrl+O, dropped, from Explorer) become PDFs next to them ("name.pdf", or
+    /// "name (2).pdf" when that is taken) and those open. The PDFs written, each at the place of its document.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<string, string>> ConvertToOpenAsync(IReadOnlyList<string> documents)
+    {
+        if (await OfficeConvertersAsync() is not { } converters)
+        {
+            return new Dictionary<string, string>();
+        }
+
+        var outputs = new List<string>();
+        foreach (var document in documents)
+        {
+            var folder = Path.GetDirectoryName(document)!;
+            var name = FileNames.MakeUnique(
+                [Path.GetFileNameWithoutExtension(document)],
+                n => File.Exists(Path.Combine(folder, n + ".pdf")) || outputs.Contains(Path.Combine(folder, n + ".pdf"), StringComparer.OrdinalIgnoreCase))[0];
+            outputs.Add(Path.Combine(folder, name + ".pdf"));
+        }
+
+        var written = await ConvertOfficeAsync(documents, outputs, converters, overwrite: false, Strings.Open_Office_Done) ?? [];
+        return documents.Select((d, i) => (Document: d, Output: outputs[i]))
+            .Where(p => written.Contains(p.Output, StringComparer.OrdinalIgnoreCase))
+            .ToDictionary(p => p.Document, p => p.Output, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string? NullIfEmpty(string? text) => string.IsNullOrWhiteSpace(text) ? null : text;
 
     /// <summary>"n of m documents became PDFs; these did not:" and a line per document (at most 10).</summary>
     private static string OfficeFailures(IReadOnlyList<(string File, string Reason)> failures, int written, int total)
@@ -327,7 +393,9 @@ public sealed partial class MainWindowViewModel
     {
         OfficeConversionException { Failure: OfficeConversionFailure.Timeout } => Strings.OfficeToPdf_Failure_Timeout,
         OfficeConversionException { Failure: OfficeConversionFailure.Unsupported } => Strings.OfficeToPdf_Failure_Unsupported,
+        OfficeConversionException { Failure: OfficeConversionFailure.Protected } => Strings.OfficeToPdf_Failure_Protected,
         OfficeConversionException => Strings.OfficeToPdf_Failure_Failed,
+        LibreOfficeNotFoundException or WordProcessorNotFoundException => Strings.OfficeToPdf_Failure_NeedsLibreOffice,
         FileNotFoundException or DirectoryNotFoundException => Strings.OfficeToPdf_Failure_Missing,
         IOException or UnauthorizedAccessException => Strings.OfficeToPdf_Failure_Access,
         _ => null,
@@ -347,6 +415,12 @@ public sealed partial class MainWindowViewModel
             },
             name);
     }
+
+    /// <summary>What converts office documents.</summary>
+    /// <param name="Word">The word processor installed, for Word documents (null: none).</param>
+    /// <param name="LibreOffice">LibreOffice's soffice (null: not installed, or not where Settings say).</param>
+    /// <param name="ChosenLibreOffice">The LibreOffice path Settings name (empty: look where it is installed).</param>
+    private sealed record OfficeConverters(WordProcessor? Word, string? LibreOffice, string? ChosenLibreOffice);
 
     /// <summary>No document of "Office sang PDF" became a PDF: the run ends as a failure.</summary>
     private sealed class NothingConvertedException : Exception

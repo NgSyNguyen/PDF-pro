@@ -163,7 +163,7 @@ public sealed partial class MainWindowViewModel
             WorkflowFailure.Parameters => Format(Strings.Workflow_Failure_Parameters, inner.Message),
             WorkflowFailure.Output => Strings.Workflow_Failure_Output,
             _ when inner is OcrException { Failure: OcrFailure.NotInstalled or OcrFailure.LanguageMissing } => Strings.Workflow_Failure_NoOcr,
-            _ when inner is LibreOfficeNotFoundException => Strings.OfficeToPdf_Error_NoLibreOffice,
+            _ when inner is LibreOfficeNotFoundException or WordProcessorNotFoundException => Strings.OfficeToPdf_Error_NoLibreOffice,
             _ when inner is Core.ExternalTools.ExternalToolNotFoundException => Strings.Optimize_Error_NoQpdf,
             _ when BatchRunner.IsUnreadableFile(failed) => Strings.Workflow_Failure_Unreadable,
             _ when inner is Core.Operations.WorkerException { Failure: Core.Operations.WorkerFailure.TimedOut } => Strings.Content_Error_WorkerTimedOut,

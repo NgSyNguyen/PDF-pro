@@ -24,11 +24,16 @@ public abstract class WorkspaceTabViewModel : ObservableObject
 /// <summary>Start page: open button, drop zone, recent files.</summary>
 public sealed class HomeTabViewModel : WorkspaceTabViewModel
 {
-    public HomeTabViewModel(ICommand openFileCommand, ICommand openRecentFileCommand, ICommand mergeCommand)
+    /// <param name="openFileCommand">"Mở tệp".</param>
+    /// <param name="openRecentFileCommand">Opens a recent file (its full path as parameter).</param>
+    /// <param name="mergeCommand">"Gộp tệp PDF".</param>
+    /// <param name="officeToPdfCommand">"Chuyển Word sang PDF" (null: the button is not shown).</param>
+    public HomeTabViewModel(ICommand openFileCommand, ICommand openRecentFileCommand, ICommand mergeCommand, ICommand? officeToPdfCommand = null)
     {
         OpenFileCommand = openFileCommand;
         OpenRecentFileCommand = openRecentFileCommand;
         MergeCommand = mergeCommand;
+        OfficeToPdfCommand = officeToPdfCommand;
         RecentFiles.CollectionChanged += OnRecentFilesChanged;
     }
 
@@ -43,6 +48,9 @@ public sealed class HomeTabViewModel : WorkspaceTabViewModel
 
     /// <summary>"Gộp tệp PDF" without opening a document first.</summary>
     public ICommand MergeCommand { get; }
+
+    /// <summary>"Chuyển Word sang PDF" (Office sang PDF) without opening a document first; null when unavailable.</summary>
+    public ICommand? OfficeToPdfCommand { get; }
 
     public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = [];
 

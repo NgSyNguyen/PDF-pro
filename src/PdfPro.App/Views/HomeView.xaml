@@ -53,6 +53,16 @@
         Content="{loc:Tr Welcome_Merge}"
         Icon="{ui:SymbolIcon Merge24}"
         ToolTip="{loc:Tr Welcome_Merge_ToolTip}" />
+      <ui:Button
+        Margin="0,8,0,0"
+        Padding="20,8"
+        HorizontalAlignment="Center"
+        AutomationProperties.AutomationId="WelcomeOfficeToPdf"
+        Command="{Binding OfficeToPdfCommand}"
+        Content="{loc:Tr Welcome_OfficeToPdf}"
+        Icon="{ui:SymbolIcon DocumentPdf24}"
+        ToolTip="{loc:Tr Welcome_OfficeToPdf_ToolTip}"
+        Visibility="{Binding OfficeToPdfCommand, Converter={StaticResource NullToCollapsed}}" />
 
       <!--
         Quick-start guide (SPEC Phase 13): four steps, until put away; Tệp › Hướng dẫn nhanh brings it back.

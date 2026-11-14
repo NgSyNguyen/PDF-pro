@@ -63,7 +63,7 @@ internal sealed class FileDialogService : IFileDialogService
         var dialog = new OpenFileDialog
         {
             Title = Strings.Open_Dialog_Title,
-            Filter = Strings.Open_Dialog_Filter,
+            Filter = Strings.Open_Dialog_FilterWithOffice,
             Multiselect = true,
             CheckFileExists = true,
         };

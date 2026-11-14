@@ -26,7 +26,22 @@ public sealed class OfficeToPdfViewModelTests : IDisposable
         dialog.RunCommand.CanExecute(null).ShouldBeFalse();
         dialog.OpenWhenDone.ShouldBeTrue();
         dialog.Overwrite.ShouldBeFalse();
-        dialog.LibreOfficeText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_LibreOffice, Soffice));
+        dialog.ConvertersText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_LibreOffice, Soffice));
+    }
+
+    [Fact]
+    public void WithAWordProcessor_ItSaysWhatConvertsWordDocuments_AndWhetherLibreOfficeIsThere()
+    {
+        var word = new PdfPro.Operations.Converting.WordProcessor(@"C:\Office\WINWORD.EXE", PdfPro.Operations.Converting.WordProcessorKind.MicrosoftWord);
+        var wps = new PdfPro.Operations.Converting.WordProcessor(@"C:\Kingsoft\office6\wps.exe", PdfPro.Operations.Converting.WordProcessorKind.Wps);
+
+        var both = new OfficeToPdfViewModel(_files, Soffice, word: word);
+        var wpsOnly = new OfficeToPdfViewModel(_files, null, word: wps);
+
+        both.ConvertersText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_Converters, Strings.OfficeToPdf_Word_Microsoft));
+        both.ConvertersToolTip.ShouldContain(Soffice);
+        wpsOnly.ConvertersText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_Converters_NoLibreOffice, Strings.OfficeToPdf_Word_Wps));
+        OfficeToPdfViewModel.NameOf(new PdfPro.Operations.Converting.WordProcessor(@"C:\x\writer.exe", PdfPro.Operations.Converting.WordProcessorKind.Other)).ShouldBe(Strings.OfficeToPdf_Word_Other);
     }
 
     [Fact]

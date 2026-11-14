@@ -33,20 +33,25 @@ public sealed class OfficeFileItemViewModel(string path, long size)
 /// <summary>
 /// "Office sang PDF" (convert.officeToPdf): the Word, Excel, PowerPoint, OpenDocument and RTF documents — added from
 /// the file dialog or dropped from Explorer, removed — the folder the PDFs go to (that of the first document unless
-/// chosen), and whether to replace PDFs already there. LibreOffice, which converts them, has been found before the
-/// dialog opens; its place is shown.
+/// chosen), and whether to replace PDFs already there. The programs that convert them — the word processor installed
+/// (Microsoft Word, WPS Office) for Word documents, LibreOffice — have been found before the dialog opens; the dialog
+/// says which converts what.
 /// </summary>
 public sealed partial class OfficeToPdfViewModel : ObservableObject, IDropTarget
 {
     private readonly IFileDialogService _files;
 
     /// <param name="files">File and folder pickers.</param>
-    /// <param name="libreOffice">The soffice program that will convert (shown).</param>
+    /// <param name="libreOffice">The soffice program that will convert, or null when it is not installed.</param>
     /// <param name="initial">Documents to start with (those not converted here are left out).</param>
-    public OfficeToPdfViewModel(IFileDialogService files, string libreOffice, IEnumerable<string>? initial = null)
+    /// <param name="word">The word processor that converts Word documents, or null when there is none.</param>
+    public OfficeToPdfViewModel(IFileDialogService files, string? libreOffice, IEnumerable<string>? initial = null, WordProcessor? word = null)
     {
         _files = files;
-        LibreOfficeText = string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_LibreOffice, libreOffice);
+        ConvertersText = word is null
+            ? string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_LibreOffice, libreOffice)
+            : string.Format(CultureInfo.CurrentCulture, libreOffice is null ? Strings.OfficeToPdf_Converters_NoLibreOffice : Strings.OfficeToPdf_Converters, NameOf(word));
+        ConvertersToolTip = libreOffice is null ? ConvertersText : ConvertersText + Environment.NewLine + string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_LibreOffice, libreOffice);
         Items = [];
         Items.CollectionChanged += (_, _) => Check();
         OpenWhenDone = true;
@@ -63,8 +68,11 @@ public sealed partial class OfficeToPdfViewModel : ObservableObject, IDropTarget
 
     public ObservableCollection<OfficeFileItemViewModel> Items { get; }
 
-    /// <summary>"LibreOffice: C:\…\soffice.exe".</summary>
-    public string LibreOfficeText { get; }
+    /// <summary>"Tài liệu Word chuyển bằng Microsoft Word; bảng tính và bản trình chiếu bằng LibreOffice.", or LibreOffice's place.</summary>
+    public string ConvertersText { get; }
+
+    /// <summary>The same, with LibreOffice's place.</summary>
+    public string ConvertersToolTip { get; }
 
     [ObservableProperty]
     public partial string OutputFolder { get; set; }
@@ -84,6 +92,18 @@ public sealed partial class OfficeToPdfViewModel : ObservableObject, IDropTarget
     public partial string? ErrorText { get; private set; }
 
     public OfficeToPdfDialogResult? Result { get; private set; }
+
+    /// <summary>"Microsoft Word", "WPS Office".</summary>
+    public static string NameOf(WordProcessor word)
+    {
+        ArgumentNullException.ThrowIfNull(word);
+        return word.Kind switch
+        {
+            WordProcessorKind.MicrosoftWord => Strings.OfficeToPdf_Word_Microsoft,
+            WordProcessorKind.Wps => Strings.OfficeToPdf_Word_Wps,
+            _ => Strings.OfficeToPdf_Word_Other,
+        };
+    }
 
     /// <summary>
     /// Adds the documents among <paramref name="paths"/> that are converted here and not listed yet, in natural order,

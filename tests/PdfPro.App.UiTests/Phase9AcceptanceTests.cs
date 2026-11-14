@@ -214,13 +214,43 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         var pdf = Path.Combine(folder, "tờ trình.pdf");
         var elapsed = AppUnderTest.WaitUntil(() => File.Exists(pdf), Long, "the PDF");
         app.WaitForStatus(Format("OfficeToPdf_Done", folder), Long);
-        output.WriteLine($"one Word document through LibreOffice: {elapsed.TotalSeconds:N1} s");
+        output.WriteLine($"one Word document (word processor, else LibreOffice): {elapsed.TotalSeconds:N1} s");
 
         // PdfFile.PageTexts joins the letters without the spaces between words.
         var text = string.Join('\n', PdfFile.PageTexts(pdf)).Normalize(System.Text.NormalizationForm.FormC);
         text.ShouldContain("CộnghòaxãhộichủnghĩaViệtNam");
         text.ShouldContain("KínhgửiỦybannhândânxã");
         Directory.GetFileSystemEntries(folder).ShouldBe([pdf], "LibreOffice's working folder is gone");
+    }
+
+    /// <summary>
+    /// A Word document given to the app as if it were a PDF (Explorer, a drop, Ctrl+O) becomes a PDF next to it — by
+    /// the word processor installed (WPS Office on the development computer) or LibreOffice — and that PDF opens.
+    /// </summary>
+    [Fact]
+    public void AWordDocument_OpenedLikeAPdf_BecomesAPdfNextToIt_ThatOpens()
+    {
+        RequireEnabled();
+        using var progId = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(@"Word.Application\CLSID");
+        var libreOffice = new[] { "ProgramFiles", "ProgramW6432" }
+            .Select(v => Environment.GetEnvironmentVariable(v))
+            .Where(f => !string.IsNullOrEmpty(f))
+            .Any(f => File.Exists(Path.Combine(f!, "LibreOffice", "program", "soffice.exe")));
+        Assert.SkipUnless(progId is not null || libreOffice, "Neither a word processor nor LibreOffice is installed");
+        var folder = Directory.CreateDirectory(Path.Combine(_folder.Documents, "hồ sơ đến")).FullName;
+        var docx = Path.Combine(folder, "công văn.docx");
+        ScanPdf.WriteDocx(docx, "Cộng hòa xã hội chủ nghĩa Việt Nam", "Kính gửi Ủy ban nhân dân xã");
+        using var app = AppUnderTest.Start(_folder, docx);
+
+        var elapsed = app.WaitForTab("công văn.pdf", Long);
+        app.WaitForStatus(Text("Open_Office_Done"), Long);
+        output.WriteLine($"a Word document opened as a PDF: {elapsed.TotalSeconds:N1} s");
+
+        var pdf = Path.Combine(folder, "công văn.pdf");
+        var text = string.Join('\n', PdfFile.PageTexts(pdf)).Normalize(System.Text.NormalizationForm.FormC);
+        text.ShouldContain("CộnghòaxãhộichủnghĩaViệtNam");
+        Directory.GetFileSystemEntries(folder).Select(Path.GetFileName).Order(StringComparer.Ordinal)
+            .ShouldBe(new[] { "công văn.docx", "công văn.pdf" }.Order(StringComparer.Ordinal), "nothing else is left next to the document");
     }
 
     [Fact]

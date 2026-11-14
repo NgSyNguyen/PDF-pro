@@ -164,7 +164,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         FlattenAnnotationsCommand = new ActiveDocumentCommand(d => d.FlattenAnnotationsCommand);
         FindNextCommand = new ActiveDocumentCommand(d => d.Search.NextCommand);
         FindPreviousCommand = new ActiveDocumentCommand(d => d.Search.PreviousCommand);
-        Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand)
+        Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand, optimizing is { OfficeToPdf: not null, LibreOffice: not null } ? OfficeToPdfCommand : null)
         {
             ShowsGuide = !settings.Current.GuideHidden,
             HideGuideCommand = HideGuideCommand,
@@ -322,7 +322,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public StatusBarViewModel StatusBar { get; } = new();
 
     /// <summary>
-    /// Opens files one after the other (each in its own tab). A file that is already open is just selected.
+    /// Opens files one after the other (each in its own tab). A file that is already open is just selected. Word,
+    /// Excel, PowerPoint documents first become PDFs next to them ("Office sang PDF"), which open in their place.
     /// With <paramref name="pdfOnly"/>, files without the .pdf extension are skipped and the user is told.
     /// </summary>
     public async Task OpenFilesAsync(IEnumerable<string> paths, bool pdfOnly = false)
@@ -335,6 +336,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (files.Count < candidates.Count)
         {
             await _messages.ShowInfoAsync(Strings.Open_Error_Title, Strings.Open_NotPdf);
+        }
+
+        var office = pdfOnly || _optimizing?.OfficeToPdf is null
+            ? []
+            : files.Select(Path.GetFullPath).Where(p => Operations.Converting.OfficeToPdfOperation.IsSupported(p) && File.Exists(p)).ToList();
+        if (office.Count > 0)
+        {
+            var converted = await ConvertToOpenAsync(office);
+            files = [.. files.Select(p => (Original: p, Full: Path.GetFullPath(p)))
+                .Where(p => !office.Contains(p.Full, StringComparer.OrdinalIgnoreCase) || converted.ContainsKey(p.Full))
+                .Select(p => converted.TryGetValue(p.Full, out var pdf) ? pdf : p.Original)];
         }
 
         foreach (var path in files)
@@ -831,7 +843,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Forms,
                 [
                     new("forms.design", Strings.Cmd_DesignForm, SymbolRegular.Form24, ToggleFormDesignCommand, Strings.Cmd_DesignForm_ToolTip),
-                    new("forms.exportData", Strings.Cmd_ExportFormData, SymbolRegular.ArrowExport24, ExportFormDataCommand, Strings.Cmd_ExportFormData_ToolTip),
+                    new("forms.exportData", Strings.Cmd_ExportFormData, SymbolRegular.ArrowExportLtr24, ExportFormDataCommand, Strings.Cmd_ExportFormData_ToolTip),
                     new("forms.importData", Strings.Cmd_ImportFormData, SymbolRegular.ArrowImport24, ImportFormDataCommand, Strings.Cmd_ImportFormData_ToolTip),
                     new("forms.merge", Strings.Cmd_MergeFormData, SymbolRegular.DocumentTableArrowRight24, MergeFormDataCommand, Strings.Cmd_MergeFormData_ToolTip),
                     new("forms.reset", Strings.Cmd_ResetForm, SymbolRegular.Eraser24, ResetFormCommand, Strings.Cmd_ResetForm_ToolTip),
@@ -843,7 +855,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("structure.addBookmark", Strings.Cmd_AddBookmark, SymbolRegular.BookmarkAdd24, AddBookmarkCommand, Strings.Cmd_AddBookmark_ToolTip),
                     new("structure.metadata", Strings.Cmd_DocumentDescription, SymbolRegular.DocumentBulletList24, DocumentDescriptionCommand, Strings.Cmd_DocumentDescription_ToolTip),
                     new("structure.pageLabels", Strings.Cmd_PageLabels, SymbolRegular.TextWordCount24, PageLabelsCommand, Strings.Cmd_PageLabels_ToolTip),
-                    new("structure.links", Strings.Cmd_Links, SymbolRegular.GlobeArrowForward24, LinksCommand, Strings.Cmd_Links_ToolTip),
+                    new("structure.links", Strings.Cmd_Links, SymbolRegular.Link24, LinksCommand, Strings.Cmd_Links_ToolTip),
                     new("structure.drawLink", Strings.Cmd_DrawLink, SymbolRegular.Link24, DrawLinkCommand, Strings.Cmd_DrawLink_ToolTip),
                 ]),
             ]),
@@ -909,13 +921,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Import,
                 [
                     new("convert.fromImages", Strings.Cmd_FromImages, SymbolRegular.ImageMultiple24, FromImagesCommand, Strings.Cmd_FromImages_ToolTip),
-                    new("convert.officeToPdf", Strings.Cmd_FromOffice, SymbolRegular.DocumentArrowDown24, OfficeToPdfCommand, Strings.Cmd_FromOffice_ToolTip),
+                    new("convert.officeToPdf", Strings.Cmd_FromOffice, SymbolRegular.DocumentPdf24, OfficeToPdfCommand, Strings.Cmd_FromOffice_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Optimize,
                 [
                     new("optimize.compress", Strings.Cmd_Compress, SymbolRegular.ArrowMinimize24, CompressCommand, Strings.Cmd_Compress_ToolTip),
                     new("optimize.grayscale", Strings.Cmd_Grayscale, SymbolRegular.DarkTheme24, GrayscaleCommand, Strings.Cmd_Grayscale_ToolTip),
-                    new("optimize.linearize", Strings.Cmd_Linearize, SymbolRegular.GlobeArrowForward24, LinearizeCommand, Strings.Cmd_Linearize_ToolTip),
+                    new("optimize.linearize", Strings.Cmd_Linearize, SymbolRegular.Globe24, LinearizeCommand, Strings.Cmd_Linearize_ToolTip),
                     new("optimize.repair", Strings.Cmd_Repair, SymbolRegular.DocumentError24, RepairCommand, Strings.Cmd_Repair_ToolTip),
                     new("convert.toPdfA", Strings.Cmd_PdfA, SymbolRegular.Archive24, ToPdfACommand, Strings.Cmd_PdfA_ToolTip),
                 ]),
@@ -938,7 +950,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 new(Strings.Ribbon_Group_Automation,
                 [
                     new("tools.commandPalette", Strings.Cmd_CommandPalette, SymbolRegular.Search24, CommandPaletteCommand, Strings.Cmd_CommandPalette_ToolTip),
-                    new("workflow.open", Strings.Cmd_Workflow, SymbolRegular.Flow24, _automation is null ? null : WorkflowsCommand, Strings.Cmd_Workflow_ToolTip),
+                    new("workflow.open", Strings.Cmd_Workflow, SymbolRegular.Flowchart24, _automation is null ? null : WorkflowsCommand, Strings.Cmd_Workflow_ToolTip),
                     new("batch.run", Strings.Cmd_Batch, SymbolRegular.TaskListLtr24, _automation is null ? null : BatchCommand, Strings.Cmd_Batch_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_App,
