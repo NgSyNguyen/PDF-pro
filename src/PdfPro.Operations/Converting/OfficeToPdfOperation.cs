@@ -20,7 +20,7 @@ public enum OfficeConversionFailure
     /// <summary>The converting program failed or wrote no readable PDF: the document may be damaged or protected.</summary>
     Failed,
 
-    /// <summary>The document is protected by a password (the word processor said so).</summary>
+    /// <summary>The document is protected by a password (the office application said so).</summary>
     Protected,
 }
 
@@ -28,13 +28,13 @@ public enum OfficeConversionFailure
 public enum OfficeConverter
 {
     /// <summary>
-    /// Word documents with the word processor installed (Microsoft Word, WPS Office) — it lays them out as their
-    /// authors saw them — and with LibreOffice when there is none or it fails; other documents with LibreOffice.
+    /// The office application installed for the document (Microsoft Office, WPS Office) — it lays documents out as
+    /// their authors saw them — and LibreOffice when there is none or it fails.
     /// </summary>
     Automatic,
 
-    /// <summary>The word processor installed (Word documents only).</summary>
-    WordProcessor,
+    /// <summary>The office application installed (Microsoft Office, WPS Office).</summary>
+    OfficeSuite,
 
     /// <summary>LibreOffice.</summary>
     LibreOffice,
@@ -60,15 +60,15 @@ public sealed record OfficeToPdfParams(
 /// <summary>A converted document.</summary>
 /// <param name="Output">The PDF written.</param>
 /// <param name="PageCount">Its pages.</param>
-/// <param name="ConvertedBy">The program that converted it (<see cref="OfficeConverter.WordProcessor"/> or <see cref="OfficeConverter.LibreOffice"/>).</param>
+/// <param name="ConvertedBy">The program that converted it (<see cref="OfficeConverter.OfficeSuite"/> or <see cref="OfficeConverter.LibreOffice"/>).</param>
 public sealed record OfficeConversionResult(string Output, int PageCount, OfficeConverter ConvertedBy = OfficeConverter.LibreOffice);
 
 /// <summary>
 /// convert.officeToPdf (<see cref="OperationKind.Export"/>, "Office sang PDF"): Word, Excel, PowerPoint, OpenDocument
-/// and RTF documents converted to PDF. Word documents go to the word processor installed (Microsoft Word, or WPS
-/// Office, through Word's automation — <see cref="IWordConverter"/>), which lays them out exactly as their authors saw
-/// them, and to LibreOffice when there is none or it fails (a document it says is protected is not tried again);
-/// spreadsheets and presentations go to LibreOffice. LibreOffice runs as a separate process (<c>soffice --headless --convert-to pdf</c>,
+/// and RTF documents converted to PDF. Each goes to the office application installed for it (Microsoft Word, Excel,
+/// PowerPoint, or WPS Office, through Office automation — <see cref="IOfficeAutomation"/>), which lays it out exactly
+/// as its author saw it, and to LibreOffice when there is none or it fails (a document it says is protected, or that
+/// took too long, is not tried again). LibreOffice runs as a separate process (<c>soffice --headless --convert-to pdf</c>,
 /// through <see cref="IExternalToolRunner"/>: no shell, a timeout, cancellable). Every run has a user profile of its own
 /// (<c>-env:UserInstallation</c>), so that several conversions run side by side and never touch the user's own
 /// LibreOffice settings — in a short folder of the system's temporary folder: LibreOffice's profile nests deep, and
@@ -78,8 +78,8 @@ public sealed record OfficeConversionResult(string Output, int PageCount, Office
 /// </summary>
 /// <param name="runner">Runs LibreOffice.</param>
 /// <param name="locator">Finds LibreOffice.</param>
-/// <param name="word">The word processor's conversion; null to convert with LibreOffice only.</param>
-public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOfficeLocator locator, IWordConverter? word = null) : PdfOperation<OfficeToPdfParams>
+/// <param name="office">The office applications' conversion; null to convert with LibreOffice only.</param>
+public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOfficeLocator locator, IOfficeAutomation? office = null) : PdfOperation<OfficeToPdfParams>
 {
     public const string OperationId = "convert.officeToPdf";
 
@@ -91,11 +91,6 @@ public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOffic
         ".docx", ".doc", ".odt", ".rtf", ".xlsx", ".xls", ".ods", ".pptx", ".ppt", ".odp",
     };
 
-    /// <summary>The word-processing documents, which the word processor converts when there is one.</summary>
-    public static IReadOnlySet<string> WordExtensions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
-        ".docx", ".doc", ".odt", ".rtf",
-    };
 
     public override string Id => OperationId;
 
@@ -104,15 +99,21 @@ public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOffic
     /// <summary>Whether <paramref name="path"/> is a document this operation converts.</summary>
     public static bool IsSupported(string path) => Extensions.Contains(Path.GetExtension(path));
 
-    /// <summary>Whether <paramref name="path"/> is a word-processing document (Word, OpenDocument text, RTF).</summary>
-    public static bool IsWordDocument(string path) => WordExtensions.Contains(Path.GetExtension(path));
+    /// <summary>Which kind of office document <paramref name="path"/> is, by its extension (null: none converted here).</summary>
+    public static OfficeDocumentFamily? FamilyOf(string path) => Path.GetExtension(path).ToLowerInvariant() switch
+    {
+        ".docx" or ".doc" or ".odt" or ".rtf" => OfficeDocumentFamily.Text,
+        ".xlsx" or ".xls" or ".ods" => OfficeDocumentFamily.Spreadsheet,
+        ".pptx" or ".ppt" or ".odp" => OfficeDocumentFamily.Presentation,
+        _ => null,
+    };
 
     /// <summary>Converts <paramref name="input"/> into the PDF <paramref name="output"/>, replacing it safely.</summary>
     /// <exception cref="LibreOfficeNotFoundException">
-    /// LibreOffice is needed (chosen, or the document is not a Word document, or no word processor is installed) and
-    /// is not installed (or not where it was said to be).
+    /// LibreOffice is needed (chosen, or no office application opens the document) and is not installed (or not where
+    /// it was said to be).
     /// </exception>
-    /// <exception cref="WordProcessorNotFoundException">The word processor was chosen and none is installed.</exception>
+    /// <exception cref="OfficeApplicationNotFoundException">The office application was chosen and none opens the document.</exception>
     /// <exception cref="OfficeConversionException">The document is not supported, or the program failed on it.</exception>
     public Task<OfficeConversionResult> ConvertAsync(string input, string output, OfficeToPdfParams parameters, CancellationToken cancellationToken)
     {
@@ -130,21 +131,21 @@ public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOffic
             throw new FileNotFoundException("The document does not exist.", input);
         }
 
-        var (processor, soffice) = Converters(input, parameters);
+        var (application, soffice) = Converters(input, parameters);
         return OptimizedFiles.WriteAsync(
             output,
             async (temporary, token) =>
             {
-                if (processor is not null)
+                if (application is not null)
                 {
                     try
                     {
-                        var pages = await ConvertIntoAsync(input, temporary, (source, pdf, t) => word!.ConvertAsync(processor, source, pdf, TimeSpan.FromSeconds(parameters.TimeoutSeconds), t), token).ConfigureAwait(false);
-                        return new OfficeConversionResult(output, pages, OfficeConverter.WordProcessor);
+                        var pages = await ConvertIntoAsync(input, temporary, (source, pdf, t) => office!.ConvertAsync(application, source, pdf, TimeSpan.FromSeconds(parameters.TimeoutSeconds), t), token).ConfigureAwait(false);
+                        return new OfficeConversionResult(output, pages, OfficeConverter.OfficeSuite);
                     }
                     catch (OfficeConversionException ex) when (ex.Failure == OfficeConversionFailure.Failed && soffice is not null)
                     {
-                        // The word processor could not: LibreOffice may.
+                        // The office application could not: LibreOffice may.
                     }
                 }
 
@@ -155,31 +156,25 @@ public sealed class OfficeToPdfOperation(IExternalToolRunner runner, ILibreOffic
     }
 
     /// <summary>
-    /// What converts <paramref name="input"/>: the word processor (a Word document, when one is installed and
-    /// LibreOffice was not chosen) and LibreOffice (when it is installed and may be needed: for another document,
-    /// when it was chosen, or to try after the word processor). At least one of them, or the exception saying what is
-    /// missing.
+    /// What converts <paramref name="input"/>: the office application installed for it (unless LibreOffice was
+    /// chosen) and LibreOffice (when it is installed and may be needed: chosen, or to try after the office
+    /// application). At least one of them, or the exception saying what is missing.
     /// </summary>
-    private (WordProcessor? Processor, string? Soffice) Converters(string input, OfficeToPdfParams parameters)
+    private (OfficeApplication? Application, string? Soffice) Converters(string input, OfficeToPdfParams parameters)
     {
-        var wordDocument = IsWordDocument(input);
+        var family = FamilyOf(input) ?? throw new OfficeConversionException(OfficeConversionFailure.Unsupported);
         switch (parameters.Converter)
         {
-            case OfficeConverter.WordProcessor:
-                if (!wordDocument)
-                {
-                    throw new OfficeConversionException(OfficeConversionFailure.Unsupported);
-                }
-
-                return (word?.Find() ?? throw new WordProcessorNotFoundException(), null);
+            case OfficeConverter.OfficeSuite:
+                return (office?.Find(family) ?? throw new OfficeApplicationNotFoundException(family), null);
 
             case OfficeConverter.LibreOffice:
                 return (null, locator.Find(parameters.LibreOfficePath) ?? throw new LibreOfficeNotFoundException());
 
             default:
-                var processor = wordDocument ? word?.Find() : null;
+                var application = office?.Find(family);
                 var soffice = locator.Find(parameters.LibreOfficePath);
-                return processor is null && soffice is null ? throw new LibreOfficeNotFoundException() : (processor, soffice);
+                return application is null && soffice is null ? throw new LibreOfficeNotFoundException() : (application, soffice);
         }
     }
 

@@ -214,8 +214,8 @@ public sealed partial class MainWindowViewModel
     private bool CanConvertToText() => _optimizing?.ToText is not null && CanLinearize();
 
     /// <summary>
-    /// Finds what converts — the word processor installed (Microsoft Word, WPS Office) for Word documents, LibreOffice
-    /// (where Settings say, else where it is installed) — and, with neither, says how to get one; then the dialog
+    /// Finds what converts — the office applications installed (Microsoft Office, WPS Office), LibreOffice (where
+    /// Settings say, else where it is installed) — and, with none, says how to get one; then the dialog
     /// (documents, folder), then each document converted in the background, one after the other; documents that fail
     /// are listed at the end, the others are kept. Needs no open document.
     /// </summary>
@@ -227,7 +227,7 @@ public sealed partial class MainWindowViewModel
             return;
         }
 
-        var dialog = new OfficeToPdfViewModel(_fileDialogs, converters.LibreOffice, word: converters.Word);
+        var dialog = new OfficeToPdfViewModel(_fileDialogs, converters.LibreOffice, applications: converters.Applications);
         if (!_pageDialogs.ShowOfficeToPdf(dialog) || dialog.Result is not { } choice)
         {
             return;
@@ -262,8 +262,8 @@ public sealed partial class MainWindowViewModel
     private bool CanConvertOffice() => _optimizing is { OfficeToPdf: not null, LibreOffice: not null } && _activeSave is null && !StatusBar.IsTaskRunning;
 
     /// <summary>
-    /// The programs that convert office documents: the word processor installed and LibreOffice (where Settings say,
-    /// else where it is installed), at least one of them; null when there is neither (the user was told how to get one).
+    /// The programs that convert office documents: the office applications installed and LibreOffice (where Settings
+    /// say, else where it is installed), at least one of them; null when there is none (the user was told how to get one).
     /// </summary>
     private async Task<OfficeConverters?> OfficeConvertersAsync()
     {
@@ -274,15 +274,17 @@ public sealed partial class MainWindowViewModel
 
         var chosen = _settings.Current.LibreOfficePath;
         var soffice = locator.Find(chosen);
-        var word = _optimizing.Word?.Find();
-        if (soffice is null && word is null)
+        var applications = _optimizing.Office is { } office
+            ? Enum.GetValues<OfficeDocumentFamily>().Select(office.Find).OfType<OfficeApplication>().ToList()
+            : [];
+        if (soffice is null && applications.Count == 0)
         {
             _logger.LogInformation("Nothing converts office documents (a LibreOffice path was set: {Chosen})", !string.IsNullOrWhiteSpace(chosen));
             await _messages.ShowErrorAsync(Strings.OfficeToPdf_Error_Title, string.IsNullOrWhiteSpace(chosen) ? Strings.OfficeToPdf_Error_NoLibreOffice : Format(Strings.OfficeToPdf_Error_NotAtPath, chosen));
             return null;
         }
 
-        return new OfficeConverters(word, soffice, chosen);
+        return new OfficeConverters(applications, soffice, chosen);
     }
 
     /// <summary>
@@ -395,7 +397,7 @@ public sealed partial class MainWindowViewModel
         OfficeConversionException { Failure: OfficeConversionFailure.Unsupported } => Strings.OfficeToPdf_Failure_Unsupported,
         OfficeConversionException { Failure: OfficeConversionFailure.Protected } => Strings.OfficeToPdf_Failure_Protected,
         OfficeConversionException => Strings.OfficeToPdf_Failure_Failed,
-        LibreOfficeNotFoundException or WordProcessorNotFoundException => Strings.OfficeToPdf_Failure_NeedsLibreOffice,
+        LibreOfficeNotFoundException or OfficeApplicationNotFoundException => Strings.OfficeToPdf_Failure_NeedsLibreOffice,
         FileNotFoundException or DirectoryNotFoundException => Strings.OfficeToPdf_Failure_Missing,
         IOException or UnauthorizedAccessException => Strings.OfficeToPdf_Failure_Access,
         _ => null,
@@ -417,10 +419,10 @@ public sealed partial class MainWindowViewModel
     }
 
     /// <summary>What converts office documents.</summary>
-    /// <param name="Word">The word processor installed, for Word documents (null: none).</param>
+    /// <param name="Applications">The office applications installed (Microsoft Office's, WPS Office's), maybe none.</param>
     /// <param name="LibreOffice">LibreOffice's soffice (null: not installed, or not where Settings say).</param>
     /// <param name="ChosenLibreOffice">The LibreOffice path Settings name (empty: look where it is installed).</param>
-    private sealed record OfficeConverters(WordProcessor? Word, string? LibreOffice, string? ChosenLibreOffice);
+    private sealed record OfficeConverters(IReadOnlyList<OfficeApplication> Applications, string? LibreOffice, string? ChosenLibreOffice);
 
     /// <summary>No document of "Office sang PDF" became a PDF: the run ends as a failure.</summary>
     private sealed class NothingConvertedException : Exception

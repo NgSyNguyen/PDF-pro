@@ -23,7 +23,7 @@ using var gate = new PdfiumGate(NullLogger<PdfiumGate>.Instance);
 var runner = new ExternalToolRunner(NullLogger<ExternalToolRunner>.Instance);
 var ocr = new TesseractEngine(runner, new TesseractLocator(tools), () => new TesseractSettings());
 using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-var catalog = StandardOperations.Create(new StandardOperationServices(gate, runner, tools, ocr, Timestamps: new HttpTimestampClient(http), Revocation: new HttpRevocationFetcher(http), Word: new PdfPro.Operations.Converting.WordAutomationConverter()));
+var catalog = StandardOperations.Create(new StandardOperationServices(gate, runner, tools, ocr, Timestamps: new HttpTimestampClient(http), Revocation: new HttpRevocationFetcher(http), Office: new PdfPro.Operations.Converting.OfficeAutomation()));
 var environment = new CliEnvironment(
     catalog,
     gate,

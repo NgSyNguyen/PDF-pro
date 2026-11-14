@@ -215,17 +215,22 @@ public sealed class SettingsViewModelTests : IDisposable
         var shell = Substitute.For<PdfPro.App.Services.IShellIntegration>();
         var viewModel = CreateViewModel(shell: shell);
         viewModel.CheckForUpdates.ShouldBeTrue("on by default");
-        viewModel.UpdateChannel.ShouldBe(PdfPro.App.Services.Updates.UpdateChannels.Stable);
+
+        // Not chosen yet: the channel of this build (a beta built by the release workflow is on the beta channel).
+        var own = PdfPro.App.Services.Updates.UpdateChannels.Resolve(null, PdfPro.App.Hosting.AppBuildInfo.Current.Version);
+        viewModel.UpdateChannel.ShouldBe(own);
+        _settings.Current.UpdateChannel.ShouldBeNull();
         viewModel.HasShellIntegration.ShouldBeTrue();
+        var other = own == PdfPro.App.Services.Updates.UpdateChannels.Beta ? PdfPro.App.Services.Updates.UpdateChannels.Stable : PdfPro.App.Services.Updates.UpdateChannels.Beta;
 
         viewModel.CheckForUpdates = false;
         await viewModel.PendingSave;
-        viewModel.UpdateChannel = PdfPro.App.Services.Updates.UpdateChannels.Beta;
+        viewModel.UpdateChannel = other;
         await viewModel.PendingSave;
         viewModel.ExplorerContextMenu = true;
 
         _settings.Current.CheckForUpdates.ShouldBeFalse();
-        _settings.Current.UpdateChannel.ShouldBe(PdfPro.App.Services.Updates.UpdateChannels.Beta);
+        _settings.Current.UpdateChannel.ShouldBe(other);
         shell.Received(1).SetContextMenu(true);
     }
 

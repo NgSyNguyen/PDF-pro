@@ -32,7 +32,7 @@ namespace PdfPro.Operations.Automation;
 /// <param name="Timestamps">The time-stamping client of signatures, or null for none.</param>
 /// <param name="Fonts">The font library (fonts installed on the computer for PDF/A), or null for the bundled fonts only.</param>
 /// <param name="Revocation">Downloads revocation lists for long-term validation of signatures, or null: no LTV.</param>
-/// <param name="Word">Converts Word documents with the word processor installed, or null: LibreOffice only.</param>
+/// <param name="Office">Converts office documents with the office applications installed, or null: LibreOffice only.</param>
 public sealed record StandardOperationServices(
     PdfiumGate Gate,
     IExternalToolRunner Tools,
@@ -42,7 +42,7 @@ public sealed record StandardOperationServices(
     ITimestampClient? Timestamps = null,
     FontLibrary? Fonts = null,
     IRevocationFetcher? Revocation = null,
-    IWordConverter? Word = null);
+    IOfficeAutomation? Office = null);
 
 /// <summary>
 /// Every operation of PDF_Pro built without the app (the command line, batch runs, tests): the same classes the app
@@ -109,7 +109,7 @@ public static class StandardOperations
             new ToImagesOperation(gate),
             new FromImagesOperation(),
             new ToTextOperation(),
-            new OfficeToPdfOperation(services.Tools, services.LibreOffice ?? new LibreOfficeLocator(), services.Word),
+            new OfficeToPdfOperation(services.Tools, services.LibreOffice ?? new LibreOfficeLocator(), services.Office),
             new ToPdfAOperation(gate, services.Fonts),
             new OcrOperation(gate, ocr),
             new RemoveBlankPagesOperation(materializer, loader, services.Gate),

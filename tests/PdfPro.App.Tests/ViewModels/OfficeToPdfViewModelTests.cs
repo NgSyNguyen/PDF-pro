@@ -4,6 +4,7 @@ using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels.Converting;
+using PdfPro.Operations.Converting;
 
 namespace PdfPro.App.Tests.ViewModels;
 
@@ -30,18 +31,20 @@ public sealed class OfficeToPdfViewModelTests : IDisposable
     }
 
     [Fact]
-    public void WithAWordProcessor_ItSaysWhatConvertsWordDocuments_AndWhetherLibreOfficeIsThere()
+    public void WithOfficeApplications_ItSaysWhatConvertsEachKindOfDocument()
     {
-        var word = new PdfPro.Operations.Converting.WordProcessor(@"C:\Office\WINWORD.EXE", PdfPro.Operations.Converting.WordProcessorKind.MicrosoftWord);
-        var wps = new PdfPro.Operations.Converting.WordProcessor(@"C:\Kingsoft\office6\wps.exe", PdfPro.Operations.Converting.WordProcessorKind.Wps);
+        var word = new OfficeApplication(OfficeDocumentFamily.Text, @"C:\Office\WINWORD.EXE", OfficeVendor.Microsoft);
+        var excel = new OfficeApplication(OfficeDocumentFamily.Spreadsheet, @"C:\Office\EXCEL.EXE", OfficeVendor.Microsoft);
+        var wps = new OfficeApplication(OfficeDocumentFamily.Text, @"C:\Kingsoft\office6\wps.exe", OfficeVendor.Wps);
 
-        var both = new OfficeToPdfViewModel(_files, Soffice, word: word);
-        var wpsOnly = new OfficeToPdfViewModel(_files, null, word: wps);
+        var withLibreOffice = new OfficeToPdfViewModel(_files, Soffice, applications: [word, excel]);
+        var wpsOnly = new OfficeToPdfViewModel(_files, null, applications: [wps]);
 
-        both.ConvertersText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_Converters, Strings.OfficeToPdf_Word_Microsoft));
-        both.ConvertersToolTip.ShouldContain(Soffice);
-        wpsOnly.ConvertersText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_Converters_NoLibreOffice, Strings.OfficeToPdf_Word_Wps));
-        OfficeToPdfViewModel.NameOf(new PdfPro.Operations.Converting.WordProcessor(@"C:\x\writer.exe", PdfPro.Operations.Converting.WordProcessorKind.Other)).ShouldBe(Strings.OfficeToPdf_Word_Other);
+        withLibreOffice.ConvertersText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_ConvertersLine, Strings.OfficeToPdf_App_Word, Strings.OfficeToPdf_App_Excel, Strings.OfficeToPdf_Converter_LibreOffice));
+        withLibreOffice.ConvertersToolTip.ShouldContain(Soffice);
+        wpsOnly.ConvertersText.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_ConvertersLine, Strings.OfficeToPdf_App_Wps, Strings.OfficeToPdf_Converter_Missing, Strings.OfficeToPdf_Converter_Missing));
+        OfficeToPdfViewModel.NameOf(new OfficeApplication(OfficeDocumentFamily.Presentation, @"C:\Office\POWERPNT.EXE", OfficeVendor.Microsoft)).ShouldBe(Strings.OfficeToPdf_App_PowerPoint);
+        OfficeToPdfViewModel.NameOf(new OfficeApplication(OfficeDocumentFamily.Text, @"C:\x\writer.exe", OfficeVendor.Other)).ShouldBe(Strings.OfficeToPdf_App_Other);
     }
 
     [Fact]

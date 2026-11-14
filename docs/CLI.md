@@ -17,7 +17,7 @@ trong app. Không phụ thuộc WPF, chạy được trên Windows và Linux.
 | 2 | Sai cú pháp, tham số không hợp lệ, workflow sai, thiếu mật khẩu/chứng thư cho một bước |
 | 3 | Tệp vào không có, không đọc được hoặc hỏng |
 | 4 | Tệp có mật khẩu: thiếu hoặc sai mật khẩu chủ |
-| 5 | Chưa cài chương trình cần thiết (Tesseract, LibreOffice, Microsoft Word/WPS, qpdf) |
+| 5 | Chưa cài chương trình cần thiết (Tesseract, LibreOffice, Microsoft Office/WPS, qpdf) |
 | 6 | Không ghi được kết quả |
 | 70 | Lỗi không lường trước |
 | 130 | Đã hủy (Ctrl+C) |
@@ -72,7 +72,7 @@ pdfpro convert van-ban.pdf --to markdown               # text | markdown
 pdfpro convert ho-so.pdf --to pdfa                     # pdfa (2b) | pdfa1b
 pdfpro convert ho-so.pdf --to grayscale                # thang xám | web (tối ưu xem trên web, cần qpdf)
 pdfpro convert anh1.jpg anh2.png --to pdf -o "album.pdf"   # ảnh → một PDF (JPEG giữ nguyên byte)
-pdfpro convert "biên bản.docx" --to pdf                # Office → PDF (Word: Microsoft Word/WPS nếu có, còn lại LibreOffice)
+pdfpro convert "biên bản.docx" --to pdf                # Office → PDF (Microsoft Office/WPS nếu có, không thì LibreOffice)
 pdfpro ocr scans\ -r --lang vie+eng -o da-ocr          # --redo: làm lại lớp chữ cũ; --all-pages; --straighten
 ```
 

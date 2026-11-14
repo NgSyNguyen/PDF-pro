@@ -23,7 +23,7 @@ var ocr = new TesseractEngine(
     runner,
     new TesseractLocator(paths.ToolsDirectory),
     () => new TesseractSettings(string.IsNullOrWhiteSpace(settings.Current.TesseractPath) ? null : settings.Current.TesseractPath.Trim(), settings.Current.OcrData));
-var catalog = StandardOperations.Create(new StandardOperationServices(gate, runner, paths.ToolsDirectory, ocr, Word: new PdfPro.Operations.Converting.WordAutomationConverter()));
+var catalog = StandardOperations.Create(new StandardOperationServices(gate, runner, paths.ToolsDirectory, ocr, Office: new PdfPro.Operations.Converting.OfficeAutomation()));
 
 await using var pipe = new NamedPipeClientStream(".", args[0], PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
 try

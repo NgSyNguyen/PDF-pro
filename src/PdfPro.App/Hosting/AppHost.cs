@@ -170,7 +170,7 @@ internal static class AppHost
         services.AddOperation<Operations.Converting.FromImagesOperation>();
         services.AddOperation<Operations.Converting.ToTextOperation>();
         services.AddSingleton<Operations.Converting.ILibreOfficeLocator>(_ => new Operations.Converting.LibreOfficeLocator());
-        services.AddSingleton<Operations.Converting.IWordConverter>(_ => new Operations.Converting.WordAutomationConverter());
+        services.AddSingleton<Operations.Converting.IOfficeAutomation>(_ => new Operations.Converting.OfficeAutomation());
         services.AddOperation<Operations.Converting.OfficeToPdfOperation>();
         services.AddOperation<Operations.Converting.ToPdfAOperation>();
         services.AddSingleton<Operations.Converting.IVeraPdfLocator>(_ => new Operations.Converting.VeraPdfLocator());
@@ -232,7 +232,7 @@ internal static class AppHost
             sp.GetRequiredService<Operations.Converting.ToPdfAOperation>(),
             sp.GetRequiredService<Operations.Converting.VeraPdfValidator>(),
             sp.GetRequiredService<Operations.Converting.IVeraPdfLocator>(),
-            sp.GetRequiredService<Operations.Converting.IWordConverter>()));
+            sp.GetRequiredService<Operations.Converting.IOfficeAutomation>()));
         services.AddSingleton(sp => new SigningServices(
             sp.GetRequiredService<ICertificateStore>(),
             sp.GetRequiredService<ITimestampClient>(),

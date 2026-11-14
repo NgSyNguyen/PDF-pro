@@ -33,9 +33,9 @@ public sealed class OfficeFileItemViewModel(string path, long size)
 /// <summary>
 /// "Office sang PDF" (convert.officeToPdf): the Word, Excel, PowerPoint, OpenDocument and RTF documents — added from
 /// the file dialog or dropped from Explorer, removed — the folder the PDFs go to (that of the first document unless
-/// chosen), and whether to replace PDFs already there. The programs that convert them — the word processor installed
-/// (Microsoft Word, WPS Office) for Word documents, LibreOffice — have been found before the dialog opens; the dialog
-/// says which converts what.
+/// chosen), and whether to replace PDFs already there. The programs that convert them — the office applications
+/// installed (Microsoft Office, WPS Office), LibreOffice — have been found before the dialog opens; the dialog says
+/// which converts what.
 /// </summary>
 public sealed partial class OfficeToPdfViewModel : ObservableObject, IDropTarget
 {
@@ -44,13 +44,17 @@ public sealed partial class OfficeToPdfViewModel : ObservableObject, IDropTarget
     /// <param name="files">File and folder pickers.</param>
     /// <param name="libreOffice">The soffice program that will convert, or null when it is not installed.</param>
     /// <param name="initial">Documents to start with (those not converted here are left out).</param>
-    /// <param name="word">The word processor that converts Word documents, or null when there is none.</param>
-    public OfficeToPdfViewModel(IFileDialogService files, string? libreOffice, IEnumerable<string>? initial = null, WordProcessor? word = null)
+    /// <param name="applications">The office applications installed (Word, Excel, PowerPoint or WPS's), if any.</param>
+    public OfficeToPdfViewModel(IFileDialogService files, string? libreOffice, IEnumerable<string>? initial = null, IReadOnlyList<OfficeApplication>? applications = null)
     {
         _files = files;
-        ConvertersText = word is null
+        string By(OfficeDocumentFamily family)
+            => applications?.FirstOrDefault(a => a.Family == family) is { } application ? NameOf(application)
+                : libreOffice is not null ? Strings.OfficeToPdf_Converter_LibreOffice
+                : Strings.OfficeToPdf_Converter_Missing;
+        ConvertersText = applications is not { Count: > 0 }
             ? string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_LibreOffice, libreOffice)
-            : string.Format(CultureInfo.CurrentCulture, libreOffice is null ? Strings.OfficeToPdf_Converters_NoLibreOffice : Strings.OfficeToPdf_Converters, NameOf(word));
+            : string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_ConvertersLine, By(OfficeDocumentFamily.Text), By(OfficeDocumentFamily.Spreadsheet), By(OfficeDocumentFamily.Presentation));
         ConvertersToolTip = libreOffice is null ? ConvertersText : ConvertersText + Environment.NewLine + string.Format(CultureInfo.CurrentCulture, Strings.OfficeToPdf_LibreOffice, libreOffice);
         Items = [];
         Items.CollectionChanged += (_, _) => Check();
@@ -68,7 +72,7 @@ public sealed partial class OfficeToPdfViewModel : ObservableObject, IDropTarget
 
     public ObservableCollection<OfficeFileItemViewModel> Items { get; }
 
-    /// <summary>"Tài liệu Word chuyển bằng Microsoft Word; bảng tính và bản trình chiếu bằng LibreOffice.", or LibreOffice's place.</summary>
+    /// <summary>"Chuyển bằng — Word: Microsoft Word; Excel: WPS Office; PowerPoint: LibreOffice.", or LibreOffice's place.</summary>
     public string ConvertersText { get; }
 
     /// <summary>The same, with LibreOffice's place.</summary>
@@ -93,15 +97,20 @@ public sealed partial class OfficeToPdfViewModel : ObservableObject, IDropTarget
 
     public OfficeToPdfDialogResult? Result { get; private set; }
 
-    /// <summary>"Microsoft Word", "WPS Office".</summary>
-    public static string NameOf(WordProcessor word)
+    /// <summary>"Microsoft Word", "Microsoft Excel", "Microsoft PowerPoint", "WPS Office".</summary>
+    public static string NameOf(OfficeApplication application)
     {
-        ArgumentNullException.ThrowIfNull(word);
-        return word.Kind switch
+        ArgumentNullException.ThrowIfNull(application);
+        return application.Vendor switch
         {
-            WordProcessorKind.MicrosoftWord => Strings.OfficeToPdf_Word_Microsoft,
-            WordProcessorKind.Wps => Strings.OfficeToPdf_Word_Wps,
-            _ => Strings.OfficeToPdf_Word_Other,
+            OfficeVendor.Microsoft => application.Family switch
+            {
+                OfficeDocumentFamily.Spreadsheet => Strings.OfficeToPdf_App_Excel,
+                OfficeDocumentFamily.Presentation => Strings.OfficeToPdf_App_PowerPoint,
+                _ => Strings.OfficeToPdf_App_Word,
+            },
+            OfficeVendor.Wps => Strings.OfficeToPdf_App_Wps,
+            _ => Strings.OfficeToPdf_App_Other,
         };
     }
 

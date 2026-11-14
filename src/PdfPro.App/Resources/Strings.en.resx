@@ -1550,7 +1550,7 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="ToText_Progress" xml:space="preserve"><value>Reading the text of "{0}"…</value></data>
   <data name="ToText_Done" xml:space="preserve"><value>Text written to "{0}"</value></data>
   <data name="ToText_PagesWithoutText" xml:space="preserve"><value>Page(s) {0} are only pictures (scans) and have no text to take. Run text recognition (OCR) on them first.</value></data>
-  <data name="Cmd_FromOffice_ToolTip" xml:space="preserve"><value>Convert Word documents to PDF (Excel, PowerPoint, OpenDocument and RTF too): Word documents with the Microsoft Word or WPS Office of this computer, the others with LibreOffice</value></data>
+  <data name="Cmd_FromOffice_ToolTip" xml:space="preserve"><value>Convert Word, Excel and PowerPoint documents (OpenDocument and RTF too) to PDF with the Microsoft Office or WPS Office of this computer, or LibreOffice</value></data>
   <data name="OfficeToPdf_Title" xml:space="preserve"><value>Office to PDF</value></data>
   <data name="OfficeToPdf_Files_Header" xml:space="preserve"><value>Documents</value></data>
   <data name="OfficeToPdf_Summary" xml:space="preserve"><value>{0} document(s)</value></data>
@@ -1567,7 +1567,7 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="OfficeToPdf_Error_None" xml:space="preserve"><value>Add at least one Word, Excel, PowerPoint, OpenDocument or RTF document.</value></data>
   <data name="OfficeToPdf_Error_Folder" xml:space="preserve"><value>Choose the folder for the PDFs (a full path).</value></data>
   <data name="OfficeToPdf_Error_Title" xml:space="preserve"><value>Could not convert to PDF</value></data>
-  <data name="OfficeToPdf_Error_NoLibreOffice" xml:space="preserve"><value>This computer has no program to convert documents to PDF. Word documents are converted with Microsoft Word or WPS Office when the computer has one; otherwise, and for spreadsheets and presentations, PDF_Pro uses LibreOffice (free): download and install it from https://www.libreoffice.org/download, then try again. If LibreOffice is installed somewhere else, choose its folder in Settings › LibreOffice.</value></data>
+  <data name="OfficeToPdf_Error_NoLibreOffice" xml:space="preserve"><value>This computer has no program to convert documents to PDF. Word, Excel and PowerPoint documents are converted with Microsoft Office or WPS Office when the computer has one; otherwise PDF_Pro uses LibreOffice (free): download and install it from https://www.libreoffice.org/download, then try again. If LibreOffice is installed somewhere else, choose its folder in Settings › LibreOffice.</value></data>
   <data name="OfficeToPdf_Error_NotAtPath" xml:space="preserve"><value>LibreOffice is not at "{0}" (the path chosen in Settings). Correct it in Settings › LibreOffice, or leave it blank for PDF_Pro to look for LibreOffice.</value></data>
   <data name="OfficeToPdf_Progress" xml:space="preserve"><value>Converting {0} document(s) to PDF…</value></data>
   <data name="OfficeToPdf_Done" xml:space="preserve"><value>Converted to PDF in "{0}"</value></data>
@@ -2476,13 +2476,16 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Redaction_OcrLater" xml:space="preserve"><value>Not now</value></data>
   <data name="Welcome_OfficeToPdf" xml:space="preserve"><value>Convert Word to PDF</value></data>
   <data name="Welcome_OfficeToPdf_ToolTip" xml:space="preserve"><value>Convert Word, Excel and PowerPoint documents to PDF, without opening a document first</value></data>
-  <data name="OfficeToPdf_Converters" xml:space="preserve"><value>Word documents are converted with {0}; spreadsheets and presentations with LibreOffice.</value></data>
-  <data name="OfficeToPdf_Converters_NoLibreOffice" xml:space="preserve"><value>Word documents are converted with {0}. Spreadsheets and presentations need LibreOffice (not installed; free from libreoffice.org).</value></data>
-  <data name="OfficeToPdf_Word_Microsoft" xml:space="preserve"><value>Microsoft Word</value></data>
-  <data name="OfficeToPdf_Word_Wps" xml:space="preserve"><value>WPS Office</value></data>
-  <data name="OfficeToPdf_Word_Other" xml:space="preserve"><value>the word processor registered as Microsoft Word</value></data>
-  <data name="OfficeToPdf_Failure_Protected" xml:space="preserve"><value>the document has a password: open it in Word, remove the password, save it and try again</value></data>
-  <data name="OfficeToPdf_Failure_NeedsLibreOffice" xml:space="preserve"><value>this kind of file needs LibreOffice (free from libreoffice.org)</value></data>
+  <data name="OfficeToPdf_Failure_Protected" xml:space="preserve"><value>the document has a password: open it, remove the password, save it and try again</value></data>
+  <data name="OfficeToPdf_Failure_NeedsLibreOffice" xml:space="preserve"><value>no program on this computer opens this kind of file (Microsoft Office, WPS Office or LibreOffice)</value></data>
   <data name="Open_Dialog_FilterWithOffice" xml:space="preserve"><value>PDF files and Office documents (*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|PDF files (*.pdf)|*.pdf|Word, Excel and PowerPoint documents (*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|All files (*.*)|*.*</value></data>
   <data name="Open_Office_Done" xml:space="preserve"><value>Converted to PDF; the PDF is next to the original document</value></data>
+  <data name="OfficeToPdf_ConvertersLine" xml:space="preserve"><value>Converted with — Word: {0}; Excel: {1}; PowerPoint: {2}.</value></data>
+  <data name="OfficeToPdf_Converter_LibreOffice" xml:space="preserve"><value>LibreOffice</value></data>
+  <data name="OfficeToPdf_Converter_Missing" xml:space="preserve"><value>none (LibreOffice is needed)</value></data>
+  <data name="OfficeToPdf_App_Word" xml:space="preserve"><value>Microsoft Word</value></data>
+  <data name="OfficeToPdf_App_Excel" xml:space="preserve"><value>Microsoft Excel</value></data>
+  <data name="OfficeToPdf_App_PowerPoint" xml:space="preserve"><value>Microsoft PowerPoint</value></data>
+  <data name="OfficeToPdf_App_Wps" xml:space="preserve"><value>WPS Office</value></data>
+  <data name="OfficeToPdf_App_Other" xml:space="preserve"><value>the program registered as Microsoft Office</value></data>
 </root>

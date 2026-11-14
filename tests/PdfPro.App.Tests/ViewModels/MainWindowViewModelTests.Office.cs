@@ -15,7 +15,7 @@ public sealed partial class MainWindowViewModelTests
 
     private readonly ILibreOfficeLocator _libreOffice = Substitute.For<ILibreOfficeLocator>();
 
-    private readonly IWordConverter _word = Substitute.For<IWordConverter>();
+    private readonly IOfficeAutomation _office = Substitute.For<IOfficeAutomation>();
 
     [Fact]
     public async Task Office_ConvertsEachDocument_IntoTheFolder_AndOpensTheFolder()
@@ -127,17 +127,17 @@ public sealed partial class MainWindowViewModelTests
     }
 
     [Fact]
-    public async Task Office_WithOnlyAWordProcessor_WordDocumentsConvert_AndTheOthersAreExplained()
+    public async Task Office_WithOnlyWps_ItsDocumentsConvert_AndTheOthersAreExplained()
     {
         var folder = Directory.CreateDirectory(_fixture.CreateFolder("chỉ có WPS")).FullName;
         string[] documents = [Office(folder, "tốt.docx"), Office(folder, "mật.docx", "protected"u8.ToArray()), Office(folder, "bảng.xlsx")];
         _libreOffice.Find(Arg.Any<string?>()).Returns((string?)null);
-        var converted = WordProcessorConverts(WordProcessorKind.Wps);
+        var converted = OfficeConverts(OfficeVendor.Wps, OfficeDocumentFamily.Text);
         _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
         _pageDialogs.ShowOfficeToPdf(Arg.Any<OfficeToPdfViewModel>()).Returns(call =>
         {
             var dialog = call.Arg<OfficeToPdfViewModel>();
-            dialog.ConvertersText.ShouldBe(Format(Strings.OfficeToPdf_Converters_NoLibreOffice, Strings.OfficeToPdf_Word_Wps));
+            dialog.ConvertersText.ShouldBe(Format(Strings.OfficeToPdf_ConvertersLine, Strings.OfficeToPdf_App_Wps, Strings.OfficeToPdf_Converter_Missing, Strings.OfficeToPdf_Converter_Missing));
             dialog.AddPaths(documents);
             dialog.RunCommand.Execute(null);
             return true;
@@ -146,7 +146,7 @@ public sealed partial class MainWindowViewModelTests
 
         await viewModel.OfficeToPdfCommand.ExecuteAsync(null);
 
-        converted.Count.ShouldBe(1, "the protected document was refused, the spreadsheet never went to the word processor");
+        converted.Count.ShouldBe(1, "the protected document was refused; nothing converts the spreadsheet");
         File.Exists(Path.Combine(folder, "tốt.pdf")).ShouldBeTrue();
         await _tools.DidNotReceive().RunAsync(Arg.Any<ExternalToolRequest>(), Arg.Any<CancellationToken>());
         await _messages.Received(1).ShowErrorAsync(
@@ -166,7 +166,7 @@ public sealed partial class MainWindowViewModelTests
         var other = Path.Combine(folder, "khác.pdf");
         File.Copy(Samples.Basic, other);
         _libreOffice.Find(Arg.Any<string?>()).Returns((string?)null);
-        var converted = WordProcessorConverts(WordProcessorKind.MicrosoftWord);
+        var converted = OfficeConverts(OfficeVendor.Microsoft, OfficeDocumentFamily.Text);
         var opened = new List<string>();
         _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call =>
         {
@@ -209,14 +209,15 @@ public sealed partial class MainWindowViewModelTests
     }
 
     /// <summary>
-    /// The word processor of <paramref name="kind"/> is installed and "converts" by writing basic.pdf — unless the
-    /// document says "protected", which it refuses as Word does. The copies it converted.
+    /// The office applications of <paramref name="vendor"/> for <paramref name="families"/> are installed and
+    /// "convert" by writing basic.pdf — unless the document says "protected", which they refuse as Word does. The
+    /// copies they converted.
     /// </summary>
-    private List<string> WordProcessorConverts(WordProcessorKind kind)
+    private List<string> OfficeConverts(OfficeVendor vendor, params OfficeDocumentFamily[] families)
     {
         var converted = new List<string>();
-        _word.Find().Returns(new WordProcessor(@"C:\Office\program.exe", kind));
-        _word.ConvertAsync(Arg.Any<WordProcessor>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).Returns(call =>
+        _office.Find(Arg.Any<OfficeDocumentFamily>()).Returns(call => families.Contains(call.Arg<OfficeDocumentFamily>()) ? new OfficeApplication(call.Arg<OfficeDocumentFamily>(), @"C:\Office\program.exe", vendor) : null);
+        _office.ConvertAsync(Arg.Any<OfficeApplication>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).Returns(call =>
         {
             var source = call.ArgAt<string>(1);
             if (File.ReadAllBytes(source).AsSpan().SequenceEqual("protected"u8))

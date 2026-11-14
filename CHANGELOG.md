@@ -3,7 +3,12 @@
 Mọi thay đổi đáng kể của PDF_Pro. Định dạng theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), phiên bản
 theo [Semantic Versioning](https://semver.org/lang/vi/). Mục đầu tiên là ghi chú phát hành của bộ cài.
 
-## [1.0.0-beta.3] — 14/11/2026 (bản thử nghiệm)
+## [Chưa phát hành]
+
+- **Excel, PowerPoint sang PDF bằng Microsoft Office hoặc WPS Office có trên máy** (như Word): máy không có LibreOffice
+  vẫn chuyển được bảng tính, bản trình chiếu.
+
+## [1.0.0-beta.3] — 14/11/2026 (bản thử nghiệm, không phát hành được: một test phụ thuộc số phiên bản)
 
 - **Word sang PDF không cần cài thêm gì** khi máy có Microsoft Word hoặc WPS Office: tài liệu Word được chính trình soạn
   thảo đó chuyển (dàn trang đúng như khi mở bằng Word); bảng tính, bản trình chiếu — và tài liệu Word khi không có hai

@@ -1550,7 +1550,7 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="ToText_Progress" xml:space="preserve"><value>Đang lấy chữ của "{0}"…</value></data>
   <data name="ToText_Done" xml:space="preserve"><value>Đã xuất văn bản vào "{0}"</value></data>
   <data name="ToText_PagesWithoutText" xml:space="preserve"><value>Trang {0} chỉ là ảnh (scan) nên không có chữ để lấy. Hãy nhận dạng chữ (OCR) cho các trang này trước.</value></data>
-  <data name="Cmd_FromOffice_ToolTip" xml:space="preserve"><value>Chuyển tài liệu Word sang PDF (cả Excel, PowerPoint, OpenDocument, RTF): tài liệu Word bằng Microsoft Word hoặc WPS Office có trên máy, còn lại bằng LibreOffice</value></data>
+  <data name="Cmd_FromOffice_ToolTip" xml:space="preserve"><value>Chuyển tài liệu Word, Excel, PowerPoint (cả OpenDocument, RTF) sang PDF bằng Microsoft Office hoặc WPS Office có trên máy, hoặc LibreOffice</value></data>
   <data name="OfficeToPdf_Title" xml:space="preserve"><value>Office sang PDF</value></data>
   <data name="OfficeToPdf_Files_Header" xml:space="preserve"><value>Các tài liệu</value></data>
   <data name="OfficeToPdf_Summary" xml:space="preserve"><value>{0} tài liệu</value></data>
@@ -1567,7 +1567,7 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="OfficeToPdf_Error_None" xml:space="preserve"><value>Hãy thêm ít nhất một tài liệu Word, Excel, PowerPoint, OpenDocument hoặc RTF.</value></data>
   <data name="OfficeToPdf_Error_Folder" xml:space="preserve"><value>Hãy chọn thư mục lưu các tệp PDF (đường dẫn đầy đủ).</value></data>
   <data name="OfficeToPdf_Error_Title" xml:space="preserve"><value>Không chuyển được sang PDF</value></data>
-  <data name="OfficeToPdf_Error_NoLibreOffice" xml:space="preserve"><value>Máy chưa có chương trình để chuyển tài liệu sang PDF. Tài liệu Word được chuyển bằng Microsoft Word hoặc WPS Office nếu máy có; khi không có, và với bảng tính, bản trình chiếu, PDF_Pro dùng LibreOffice (miễn phí): hãy tải và cài từ https://www.libreoffice.org/download rồi thử lại. Nếu LibreOffice đã được cài ở chỗ khác, hãy chọn thư mục cài trong Cài đặt › LibreOffice.</value></data>
+  <data name="OfficeToPdf_Error_NoLibreOffice" xml:space="preserve"><value>Máy chưa có chương trình để chuyển tài liệu sang PDF. Tài liệu Word, Excel, PowerPoint được chuyển bằng Microsoft Office hoặc WPS Office nếu máy có; khi không có, PDF_Pro dùng LibreOffice (miễn phí): hãy tải và cài từ https://www.libreoffice.org/download rồi thử lại. Nếu LibreOffice đã được cài ở chỗ khác, hãy chọn thư mục cài trong Cài đặt › LibreOffice.</value></data>
   <data name="OfficeToPdf_Error_NotAtPath" xml:space="preserve"><value>Không thấy LibreOffice ở "{0}" (đường dẫn chọn trong Cài đặt). Hãy sửa đường dẫn trong Cài đặt › LibreOffice, hoặc để trống để PDF_Pro tự tìm.</value></data>
   <data name="OfficeToPdf_Progress" xml:space="preserve"><value>Đang chuyển {0} tài liệu sang PDF…</value></data>
   <data name="OfficeToPdf_Done" xml:space="preserve"><value>Đã chuyển sang PDF vào "{0}"</value></data>
@@ -2476,13 +2476,16 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Redaction_OcrLater" xml:space="preserve"><value>Để sau</value></data>
   <data name="Welcome_OfficeToPdf" xml:space="preserve"><value>Chuyển Word sang PDF</value></data>
   <data name="Welcome_OfficeToPdf_ToolTip" xml:space="preserve"><value>Chuyển tài liệu Word, Excel, PowerPoint sang PDF, không cần mở tài liệu nào trước</value></data>
-  <data name="OfficeToPdf_Converters" xml:space="preserve"><value>Tài liệu Word chuyển bằng {0}; bảng tính và bản trình chiếu bằng LibreOffice.</value></data>
-  <data name="OfficeToPdf_Converters_NoLibreOffice" xml:space="preserve"><value>Tài liệu Word chuyển bằng {0}. Bảng tính và bản trình chiếu cần LibreOffice (chưa cài; tải miễn phí tại libreoffice.org).</value></data>
-  <data name="OfficeToPdf_Word_Microsoft" xml:space="preserve"><value>Microsoft Word</value></data>
-  <data name="OfficeToPdf_Word_Wps" xml:space="preserve"><value>WPS Office</value></data>
-  <data name="OfficeToPdf_Word_Other" xml:space="preserve"><value>trình soạn thảo đăng ký là Microsoft Word</value></data>
-  <data name="OfficeToPdf_Failure_Protected" xml:space="preserve"><value>tài liệu có mật khẩu: mở bằng Word, gỡ mật khẩu, lưu rồi thử lại</value></data>
-  <data name="OfficeToPdf_Failure_NeedsLibreOffice" xml:space="preserve"><value>loại tệp này cần LibreOffice (tải miễn phí tại libreoffice.org)</value></data>
+  <data name="OfficeToPdf_Failure_Protected" xml:space="preserve"><value>tài liệu có mật khẩu: mở nó, gỡ mật khẩu, lưu rồi thử lại</value></data>
+  <data name="OfficeToPdf_Failure_NeedsLibreOffice" xml:space="preserve"><value>máy chưa có chương trình mở được loại tệp này (Microsoft Office, WPS Office hoặc LibreOffice)</value></data>
   <data name="Open_Dialog_FilterWithOffice" xml:space="preserve"><value>Tệp PDF và tài liệu Office (*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|Tệp PDF (*.pdf)|*.pdf|Tài liệu Word, Excel, PowerPoint (*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|Tất cả tệp (*.*)|*.*</value></data>
   <data name="Open_Office_Done" xml:space="preserve"><value>Đã chuyển sang PDF; bản PDF nằm cạnh tài liệu gốc</value></data>
+  <data name="OfficeToPdf_ConvertersLine" xml:space="preserve"><value>Chuyển bằng — Word: {0}; Excel: {1}; PowerPoint: {2}.</value></data>
+  <data name="OfficeToPdf_Converter_LibreOffice" xml:space="preserve"><value>LibreOffice</value></data>
+  <data name="OfficeToPdf_Converter_Missing" xml:space="preserve"><value>chưa có (cần LibreOffice)</value></data>
+  <data name="OfficeToPdf_App_Word" xml:space="preserve"><value>Microsoft Word</value></data>
+  <data name="OfficeToPdf_App_Excel" xml:space="preserve"><value>Microsoft Excel</value></data>
+  <data name="OfficeToPdf_App_PowerPoint" xml:space="preserve"><value>Microsoft PowerPoint</value></data>
+  <data name="OfficeToPdf_App_Wps" xml:space="preserve"><value>WPS Office</value></data>
+  <data name="OfficeToPdf_App_Other" xml:space="preserve"><value>chương trình đăng ký là Microsoft Office</value></data>
 </root>

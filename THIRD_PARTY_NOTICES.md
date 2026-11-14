@@ -78,7 +78,7 @@ bits (OS/2 `fsType`) allow editable embedding; PDF_Pro never ships them.
 | Component | License | Used for |
 |---|---|---|
 | [LibreOffice](https://www.libreoffice.org) (`soffice`, found where it is installed or where the user points) | MPL-2.0 | "Office sang PDF" (`convert.officeToPdf`, Phase 9): Word, Excel, PowerPoint, OpenDocument and RTF files converted by running `soffice --headless --convert-to pdf` as a separate process (`IExternalToolRunner`), never linked; PDF_Pro neither ships nor downloads it |
-| Microsoft Word or WPS Office (the word processor the user has installed, answering to COM `Word.Application`) | The user's own licence | "Office sang PDF" for Word documents: the installed word processor is driven through its automation interface to export the document as PDF; nothing of it is shipped, linked or downloaded |
+| Microsoft Office or WPS Office (the applications the user has installed, answering to COM `Word.Application`, `Excel.Application`, `PowerPoint.Application`) | The user's own licence | "Office sang PDF": the installed application is driven through its automation interface to export the document as PDF; nothing of it is shipped, linked or downloaded |
 
 ## Planned and left out
 

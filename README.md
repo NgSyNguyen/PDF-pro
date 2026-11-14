@@ -26,7 +26,7 @@ toàn trên máy, không gửi tài liệu hay dữ liệu sử dụng đi đâu
 | Chỉnh sửa | Chữ, ảnh, hình, chữ ký tay, hình mờ, đầu/chân trang, số trang, Bates; sửa chữ và ảnh có sẵn; chú thích đầy đủ, bình luận, làm phẳng |
 | Biểu mẫu | Điền, thiết kế, nhận diện trường, nhập/xuất JSON/XFDF, trộn từ CSV/Excel |
 | Bảo mật | Mật khẩu + quyền AES-256, xóa vĩnh viễn có kiểm lại, làm sạch, ký số và kiểm tra chữ ký |
-| Tối ưu & chuyển đổi | Nén, tối ưu web, sửa tệp hỏng, thang xám, PDF/A, sang ảnh/văn bản/Markdown, ảnh sang PDF, Word/Office sang PDF (bằng Microsoft Word hoặc WPS Office có trên máy, hoặc LibreOffice); mở thẳng tệp Word là ra PDF |
+| Tối ưu & chuyển đổi | Nén, tối ưu web, sửa tệp hỏng, thang xám, PDF/A, sang ảnh/văn bản/Markdown, ảnh sang PDF, Word/Excel/PowerPoint sang PDF (bằng Microsoft Office hoặc WPS Office có trên máy, hoặc LibreOffice); mở thẳng tệp Office là ra PDF |
 | OCR & bản quét | OCR tiếng Việt (Tesseract), xóa trang trắng, xoay đúng chiều, làm thẳng, xóa viền đen |
 | Phân tích | So sánh hai tài liệu, trích bảng sang Excel/CSV, trích ảnh, tệp đính kèm, phông chữ |
 | Tự động hóa | Tìm lệnh (Ctrl+K), workflow `.pdfflow`, chạy lô, hot folder, CLI `pdfpro` ([docs/CLI.md](docs/CLI.md)) |
