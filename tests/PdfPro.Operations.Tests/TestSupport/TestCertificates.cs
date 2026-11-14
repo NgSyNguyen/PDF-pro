@@ -75,9 +75,11 @@ internal sealed class FakeTimestampAuthority : ITimestampClient, IDisposable
 {
     private readonly X509Certificate2 _certificate;
 
+    /// <param name="time">The time it attests, to the whole second: a token read back may keep fewer fractional digits
+    /// than it was written with, and a test comparing the two then fails now and then.</param>
     public FakeTimestampAuthority(DateTimeOffset time)
     {
-        Time = time;
+        Time = new DateTimeOffset(time.Ticks - (time.Ticks % TimeSpan.TicksPerSecond), time.Offset);
         using var key = RSA.Create(2048);
         var request = new CertificateRequest(new X500DistinguishedName("CN=PDF_Pro Test TSA"), key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension([new Oid("1.3.6.1.5.5.7.3.8")], critical: true));
