@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Windows;
 using Microsoft.Win32;
 using PdfPro.App.Resources;
@@ -62,7 +63,7 @@ internal sealed class FileDialogService : IFileDialogService
         var dialog = new OpenFileDialog
         {
             Title = Strings.Open_Dialog_Title,
-            Filter = Strings.Open_Dialog_Filter,
+            Filter = Strings.Open_Dialog_FilterWithOffice,
             Multiselect = true,
             CheckFileExists = true,
         };
@@ -96,6 +97,47 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public IReadOnlyList<string> PickImageFiles(string title)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = title,
+            Filter = Strings.FromImages_Dialog_Filter,
+            Multiselect = true,
+            CheckFileExists = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileNames : [];
+    }
+
+    public IReadOnlyList<string> PickOfficeFiles(string title)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = title,
+            Filter = Strings.OfficeToPdf_Dialog_Filter,
+            Multiselect = true,
+            CheckFileExists = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileNames : [];
+    }
+
+    public string? PickImageSavePath(string suggestedFileName, string extension)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.ContentEditor_SaveImage_Title,
+            Filter = string.Format(CultureInfo.CurrentCulture, Strings.ContentEditor_SaveImage_Filter, extension),
+            FileName = suggestedFileName,
+            DefaultExt = extension,
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickSavePath(string suggestedFileName, string? initialDirectory)
     {
         var dialog = new SaveFileDialog
@@ -112,6 +154,190 @@ internal sealed class FileDialogService : IFileDialogService
             dialog.InitialDirectory = initialDirectory;
         }
 
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickCommentExportPath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Comments_ExportDialog_Title,
+            Filter = Strings.Comments_ExportDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".md",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickReportSavePath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Sanitize_ReportDialog_Title,
+            Filter = Strings.Sanitize_ReportDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".txt",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickOcrExportPath(string suggestedFileName, bool hocr)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = hocr ? Strings.Ocr_SaveHocr_Title : Strings.Ocr_SaveText_Title,
+            Filter = hocr ? Strings.Ocr_SaveHocr_Filter : Strings.Ocr_SaveText_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = hocr ? ".hocr" : ".txt",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickFormDataSavePath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.FormData_ExportDialog_Title,
+            Filter = Strings.FormData_ExportDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".json",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickWordSavePath(string suggestedFileName, string? initialDirectory)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.ToWord_SaveDialog_Title,
+            Filter = Strings.ToWord_SaveDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".docx",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        if (!string.IsNullOrEmpty(initialDirectory) && System.IO.Directory.Exists(initialDirectory))
+        {
+            dialog.InitialDirectory = initialDirectory;
+        }
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickTableSavePath(string suggestedFileName, string? initialDirectory, bool csv)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Tables_SaveDialog_Title,
+            Filter = csv ? Strings.Tables_SaveDialog_FilterCsv : Strings.Tables_SaveDialog_FilterXlsx,
+            FileName = suggestedFileName,
+            DefaultExt = csv ? ".csv" : ".xlsx",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        if (!string.IsNullOrEmpty(initialDirectory) && System.IO.Directory.Exists(initialDirectory))
+        {
+            dialog.InitialDirectory = initialDirectory;
+        }
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public IReadOnlyList<string> PickAttachmentFiles(string title)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = title,
+            Filter = Strings.Attachments_Dialog_Filter,
+            Multiselect = true,
+            CheckFileExists = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileNames : [];
+    }
+
+    public string? PickAttachmentSavePath(string fileName)
+    {
+        var extension = System.IO.Path.GetExtension(fileName);
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Attachments_Save_Title,
+            Filter = string.IsNullOrEmpty(extension) || extension.Contains('|', StringComparison.Ordinal)
+                ? Strings.Attachments_Dialog_Filter
+                : string.Format(CultureInfo.CurrentCulture, Strings.Attachments_Save_Filter, extension),
+            FileName = fileName,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickWorkflowFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.Workflow_ImportDialog_Title,
+            Filter = Strings.Workflow_Dialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickWorkflowSavePath(string suggestedFileName)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.Workflow_ExportDialog_Title,
+            Filter = Strings.Workflow_Dialog_Filter,
+            FileName = PdfPro.Core.Splitting.FileNames.Sanitize(suggestedFileName),
+            DefaultExt = PdfPro.Operations.Automation.WorkflowFile.Extension,
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickFormDataFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.FormData_ImportDialog_Title,
+            Filter = Strings.FormData_ImportDialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickTableFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.FormMerge_DataDialog_Title,
+            Filter = Strings.FormMerge_DataDialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
+    public string? PickCertificateFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.Sign_CertificateDialog_Title,
+            Filter = Strings.Sign_CertificateDialog_Filter,
+            Multiselect = false,
+            CheckFileExists = true,
+        };
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
@@ -217,6 +443,204 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new SignatureWindow(viewModel));
+    }
+
+    public bool ShowStamp(ViewModels.Editing.StampDialogViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new StampWindow(viewModel));
+    }
+
+    public bool ShowBates(ViewModels.Editing.BatesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new BatesWindow(viewModel));
+    }
+
+    public bool ShowFlatten(ViewModels.Annotating.FlattenViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new FlattenWindow(viewModel));
+    }
+
+    public bool ShowFormMerge(ViewModels.Forms.FormMergeViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new FormMergeWindow(viewModel));
+    }
+
+    public bool ShowSecurity(ViewModels.Security.SecurityViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SecurityWindow(viewModel));
+    }
+
+    public bool ShowRedactionSearch(ViewModels.Security.RedactionSearchViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new RedactionSearchWindow(viewModel));
+    }
+
+    public bool ShowRedactionApply(ViewModels.Security.RedactionApplyViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new RedactionApplyWindow(viewModel));
+    }
+
+    public bool ShowSanitize(ViewModels.Security.SanitizeViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SanitizeWindow(viewModel));
+    }
+
+    public bool ShowSign(ViewModels.Security.SignDialogViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new SignWindow(viewModel));
+    }
+
+    public bool ShowCompress(ViewModels.Optimizing.CompressViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new CompressWindow(viewModel));
+    }
+
+    public bool ShowGrayscale(ViewModels.Optimizing.GrayscaleViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new GrayscaleWindow(viewModel));
+    }
+
+    public bool ShowToImages(ViewModels.Converting.ToImagesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new ToImagesWindow(viewModel));
+    }
+
+    public bool ShowFromImages(ViewModels.Converting.FromImagesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new FromImagesWindow(viewModel));
+    }
+
+    public bool ShowToText(ViewModels.Converting.ToTextViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new ToTextWindow(viewModel));
+    }
+
+    public bool ShowToWord(ViewModels.Converting.ToWordViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new ToWordWindow(viewModel));
+    }
+
+    public void ShowPresentation(ViewModels.Viewer.PresentationViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        Show(new PresentationWindow(viewModel));
+    }
+
+    public bool ShowBookmarks(ViewModels.Structure.BookmarksEditorViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new BookmarksEditorWindow(viewModel));
+    }
+
+    public bool ShowDocumentDescription(ViewModels.Structure.DocumentDescriptionViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new DocumentDescriptionWindow(viewModel));
+    }
+
+    public bool ShowPageLabels(ViewModels.Structure.PageLabelsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new PageLabelsWindow(viewModel));
+    }
+
+    public bool ShowLinks(ViewModels.Structure.LinksViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new LinksWindow(viewModel));
+    }
+
+    public bool ShowExtractImages(ViewModels.Extracting.ExtractImagesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new ExtractImagesWindow(viewModel));
+    }
+
+    public bool ShowAttachments(ViewModels.Extracting.AttachmentsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new AttachmentsWindow(viewModel));
+    }
+
+    public bool ShowFonts(ViewModels.Extracting.FontsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new FontsWindow(viewModel));
+    }
+
+    public bool ShowCommandPalette(ViewModels.CommandPaletteViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new CommandPaletteWindow(viewModel));
+    }
+
+    public bool ShowWorkflows(ViewModels.Automation.WorkflowsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new WorkflowsWindow(viewModel));
+    }
+
+    public void ShowBatch(ViewModels.Automation.BatchViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        Show(new BatchWindow(viewModel));
+    }
+
+    public bool ShowTables(ViewModels.Extracting.TablesViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new TablesWindow(viewModel));
+    }
+
+    public bool ShowCompare(ViewModels.Comparing.CompareViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new CompareWindow(viewModel));
+    }
+
+    public bool ShowOcr(ViewModels.Ocr.OcrViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new OcrWindow(viewModel));
+    }
+
+    public bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new OfficeToPdfWindow(viewModel));
+    }
+
+    public bool ShowPdfA(ViewModels.Converting.PdfAViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new PdfAWindow(viewModel));
+    }
+
+    public void ShowShortcuts(ViewModels.ShortcutsViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        Show(new ShortcutsWindow(viewModel));
+    }
+
+    public void ShowAbout(ViewModels.AboutViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        Show(new AboutWindow(viewModel));
     }
 
     private static bool Show(Window window)

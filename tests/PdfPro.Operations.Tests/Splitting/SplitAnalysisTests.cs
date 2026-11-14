@@ -67,17 +67,8 @@ public sealed class SplitAnalysisTests(PdfiumFixture pdfium) : IAsyncDisposable
     }
 
     [Fact]
-    public void DarkShare_CountsPixelsDarkerThanTheLevel()
+    public void IsBlank_ComparesTheShareWithTheThreshold()
     {
-        // 4 × 2 BGRx pixels, stride 20: white, black, mid grey (128), light grey (200); second row all white.
-        var pixels = new byte[40];
-        Array.Fill(pixels, (byte)255);
-        pixels.AsSpan(4, 4).Fill(0);
-        pixels.AsSpan(8, 4).Fill(128);
-        pixels.AsSpan(12, 4).Fill(200);
-
-        BlankPageDetector.DarkShare(pixels, 4, 2, 20).ShouldBe(25);
-        BlankPageDetector.DarkShare(pixels, 0, 0, 0).ShouldBe(0);
         BlankPageDetector.IsBlank(0.1, 0.1).ShouldBeTrue();
         BlankPageDetector.IsBlank(0.11, 0.1).ShouldBeFalse();
     }

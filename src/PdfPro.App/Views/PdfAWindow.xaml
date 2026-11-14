@@ -1,0 +1,113 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.PdfAWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:converting="clr-namespace:PdfPro.App.ViewModels.Converting"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=converting:PdfAViewModel}"
+  Title="{loc:Tr PdfA_Title}"
+  Width="560"
+  MinHeight="0"
+  AutomationProperties.AutomationId="PdfAWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr PdfA_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock
+        FontWeight="SemiBold"
+        Text="{Binding FileName}"
+        TextTrimming="CharacterEllipsis" />
+      <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding PagesText}" />
+      <TextBlock
+        Margin="0,12,0,0"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr PdfA_Intro}"
+        TextWrapping="Wrap" />
+
+      <RadioButton
+        Margin="0,16,0,0"
+        AutomationProperties.AutomationId="PdfAA2B"
+        GroupName="PdfALevel"
+        IsChecked="{Binding IsA2B}">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="{loc:Tr PdfA_A2B}" />
+          <TextBlock
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr PdfA_A2B_Details}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </RadioButton>
+      <RadioButton
+        Margin="0,12,0,0"
+        AutomationProperties.AutomationId="PdfAA1B"
+        GroupName="PdfALevel"
+        IsChecked="{Binding IsA1B}">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="{loc:Tr PdfA_A1B}" />
+          <TextBlock
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr PdfA_A1B_Details}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </RadioButton>
+
+      <ui:InfoBar
+        Margin="0,16,0,0"
+        AutomationProperties.AutomationId="PdfASigned"
+        IsClosable="False"
+        IsOpen="{Binding IsSigned}"
+        Message="{loc:Tr PdfA_Signed}"
+        Severity="Warning" />
+
+      <CheckBox
+        Margin="0,16,0,0"
+        AutomationProperties.AutomationId="PdfAValidate"
+        Content="{loc:Tr PdfA_Validate}"
+        IsChecked="{Binding Validate}"
+        IsEnabled="{Binding CanValidate}" />
+      <TextBlock
+        Margin="28,2,0,0"
+        AutomationProperties.AutomationId="PdfAVeraPdf"
+        FontSize="12"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{Binding VeraPdfText}"
+        TextWrapping="Wrap" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="PdfAApply"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr PdfA_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="PdfACancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

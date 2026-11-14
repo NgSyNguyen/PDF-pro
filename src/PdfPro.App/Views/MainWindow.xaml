@@ -48,6 +48,13 @@
     <KeyBinding Key="R" Command="{Binding RotateRightCommand}" Modifiers="Control" />
     <KeyBinding Key="R" Command="{Binding RotateLeftCommand}" Modifiers="Control+Shift" />
     <KeyBinding Key="M" Command="{Binding MarkSplitCommand}" Modifiers="Control" />
+    <KeyBinding Key="B" Command="{Binding AddBookmarkCommand}" Modifiers="Control" />
+    <KeyBinding Key="F" Command="{Binding ShowSearchCommand}" Modifiers="Control" />
+    <KeyBinding Key="K" Command="{Binding CommandPaletteCommand}" Modifiers="Control" />
+    <KeyBinding Key="F1" Command="{Binding ShowShortcutsCommand}" />
+    <KeyBinding Key="F5" Command="{Binding PresentCommand}" />
+    <KeyBinding Key="F3" Command="{Binding FindNextCommand}" />
+    <KeyBinding Key="F3" Command="{Binding FindPreviousCommand}" Modifiers="Shift" />
   </ui:FluentWindow.InputBindings>
 
   <ui:FluentWindow.CommandBindings>
@@ -78,7 +85,9 @@
         Padding="6,4"
         VerticalAlignment="Stretch"
         Appearance="Transparent"
+        AutomationProperties.AcceleratorKey="{Binding Shortcut}"
         AutomationProperties.AutomationId="{Binding Id}"
+        AutomationProperties.HelpText="{Binding ToolTip}"
         AutomationProperties.Name="{Binding Label}"
         BorderThickness="0"
         Command="{Binding Command}"
@@ -156,7 +165,17 @@
       <TabControl.ContentTemplate>
         <DataTemplate DataType="{x:Type vm:RibbonTabViewModel}">
           <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <!-- On a narrow window the scroll bar is drawn over the content: room is left for it below the group names. -->
             <ItemsControl Focusable="False" ItemsSource="{Binding Groups}">
+              <ItemsControl.Style>
+                <Style TargetType="ItemsControl">
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding ComputedHorizontalScrollBarVisibility, RelativeSource={RelativeSource AncestorType=ScrollViewer}}" Value="Visible">
+                      <Setter Property="Margin" Value="0,0,0,14" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </ItemsControl.Style>
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                   <StackPanel Orientation="Horizontal" />
@@ -298,10 +317,13 @@
               Text="{loc:Tr Properties_Empty}"
               TextAlignment="Center"
               TextWrapping="Wrap"
-              Visibility="{Binding ActiveDocument.Editor.IsActive, Converter={StaticResource InverseBoolToVisibility}, FallbackValue=Visible}" />
+              Visibility="{Binding ActiveDocument.ShowsProperties, Converter={StaticResource InverseBoolToVisibility}, FallbackValue=Visible}" />
             <views:OverlayPropertiesView
               DataContext="{Binding ActiveDocument.EditorProperties}"
               Visibility="{Binding DataContext.ActiveDocument.Editor.IsActive, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+            <views:FormFieldPropertiesView
+              DataContext="{Binding ActiveDocument.FormDesigner}"
+              Visibility="{Binding DataContext.ActiveDocument.IsDesigningForm, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
           </Grid>
         </DockPanel>
       </Border>
@@ -322,14 +344,15 @@
           <TextBlock VerticalAlignment="Center" Text="{loc:Tr Status_PageLabel}" />
           <TextBox
             x:Name="PageNumberBox"
-            Width="64"
+            MinWidth="64"
+            MaxWidth="160"
             Margin="6,0"
             Padding="6,2"
             VerticalAlignment="Center"
             AutomationProperties.AutomationId="PageNumberBox"
             AutomationProperties.Name="{loc:Tr Status_PageLabel}"
             HorizontalContentAlignment="Center"
-            Text="{Binding CurrentPageNumber, Mode=OneWay}"
+            Text="{Binding CurrentPageText, Mode=OneWay}"
             ToolTip="{loc:Tr Status_PageInput_ToolTip}">
             <TextBox.InputBindings>
               <KeyBinding
@@ -341,7 +364,7 @@
           <TextBlock
             VerticalAlignment="Center"
             AutomationProperties.AutomationId="PageCountText"
-            Text="{Binding PageCount, StringFormat={loc:Tr Status_PageCount}}" />
+            Text="{Binding PageCountText}" />
           <!-- "Tệp 3/13" while the document has first-page marks for a split. -->
           <TextBlock
             Margin="16,0,0,0"
@@ -434,7 +457,7 @@
             AutomationProperties.AutomationId="StatusTaskProgress"
             Maximum="1"
             Visibility="{Binding IsTaskRunning, Converter={StaticResource BoolToVisibility}}"
-            Value="{Binding TaskProgress}" />
+            Value="{Binding TaskProgress, Mode=OneWay}" />
           <TextBlock
             VerticalAlignment="Center"
             AutomationProperties.AutomationId="StatusTask"

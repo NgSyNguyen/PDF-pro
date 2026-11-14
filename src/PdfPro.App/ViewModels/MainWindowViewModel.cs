@@ -23,6 +23,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IAppLifetime _lifetime;
     private readonly IShellLauncher _shell;
     private readonly AppPaths _paths;
+    private readonly AppBuildInfo _buildInfo;
+    private readonly IClipboardService? _clipboard;
+    private readonly Services.Updates.IUpdateService? _updates;
+    private readonly Services.Optimizing.IExportRunner? _exports;
+    private readonly PdfPro.Infrastructure.Instances.IOpenDocumentGuard? _openGuard;
     private readonly IDocumentWorkspaceService _workspaces;
     private readonly IDocumentTabFactory _tabFactory;
     private readonly ISettingsService _settings;
@@ -35,6 +40,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IContentChanger _contentChanger;
     private readonly IPageDialogService _pageDialogs;
     private readonly IMergeService _merge;
+    private readonly IBatesService? _bates;
+    private readonly Services.Security.SigningServices? _signing;
+    private readonly Services.Optimizing.OptimizingServices? _optimizing;
+    private readonly Services.Scanning.ScanServices? _scan;
+    private readonly Services.Comparing.CompareServices? _compare;
+    private readonly Services.Extracting.ExtractingServices? _extracting;
+    private readonly Services.Automation.AutomationServices? _automation;
     private readonly ILogger<MainWindowViewModel> _logger;
     private ActivePrint? _activePrint;
     private DocumentTabViewModel? _trackedDocument;
@@ -57,9 +69,25 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IContentChanger contentChanger,
         IPageDialogService pageDialogs,
         IMergeService merge,
-        ILogger<MainWindowViewModel> logger)
+        ILogger<MainWindowViewModel> logger,
+        IBatesService? bates = null,
+        Services.Security.SigningServices? signing = null,
+        Services.Optimizing.OptimizingServices? optimizing = null,
+        Services.Scanning.ScanServices? scan = null,
+        Services.Comparing.CompareServices? compare = null,
+        Services.Extracting.ExtractingServices? extracting = null,
+        Services.Automation.AutomationServices? automation = null,
+        IClipboardService? clipboard = null,
+        Services.Updates.IUpdateService? updates = null,
+        Services.Optimizing.IExportRunner? exports = null,
+        PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null)
     {
         ArgumentNullException.ThrowIfNull(buildInfo);
+        _exports = exports;
+        _openGuard = openGuard;
+        _buildInfo = buildInfo;
+        _clipboard = clipboard;
+        _updates = updates;
         _dialogs = dialogs;
         _lifetime = lifetime;
         _shell = shell;
@@ -76,6 +104,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _contentChanger = contentChanger;
         _pageDialogs = pageDialogs;
         _merge = merge;
+        _bates = bates;
+        _signing = signing;
+        _optimizing = optimizing;
+        _scan = scan;
+        _compare = compare;
+        _extracting = extracting;
+        _automation = automation;
         _logger = logger;
 
         UndoCommand = new ActiveDocumentCommand(d => d.UndoCommand);
@@ -98,15 +133,53 @@ public sealed partial class MainWindowViewModel : ObservableObject
         BookletCommand = new ActiveDocumentCommand(d => d.BookletCommand);
         TileCommand = new ActiveDocumentCommand(d => d.TileCommand);
         AddTextCommand = new ActiveDocumentCommand(d => d.AddTextCommand);
+        ToggleContentEditingCommand = new ActiveDocumentCommand(d => d.ToggleContentEditingCommand);
+        ToggleRedactionCommand = new ActiveDocumentCommand(d => d.ToggleRedactionCommand);
+        SanitizeCommand = new ActiveDocumentCommand(d => d.SanitizeCommand);
+        OcrCommand = new ActiveDocumentCommand(d => d.OcrCommand);
+        SplitByBlankPagesCommand = new ActiveDocumentCommand(d => d.SplitByBlankPagesCommand);
+        ToggleFormDesignCommand = new ActiveDocumentCommand(d => d.ToggleFormDesignCommand);
+        ExportFormDataCommand = new ActiveDocumentCommand(d => d.ExportFormDataCommand);
+        ImportFormDataCommand = new ActiveDocumentCommand(d => d.ImportFormDataCommand);
+        MergeFormDataCommand = new ActiveDocumentCommand(d => d.MergeFormDataCommand);
+        FlattenFormCommand = new ActiveDocumentCommand(d => d.FlattenFormCommand);
+        ResetFormCommand = new ActiveDocumentCommand(d => d.ResetFormCommand);
         AddShapeCommand = new ActiveDocumentCommand(d => d.AddShapeCommand);
         AddImageCommand = new ActiveDocumentCommand(d => d.AddImageCommand);
         AddSignatureCommand = new ActiveDocumentCommand(d => d.AddSignatureCommand);
-        Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand);
+        StampWatermarkCommand = new ActiveDocumentCommand(d => d.StampWatermarkCommand);
+        StampBackgroundCommand = new ActiveDocumentCommand(d => d.StampBackgroundCommand);
+        StampHeaderFooterCommand = new ActiveDocumentCommand(d => d.StampHeaderFooterCommand);
+        StampPageNumbersCommand = new ActiveDocumentCommand(d => d.StampPageNumbersCommand);
+        RemoveStampsCommand = new ActiveDocumentCommand(d => d.RemoveStampsCommand);
+        HighlightCommand = new ActiveDocumentCommand(d => d.HighlightCommand);
+        UnderlineCommand = new ActiveDocumentCommand(d => d.UnderlineCommand);
+        StrikeOutCommand = new ActiveDocumentCommand(d => d.StrikeOutCommand);
+        SquigglyCommand = new ActiveDocumentCommand(d => d.SquigglyCommand);
+        StickyNoteCommand = new ActiveDocumentCommand(d => d.StickyNoteCommand);
+        TextBoxCommand = new ActiveDocumentCommand(d => d.TextBoxCommand);
+        InkCommand = new ActiveDocumentCommand(d => d.InkCommand);
+        ShapesCommand = new ActiveDocumentCommand(d => d.ShapesCommand);
+        StampAnnotationCommand = new ActiveDocumentCommand(d => d.StampAnnotationCommand);
+        FlattenAnnotationsCommand = new ActiveDocumentCommand(d => d.FlattenAnnotationsCommand);
+        FindNextCommand = new ActiveDocumentCommand(d => d.Search.NextCommand);
+        FindPreviousCommand = new ActiveDocumentCommand(d => d.Search.PreviousCommand);
+        Home = new HomeTabViewModel(OpenCommand, OpenRecentFileCommand, MergeCommand, optimizing is { OfficeToPdf: not null, LibreOffice: not null } ? OfficeToPdfCommand : null)
+        {
+            ShowsGuide = !settings.Current.GuideHidden,
+            HideGuideCommand = HideGuideCommand,
+        };
         ShowRecentFiles(settings.Current.RecentFiles);
         RibbonTabs = BuildRibbon(buildInfo.IsDebugBuild);
         Tabs = [Home];
         SelectedTab = Home;
+        if (openGuard is not null)
+        {
+            GuardOpenDocuments(openGuard);
+        }
+
         StatusBar.PropertyChanged += OnStatusBarPropertyChanged;
+        Sidebar.PropertyChanged += OnSidebarPropertyChanged;
     }
 
     public IReadOnlyList<RibbonTabViewModel> RibbonTabs { get; }
@@ -117,7 +190,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(PresentCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToWordCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand), nameof(BookmarksCommand), nameof(AddBookmarkCommand), nameof(DocumentDescriptionCommand), nameof(PageLabelsCommand), nameof(LinksCommand), nameof(DrawLinkCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -176,16 +249,81 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public ActiveDocumentCommand AddTextCommand { get; }
 
+    public ActiveDocumentCommand ToggleContentEditingCommand { get; }
+
+    /// <summary>"Xóa thông tin": the redaction mode of the active document.</summary>
+    public ActiveDocumentCommand ToggleRedactionCommand { get; }
+
+    public ActiveDocumentCommand SanitizeCommand { get; }
+
+    /// <summary>"Nhận dạng chữ (OCR)" of the active document.</summary>
+    public ActiveDocumentCommand OcrCommand { get; }
+
+    /// <summary>"Tách theo trang trắng": the split dialog of the active document, at blank separator sheets.</summary>
+    public ActiveDocumentCommand SplitByBlankPagesCommand { get; }
+
+    public ActiveDocumentCommand ToggleFormDesignCommand { get; }
+
+    public ActiveDocumentCommand ExportFormDataCommand { get; }
+
+    public ActiveDocumentCommand ImportFormDataCommand { get; }
+
+    public ActiveDocumentCommand MergeFormDataCommand { get; }
+
+    public ActiveDocumentCommand FlattenFormCommand { get; }
+
+    public ActiveDocumentCommand ResetFormCommand { get; }
+
     public ActiveDocumentCommand AddShapeCommand { get; }
 
     public ActiveDocumentCommand AddImageCommand { get; }
 
     public ActiveDocumentCommand AddSignatureCommand { get; }
 
+    public ActiveDocumentCommand StampWatermarkCommand { get; }
+
+    public ActiveDocumentCommand StampBackgroundCommand { get; }
+
+    public ActiveDocumentCommand StampHeaderFooterCommand { get; }
+
+    public ActiveDocumentCommand StampPageNumbersCommand { get; }
+
+    public ActiveDocumentCommand RemoveStampsCommand { get; }
+
+    public ActiveDocumentCommand HighlightCommand { get; }
+
+    public ActiveDocumentCommand UnderlineCommand { get; }
+
+    public ActiveDocumentCommand StrikeOutCommand { get; }
+
+    public ActiveDocumentCommand SquigglyCommand { get; }
+
+    public ActiveDocumentCommand StickyNoteCommand { get; }
+
+    public ActiveDocumentCommand TextBoxCommand { get; }
+
+    public ActiveDocumentCommand InkCommand { get; }
+
+    public ActiveDocumentCommand ShapesCommand { get; }
+
+    public ActiveDocumentCommand StampAnnotationCommand { get; }
+
+    public ActiveDocumentCommand FlattenAnnotationsCommand { get; }
+
+    /// <summary>F3: the next match of the search.</summary>
+    public ActiveDocumentCommand FindNextCommand { get; }
+
+    /// <summary>Shift+F3: the previous match of the search.</summary>
+    public ActiveDocumentCommand FindPreviousCommand { get; }
+
+    /// <summary>The search panel was asked for (Ctrl+F, "Tìm"): the window puts the keyboard in its query box.</summary>
+    public event EventHandler? SearchRequested;
+
     public StatusBarViewModel StatusBar { get; } = new();
 
     /// <summary>
-    /// Opens files one after the other (each in its own tab). A file that is already open is just selected.
+    /// Opens files one after the other (each in its own tab). A file that is already open is just selected. Word,
+    /// Excel, PowerPoint documents first become PDFs next to them ("Office sang PDF"), which open in their place.
     /// With <paramref name="pdfOnly"/>, files without the .pdf extension are skipped and the user is told.
     /// </summary>
     public async Task OpenFilesAsync(IEnumerable<string> paths, bool pdfOnly = false)
@@ -200,12 +338,28 @@ public sealed partial class MainWindowViewModel : ObservableObject
             await _messages.ShowInfoAsync(Strings.Open_Error_Title, Strings.Open_NotPdf);
         }
 
+        var office = pdfOnly || _optimizing?.OfficeToPdf is null
+            ? []
+            : files.Select(Path.GetFullPath).Where(p => Operations.Converting.OfficeToPdfOperation.IsSupported(p) && File.Exists(p)).ToList();
+        if (office.Count > 0)
+        {
+            var converted = await ConvertToOpenAsync(office);
+            files = [.. files.Select(p => (Original: p, Full: Path.GetFullPath(p)))
+                .Where(p => !office.Contains(p.Full, StringComparer.OrdinalIgnoreCase) || converted.ContainsKey(p.Full))
+                .Select(p => converted.TryGetValue(p.Full, out var pdf) ? pdf : p.Original)];
+        }
+
         foreach (var path in files)
         {
             var fullPath = Path.GetFullPath(path);
             if (Documents.FirstOrDefault(d => d.IsSameFile(fullPath)) is { } open)
             {
                 SelectedTab = open;
+                continue;
+            }
+
+            if (_openGuard is { } guard && guard.IsSuspect(fullPath) && !await MayOpenSuspectAsync(guard, fullPath))
+            {
                 continue;
             }
 
@@ -279,6 +433,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         // Objects placed in the page editor and not applied yet are applied first (then asked about like any change).
         if (!await ApplyPendingEditsAsync(document) || !Tabs.Contains(document))
+        {
+            return;
+        }
+
+        if (!await ConfirmDropRedactionMarksAsync(document) || !Tabs.Contains(document))
         {
             return;
         }
@@ -378,6 +537,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private bool CanPrint() => HasActiveDocument && !StatusBar.IsTaskRunning;
 
+    /// <summary>"Trình chiếu" (F5): the document on the whole screen from the page being read; the viewer then shows the page it ended on.</summary>
+    [RelayCommand(CanExecute = nameof(CanPresent))]
+    private void Present()
+    {
+        if (ActiveDocument is not { Viewer.PageCount: > 0 } document)
+        {
+            return;
+        }
+
+        var presentation = document.Viewer.CreatePresentation();
+        _pageDialogs.ShowPresentation(presentation);
+        document.Viewer.NavigateTo(presentation.PageIndex);
+    }
+
+    private bool CanPresent() => ActiveDocument is { Viewer.PageCount: > 0 };
+
     private static string PrintProgressText(int done, int total)
         => string.Format(CultureInfo.CurrentCulture, Strings.Print_Progress, Math.Min(done + 1, total), total);
 
@@ -385,11 +560,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         if (_trackedDocument is not null)
         {
+            _trackedDocument.Comments.IsActive = false;
+            _trackedDocument.Signatures.IsActive = false;
             _trackedDocument.PropertyChanged -= OnActiveDocumentPropertyChanged;
             _trackedDocument.ExtractRequested -= OnExtractRequested;
             _trackedDocument.ContentChangeRequested -= OnContentChangeRequested;
             _trackedDocument.SplitRequested -= OnSplitRequested;
             _trackedDocument.LayoutRequested -= OnLayoutRequested;
+            _trackedDocument.FormMergeRequested -= OnFormMergeRequested;
+            _trackedDocument.BackgroundWorkRequested -= OnBackgroundWorkRequested;
         }
 
         _trackedDocument = value as DocumentTabViewModel;
@@ -400,6 +579,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _trackedDocument.ContentChangeRequested += OnContentChangeRequested;
             _trackedDocument.SplitRequested += OnSplitRequested;
             _trackedDocument.LayoutRequested += OnLayoutRequested;
+            _trackedDocument.FormMergeRequested += OnFormMergeRequested;
+            _trackedDocument.BackgroundWorkRequested += OnBackgroundWorkRequested;
         }
 
         foreach (var command in new[]
@@ -407,13 +588,40 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand, SanitizeCommand, OcrCommand, SplitByBlankPagesCommand,
+            ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand, FlattenFormCommand, ResetFormCommand,
+            StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
+            FindNextCommand, FindPreviousCommand,
+            HighlightCommand, UnderlineCommand, StrikeOutCommand, SquigglyCommand, StickyNoteCommand,
+            TextBoxCommand, InkCommand, ShapesCommand, StampAnnotationCommand, FlattenAnnotationsCommand,
         })
         {
             command.Attach(_trackedDocument);
         }
 
         UpdateHistoryToolTips();
+        UpdateCommentsPanel();
+    }
+
+    /// <summary>
+    /// The comments of the active document are read while the "Bình luận" panel shows them, its signatures checked
+    /// while the "Chữ ký" panel does.
+    /// </summary>
+    private void UpdateCommentsPanel()
+    {
+        if (_trackedDocument is { } document)
+        {
+            document.Comments.IsActive = Sidebar.SelectedPanel == SidebarPanel.Comments;
+            document.Signatures.IsActive = Sidebar.SelectedPanel == SidebarPanel.Signatures;
+        }
+    }
+
+    private void OnSidebarPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SidebarViewModel.SelectedPanel))
+        {
+            UpdateCommentsPanel();
+        }
     }
 
     private void OnActiveDocumentPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -453,6 +661,58 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
     private Task CloseActiveDocumentAsync() => CloseTabAsync(ActiveDocument);
+
+    /// <summary>"Tìm" (Ctrl+F): shows the search panel of the sidebar (the organizer gives way to the viewer).</summary>
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowSearch()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsOrganizing)
+        {
+            document.IsOrganizing = false;
+        }
+
+        Sidebar.SelectedPanel = SidebarPanel.Search;
+        SearchRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>"Bình luận": shows the comments panel of the sidebar (the organizer gives way to the viewer).</summary>
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowComments()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsOrganizing)
+        {
+            document.IsOrganizing = false;
+        }
+
+        Sidebar.SelectedPanel = SidebarPanel.Comments;
+    }
+
+    /// <summary>"Kiểm chữ ký": shows the signatures panel of the sidebar (the organizer gives way to the viewer).</summary>
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private void ShowSignatures()
+    {
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsOrganizing)
+        {
+            document.IsOrganizing = false;
+        }
+
+        Sidebar.SelectedPanel = SidebarPanel.Signatures;
+    }
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
     private void ShowProperties()
@@ -521,6 +781,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("file.save", Strings.Cmd_Save, SymbolRegular.Save24, SaveCommand),
                     new("file.saveAs", Strings.Cmd_SaveAs, SymbolRegular.SaveEdit24, SaveAsCommand),
                     new("file.print", Strings.Cmd_Print, SymbolRegular.Print24, PrintCommand),
+                    new("file.present", Strings.Cmd_Present, SymbolRegular.SlideMultiple24, PresentCommand, Strings.Cmd_Present_ToolTip),
                     new("file.properties", Strings.Cmd_Properties, SymbolRegular.DocumentData24, ShowPropertiesCommand),
                     new("file.close", Strings.Cmd_Close, SymbolRegular.Dismiss24, CloseActiveDocumentCommand),
                 ]),
@@ -528,6 +789,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("app.settings", Strings.Cmd_Settings, SymbolRegular.Settings24, OpenSettingsCommand),
                     new("app.exit", Strings.Cmd_Exit, SymbolRegular.SignOut24, ExitCommand),
+                ]),
+                new(Strings.Ribbon_Group_Help,
+                [
+                    new("help.shortcuts", Strings.Cmd_Shortcuts, SymbolRegular.Keyboard24, ShowShortcutsCommand),
+                    new("help.guide", Strings.Cmd_Guide, SymbolRegular.Lightbulb24, ShowGuideCommand),
+                    new("help.about", Strings.Cmd_About, SymbolRegular.Info24, ShowAboutCommand),
                 ]),
             ]),
             new("page", Strings.Ribbon_Tab_Page,
@@ -579,82 +846,130 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ]),
                 new(Strings.Ribbon_Group_Stamp,
                 [
-                    new("stamp.watermark", Strings.Cmd_Watermark, SymbolRegular.Water24),
-                    new("stamp.headerFooter", Strings.Cmd_HeaderFooter, SymbolRegular.DocumentHeader24),
-                    new("stamp.pageNumbers", Strings.Cmd_PageNumbers, SymbolRegular.NumberSymbol24),
+                    new("stamp.watermark", Strings.Cmd_Watermark, SymbolRegular.Water24, StampWatermarkCommand),
+                    new("stamp.background", Strings.Cmd_Background, SymbolRegular.PaintBucket24, StampBackgroundCommand),
+                    new("stamp.headerFooter", Strings.Cmd_HeaderFooter, SymbolRegular.DocumentHeader24, StampHeaderFooterCommand),
+                    new("stamp.pageNumbers", Strings.Cmd_PageNumbers, SymbolRegular.NumberSymbol24, StampPageNumbersCommand),
+                    new("stamp.remove", Strings.Cmd_RemoveStamps, SymbolRegular.EraserTool24, RemoveStampsCommand, Strings.Cmd_RemoveStamps_ToolTip),
+                    new("stamp.bates", Strings.Cmd_Bates, SymbolRegular.NumberRow24, BatesCommand, Strings.Cmd_Bates_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Content,
                 [
-                    new("edit.content", Strings.Cmd_EditContent, SymbolRegular.DocumentEdit24),
+                    new("edit.content", Strings.Cmd_EditContent, SymbolRegular.DocumentEdit24, ToggleContentEditingCommand, Strings.Cmd_EditContent_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Forms,
+                [
+                    new("forms.design", Strings.Cmd_DesignForm, SymbolRegular.Form24, ToggleFormDesignCommand, Strings.Cmd_DesignForm_ToolTip),
+                    new("forms.exportData", Strings.Cmd_ExportFormData, SymbolRegular.ArrowExportLtr24, ExportFormDataCommand, Strings.Cmd_ExportFormData_ToolTip),
+                    new("forms.importData", Strings.Cmd_ImportFormData, SymbolRegular.ArrowImport24, ImportFormDataCommand, Strings.Cmd_ImportFormData_ToolTip),
+                    new("forms.merge", Strings.Cmd_MergeFormData, SymbolRegular.DocumentTableArrowRight24, MergeFormDataCommand, Strings.Cmd_MergeFormData_ToolTip),
+                    new("forms.reset", Strings.Cmd_ResetForm, SymbolRegular.Eraser24, ResetFormCommand, Strings.Cmd_ResetForm_ToolTip),
+                    new("forms.flatten", Strings.Cmd_FlattenForm, SymbolRegular.Layer24, FlattenFormCommand, Strings.Cmd_FlattenForm_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Structure,
+                [
+                    new("structure.bookmarks", Strings.Cmd_Bookmarks, SymbolRegular.Book24, BookmarksCommand, Strings.Cmd_Bookmarks_ToolTip),
+                    new("structure.addBookmark", Strings.Cmd_AddBookmark, SymbolRegular.BookmarkAdd24, AddBookmarkCommand, Strings.Cmd_AddBookmark_ToolTip),
+                    new("structure.metadata", Strings.Cmd_DocumentDescription, SymbolRegular.DocumentBulletList24, DocumentDescriptionCommand, Strings.Cmd_DocumentDescription_ToolTip),
+                    new("structure.pageLabels", Strings.Cmd_PageLabels, SymbolRegular.TextWordCount24, PageLabelsCommand, Strings.Cmd_PageLabels_ToolTip),
+                    new("structure.links", Strings.Cmd_Links, SymbolRegular.Link24, LinksCommand, Strings.Cmd_Links_ToolTip),
+                    new("structure.drawLink", Strings.Cmd_DrawLink, SymbolRegular.Link24, DrawLinkCommand, Strings.Cmd_DrawLink_ToolTip),
                 ]),
             ]),
             new("annotate", Strings.Ribbon_Tab_Annotate,
             [
                 new(Strings.Ribbon_Group_Markup,
                 [
-                    new("annotate.highlight", Strings.Cmd_Highlight, SymbolRegular.Highlight24),
-                    new("annotate.underline", Strings.Cmd_Underline, SymbolRegular.TextUnderline24),
-                    new("annotate.strikeout", Strings.Cmd_Strikeout, SymbolRegular.TextStrikethrough24),
+                    new("annotate.highlight", Strings.Cmd_Highlight, SymbolRegular.Highlight24, HighlightCommand, Strings.Cmd_Highlight_ToolTip),
+                    new("annotate.underline", Strings.Cmd_Underline, SymbolRegular.TextUnderline24, UnderlineCommand, Strings.Cmd_Underline_ToolTip),
+                    new("annotate.strikeout", Strings.Cmd_Strikeout, SymbolRegular.TextStrikethrough24, StrikeOutCommand, Strings.Cmd_Strikeout_ToolTip),
+                    new("annotate.squiggly", Strings.Cmd_Squiggly, SymbolRegular.TextWordCount24, SquigglyCommand, Strings.Cmd_Squiggly_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Notes,
                 [
-                    new("annotate.note", Strings.Cmd_StickyNote, SymbolRegular.Note24),
-                    new("annotate.textBox", Strings.Cmd_TextBox, SymbolRegular.Textbox24),
+                    new("annotate.note", Strings.Cmd_StickyNote, SymbolRegular.Note24, StickyNoteCommand, Strings.Cmd_StickyNote_ToolTip),
+                    new("annotate.textBox", Strings.Cmd_TextBox, SymbolRegular.Textbox24, TextBoxCommand, Strings.Cmd_TextBox_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Draw,
                 [
-                    new("annotate.ink", Strings.Cmd_Ink, SymbolRegular.InkStroke24),
-                    new("annotate.shapes", Strings.Cmd_Shapes, SymbolRegular.DrawShape24),
-                    new("annotate.stamp", Strings.Cmd_StampAnnotation, SymbolRegular.DocumentCheckmark24),
+                    new("annotate.ink", Strings.Cmd_Ink, SymbolRegular.InkStroke24, InkCommand, Strings.Cmd_Ink_ToolTip),
+                    new("annotate.shapes", Strings.Cmd_Shapes, SymbolRegular.DrawShape24, ShapesCommand, Strings.Cmd_Shapes_ToolTip),
+                    new("annotate.stamp", Strings.Cmd_StampAnnotation, SymbolRegular.DocumentCheckmark24, StampAnnotationCommand, Strings.Cmd_StampAnnotation_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Review,
+                [
+                    new("annotate.comments", Strings.Cmd_Comments, SymbolRegular.CommentMultiple24, ShowCommentsCommand, Strings.Cmd_Comments_ToolTip),
+                    new("annotate.flatten", Strings.Cmd_FlattenAnnotations, SymbolRegular.Layer24, FlattenAnnotationsCommand, Strings.Cmd_FlattenAnnotations_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Search,
                 [
-                    new("search.find", Strings.Cmd_Find, SymbolRegular.DocumentSearch24),
+                    new("search.find", Strings.Cmd_Find, SymbolRegular.DocumentSearch24, ShowSearchCommand, Strings.Cmd_Find_ToolTip),
                 ]),
             ]),
             new("security", Strings.Ribbon_Tab_Security,
             [
                 new(Strings.Ribbon_Group_Protect,
                 [
-                    new("security.encrypt", Strings.Cmd_Password, SymbolRegular.LockClosed24),
-                    new("security.redact", Strings.Cmd_Redact, SymbolRegular.EraserSegment24),
-                    new("security.sanitize", Strings.Cmd_Sanitize, SymbolRegular.Broom24),
+                    new("security.encrypt", Strings.Cmd_Password, SymbolRegular.LockClosed24, ProtectCommand, Strings.Cmd_Password_ToolTip),
+                    new("security.redact", Strings.Cmd_Redact, SymbolRegular.EraserSegment24, ToggleRedactionCommand, Strings.Cmd_Redact_ToolTip),
+                    new("security.sanitize", Strings.Cmd_Sanitize, SymbolRegular.Broom24, SanitizeCommand, Strings.Cmd_Sanitize_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Signature,
                 [
-                    new("security.sign", Strings.Cmd_Sign, SymbolRegular.Certificate24),
-                    new("security.verify", Strings.Cmd_VerifySignatures, SymbolRegular.ShieldCheckmark24),
+                    new("security.sign", Strings.Cmd_Sign, SymbolRegular.Certificate24, SignCommand, Strings.Cmd_Sign_ToolTip),
+                    new("security.signBatch", Strings.Cmd_SignBatch, SymbolRegular.DocumentMultiple24, SignBatchCommand, Strings.Cmd_SignBatch_ToolTip),
+                    new("security.verify", Strings.Cmd_VerifySignatures, SymbolRegular.ShieldCheckmark24, ShowSignaturesCommand, Strings.Cmd_VerifySignatures_ToolTip),
                 ]),
             ]),
             new("convert", Strings.Ribbon_Tab_Convert,
             [
                 new(Strings.Ribbon_Group_Export,
                 [
-                    new("convert.toImages", Strings.Cmd_ToImages, SymbolRegular.Image24),
-                    new("convert.toText", Strings.Cmd_ToText, SymbolRegular.DocumentText24),
+                    new("convert.toImages", Strings.Cmd_ToImages, SymbolRegular.Image24, ToImagesCommand, Strings.Cmd_ToImages_ToolTip),
+                    new("convert.toText", Strings.Cmd_ToText, SymbolRegular.DocumentText24, ToTextCommand, Strings.Cmd_ToText_ToolTip),
+                    new("convert.toWord", Strings.Cmd_ToWord, SymbolRegular.DocumentEdit24, ToWordCommand, Strings.Cmd_ToWord_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Extract,
+                [
+                    new("extract.tables", Strings.Cmd_ExtractTables, SymbolRegular.TableSimple24, ExtractTablesCommand, Strings.Cmd_ExtractTables_ToolTip),
+                    new("extract.images", Strings.Cmd_ExtractImages, SymbolRegular.ImageMultiple24, ExtractImagesCommand, Strings.Cmd_ExtractImages_ToolTip),
+                    new("extract.attachments", Strings.Cmd_Attachments, SymbolRegular.DocumentCopy24, AttachmentsCommand, Strings.Cmd_Attachments_ToolTip),
+                    new("extract.fonts", Strings.Cmd_Fonts, SymbolRegular.TextEditStyle24, FontsCommand, Strings.Cmd_Fonts_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Import,
                 [
-                    new("convert.fromImages", Strings.Cmd_FromImages, SymbolRegular.ImageMultiple24),
-                    new("convert.officeToPdf", Strings.Cmd_FromOffice, SymbolRegular.DocumentArrowDown24),
+                    new("convert.fromImages", Strings.Cmd_FromImages, SymbolRegular.ImageMultiple24, FromImagesCommand, Strings.Cmd_FromImages_ToolTip),
+                    new("convert.officeToPdf", Strings.Cmd_FromOffice, SymbolRegular.DocumentPdf24, OfficeToPdfCommand, Strings.Cmd_FromOffice_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Optimize,
                 [
-                    new("optimize.compress", Strings.Cmd_Compress, SymbolRegular.ArrowMinimize24),
-                    new("convert.toPdfA", Strings.Cmd_PdfA, SymbolRegular.Archive24),
+                    new("optimize.compress", Strings.Cmd_Compress, SymbolRegular.ArrowMinimize24, CompressCommand, Strings.Cmd_Compress_ToolTip),
+                    new("optimize.grayscale", Strings.Cmd_Grayscale, SymbolRegular.DarkTheme24, GrayscaleCommand, Strings.Cmd_Grayscale_ToolTip),
+                    new("optimize.linearize", Strings.Cmd_Linearize, SymbolRegular.Globe24, LinearizeCommand, Strings.Cmd_Linearize_ToolTip),
+                    new("optimize.repair", Strings.Cmd_Repair, SymbolRegular.DocumentError24, RepairCommand, Strings.Cmd_Repair_ToolTip),
+                    new("convert.toPdfA", Strings.Cmd_PdfA, SymbolRegular.Archive24, ToPdfACommand, Strings.Cmd_PdfA_ToolTip),
                 ]),
             ]),
             new("tools", Strings.Ribbon_Tab_Tools,
             [
                 new(Strings.Ribbon_Group_Tools,
                 [
-                    new("ocr.run", Strings.Cmd_Ocr, SymbolRegular.ScanText24),
-                    new("compare.documents", Strings.Cmd_Compare, SymbolRegular.ArrowSwap24),
+                    new("ocr.run", Strings.Cmd_Ocr, SymbolRegular.ScanText24, OcrCommand, Strings.Cmd_Ocr_ToolTip),
+                    new("compare.documents", Strings.Cmd_Compare, SymbolRegular.ArrowSwap24, CompareDocumentsCommand, Strings.Cmd_Compare_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Scan,
+                [
+                    new("scan.removeBlankPages", Strings.Cmd_RemoveBlankPages, SymbolRegular.DocumentDismiss24, RemoveBlankPagesCommand, Strings.Cmd_RemoveBlankPages_ToolTip),
+                    new("scan.autoRotate", Strings.Cmd_AutoRotate, SymbolRegular.ArrowRotateClockwise24, AutoRotateCommand, Strings.Cmd_AutoRotate_ToolTip),
+                    new("scan.deskew", Strings.Cmd_Deskew, SymbolRegular.Ruler24, DeskewCommand, Strings.Cmd_Deskew_ToolTip),
+                    new("scan.cleanBorders", Strings.Cmd_CleanBorders, SymbolRegular.BorderOutside24, CleanBordersCommand, Strings.Cmd_CleanBorders_ToolTip),
+                    new("scan.splitByBlank", Strings.Cmd_SplitByBlank, SymbolRegular.DocumentSplitHint24, SplitByBlankPagesCommand, Strings.Cmd_SplitByBlank_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Automation,
                 [
-                    new("workflow.open", Strings.Cmd_Workflow, SymbolRegular.Flow24),
-                    new("batch.run", Strings.Cmd_Batch, SymbolRegular.TaskListLtr24),
+                    new("tools.commandPalette", Strings.Cmd_CommandPalette, SymbolRegular.Search24, CommandPaletteCommand, Strings.Cmd_CommandPalette_ToolTip),
+                    new("workflow.open", Strings.Cmd_Workflow, SymbolRegular.Flowchart24, _automation is null ? null : WorkflowsCommand, Strings.Cmd_Workflow_ToolTip),
+                    new("batch.run", Strings.Cmd_Batch, SymbolRegular.TaskListLtr24, _automation is null ? null : BatchCommand, Strings.Cmd_Batch_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_App,
                 [

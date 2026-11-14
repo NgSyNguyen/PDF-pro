@@ -44,7 +44,12 @@ internal static class PageStamper
         return new PageGeometry(PageBoxes.VisibleBox(page), PageBoxes.Rotation(page));
     }
 
-    public static void Place(PdfPage page, IReadOnlyList<FormPlacement> placements, StampDepth depth, StampLayer? layer = null)
+    /// <param name="page">The page drawn on.</param>
+    /// <param name="placements">The forms and where they go.</param>
+    /// <param name="depth">Over or under the page's content.</param>
+    /// <param name="layer">The optional content group of a removable stamp, or null.</param>
+    /// <param name="markerKey">An entry set to true on the added content stream (what finds it again), or null.</param>
+    public static void Place(PdfPage page, IReadOnlyList<FormPlacement> placements, StampDepth depth, StampLayer? layer = null, string? markerKey = null)
     {
         ArgumentNullException.ThrowIfNull(page);
         ArgumentNullException.ThrowIfNull(placements);
@@ -95,6 +100,11 @@ internal static class PageStamper
         if (layer is not null && AsDictionary(stamp) is { } stampStream)
         {
             stampStream.Elements.SetName(MarkerKey, "/" + layer.Kind);
+        }
+
+        if (markerKey is not null && AsDictionary(stamp) is { } markedStream)
+        {
+            markedStream.Elements.SetBoolean(markerKey, true);
         }
 
         var streams = ContentStreams(page);

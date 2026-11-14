@@ -11,6 +11,7 @@ using PdfPro.Core.Text;
 using PdfPro.Infrastructure;
 using PdfPro.Infrastructure.Caching;
 using PdfPro.Infrastructure.Settings;
+using PdfPro.Operations.Converting;
 
 namespace PdfPro.App.Tests.ViewModels;
 
@@ -98,6 +99,19 @@ public sealed class SettingsViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task TheAnnotationAuthor_IsSavedTrimmed()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.AnnotationAuthor.ShouldBeEmpty();
+
+        viewModel.AnnotationAuthor = "  Nguyễn Lan ";
+        await viewModel.PendingSave;
+
+        _settings.Current.AnnotationAuthor.ShouldBe("Nguyễn Lan", "composed (NFC) and trimmed");
+        CreateViewModel().AnnotationAuthor.ShouldBe("Nguyễn Lan");
+    }
+
+    [Fact]
     public async Task FailedSave_ShowsErrorAndKeepsSelection()
     {
         var viewModel = CreateViewModel();
@@ -176,6 +190,50 @@ public sealed class SettingsViewModelTests : IDisposable
         _settings.Current.RenderCacheMegabytes.ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData(100, 512)]
+    [InlineData(2048.4, 2048)]
+    [InlineData(1_000_000, 65536)]
+    public async Task TheWorker_CanBeTurnedOff_AndItsMemoryLimitStaysInRange(double typed, int expected)
+    {
+        var viewModel = CreateViewModel();
+        viewModel.IsolateOperations.ShouldBeTrue("on by default");
+
+        viewModel.IsolateOperations = false;
+        await viewModel.PendingSave;
+        viewModel.WorkerMemoryMegabytes = typed;
+        await viewModel.PendingSave;
+
+        _settings.Current.IsolateOperations.ShouldBeFalse();
+        viewModel.WorkerMemoryMegabytes.ShouldBe(expected);
+        _settings.Current.WorkerMemoryMegabytes.ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task Updates_AndTheExplorerMenu_AreSavedAndApplied()
+    {
+        var shell = Substitute.For<PdfPro.App.Services.IShellIntegration>();
+        var viewModel = CreateViewModel(shell: shell);
+        viewModel.CheckForUpdates.ShouldBeTrue("on by default");
+
+        // Not chosen yet: the channel of this build (a beta built by the release workflow is on the beta channel).
+        var own = PdfPro.App.Services.Updates.UpdateChannels.Resolve(null, PdfPro.App.Hosting.AppBuildInfo.Current.Version);
+        viewModel.UpdateChannel.ShouldBe(own);
+        _settings.Current.UpdateChannel.ShouldBeNull();
+        viewModel.HasShellIntegration.ShouldBeTrue();
+        var other = own == PdfPro.App.Services.Updates.UpdateChannels.Beta ? PdfPro.App.Services.Updates.UpdateChannels.Stable : PdfPro.App.Services.Updates.UpdateChannels.Beta;
+
+        viewModel.CheckForUpdates = false;
+        await viewModel.PendingSave;
+        viewModel.UpdateChannel = other;
+        await viewModel.PendingSave;
+        viewModel.ExplorerContextMenu = true;
+
+        _settings.Current.CheckForUpdates.ShouldBeFalse();
+        _settings.Current.UpdateChannel.ShouldBe(other);
+        shell.Received(1).SetContextMenu(true);
+    }
+
     [Fact]
     public void RenderCache_ClearedOrUnchanged_DoesNotSave()
     {
@@ -214,6 +272,100 @@ public sealed class SettingsViewModelTests : IDisposable
         viewModel.DiskCacheSize.ShouldBe(ByteSizeFormatter.Format(0, CultureInfo.CurrentCulture));
     }
 
-    private SettingsViewModel CreateViewModel()
-        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance);
+    [Fact]
+    public async Task LibreOffice_IsLookedFor_AndAChosenPathIsSaved_WithWhatIsThere()
+    {
+        const string Installed = @"C:\Program Files\LibreOffice\program\soffice.exe";
+        var locator = Substitute.For<ILibreOfficeLocator>();
+        locator.Find(null).Returns(Installed);
+        locator.Find(@"D:\LibreOffice").Returns((string?)null);
+        locator.Find(@"E:\LO").Returns(@"E:\LO\program\soffice.exe");
+        var files = Substitute.For<IFileDialogService>();
+        var viewModel = CreateViewModel(locator, files);
+
+        viewModel.LibreOfficePath.ShouldBeEmpty();
+        viewModel.LibreOfficeStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Found, Installed));
+        viewModel.CanPickLibreOffice.ShouldBeTrue();
+
+        viewModel.LibreOfficePath = @"  D:\LibreOffice ";
+        await viewModel.PendingSave;
+        viewModel.LibreOfficeStatus.ShouldBe(Strings.Settings_LibreOffice_NotThere);
+        _settings.Current.LibreOfficePath.ShouldBe(@"D:\LibreOffice", "trimmed");
+
+        files.PickFolder(Strings.Settings_LibreOffice_Pick_Title, Arg.Any<string?>()).Returns(@"E:\LO");
+        viewModel.PickLibreOfficeCommand.Execute(null);
+        await viewModel.PendingSave;
+        viewModel.LibreOfficeStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Using, @"E:\LO\program\soffice.exe"));
+        _settings.Current.LibreOfficePath.ShouldBe(@"E:\LO");
+
+        viewModel.LibreOfficePath = string.Empty;
+        await viewModel.PendingSave;
+        _settings.Current.LibreOfficePath.ShouldBeEmpty("blank: looked for again");
+        CreateViewModel(locator, files).LibreOfficeStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Found, Installed));
+    }
+
+    [Fact]
+    public async Task VeraPdf_IsLookedFor_AndAChosenFolderIsSaved_WithWhatIsThere()
+    {
+        var veraPdf = Substitute.For<IVeraPdfLocator>();
+        veraPdf.Find(null).Returns((VeraPdfInstallation?)null);
+        veraPdf.Find(@"D:\veraPDF").Returns(new VeraPdfInstallation(@"D:\veraPDF", @"C:\Java\bin\java.exe"));
+        veraPdf.Find(@"E:\vp").Returns(new VeraPdfInstallation(@"E:\vp", null));
+        var files = Substitute.For<IFileDialogService>();
+        var viewModel = CreateViewModel(files: files, veraPdf: veraPdf);
+
+        viewModel.VeraPdfStatus.ShouldBe(Strings.Settings_VeraPdf_Missing);
+
+        files.PickFolder(Strings.Settings_VeraPdf_Pick_Title, Arg.Is<string?>(p => p == null)).Returns(@"D:\veraPDF");
+        viewModel.PickVeraPdfCommand.Execute(null);
+        await viewModel.PendingSave;
+        viewModel.VeraPdfStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Using, @"D:\veraPDF"));
+        _settings.Current.VeraPdfPath.ShouldBe(@"D:\veraPDF");
+
+        viewModel.VeraPdfPath = @"E:\vp";
+        await viewModel.PendingSave;
+        viewModel.VeraPdfStatus.ShouldBe(Strings.Settings_VeraPdf_NoJava);
+        viewModel.VeraPdfPath = @"F:\không có";
+        viewModel.VeraPdfStatus.ShouldBe(Strings.Settings_VeraPdf_NotThere);
+    }
+
+    [Fact]
+    public void WithoutALocator_NoLibreOfficeStatusIsShown()
+    {
+        var viewModel = CreateViewModel();
+
+        viewModel.LibreOfficeStatus.ShouldBeNull();
+        viewModel.CanPickLibreOffice.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Tesseract_IsLookedFor_WithTheDataChosen_AndBothAreSaved()
+    {
+        var tesseract = Substitute.For<PdfPro.Ocr.ITesseractLocator>();
+        tesseract.Find(null, PdfPro.Core.Ocr.OcrDataKind.Best).Returns((PdfPro.Ocr.TesseractInstallation?)null);
+        tesseract.Find(@"D:\OCR", PdfPro.Core.Ocr.OcrDataKind.Best).Returns(new PdfPro.Ocr.TesseractInstallation(@"D:\OCR\tesseract.exe", @"D:\OCR\tessdata-best", PdfPro.Core.Ocr.OcrDataKind.Best, ["eng", "vie"], true));
+        tesseract.Find(@"D:\OCR", PdfPro.Core.Ocr.OcrDataKind.Fast).Returns(new PdfPro.Ocr.TesseractInstallation(@"D:\OCR\tesseract.exe", @"D:\OCR\tessdata", null, ["vie"], true));
+        var files = Substitute.For<IFileDialogService>();
+        var viewModel = CreateViewModel(files: files, tesseract: tesseract);
+
+        viewModel.TesseractStatus.ShouldBe(Strings.Settings_Tesseract_Missing);
+        viewModel.SelectedOcrData.ShouldBe(PdfPro.Core.Ocr.OcrDataKind.Best);
+        viewModel.OcrDataOptions.Select(o => o.Value).ShouldBe([PdfPro.Core.Ocr.OcrDataKind.Best, PdfPro.Core.Ocr.OcrDataKind.Fast]);
+
+        files.PickFolder(Strings.Settings_Tesseract_Pick_Title, Arg.Is<string?>(p => p == null)).Returns(@"D:\OCR");
+        viewModel.PickTesseractCommand.Execute(null);
+        await viewModel.PendingSave;
+        _settings.Current.TesseractPath.ShouldBe(@"D:\OCR");
+        viewModel.TesseractStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_Tesseract_Found, @"D:\OCR\tesseract.exe", Strings.Ocr_Data_Best, $"{Strings.Ocr_Language_eng}, {Strings.Ocr_Language_vie}"));
+
+        viewModel.SelectedOcrData = PdfPro.Core.Ocr.OcrDataKind.Fast;
+        await viewModel.PendingSave;
+        _settings.Current.OcrData.ShouldBe(PdfPro.Core.Ocr.OcrDataKind.Fast);
+        viewModel.TesseractStatus.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Settings_Tesseract_Found, @"D:\OCR\tesseract.exe", Strings.Ocr_Data_Own, Strings.Ocr_Language_vie));
+        viewModel.TesseractPath = @"E:\không có";
+        viewModel.TesseractStatus.ShouldBe(Strings.Settings_Tesseract_NotThere);
+    }
+
+    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null, IVeraPdfLocator? veraPdf = null, PdfPro.Ocr.ITesseractLocator? tesseract = null, PdfPro.App.Services.IShellIntegration? shell = null)
+        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files, veraPdf, tesseract, shell: shell);
 }

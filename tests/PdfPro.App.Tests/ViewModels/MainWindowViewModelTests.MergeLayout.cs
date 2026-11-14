@@ -35,6 +35,26 @@ public sealed partial class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task MergeFiles_FromExplorer_OpenTheDialogWithThem_InTheirOrder()
+    {
+        var viewModel = Create(isDebugBuild: false);
+        await PrepareMergeAsync();
+        var first = _fixture.CreateFolder("trang 1.pdf");
+        var second = _fixture.CreateFolder("trang 2.pdf");
+        string[]? listed = null;
+        _pageDialogs.ShowMerge(Arg.Any<MergeViewModel>()).Returns(call =>
+        {
+            listed = [.. call.Arg<MergeViewModel>().Items.Select(i => i.Source.Path)];
+            return false;
+        });
+
+        await viewModel.MergeFilesAsync([first, second]);
+
+        listed.ShouldBe([first, second], "the files Explorer gave, already in the dialog");
+        await _merge.DidNotReceiveWithAnyArgs().WriteAsync(default!, default!, default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
     public async Task Merge_ThatCannotWrite_Explains()
     {
         var viewModel = Create(isDebugBuild: false);
@@ -157,6 +177,40 @@ public sealed partial class MainWindowViewModelTests
         Command(viewModel, "layout.tile").Command.Execute(null);
 
         kinds.ShouldBe([SheetLayoutKind.NUp, SheetLayoutKind.Booklet, SheetLayoutKind.Tile]);
+    }
+
+    [Fact]
+    public async Task Merge_OfAProtectedDocument_UsesACopy_AndSaysTheMergedFileHasNoPassword()
+    {
+        var (viewModel, path) = await CreateWithFileAsync("mật.pdf");
+        var document = viewModel.ActiveDocument!;
+        document.Apply(TestOperations.Catalog().Get<PdfPro.Operations.Security.SetProtectionOperation>(), new PdfPro.Operations.Security.SetProtectionParams(Unknown)).ShouldBeTrue();
+        await PrepareMergeAsync();
+        MergeViewModel? shown = null;
+        _pageDialogs.ShowMerge(Arg.Any<MergeViewModel>()).Returns(call =>
+        {
+            shown = call.Arg<MergeViewModel>();
+            return false;
+        });
+
+        await viewModel.MergeCommand.ExecuteAsync(null);
+
+        shown.ShouldNotBeNull().Items.ShouldHaveSingleItem().IsProtected.ShouldBeTrue("its password is known: a copy is merged");
+        shown.HasProtectedFiles.ShouldBeTrue("the dialog says the merged file has no password");
+        await _merge.DidNotReceive().AddAsync(path, Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await _saver.Received(1).ExportAsync(document.Workspace, Arg.Any<IReadOnlyList<int>>(), Arg.Any<string>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Layout_OfAProtectedDocument_IsRefused_BeforeItsDialog()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        viewModel.ActiveDocument!.Apply(TestOperations.Catalog().Get<PdfPro.Operations.Security.SetProtectionOperation>(), new PdfPro.Operations.Security.SetProtectionParams(Unknown)).ShouldBeTrue();
+
+        await viewModel.ActiveDocument.BookletCommand.ExecuteAsync(null);
+
+        await _messages.Received(1).ShowErrorAsync(Strings.Layout_Error_Title, Strings.Optimize_Error_Protected);
+        _pageDialogs.DidNotReceiveWithAnyArgs().ShowSheetLayout(default!);
     }
 
     /// <summary>The merge service reads "x.pdf" files as fake 2-page documents and previews like the real one.</summary>

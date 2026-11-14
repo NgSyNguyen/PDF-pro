@@ -68,9 +68,24 @@ public partial class App : Application
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
             theme.AttachMainWindow(mainWindow);
-            mainWindow.Show();
+            if (startup.Background)
+            {
+                // Started with Windows for the hot folder: out of the way, in the notification area when it runs.
+                mainWindow.WindowState = WindowState.Minimized;
+            }
 
-            _ = OpenStartupFilesAsync(_host.Services.GetRequiredService<MainWindowViewModel>(), startup.Files);
+            mainWindow.Show();
+            if (startup.Background && mainWindow.RunsInTray)
+            {
+                mainWindow.HideToTray();
+            }
+
+            _ = OpenStartupFilesAsync(_host.Services.GetRequiredService<MainWindowViewModel>(), startup.Merge ? [] : startup.Files);
+            if (startup.Merge)
+            {
+                // The first of Explorer's "Gộp bằng PDF_Pro" launches: the others hand their files over to this one.
+                _host.Services.GetRequiredService<MergeRequestCollector>().Add(startup.Files);
+            }
         }
         catch (Exception ex)
         {
@@ -132,6 +147,10 @@ public partial class App : Application
         }
 
         await viewModel.RemoveMissingRecentFilesAsync();
+
+        // An installed copy looks for a newer version once things have settled (SPEC Phase 13).
+        await Task.Delay(TimeSpan.FromSeconds(20));
+        await viewModel.CheckForUpdatesAsync(manual: false);
     }
 
     /// <summary>
@@ -158,7 +177,7 @@ public partial class App : Application
 
         try
         {
-            if (channel.SendAsync(startup.Files, HandOverTimeout).GetAwaiter().GetResult())
+            if (channel.SendAsync(startup.HandOverMessage(), HandOverTimeout).GetAwaiter().GetResult())
             {
                 log.Information("Handed {Count} file(s) over to the running instance", startup.Files.Count);
                 return true;
@@ -173,8 +192,8 @@ public partial class App : Application
         }
     }
 
-    /// <summary>Another launch passed its files (or none): bring the window forward and open them.</summary>
-    private async void OnFilesHandedOver(IReadOnlyList<string> files)
+    /// <summary>Another launch passed its files (or none): bring the window forward and open them — or gather them to merge.</summary>
+    private async void OnFilesHandedOver(IReadOnlyList<string> message)
     {
         if (_host is null || MainWindow is not MainWindow window)
         {
@@ -182,6 +201,13 @@ public partial class App : Application
         }
 
         window.BringToFront();
+        var (merge, files) = StartupArguments.ReadHandOver(message);
+        if (merge)
+        {
+            _host.Services.GetRequiredService<MergeRequestCollector>().Add(files);
+            return;
+        }
+
         if (files.Count > 0)
         {
             await _host.Services.GetRequiredService<MainWindowViewModel>().OpenFilesAsync(files);

@@ -1,5 +1,6 @@
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Security;
 using PdfPro.Operations.Materializing;
 using PdfPro.Operations.Splitting;
 using PdfPro.Operations.Tests.TestSupport;
@@ -352,6 +353,27 @@ public sealed class SplitOperationTests(PdfiumFixture pdfium) : IAsyncDisposable
         await analysis.PrepareAsync(new SplitParams(SplitMode.EveryN), new RecordingProgress(), CancellationToken);
         analysis.Bookmarks.ShouldBeNull("only what the mode needs is read");
         analysis.DarkPercents.ShouldBeNull();
+    }
+
+    /// <summary>The parts of a protected document keep its protection: its passwords and its permissions.</summary>
+    [Fact]
+    public async Task TheParts_OfAProtectedDocument_KeepItsProtection()
+    {
+        var document = (await OpenAsync(Samples.BasicVi)) with
+        {
+            Security = new DocumentSecurity("mở-ra", "chủ-nhân", EncryptionAlgorithm.Aes256, DocumentPermissions.Print),
+        };
+        var parameters = new SplitParams(SplitMode.EveryN, PagesPerFile: 3);
+        var files = await WriteAsync(document, await PreviewAsync(document, parameters), parameters);
+
+        files.Count.ShouldBe(2);
+        foreach (var file in files)
+        {
+            await Should.ThrowAsync<PdfPasswordRequiredException>(() => PdfInspector.OpenAsync(pdfium.Gate, file));
+            await using var opened = await PdfDocumentHandle.OpenAsync(pdfium.Gate, file, "mở-ra", CancellationToken);
+            opened.PageCount.ShouldBe(3);
+            PermissionBits.ToPermissions(opened.Features.UserPermissions).ShouldBe(DocumentPermissions.Print);
+        }
     }
 
     private async Task<SplitDocument> OpenAsync(string path, PagePlan? plan = null)

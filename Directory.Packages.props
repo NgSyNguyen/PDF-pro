@@ -21,6 +21,8 @@
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.13" />
+    <!-- Installer and updates (Setup.exe, delta updates from GitHub releases). MIT. -->
+    <PackageVersion Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
   <!-- PDF engines -->
@@ -34,6 +36,16 @@
     <PackageVersion Include="PDFsharp" Version="6.2.4" />
     <!-- Text with coordinates (UglyToad/PdfPig). Apache-2.0. Tests only in Phase 5; search and redaction from Phase 6. -->
     <PackageVersion Include="PdfPig" Version="0.1.16" />
+    <!-- Table detection and extraction (BobLd/tabula-sharp, a port of tabula-java on PdfPig). MIT. Phase 11. -->
+    <PackageVersion Include="Tabula" Version="1.0.1" />
+  </ItemGroup>
+
+  <!-- Images -->
+  <ItemGroup>
+    <!-- JPEG decoding and encoding when compressing images (mono/SkiaSharp, MIT; Skia itself BSD-3-Clause). -->
+    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
+    <!-- Skia for Linux, for the tests run in Linux containers only (the app gets the Windows build with SkiaSharp). MIT. -->
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.1" />
   </ItemGroup>
 
   <!-- Transitive pins (security fixes for dependencies of the packages above) -->
@@ -48,6 +60,8 @@
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <!-- Performance measurements (benchmarks/PdfPro.Benchmarks, run by hand). MIT. -->
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <!-- UI automation of the built app (tests/PdfPro.App.UiTests, run by hand only). MIT. -->
     <PackageVersion Include="FlaUI.UIA3" Version="5.0.0" />
   </ItemGroup>

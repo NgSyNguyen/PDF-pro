@@ -1,0 +1,129 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.ExtractImagesWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:extracting="clr-namespace:PdfPro.App.ViewModels.Extracting"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:views="clr-namespace:PdfPro.App.Views"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=extracting:ExtractImagesViewModel}"
+  Title="{loc:Tr ExtractImages_Title}"
+  Width="560"
+  MinHeight="0"
+  AutomationProperties.AutomationId="ExtractImagesWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,12,0,4" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr ExtractImages_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock
+        FontWeight="SemiBold"
+        Text="{Binding FileName}"
+        TextTrimming="CharacterEllipsis" />
+      <TextBlock
+        Margin="0,4,0,0"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr ExtractImages_Note}"
+        TextWrapping="Wrap" />
+
+      <views:PageTargetPanel Margin="0,16,0,0" DataContext="{Binding Target}" />
+
+      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr ExtractImages_MinSide}" />
+      <StackPanel Orientation="Horizontal">
+        <TextBox
+          Width="80"
+          AutomationProperties.AutomationId="ExtractImagesMinSide"
+          AutomationProperties.Name="{loc:Tr ExtractImages_MinSide}"
+          Text="{Binding MinSideText, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+          Margin="8,0,0,0"
+          VerticalAlignment="Center"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{loc:Tr ExtractImages_Pixels}" />
+      </StackPanel>
+      <CheckBox
+        Margin="0,10,0,0"
+        AutomationProperties.AutomationId="ExtractImagesSkipDuplicates"
+        Content="{loc:Tr ExtractImages_SkipDuplicates}"
+        IsChecked="{Binding SkipDuplicates}" />
+
+      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr ToImages_Folder}" />
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox
+          AutomationProperties.AutomationId="ExtractImagesFolder"
+          AutomationProperties.Name="{loc:Tr ToImages_Folder}"
+          Text="{Binding OutputFolder, UpdateSourceTrigger=PropertyChanged}" />
+        <ui:Button
+          Grid.Column="1"
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="ExtractImagesPickFolder"
+          Command="{Binding PickFolderCommand}"
+          Content="{loc:Tr Split_Folder_Pick}" />
+      </Grid>
+      <WrapPanel Margin="0,8,0,0">
+        <CheckBox
+          Margin="0,0,16,0"
+          AutomationProperties.AutomationId="ExtractImagesOverwrite"
+          Content="{loc:Tr Split_Overwrite}"
+          IsChecked="{Binding Overwrite}" />
+        <CheckBox
+          AutomationProperties.AutomationId="ExtractImagesOpenFolder"
+          Content="{loc:Tr Split_OpenFolder}"
+          IsChecked="{Binding OpenFolderWhenDone}" />
+      </WrapPanel>
+
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="ExtractImagesError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="ExtractImagesApply"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr ExtractImages_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="ExtractImagesCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

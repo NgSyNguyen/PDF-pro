@@ -2,8 +2,12 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using Microsoft.Extensions.Logging;
+using PdfPro.App.Services.Annotating;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Editing;
 using PdfPro.App.Services.Rendering;
+using PdfPro.Core.Geometry;
+using PdfPro.Core.Organizing;
 using PdfPro.Core.Printing;
 using PdfPro.Pdfium;
 
@@ -26,10 +30,14 @@ internal sealed class PdfPrintPaginator : DocumentPaginator
     private readonly PrintSheet _sheet;
     private readonly ILogger _logger;
     private readonly CancellationToken _cancellation;
+    private readonly ScreenFonts? _fonts;
+    private readonly ScreenImages _images = new();
     private Size _pageSize;
 
-    public PdfPrintPaginator(VirtualDocument document, IPageImageRenderer renderer, IReadOnlyList<int> pageIndices, PrintSheet sheet, ILogger logger, CancellationToken cancellation)
+    /// <param name="fonts">Faces for the text of annotations made in the session (null: their text is left out).</param>
+    public PdfPrintPaginator(VirtualDocument document, IPageImageRenderer renderer, IReadOnlyList<int> pageIndices, PrintSheet sheet, ILogger logger, CancellationToken cancellation, ScreenFonts? fonts = null)
     {
+        _fonts = fonts;
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(pageIndices);
         ArgumentNullException.ThrowIfNull(sheet);
@@ -64,16 +72,73 @@ internal sealed class PdfPrintPaginator : DocumentPaginator
         if (!_cancellation.IsCancellationRequested)
         {
             var placement = PrintLayout.Fit(_document.PageSizes[pageIndex], _sheet.PrintableArea);
-            if (Render(pageIndex, placement) is { } image)
+            var image = Render(pageIndex, placement);
+            using var context = visual.RenderOpen();
+            if (image is not null)
             {
-                using var context = visual.RenderOpen();
                 context.DrawImage(image, new Rect(placement.Bounds.X, placement.Bounds.Y, placement.Bounds.Width, placement.Bounds.Height));
             }
+
+            DrawAnnotations(context, pageIndex, placement);
         }
 
         // After cancellation the writer still asks for the page it is on; a blank sheet ends it quickly.
         var sheet = new Rect(_pageSize);
         return new DocumentPage(visual, _pageSize, sheet, sheet);
+    }
+
+    /// <summary>
+    /// Annotations made in the session are not in the source file PDFium renders: they are drawn over the page, in the
+    /// page's space as written, turned and scaled like the page on the sheet.
+    /// </summary>
+    private void DrawAnnotations(DrawingContext context, int pageIndex, PrintPlacement placement)
+    {
+        var page = _document.Pages[pageIndex];
+        if (page.Ref.Annotations.Count == 0)
+        {
+            return;
+        }
+
+        PageGeometry? source = null;
+        if (page.Source is { } document)
+        {
+            try
+            {
+                // Completes on the PDFium thread, never on this one (as rendering does).
+                source = document.GetPageGeometryAsync(page.SourcePageIndex, _cancellation).GetAwaiter().GetResult();
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogWarning(ex, "The annotations of page {PageNumber} could not be placed for printing", pageIndex + 1);
+                return;
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+
+        var geometry = MaterializedGeometry.Of(page.Ref, source);
+        if (placement.Rotated)
+        {
+            geometry = new PageGeometry(geometry.Box, geometry.RotationDegrees + 90);
+        }
+
+        var mapper = new PageCoordinateMapper(geometry, placement.Scale);
+        context.PushTransform(new TranslateTransform(placement.Bounds.X, placement.Bounds.Y));
+        foreach (var annotation in page.Ref.Annotations)
+        {
+            try
+            {
+                AnnotationDrawing.Draw(context, annotation, mapper, _fonts, _images, pixelsPerDip: 1);
+            }
+            catch (Exception ex) when (ex is System.IO.IOException or NotSupportedException or KeyNotFoundException or UnauthorizedAccessException)
+            {
+                _logger.LogWarning("An annotation of page {PageNumber} could not be printed: {ErrorType}", pageIndex + 1, ex.GetType().Name);
+            }
+        }
+
+        context.Pop();
     }
 
     private ImageSource? Render(int pageIndex, PrintPlacement placement)

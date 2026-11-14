@@ -122,7 +122,7 @@ public sealed class ChangePageSizeOperation : PdfOperation<ChangePageSizeParams>
         PdfDocument document;
         try
         {
-            document = PdfReader.Open(inputPath, PdfDocumentOpenMode.Modify);
+            document = PdfSafeReader.Open(inputPath, PdfDocumentOpenMode.Modify);
         }
         catch (Exception ex) when (ex is not OperationCanceledException and not IOException and not UnauthorizedAccessException)
         {
@@ -154,7 +154,7 @@ public sealed class ChangePageSizeOperation : PdfOperation<ChangePageSizeParams>
             MovedDestinations.Apply(document, transforms);
             cancellationToken.ThrowIfCancellationRequested();
             progress.Report(new OperationProgress(indices.Count, indices.Count, ResizeStage));
-            document.Save(output, closeStream: false);
+            Materializing.PdfWriting.Save(document, output);
         }
     }
 }

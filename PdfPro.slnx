@@ -8,8 +8,13 @@
     <File Path="THIRD_PARTY_NOTICES.md" />
   </Folder>
   <Folder Name="/docs/">
+    <File Path="docs/CLI.md" />
+    <File Path="docs/PROGRESS.md" />
     <File Path="docs/PROMPTS.md" />
     <File Path="docs/SPEC.md" />
+  </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/PdfPro.Benchmarks/PdfPro.Benchmarks.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/PdfPro.App/PdfPro.App.csproj" />
@@ -19,16 +24,19 @@
     <Project Path="src/PdfPro.Ocr/PdfPro.Ocr.csproj" />
     <Project Path="src/PdfPro.Operations/PdfPro.Operations.csproj" />
     <Project Path="src/PdfPro.Pdfium/PdfPro.Pdfium.csproj" />
+    <Project Path="src/PdfPro.Worker/PdfPro.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <File Path="tests/Directory.Build.props" />
     <Project Path="tests/PdfPro.App.Tests/PdfPro.App.Tests.csproj" />
     <Project Path="tests/PdfPro.App.UiTests/PdfPro.App.UiTests.csproj" />
+    <Project Path="tests/PdfPro.Cli.Tests/PdfPro.Cli.Tests.csproj" />
     <Project Path="tests/PdfPro.Core.Tests/PdfPro.Core.Tests.csproj" />
     <Project Path="tests/PdfPro.Infrastructure.Tests/PdfPro.Infrastructure.Tests.csproj" />
     <Project Path="tests/PdfPro.Operations.Tests/PdfPro.Operations.Tests.csproj" />
     <Project Path="tests/PdfPro.Pdfium.Tests/PdfPro.Pdfium.Tests.csproj" />
     <Project Path="tests/PdfPro.SampleGenerator/PdfPro.SampleGenerator.csproj" />
     <Project Path="tests/PdfPro.TestTools.FakeTool/PdfPro.TestTools.FakeTool.csproj" />
+    <Project Path="tests/PdfPro.Worker.Tests/PdfPro.Worker.Tests.csproj" />
   </Folder>
 </Solution>

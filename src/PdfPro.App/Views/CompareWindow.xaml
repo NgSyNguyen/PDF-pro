@@ -1,0 +1,655 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.CompareWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:comparing="clr-namespace:PdfPro.App.ViewModels.Comparing"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=comparing:CompareViewModel}"
+  Title="{loc:Tr Compare_Title}"
+  Width="1280"
+  Height="860"
+  MinWidth="900"
+  MinHeight="600"
+  AutomationProperties.AutomationId="CompareWindow"
+  ExtendsContentIntoTitleBar="True"
+  ShowInTaskbar="False"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CloseCommand}" />
+    <KeyBinding Key="F8" Command="{Binding NextChangeCommand}" />
+    <KeyBinding
+      Key="F8"
+      Command="{Binding PreviousChangeCommand}"
+      Modifiers="Shift" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="Secondary" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- A highlight: green added, red deleted, yellow modified, purple looks different; thicker when its change is chosen. -->
+    <Style x:Key="MarkStyle" TargetType="Border">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Kind}" Value="Added">
+          <Setter Property="Background" Value="#4D2DB84D" />
+          <Setter Property="BorderBrush" Value="#FF1E8C1E" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Kind}" Value="Deleted">
+          <Setter Property="Background" Value="#4DE03C3C" />
+          <Setter Property="BorderBrush" Value="#FFC00000" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Kind}" Value="Modified">
+          <Setter Property="Background" Value="#66FFD200" />
+          <Setter Property="BorderBrush" Value="#FFC89600" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Kind}" Value="Visual">
+          <Setter Property="Background" Value="#26A040FF" />
+          <Setter Property="BorderBrush" Value="#FF8A2BE2" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+          <Setter Property="BorderThickness" Value="3" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+
+    <!-- A page with its highlights, or a note that this side has no such page. -->
+    <DataTemplate x:Key="PageTemplate" DataType="{x:Type comparing:ComparePage}">
+      <Grid>
+        <Border
+          Width="320"
+          Padding="16"
+          Background="{DynamicResource ControlFillColorDefaultBrush}"
+          BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+          BorderThickness="1"
+          Visibility="{Binding IsMissing, Converter={StaticResource BoolToVisibility}}">
+          <TextBlock
+            AutomationProperties.AutomationId="CompareMissingPage"
+            Text="{Binding MissingText}"
+            TextWrapping="Wrap" />
+        </Border>
+        <Grid
+          Width="{Binding Width}"
+          Height="{Binding Height}"
+          Background="White"
+          Visibility="{Binding IsMissing, Converter={StaticResource InverseBoolToVisibility}}">
+          <Image
+            RenderOptions.BitmapScalingMode="HighQuality"
+            Source="{Binding Image}"
+            Stretch="Fill" />
+          <ItemsControl Focusable="False" ItemsSource="{Binding Marks}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <Canvas />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerStyle>
+              <Style TargetType="ContentPresenter">
+                <Setter Property="Canvas.Left" Value="{Binding X}" />
+                <Setter Property="Canvas.Top" Value="{Binding Y}" />
+              </Style>
+            </ItemsControl.ItemContainerStyle>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type comparing:CompareMark}">
+                <Border
+                  Width="{Binding Width}"
+                  Height="{Binding Height}"
+                  Style="{StaticResource MarkStyle}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Grid>
+      </Grid>
+    </DataTemplate>
+
+    <Style x:Key="KindDot" TargetType="Ellipse">
+      <Setter Property="Width" Value="10" />
+      <Setter Property="Height" Value="10" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Kind}" Value="Added">
+          <Setter Property="Fill" Value="#FF1E8C1E" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Kind}" Value="Deleted">
+          <Setter Property="Fill" Value="#FFC00000" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Kind}" Value="Modified">
+          <Setter Property="Fill" Value="#FFC89600" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <ui:TitleBar Title="{loc:Tr Compare_Title}" ShowMinimize="False" />
+
+    <!-- The two files and the options. -->
+    <Grid Grid.Row="1" Margin="24,4,24,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <StackPanel>
+        <TextBlock Style="{StaticResource Secondary}" Text="{loc:Tr Compare_Old}" />
+        <DockPanel Margin="0,4,0,0">
+          <ui:Button
+            Margin="8,0,0,0"
+            AutomationProperties.AutomationId="ComparePickOld"
+            Command="{Binding PickOldCommand}"
+            Content="{loc:Tr Compare_Pick}"
+            DockPanel.Dock="Right"
+            Icon="{ui:SymbolIcon FolderOpen24}" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="CompareOldName"
+            FontWeight="SemiBold"
+            Text="{Binding OldName}"
+            TextTrimming="CharacterEllipsis"
+            ToolTip="{Binding OldPath}" />
+        </DockPanel>
+      </StackPanel>
+      <ui:Button
+        Grid.Column="1"
+        Margin="12,0"
+        VerticalAlignment="Bottom"
+        AutomationProperties.AutomationId="CompareSwap"
+        AutomationProperties.Name="{loc:Tr Compare_Swap}"
+        Command="{Binding SwapCommand}"
+        Icon="{ui:SymbolIcon ArrowSwap24}"
+        ToolTip="{loc:Tr Compare_Swap}" />
+      <StackPanel Grid.Column="2">
+        <TextBlock Style="{StaticResource Secondary}" Text="{loc:Tr Compare_New}" />
+        <DockPanel Margin="0,4,0,0">
+          <ui:Button
+            Margin="8,0,0,0"
+            AutomationProperties.AutomationId="ComparePickNew"
+            Command="{Binding PickNewCommand}"
+            Content="{loc:Tr Compare_Pick}"
+            DockPanel.Dock="Right"
+            Icon="{ui:SymbolIcon FolderOpen24}" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="CompareNewName"
+            FontWeight="SemiBold"
+            Text="{Binding NewName}"
+            TextTrimming="CharacterEllipsis"
+            ToolTip="{Binding NewPath}" />
+        </DockPanel>
+      </StackPanel>
+      <StackPanel
+        Grid.Column="3"
+        Margin="24,0,0,0"
+        VerticalAlignment="Bottom"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="110"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="CompareRun"
+          Command="{Binding RunCommand}"
+          Content="{loc:Tr Compare_Run}"
+          Icon="{ui:SymbolIcon DocumentSearch24}"
+          IsDefault="True" />
+        <ui:Button
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="CompareStop"
+          Command="{Binding RunCancelCommand}"
+          Content="{loc:Tr Compare_Stop}"
+          Visibility="{Binding IsComparing, Converter={StaticResource BoolToVisibility}}" />
+      </StackPanel>
+    </Grid>
+
+    <StackPanel Grid.Row="2" Margin="24,8,24,0">
+      <WrapPanel>
+        <CheckBox
+          Margin="0,0,24,0"
+          AutomationProperties.AutomationId="CompareIgnoreRunningLines"
+          Content="{loc:Tr Compare_IgnoreRunningLines}"
+          IsChecked="{Binding IgnoreRunningLines}" />
+        <CheckBox
+          Margin="0,0,24,0"
+          AutomationProperties.AutomationId="CompareIgnoreCase"
+          Content="{loc:Tr Compare_IgnoreCase}"
+          IsChecked="{Binding IgnoreCase}" />
+        <CheckBox
+          AutomationProperties.AutomationId="CompareImages"
+          Content="{loc:Tr Compare_Visual}"
+          IsChecked="{Binding CompareImages}" />
+      </WrapPanel>
+      <StackPanel
+        Margin="0,8,0,0"
+        Orientation="Horizontal"
+        Visibility="{Binding IsComparing, Converter={StaticResource BoolToVisibility}}">
+        <ui:ProgressRing
+          Width="16"
+          Height="16"
+          Margin="0,0,8,0"
+          IsIndeterminate="True" />
+        <TextBlock AutomationProperties.AutomationId="CompareProgress" Text="{Binding ProgressText}" />
+      </StackPanel>
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="CompareError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="CompareSummary"
+        FontWeight="SemiBold"
+        Text="{Binding SummaryText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding SummaryText, Converter={StaticResource NullToCollapsed}}" />
+      <TextBlock
+        Margin="0,4,0,0"
+        Foreground="{DynamicResource SystemFillColorCautionBrush}"
+        Text="{loc:Tr Compare_Stale}"
+        TextWrapping="Wrap"
+        Visibility="{Binding IsStale, Converter={StaticResource BoolToVisibility}}" />
+    </StackPanel>
+
+    <!-- The changes, and the pair of pages shown. -->
+    <Grid Grid.Row="3" Margin="24,12,24,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="300" />
+        <ColumnDefinition Width="16" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <DockPanel>
+        <DockPanel Margin="0,0,0,6" DockPanel.Dock="Top">
+          <ui:Button
+            Margin="4,0,0,0"
+            AutomationProperties.AutomationId="CompareNextChange"
+            AutomationProperties.Name="{loc:Tr Compare_NextChange}"
+            Command="{Binding NextChangeCommand}"
+            DockPanel.Dock="Right"
+            Icon="{ui:SymbolIcon ArrowDown24}"
+            ToolTip="{loc:Tr Compare_NextChange}" />
+          <ui:Button
+            AutomationProperties.AutomationId="ComparePreviousChange"
+            AutomationProperties.Name="{loc:Tr Compare_PreviousChange}"
+            Command="{Binding PreviousChangeCommand}"
+            DockPanel.Dock="Right"
+            Icon="{ui:SymbolIcon ArrowUp24}"
+            ToolTip="{loc:Tr Compare_PreviousChange}" />
+          <TextBlock
+            VerticalAlignment="Center"
+            FontWeight="SemiBold"
+            Text="{loc:Tr Compare_Changes}" />
+        </DockPanel>
+        <TextBlock
+          Margin="0,6,0,0"
+          DockPanel.Dock="Bottom"
+          FontSize="12"
+          Style="{StaticResource Secondary}"
+          Text="{loc:Tr Compare_Legend}" />
+        <ListBox
+          AutomationProperties.AutomationId="CompareChanges"
+          AutomationProperties.Name="{loc:Tr Compare_Changes}"
+          ItemsSource="{Binding Changes}"
+          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+          SelectedItem="{Binding SelectedChange}">
+          <ListBox.ItemContainerStyle>
+            <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+              <Setter Property="AutomationProperties.AutomationId" Value="{Binding Number, StringFormat=CompareChange_{0}}" />
+              <Setter Property="AutomationProperties.Name" Value="{Binding KindText}" />
+            </Style>
+          </ListBox.ItemContainerStyle>
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="{x:Type comparing:CompareChangeItem}">
+              <StackPanel Margin="0,4">
+                <StackPanel Orientation="Horizontal">
+                  <Ellipse Style="{StaticResource KindDot}" />
+                  <TextBlock FontWeight="SemiBold" Text="{Binding Number, StringFormat={}{0}.}" />
+                  <TextBlock
+                    Margin="6,0,0,0"
+                    FontWeight="SemiBold"
+                    Text="{Binding KindText}" />
+                  <TextBlock
+                    Margin="8,0,0,0"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding PagesText}" />
+                </StackPanel>
+                <TextBlock
+                  MaxHeight="54"
+                  Margin="18,2,0,0"
+                  Foreground="#FFC00000"
+                  Text="{Binding OldText, StringFormat='− {0}'}"
+                  TextDecorations="Strikethrough"
+                  TextTrimming="CharacterEllipsis"
+                  TextWrapping="Wrap"
+                  Visibility="{Binding HasOldText, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock
+                  MaxHeight="54"
+                  Margin="18,2,0,0"
+                  Foreground="#FF1E8C1E"
+                  Text="{Binding NewText, StringFormat='+ {0}'}"
+                  TextTrimming="CharacterEllipsis"
+                  TextWrapping="Wrap"
+                  Visibility="{Binding HasNewText, Converter={StaticResource BoolToVisibility}}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+      <Grid Grid.Column="2">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- How the pair is shown, and which pair. -->
+        <WrapPanel Margin="0,0,0,6" VerticalAlignment="Center">
+          <RadioButton
+            Margin="0,0,8,0"
+            AutomationProperties.AutomationId="CompareModeSideBySide"
+            Content="{loc:Tr Compare_Mode_SideBySide}"
+            GroupName="CompareMode"
+            IsChecked="{Binding IsSideBySide}" />
+          <RadioButton
+            Margin="0,0,8,0"
+            AutomationProperties.AutomationId="CompareModeOverlay"
+            Content="{loc:Tr Compare_Mode_Overlay}"
+            GroupName="CompareMode"
+            IsChecked="{Binding IsOverlay}" />
+          <RadioButton
+            Margin="0,0,16,0"
+            AutomationProperties.AutomationId="CompareModeSlider"
+            Content="{loc:Tr Compare_Mode_Slider}"
+            GroupName="CompareMode"
+            IsChecked="{Binding IsSlider}" />
+          <StackPanel
+            Margin="0,0,16,0"
+            Orientation="Horizontal"
+            Visibility="{Binding IsOverlay, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock
+              Margin="0,0,8,0"
+              VerticalAlignment="Center"
+              Text="{loc:Tr Compare_Opacity}" />
+            <Slider
+              Width="120"
+              VerticalAlignment="Center"
+              AutomationProperties.AutomationId="CompareOpacity"
+              AutomationProperties.Name="{loc:Tr Compare_Opacity}"
+              Maximum="1"
+              Minimum="0"
+              Value="{Binding OverlayOpacity}" />
+          </StackPanel>
+          <StackPanel
+            Margin="0,0,16,0"
+            Orientation="Horizontal"
+            Visibility="{Binding IsSlider, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock
+              Margin="0,0,8,0"
+              VerticalAlignment="Center"
+              Text="{loc:Tr Compare_SliderPosition}" />
+            <Slider
+              Width="160"
+              VerticalAlignment="Center"
+              AutomationProperties.AutomationId="CompareSliderPosition"
+              AutomationProperties.Name="{loc:Tr Compare_SliderPosition}"
+              Maximum="1"
+              Minimum="0"
+              Value="{Binding SliderPosition}" />
+          </StackPanel>
+          <CheckBox
+            Margin="0,0,16,0"
+            AutomationProperties.AutomationId="CompareSynchronized"
+            Content="{loc:Tr Compare_Sync}"
+            IsChecked="{Binding IsSynchronized}" />
+          <ui:Button
+            Margin="0,0,4,0"
+            AutomationProperties.AutomationId="ComparePreviousPair"
+            AutomationProperties.Name="{loc:Tr Compare_PreviousPair}"
+            Command="{Binding PreviousPairCommand}"
+            Icon="{ui:SymbolIcon DocumentArrowLeft24}"
+            ToolTip="{loc:Tr Compare_PreviousPair}" />
+          <TextBlock
+            MinWidth="90"
+            Margin="4,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="ComparePair"
+            Text="{Binding PairText}"
+            TextAlignment="Center"
+            ToolTip="{Binding PairPagesText}" />
+          <ui:Button
+            Margin="4,0,0,0"
+            AutomationProperties.AutomationId="CompareNextPair"
+            AutomationProperties.Name="{loc:Tr Compare_NextPair}"
+            Command="{Binding NextPairCommand}"
+            Icon="{ui:SymbolIcon DocumentArrowRight24}"
+            ToolTip="{loc:Tr Compare_NextPair}" />
+        </WrapPanel>
+
+        <!-- Side by side. -->
+        <Grid Grid.Row="1" Visibility="{Binding IsSideBySide, Converter={StaticResource BoolToVisibility}}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <DockPanel Margin="0,0,0,4">
+            <Slider
+              Width="120"
+              VerticalAlignment="Center"
+              AutomationProperties.AutomationId="CompareOldZoom"
+              AutomationProperties.Name="{loc:Tr Compare_Zoom}"
+              DockPanel.Dock="Right"
+              Maximum="4"
+              Minimum="0.25"
+              ToolTip="{loc:Tr Compare_Zoom}"
+              Value="{Binding OldZoom}" />
+            <TextBlock
+              VerticalAlignment="Center"
+              FontWeight="SemiBold"
+              Text="{Binding OldName}"
+              TextTrimming="CharacterEllipsis" />
+          </DockPanel>
+          <DockPanel Grid.Column="2" Margin="0,0,0,4">
+            <Slider
+              Width="120"
+              VerticalAlignment="Center"
+              AutomationProperties.AutomationId="CompareNewZoom"
+              AutomationProperties.Name="{loc:Tr Compare_Zoom}"
+              DockPanel.Dock="Right"
+              Maximum="4"
+              Minimum="0.25"
+              ToolTip="{loc:Tr Compare_Zoom}"
+              Value="{Binding NewZoom}" />
+            <TextBlock
+              VerticalAlignment="Center"
+              FontWeight="SemiBold"
+              Text="{Binding NewName}"
+              TextTrimming="CharacterEllipsis" />
+          </DockPanel>
+          <Border
+            Grid.Row="1"
+            Background="{DynamicResource ControlFillColorSecondaryBrush}"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1">
+            <ScrollViewer
+              x:Name="OldScroller"
+              AutomationProperties.AutomationId="CompareOldPage"
+              HorizontalScrollBarVisibility="Auto"
+              ScrollChanged="OnPageScrolled"
+              VerticalScrollBarVisibility="Auto">
+              <Grid x:Name="OldContent" Margin="12">
+                <ContentControl
+                  x:Name="OldHost"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Top"
+                  Content="{Binding OldPage}"
+                  ContentTemplate="{StaticResource PageTemplate}"
+                  Focusable="False">
+                  <ContentControl.LayoutTransform>
+                    <ScaleTransform ScaleX="{Binding OldZoom}" ScaleY="{Binding OldZoom}" />
+                  </ContentControl.LayoutTransform>
+                </ContentControl>
+              </Grid>
+            </ScrollViewer>
+          </Border>
+          <Border
+            Grid.Row="1"
+            Grid.Column="2"
+            Background="{DynamicResource ControlFillColorSecondaryBrush}"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1">
+            <ScrollViewer
+              x:Name="NewScroller"
+              AutomationProperties.AutomationId="CompareNewPage"
+              HorizontalScrollBarVisibility="Auto"
+              ScrollChanged="OnPageScrolled"
+              VerticalScrollBarVisibility="Auto">
+              <Grid x:Name="NewContent" Margin="12">
+                <ContentControl
+                  x:Name="NewHost"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Top"
+                  Content="{Binding NewPage}"
+                  ContentTemplate="{StaticResource PageTemplate}"
+                  Focusable="False">
+                  <ContentControl.LayoutTransform>
+                    <ScaleTransform ScaleX="{Binding NewZoom}" ScaleY="{Binding NewZoom}" />
+                  </ContentControl.LayoutTransform>
+                </ContentControl>
+              </Grid>
+            </ScrollViewer>
+          </Border>
+        </Grid>
+
+        <!-- One page over the other: see-through, or with a slider between them. -->
+        <Grid Grid.Row="1" Visibility="{Binding IsLayered, Converter={StaticResource BoolToVisibility}}">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <DockPanel Margin="0,0,0,4">
+            <Slider
+              Width="120"
+              VerticalAlignment="Center"
+              AutomationProperties.AutomationId="CompareLayeredZoom"
+              AutomationProperties.Name="{loc:Tr Compare_Zoom}"
+              DockPanel.Dock="Right"
+              Maximum="4"
+              Minimum="0.25"
+              ToolTip="{loc:Tr Compare_Zoom}"
+              Value="{Binding OldZoom}" />
+            <TextBlock
+              VerticalAlignment="Center"
+              Style="{StaticResource Secondary}"
+              Text="{Binding PairPagesText}" />
+          </DockPanel>
+          <Border
+            Grid.Row="1"
+            Background="{DynamicResource ControlFillColorSecondaryBrush}"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1">
+            <ScrollViewer
+              x:Name="LayeredScroller"
+              AutomationProperties.AutomationId="CompareLayeredPages"
+              HorizontalScrollBarVisibility="Auto"
+              VerticalScrollBarVisibility="Auto">
+              <Grid x:Name="LayeredContent" Margin="12">
+                <Grid
+                  x:Name="LayeredHost"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Top">
+                  <Grid.LayoutTransform>
+                    <ScaleTransform ScaleX="{Binding OldZoom}" ScaleY="{Binding OldZoom}" />
+                  </Grid.LayoutTransform>
+                  <ContentControl
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="{Binding OldPage}"
+                    ContentTemplate="{StaticResource PageTemplate}"
+                    Focusable="False" />
+                  <ContentControl
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="{Binding NewPage}"
+                    ContentTemplate="{StaticResource PageTemplate}"
+                    Focusable="False"
+                    Opacity="{Binding OverlayOpacity}"
+                    Visibility="{Binding IsOverlay, Converter={StaticResource BoolToVisibility}}" />
+                  <ContentControl
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="{Binding NewPage}"
+                    ContentTemplate="{StaticResource PageTemplate}"
+                    Focusable="False"
+                    Visibility="{Binding IsSlider, Converter={StaticResource BoolToVisibility}}">
+                    <ContentControl.Clip>
+                      <RectangleGeometry Rect="{Binding SliderClip}" />
+                    </ContentControl.Clip>
+                  </ContentControl>
+                  <Canvas
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    IsHitTestVisible="False"
+                    Visibility="{Binding IsSlider, Converter={StaticResource BoolToVisibility}}">
+                    <Rectangle
+                      Canvas.Left="{Binding SliderClip.X}"
+                      Width="2"
+                      Height="{Binding SliderClip.Height}"
+                      Fill="#FF0063B1" />
+                  </Canvas>
+                </Grid>
+              </Grid>
+            </ScrollViewer>
+          </Border>
+        </Grid>
+      </Grid>
+    </Grid>
+
+    <!-- The report, and closing. -->
+    <DockPanel Grid.Row="4" Margin="24,12,24,24">
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+        <ui:Button
+          Margin="0,0,8,0"
+          AutomationProperties.AutomationId="CompareExport"
+          Command="{Binding ExportReportCommand}"
+          Content="{loc:Tr Compare_Export}"
+          Icon="{ui:SymbolIcon ArrowExportUp24}" />
+        <ui:Button
+          Margin="0,0,8,0"
+          AutomationProperties.AutomationId="CompareOpenReport"
+          Command="{Binding OpenReportCommand}"
+          Content="{loc:Tr Compare_OpenReport}"
+          Visibility="{Binding ReportPath, Converter={StaticResource NullToCollapsed}}" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="CompareClose"
+          Command="{Binding CloseCommand}"
+          Content="{loc:Tr Common_Close}" />
+      </StackPanel>
+      <TextBlock
+        VerticalAlignment="Center"
+        AutomationProperties.AutomationId="CompareReport"
+        Text="{Binding ReportText}"
+        TextTrimming="CharacterEllipsis" />
+    </DockPanel>
+  </Grid>
+</ui:FluentWindow>

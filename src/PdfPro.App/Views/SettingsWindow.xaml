@@ -67,6 +67,245 @@
           SelectedValuePath="Value" />
       </ui:CardControl>
 
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Person24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_AnnotationAuthor}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_AnnotationAuthor_Hint}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <TextBox
+          MinWidth="200"
+          AutomationProperties.AutomationId="SettingsAnnotationAuthor"
+          AutomationProperties.Name="{loc:Tr Settings_AnnotationAuthor}"
+          MaxLength="128"
+          Text="{Binding AnnotationAuthor, UpdateSourceTrigger=LostFocus}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon FolderArrowRight24}" Visibility="{Binding HasHotFolder, Converter={StaticResource BoolToVisibility}}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_HotFolder}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_HotFolder_Hint}"
+              TextWrapping="Wrap" />
+            <TextBlock
+              Margin="0,4,0,0"
+              AutomationProperties.AutomationId="SettingsHotFolderStatus"
+              FontSize="12"
+              Text="{Binding HotFolderStatus}"
+              TextWrapping="Wrap" />
+            <Grid Margin="0,8,0,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+              <TextBlock Margin="0,0,8,6" VerticalAlignment="Center" Text="{loc:Tr Settings_HotFolder_Folder}" />
+              <ui:TextBox Grid.Column="1" Margin="0,0,0,6" AutomationProperties.AutomationId="SettingsHotFolderPath" AutomationProperties.Name="{loc:Tr Settings_HotFolder_Folder}" Text="{Binding HotFolderPath, UpdateSourceTrigger=LostFocus}" />
+              <ui:Button Grid.Column="2" Margin="8,0,0,6" Command="{Binding PickHotFolderCommand}" Content="{loc:Tr Split_Folder_Pick}" />
+              <TextBlock Grid.Row="1" Margin="0,0,8,6" VerticalAlignment="Center" Text="{loc:Tr Settings_HotFolder_Workflow}" />
+              <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" AutomationProperties.Name="{loc:Tr Settings_HotFolder_Workflow}" DisplayMemberPath="Label" ItemsSource="{Binding HotFolderWorkflows}" SelectedValue="{Binding HotFolderWorkflow}" SelectedValuePath="Value" />
+              <TextBlock Grid.Row="2" Margin="0,0,8,6" VerticalAlignment="Center" Text="{loc:Tr Settings_HotFolder_Output}" />
+              <ui:TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,6" AutomationProperties.Name="{loc:Tr Settings_HotFolder_Output}" PlaceholderText="{loc:Tr Settings_HotFolder_Output_Placeholder}" Text="{Binding HotFolderOutput, UpdateSourceTrigger=LostFocus}" />
+              <ui:Button Grid.Row="2" Grid.Column="2" Margin="8,0,0,6" Command="{Binding PickHotFolderOutputCommand}" Content="{loc:Tr Split_Folder_Pick}" />
+            </Grid>
+            <CheckBox Margin="0,4,0,0" Content="{loc:Tr Settings_HotFolder_MinimizeToTray}" IsChecked="{Binding MinimizeToTray}" />
+            <CheckBox Margin="0,4,0,0" Content="{loc:Tr Settings_HotFolder_StartWithWindows}" IsChecked="{Binding StartWithWindows}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch AutomationProperties.AutomationId="SettingsHotFolderEnabled" AutomationProperties.Name="{loc:Tr Settings_HotFolder}" IsChecked="{Binding HotFolderEnabled}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ArrowSync24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_Update}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_Update_Hint}"
+              TextWrapping="Wrap" />
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+              <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="{loc:Tr Settings_Update_Channel}" />
+              <ComboBox
+                MinWidth="200"
+                AutomationProperties.AutomationId="SettingsUpdateChannel"
+                AutomationProperties.Name="{loc:Tr Settings_Update_Channel}"
+                DisplayMemberPath="Label"
+                ItemsSource="{Binding UpdateChannelOptions}"
+                SelectedValue="{Binding UpdateChannel}"
+                SelectedValuePath="Value" />
+            </StackPanel>
+            <CheckBox
+              Margin="0,8,0,0"
+              AutomationProperties.AutomationId="SettingsExplorerMenu"
+              Content="{loc:Tr Settings_ExplorerMenu}"
+              IsChecked="{Binding ExplorerContextMenu}"
+              Visibility="{Binding HasShellIntegration, Converter={StaticResource BoolToVisibility}}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch AutomationProperties.AutomationId="SettingsCheckForUpdates" AutomationProperties.Name="{loc:Tr Settings_Update}" IsChecked="{Binding CheckForUpdates}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ShieldTask24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_Worker}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_Worker_Hint}"
+              TextWrapping="Wrap" />
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+              <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="{loc:Tr Settings_Worker_Memory}" />
+              <ui:NumberBox
+                Width="140"
+                AutomationProperties.AutomationId="SettingsWorkerMemory"
+                AutomationProperties.Name="{loc:Tr Settings_Worker_Memory}"
+                ClearButtonEnabled="False"
+                LargeChange="1024"
+                MaxDecimalPlaces="0"
+                Maximum="{Binding MaxWorkerMemory}"
+                Minimum="{Binding MinWorkerMemory}"
+                SmallChange="512"
+                SpinButtonPlacementMode="Inline"
+                Value="{Binding WorkerMemoryMegabytes, UpdateSourceTrigger=LostFocus}" />
+            </StackPanel>
+            <TextBlock
+              Margin="0,4,0,0"
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_Worker_Memory_Hint}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch AutomationProperties.AutomationId="SettingsIsolateOperations" AutomationProperties.Name="{loc:Tr Settings_Worker}" IsChecked="{Binding IsolateOperations}" />
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon DocumentPdf24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_LibreOffice}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_LibreOffice_Hint}"
+              TextWrapping="Wrap" />
+            <TextBlock
+              Margin="0,4,0,0"
+              AutomationProperties.AutomationId="SettingsLibreOfficeStatus"
+              FontSize="12"
+              Text="{Binding LibreOfficeStatus}"
+              TextWrapping="Wrap"
+              Visibility="{Binding LibreOfficeStatus, Converter={StaticResource NullToCollapsed}}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <StackPanel Orientation="Horizontal">
+          <ui:TextBox
+            Width="220"
+            AutomationProperties.AutomationId="SettingsLibreOfficePath"
+            AutomationProperties.Name="{loc:Tr Settings_LibreOffice}"
+            PlaceholderText="{loc:Tr Settings_LibreOffice_Placeholder}"
+            Text="{Binding LibreOfficePath, UpdateSourceTrigger=LostFocus}" />
+          <ui:Button
+            Margin="8,0,0,0"
+            AutomationProperties.AutomationId="SettingsLibreOfficePick"
+            Command="{Binding PickLibreOfficeCommand}"
+            Content="{loc:Tr Split_Folder_Pick}"
+            Visibility="{Binding CanPickLibreOffice, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Archive24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_VeraPdf}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_VeraPdf_Hint}"
+              TextWrapping="Wrap" />
+            <TextBlock
+              Margin="0,4,0,0"
+              AutomationProperties.AutomationId="SettingsVeraPdfStatus"
+              FontSize="12"
+              Text="{Binding VeraPdfStatus}"
+              TextWrapping="Wrap"
+              Visibility="{Binding VeraPdfStatus, Converter={StaticResource NullToCollapsed}}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <StackPanel Orientation="Horizontal">
+          <ui:TextBox
+            Width="220"
+            AutomationProperties.AutomationId="SettingsVeraPdfPath"
+            AutomationProperties.Name="{loc:Tr Settings_VeraPdf}"
+            PlaceholderText="{loc:Tr Settings_LibreOffice_Placeholder}"
+            Text="{Binding VeraPdfPath, UpdateSourceTrigger=LostFocus}" />
+          <ui:Button
+            Margin="8,0,0,0"
+            AutomationProperties.AutomationId="SettingsVeraPdfPick"
+            Command="{Binding PickVeraPdfCommand}"
+            Content="{loc:Tr Split_Folder_Pick}"
+            Visibility="{Binding CanPickLibreOffice, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+      </ui:CardControl>
+
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ScanText24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_Tesseract}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_Tesseract_Hint}"
+              TextWrapping="Wrap" />
+            <TextBlock
+              Margin="0,4,0,0"
+              AutomationProperties.AutomationId="SettingsTesseractStatus"
+              FontSize="12"
+              Text="{Binding TesseractStatus}"
+              TextWrapping="Wrap"
+              Visibility="{Binding TesseractStatus, Converter={StaticResource NullToCollapsed}}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <ui:TextBox
+              Width="220"
+              AutomationProperties.AutomationId="SettingsTesseractPath"
+              AutomationProperties.Name="{loc:Tr Settings_Tesseract}"
+              PlaceholderText="{loc:Tr Settings_LibreOffice_Placeholder}"
+              Text="{Binding TesseractPath, UpdateSourceTrigger=LostFocus}" />
+            <ui:Button
+              Margin="8,0,0,0"
+              AutomationProperties.AutomationId="SettingsTesseractPick"
+              Command="{Binding PickTesseractCommand}"
+              Content="{loc:Tr Split_Folder_Pick}"
+              Visibility="{Binding CanPickLibreOffice, Converter={StaticResource BoolToVisibility}}" />
+          </StackPanel>
+          <ComboBox
+            Margin="0,8,0,0"
+            HorizontalAlignment="Stretch"
+            AutomationProperties.AutomationId="SettingsOcrData"
+            AutomationProperties.Name="{loc:Tr Settings_OcrData}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding OcrDataOptions}"
+            SelectedValue="{Binding SelectedOcrData}"
+            SelectedValuePath="Value" />
+        </StackPanel>
+      </ui:CardControl>
+
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon Ram20}">
         <ui:CardControl.Header>
           <StackPanel>

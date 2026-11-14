@@ -3,13 +3,26 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Security;
 using PdfPro.App.Tests.TestSupport;
+using PdfPro.Core.Annotations;
+using PdfPro.Core.Forms;
+using PdfPro.Core.Geometry;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Overlay;
+using PdfPro.Core.Security;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
+using PdfPro.Operations.Annotating;
+using PdfPro.Operations.Forms;
 using PdfPro.Operations.Organizing;
+using PdfPro.Operations.Security;
+using PdfPro.Operations.Signing;
 using PdfPro.Pdfium;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.Advanced;
+using PdfSharp.Pdf.IO;
 
 namespace PdfPro.App.Tests.Documents;
 
@@ -283,6 +296,268 @@ public sealed class DocumentSaverTests : IDisposable
 
         await Should.ThrowAsync<Core.Operations.OperationValidationException>(
             () => _saver.ExportAsync(workspace, [7], Path.Combine(Path.GetDirectoryName(path)!, "x.pdf"), _progress, TestToken));
+    }
+
+    [Fact]
+    public async Task Save_OfAProtectedDocument_EncryptsItWithItsPasswords_AndChecksItWithTheOpenPassword()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        Protect(workspace, new DocumentPasswords("mở-ra", "chủ-nhân"), DocumentPermissions.Print);
+        MaterializeRequest? request = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(call => request = call.ArgAt<MaterializeRequest>(0));
+        _loader.LoadAsync(Arg.Any<string>(), "mở-ra", Arg.Any<CancellationToken>()).Returns(_ => Task.FromResult<IPdfDocument>(ProtectedFake(3)));
+
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        request.ShouldNotBeNull().Security.ShouldBe(new DocumentSecurity("mở-ra", "chủ-nhân", EncryptionAlgorithm.Aes256, DocumentPermissions.Print));
+        request.ToString().ShouldNotContain("chủ-nhân", Case.Sensitive, "a request never shows the passwords");
+        await _loader.Received(1).LoadAsync(Arg.Is<string>(p => p != path), "mở-ra", Arg.Any<CancellationToken>());
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(NewContent);
+        workspace.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Save_WhenTheWrittenFileIsNotProtected_KeepsTheOriginal()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        Protect(workspace, new DocumentPasswords(null, "chủ-nhân"), DocumentPermissions.None);
+
+        var error = await Should.ThrowAsync<DocumentSaveException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        error.Failure.ShouldBe(SaveFailure.VerificationFailed);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+        LeftoversNextTo(path).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Save_OfAProtectionWithoutItsPasswords_IsRefused_NeverWrittenUnprotected()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        var unknown = new ProtectionSetting(Guid.NewGuid(), EncryptionAlgorithm.Aes256, DocumentPermissions.All, HasOpenPassword: true);
+        workspace.Apply(TestOperations.Catalog().Get<SetProtectionOperation>(), new SetProtectionParams(unknown)).ShouldBeTrue();
+        workspace.NeedsPasswordsToSave.ShouldBeTrue("a recovered session knows the protection but not its passwords");
+
+        await Should.ThrowAsync<InvalidOperationException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(OldContent);
+    }
+
+    [Fact]
+    public async Task Extract_OfAProtectedDocument_KeepsItsProtection_CheckedWithTheOpenPassword()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        Protect(workspace, new DocumentPasswords("mở-ra", "chủ-nhân"), DocumentPermissions.Print);
+        var target = Path.Combine(Path.GetDirectoryName(path)!, "a (trang 1).pdf");
+        MaterializeRequest? request = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(call => request = call.ArgAt<MaterializeRequest>(0));
+        _loader.LoadAsync(Arg.Any<string>(), "mở-ra", Arg.Any<CancellationToken>()).Returns(_ => Task.FromResult<IPdfDocument>(ProtectedFake(1)));
+
+        await _saver.ExtractAsync(workspace, [0], target, _progress, TestToken);
+
+        request.ShouldNotBeNull().Security.ShouldBe(new DocumentSecurity("mở-ra", "chủ-nhân", EncryptionAlgorithm.Aes256, DocumentPermissions.Print), "the pages keep the document's protection");
+        await _loader.Received(1).LoadAsync(Arg.Any<string>(), "mở-ra", Arg.Any<CancellationToken>());
+        (await File.ReadAllBytesAsync(target, TestToken)).ShouldBe(NewContent);
+        workspace.IsDirty.ShouldBeTrue("extracting pages does not save the document");
+    }
+
+    [Fact]
+    public async Task Extract_OfAProtectionWithoutItsPasswords_IsRefused_NeverWrittenUnprotected()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        var unknown = new ProtectionSetting(Guid.NewGuid(), EncryptionAlgorithm.Aes256, DocumentPermissions.All, HasOpenPassword: true);
+        workspace.Apply(TestOperations.Catalog().Get<SetProtectionOperation>(), new SetProtectionParams(unknown)).ShouldBeTrue();
+        var target = Path.Combine(Path.GetDirectoryName(path)!, "x.pdf");
+
+        await Should.ThrowAsync<InvalidOperationException>(() => _saver.ExtractAsync(workspace, [0], target, _progress, TestToken));
+
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        File.Exists(target).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Export_ForTheAppsOwnWork_IsNeverEncrypted()
+    {
+        var path = _fixture.CreateFile("a.pdf", OldContent);
+        var workspace = await DirtyWorkspaceAsync(path);
+        Protect(workspace, new DocumentPasswords("mở-ra", "chủ-nhân"), DocumentPermissions.Print);
+        MaterializeRequest? request = null;
+        _materializer.When(m => m.MaterializeAsync(Arg.Any<MaterializeRequest>(), Arg.Any<Stream>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>()))
+            .Do(call => request = call.ArgAt<MaterializeRequest>(0));
+        _reopenedPages = 1;
+
+        await _saver.ExportAsync(workspace, [0], Path.Combine(Path.GetDirectoryName(path)!, "xem trước.pdf"), _progress, TestToken);
+
+        request.ShouldNotBeNull().Security.ShouldBeNull("a stamp preview or a merge input is read back by the app without a password");
+    }
+
+    private static void Protect(DocumentWorkspace workspace, DocumentPasswords passwords, DocumentPermissions permissions)
+    {
+        var setting = new ProtectionSetting(workspace.Passwords.Add(passwords), EncryptionAlgorithm.Aes256, permissions, passwords.Open is not null);
+        workspace.Apply(TestOperations.Catalog().Get<SetProtectionOperation>(), new SetProtectionParams(setting)).ShouldBeTrue();
+        workspace.NeedsPasswordsToSave.ShouldBeFalse();
+    }
+
+    private static FakePdfDocument ProtectedFake(int pages)
+    {
+        var document = FakePdfDocument.WithPages(pages);
+        document.Features = new PdfDocumentFeatures("2.0", 6, 0xFFFFF0C4, 0, PdfFormType.None, false, 0xFFFFF0C4);
+        return document;
+    }
+
+    [Fact]
+    public async Task Save_CommentsOnASignedFile_AreAppended_SoItsSignatureStays()
+    {
+        var (workspace, path, signed) = await SignedWorkspaceAsync();
+        workspace.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeTrue();
+
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        var saved = await File.ReadAllBytesAsync(path, TestToken);
+        saved.Length.ShouldBeGreaterThan(signed.Length);
+        saved.AsSpan(0, signed.Length).SequenceEqual(signed).ShouldBeTrue("the signed file is untouched before the update");
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        using var read = PdfReader.Open(new MemoryStream(saved), PdfDocumentOpenMode.Import);
+        FormReader.Read(read).ShouldHaveSingleItem().IsSigned.ShouldBeTrue();
+        read.Pages[0].Elements.GetArray("/Annots").ShouldNotBeNull().Elements.OfType<PdfReference>()
+            .Select(r => ((PdfDictionary)r.Value).Elements.GetName("/Subtype")).ShouldContain("/Text");
+        workspace.IsDirty.ShouldBeFalse();
+        LeftoversNextTo(path).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task KeepsSignatures_OnlyWhenCommentsAreTheOnlyChange_OfASignedFile()
+    {
+        var (workspace, _, _) = await SignedWorkspaceAsync();
+        _saver.KeepsSignatures(workspace).ShouldBeFalse("nothing changed");
+
+        workspace.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeTrue();
+
+        workspace.Apply(TestOperations.Catalog().Get<RotatePagesOperation>(), new RotatePagesParams("2", 90)).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeFalse("a turned page is written anew");
+
+        var unsigned = await _fixture.CreateAsync(FakePdfDocument.WithPages(6), _fixture.CreateFile("b.pdf"));
+        unsigned.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+        _saver.KeepsSignatures(unsigned).ShouldBeFalse("only signed files are updated this way");
+    }
+
+    [Theory]
+    [InlineData(1, false)]
+    [InlineData(2, false)]
+    [InlineData(3, true)]
+    public async Task KeepsSignatures_OfACertifiedFile_OnlyWhenItsCertificationAllowsComments(int permission, bool keeps)
+    {
+        var (workspace, _, _) = await SignedWorkspaceAsync(permission);
+        workspace.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+
+        _saver.KeepsSignatures(workspace).ShouldBe(keeps, "a comment breaks a certification that does not allow comments: saving warns instead");
+    }
+
+    [Fact]
+    public async Task Save_AFormFilledInAfterSigning_IsAppended_SoItsSignatureStays()
+    {
+        var (workspace, path, signed) = await SignedFormWorkspaceAsync();
+        workspace.Apply(TestOperations.Catalog().Get<FillFormOperation>(), new FillFormParams([new FormValue("ho_ten", "Nguyễn Văn An"), new FormValue("dong_y", "Yes")])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeTrue();
+
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        var saved = await File.ReadAllBytesAsync(path, TestToken);
+        saved.AsSpan(0, signed.Length).SequenceEqual(signed).ShouldBeTrue("the signed file is untouched before the update");
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        using var read = PdfReader.Open(new MemoryStream(saved), PdfDocumentOpenMode.Import);
+        var fields = FormReader.Read(read).ToDictionary(f => f.Name);
+        fields["ho_ten"].Value.ShouldBe("Nguyễn Văn An");
+        fields["dong_y"].Value.ShouldBe("Yes");
+        fields["ChuKy1"].IsSigned.ShouldBeTrue();
+        workspace.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Save_OfASignedFileThatCannotBeUpdated_WritesNothing_UntilTheUserAcceptsBreakingItsSignatures()
+    {
+        var (workspace, path, signed) = await SignedFormWorkspaceAsync();
+        workspace.Apply(TestOperations.Catalog().Get<FillFormOperation>(), new FillFormParams([new FormValue("khong_co", "A")])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBeTrue("the plan only fills in a form");
+
+        var error = await Should.ThrowAsync<DocumentSaveException>(() => _saver.SaveAsync(workspace, path, _progress, TestToken));
+
+        error.Failure.ShouldBe(SaveFailure.SignaturesWouldBreak, "the file has no such field: it cannot be updated in place");
+        (await File.ReadAllBytesAsync(path, TestToken)).ShouldBe(signed, "never written anew without the user knowing");
+        await _materializer.DidNotReceiveWithAnyArgs().MaterializeAsync(default!, default!, default!, TestToken);
+        workspace.IsDirty.ShouldBeTrue();
+        workspace.IsBusy.ShouldBeFalse();
+
+        workspace.SignaturesMayBreak = true;
+        _saver.KeepsSignatures(workspace).ShouldBeFalse();
+        await _saver.SaveAsync(workspace, path, _progress, TestToken);
+
+        await _materializer.ReceivedWithAnyArgs(1).MaterializeAsync(default!, default!, default!, TestToken);
+        workspace.IsDirty.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(1, false, false)]
+    [InlineData(2, true, false)]
+    [InlineData(3, true, true)]
+    public async Task KeepsSignatures_OfACertifiedForm_AsItsCertificationAllows(int permission, bool keepsFilling, bool keepsFillingAndComments)
+    {
+        var (workspace, _, _) = await SignedFormWorkspaceAsync(permission);
+        workspace.Apply(TestOperations.Catalog().Get<FillFormOperation>(), new FillFormParams([new FormValue("ho_ten", "An")])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBe(keepsFilling, "a certification allowing forms (2, 3) keeps them");
+
+        workspace.Apply(TestOperations.Catalog().Get<AddAnnotationsOperation>(), AddAnnotationsParams.On(1, [Note()])).ShouldBeTrue();
+        _saver.KeepsSignatures(workspace).ShouldBe(keepsFillingAndComments, "comments also need a certification allowing them (3)");
+    }
+
+    /// <summary>An open one-page form (a name and a check box) whose file is signed, the session holding the same bytes.</summary>
+    private async Task<(DocumentWorkspace Workspace, string Path, byte[] Signed)> SignedFormWorkspaceAsync(int certification = 0)
+    {
+        byte[] form;
+        using (var document = new PdfDocument())
+        {
+            document.AddPage();
+            FormWriter.AddFields(document,
+            [
+                new FormFieldSpec("ho_ten", FormFieldKind.Text, 0, new PdfRect(100, 700, 400, 720)),
+                new FormFieldSpec("dong_y", FormFieldKind.CheckBox, 0, new PdfRect(100, 660, 116, 676)),
+            ]);
+            using var stream = new MemoryStream();
+            document.Save(stream, closeStream: false);
+            form = stream.ToArray();
+        }
+
+        using var certificate = SigningCertificates.Signer();
+        var signed = await PdfSigner.SignAsync(form, new SignRequest("ChuKy1"), certificate, null, DateTimeOffset.Now, TestToken);
+        var path = _fixture.CreateFile("biểu mẫu đã ký.pdf", signed);
+        var opened = FakePdfDocument.WithPages(1);
+        opened.Features = FakePdfDocument.PlainFeatures with { SignatureCount = 1, CertificationPermission = certification };
+        _reopenedPages = 1;
+        return (await _fixture.CreateAsync(opened, path, signed), path, signed);
+    }
+
+    private static NoteAnnotation Note()
+        => new("n1", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.Now, DateTimeOffset.Now, "Đã xem", new PdfPoint(100, 700));
+
+    /// <summary>An open document whose file is a real signed PDF (six pages), the session holding the same bytes.</summary>
+    private async Task<(DocumentWorkspace Workspace, string Path, byte[] Signed)> SignedWorkspaceAsync(int certification = 0)
+    {
+        using var certificate = SigningCertificates.Signer();
+        var signed = await PdfSigner.SignAsync(await File.ReadAllBytesAsync(Samples.Basic, TestToken), new SignRequest("ChuKy1"), certificate, null, DateTimeOffset.Now, TestToken);
+        var path = _fixture.CreateFile("đã ký.pdf", signed);
+        var document = FakePdfDocument.WithPages(6);
+        document.Features = FakePdfDocument.PlainFeatures with { SignatureCount = 1, CertificationPermission = certification };
+        _reopenedPages = 6;
+        return (await _fixture.CreateAsync(document, path, signed), path, signed);
     }
 
     private async Task<DocumentWorkspace> DirtyWorkspaceAsync(string path)

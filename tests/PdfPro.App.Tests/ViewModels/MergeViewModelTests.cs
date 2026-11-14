@@ -167,6 +167,10 @@ public sealed class MergeViewModelTests : IDisposable
         source.ShouldNotBeNull().IsEncrypted.ShouldBeTrue();
         source.ToString().ShouldNotContain("đúng");
         _passwords.Received(1).RequestPassword("secret-2.pdf", true);
+        var dialog = new MergeViewModel(_service, _fileDialogs, [new MergeItemViewModel(source, "secret-2.pdf")], null);
+        dialog.HasProtectedFiles.ShouldBeTrue("the merged file will have no password: the dialog says so");
+        dialog.Items.Clear();
+        dialog.HasProtectedFiles.ShouldBeFalse();
     }
 
     [Fact]

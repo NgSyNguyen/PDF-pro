@@ -1,0 +1,200 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.DocumentDescriptionWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:structure="clr-namespace:PdfPro.App.ViewModels.Structure"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=structure:DocumentDescriptionViewModel}"
+  Title="{loc:Tr DocInfo_Title}"
+  Width="600"
+  MinHeight="0"
+  AutomationProperties.AutomationId="DocumentDescriptionWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,0,12,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr DocInfo_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock
+        FontWeight="SemiBold"
+        Text="{Binding FileName}"
+        TextTrimming="CharacterEllipsis" />
+      <Grid Margin="0,12,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="6" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="6" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="6" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="6" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="6" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr DocInfo_DocumentTitle}" />
+        <TextBox
+          Grid.Column="1"
+          AutomationProperties.AutomationId="DocInfoTitle"
+          AutomationProperties.Name="{loc:Tr DocInfo_DocumentTitle}"
+          Text="{Binding DocumentTitle, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+          Grid.Row="2"
+          Style="{StaticResource FieldLabel}"
+          Text="{loc:Tr DocInfo_Author}" />
+        <TextBox
+          Grid.Row="2"
+          Grid.Column="1"
+          AutomationProperties.AutomationId="DocInfoAuthor"
+          AutomationProperties.Name="{loc:Tr DocInfo_Author}"
+          Text="{Binding Author, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+          Grid.Row="4"
+          Style="{StaticResource FieldLabel}"
+          Text="{loc:Tr DocInfo_Subject}" />
+        <TextBox
+          Grid.Row="4"
+          Grid.Column="1"
+          AutomationProperties.AutomationId="DocInfoSubject"
+          AutomationProperties.Name="{loc:Tr DocInfo_Subject}"
+          Text="{Binding Subject, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+          Grid.Row="6"
+          Style="{StaticResource FieldLabel}"
+          Text="{loc:Tr DocInfo_Keywords}" />
+        <TextBox
+          Grid.Row="6"
+          Grid.Column="1"
+          AutomationProperties.AutomationId="DocInfoKeywords"
+          AutomationProperties.Name="{loc:Tr DocInfo_Keywords}"
+          Text="{Binding Keywords, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+          Grid.Row="8"
+          Style="{StaticResource FieldLabel}"
+          Text="{loc:Tr DocInfo_Creator}" />
+        <TextBox
+          Grid.Row="8"
+          Grid.Column="1"
+          AutomationProperties.AutomationId="DocInfoCreator"
+          AutomationProperties.Name="{loc:Tr DocInfo_Creator}"
+          Text="{Binding Creator, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+          Grid.Row="10"
+          Style="{StaticResource FieldLabel}"
+          Text="{loc:Tr DocInfo_Producer}" />
+        <TextBlock
+          Grid.Row="10"
+          Grid.Column="1"
+          VerticalAlignment="Center"
+          Text="{Binding Producer}"
+          TextTrimming="CharacterEllipsis" />
+      </Grid>
+      <TextBlock Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+        <Run Text="{loc:Tr DocInfo_Created}" />
+        <Run Text="{Binding Created, Mode=OneWay}" />
+        <Run Text=" · " />
+        <Run Text="{loc:Tr DocInfo_Modified}" />
+        <Run Text="{Binding Modified, Mode=OneWay}" />
+      </TextBlock>
+
+      <TextBlock
+        Margin="0,18,0,8"
+        FontWeight="SemiBold"
+        Text="{loc:Tr DocInfo_OpenTitle}" />
+      <WrapPanel>
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr DocInfo_OpenPage}" />
+        <TextBox
+          Width="64"
+          Margin="0,0,16,0"
+          AutomationProperties.AutomationId="DocInfoOpenPage"
+          AutomationProperties.Name="{loc:Tr DocInfo_OpenPage}"
+          Text="{Binding OpenPageText, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr DocInfo_Zoom}" />
+        <ComboBox
+          MinWidth="150"
+          Margin="0,0,8,0"
+          AutomationProperties.AutomationId="DocInfoZoom"
+          AutomationProperties.Name="{loc:Tr DocInfo_Zoom}"
+          DisplayMemberPath="Label"
+          ItemsSource="{Binding Zooms}"
+          SelectedValue="{Binding Zoom}"
+          SelectedValuePath="Value" />
+        <TextBox
+          Width="64"
+          AutomationProperties.AutomationId="DocInfoPercent"
+          AutomationProperties.Name="{loc:Tr DocInfo_Zoom_Percent}"
+          Text="{Binding PercentText, UpdateSourceTrigger=PropertyChanged}"
+          Visibility="{Binding IsPercent, Converter={StaticResource BoolToVisibility}}" />
+      </WrapPanel>
+      <WrapPanel Margin="0,8,0,0">
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr DocInfo_Panel}" />
+        <ComboBox
+          MinWidth="180"
+          AutomationProperties.AutomationId="DocInfoPanel"
+          AutomationProperties.Name="{loc:Tr DocInfo_Panel}"
+          DisplayMemberPath="Label"
+          ItemsSource="{Binding Panels}"
+          SelectedValue="{Binding Panel}"
+          SelectedValuePath="Value" />
+      </WrapPanel>
+      <CheckBox
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="DocInfoShowTitle"
+        Content="{loc:Tr DocInfo_ShowTitle}"
+        IsChecked="{Binding ShowTitle}" />
+
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="DocInfoError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="DocInfoApply"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr Bookmarks_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="DocInfoCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

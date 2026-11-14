@@ -55,6 +55,15 @@ public sealed class TrueTypeFont : IFontMetrics
 
     public int LineGap { get; private init; }
 
+    /// <summary>The glyphs in the font (maxp numGlyphs).</summary>
+    public int GlyphCount { get; private init; }
+
+    /// <summary>The box every glyph fits in, in font units (head xMin, yMin, xMax, yMax).</summary>
+    public (int XMin, int YMin, int XMax, int YMax) BoundingBox { get; private init; }
+
+    /// <summary>The height of capital letters in font units (OS/2 sCapHeight), or 70 % of the ascender when the font does not say.</summary>
+    public int CapHeight { get; private init; }
+
     /// <summary>Reads a single-font file (.ttf, .otf). Collections (.ttc) are refused: PDFsharp 6.2 cannot embed them.</summary>
     /// <exception cref="InvalidDataException">Not a font file this reader understands.</exception>
     public static TrueTypeFont Load(Stream stream)
@@ -126,6 +135,12 @@ public sealed class TrueTypeFont : IFontMetrics
             bold = (selection & 0x20) != 0;
         }
 
+        var capHeight = 0;
+        if (tables.ContainsKey("OS/2") && Table("OS/2") is { Length: >= 90 } os2Table && U16(os2Table, 0) >= 2)
+        {
+            capHeight = I16(os2Table, 88);
+        }
+
         var names = tables.ContainsKey("name") ? ReadNames(Table("name")) : [];
         return new TrueTypeFont(ReadCharacterMap(Table("cmap")), advances)
         {
@@ -139,6 +154,9 @@ public sealed class TrueTypeFont : IFontMetrics
             Ascender = I16(hhea, 4),
             Descender = I16(hhea, 6),
             LineGap = I16(hhea, 8),
+            GlyphCount = glyphCount,
+            BoundingBox = (I16(head, 36), I16(head, 38), I16(head, 40), I16(head, 42)),
+            CapHeight = capHeight > 0 ? capHeight : I16(hhea, 4) * 7 / 10,
         };
     }
 
@@ -165,6 +183,9 @@ public sealed class TrueTypeFont : IFontMetrics
 
         return true;
     }
+
+    /// <summary>The advance width, in font units, of glyph <paramref name="glyph"/> (fonts give the last width to the glyphs after their metrics).</summary>
+    public int AdvanceOfGlyph(int glyph) => _advances[Math.Clamp(glyph, 0, _advances.Length - 1)];
 
     public int Advance(int codePoint)
     {

@@ -1,6 +1,8 @@
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Overlay;
 using PdfPro.Operations.Materializing;
 using PdfPro.Operations.Tests.TestSupport;
 using PdfPro.Pdfium;
@@ -43,6 +45,17 @@ public sealed class MaterializerTests : IDisposable
         PdfInspector.Catalog(output, c => c.Elements.ContainsKey("/PageLabels")).ShouldBeTrue();
         PdfInspector.Catalog(output, c => c.Elements.ContainsKey("/OpenAction")).ShouldBeTrue();
         _repairer.Calls.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task RotatedAndAnnotatedPages_KeepThePageLabels_SinceTheirOrderIsTheSame()
+    {
+        var note = new NoteAnnotation("n", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, "", new PdfPoint(40, 40));
+        var output = await WriteAsync(Identity(6).Rotate([1], 90).WithAnnotations(2, [note]), Samples.LinksAnnots);
+
+        PdfInspector.Catalog(output, c => c.Elements.ContainsKey("/PageLabels")).ShouldBeTrue("filling, rotating or annotating pages keeps their sequence");
+        Operations.Structure.DocumentStructureReader.ReadLabels(output)
+            .ShouldBe(Operations.Structure.DocumentStructureReader.ReadLabels(Samples.LinksAnnots));
     }
 
     [Fact]

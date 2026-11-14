@@ -53,6 +53,9 @@ public interface IExitGuard
 public interface IShellLauncher
 {
     void OpenFolder(string path);
+
+    /// <summary>Opens a file the app wrote (a Word document) in the program Windows opens it with.</summary>
+    void OpenFile(string path);
 }
 
 /// <summary>Opens PDF files for the UI: asks for passwords and explains failures to the user.</summary>
@@ -64,8 +67,15 @@ public interface IDocumentOpener
     /// </summary>
     /// <param name="path">The file to open (a copy in a session folder).</param>
     /// <param name="displayName">The name shown in prompts and messages (the original file name).</param>
+    /// <param name="password">A password to try first (asked for when it is wrong); null to try without one.</param>
     /// <param name="cancellationToken">Cancels the open.</param>
-    Task<Pdfium.IPdfDocument?> OpenAsync(string path, string displayName, CancellationToken cancellationToken = default);
+    Task<OpenedDocument?> OpenAsync(string path, string displayName, string? password = null, CancellationToken cancellationToken = default);
+}
+
+/// <summary>An opened document and the password it took (null when it opened without one); never shows the password.</summary>
+public sealed record OpenedDocument(Pdfium.IPdfDocument Document, string? Password)
+{
+    public override string ToString() => $"OpenedDocument {{ {Document.PageCount} pages, password: {(Password is null ? "no" : "yes")} }}";
 }
 
 /// <summary>Asks the user for a document password. Never stores it.</summary>
@@ -123,6 +133,75 @@ public interface IFileDialogService
     /// <returns>The chosen file, or null when cancelled.</returns>
     string? PickImageFile(string title);
 
+    /// <summary>Asks for pictures (JPEG, PNG, BMP, GIF, TIFF, WebP) to make a PDF of.</summary>
+    /// <param name="title">The dialog title.</param>
+    /// <returns>The chosen files, empty when cancelled.</returns>
+    IReadOnlyList<string> PickImageFiles(string title);
+
+    /// <summary>Word, Excel, PowerPoint, OpenDocument and RTF documents to convert (several at once); empty when cancelled.</summary>
+    IReadOnlyList<string> PickOfficeFiles(string title);
+
+    /// <summary>Asks where to write the comments list: Markdown (.md) or CSV (.csv); overwriting asks for confirmation.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickCommentExportPath(string suggestedFileName);
+
+    /// <summary>Where to save a report as text (.txt); null when cancelled.</summary>
+    string? PickReportSavePath(string suggestedFileName);
+
+    /// <summary>Where to save what OCR recognised: text (.txt) or hOCR (.hocr); overwriting asks for confirmation; null when cancelled.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <param name="hocr">hOCR rather than text.</param>
+    string? PickOcrExportPath(string suggestedFileName, bool hocr);
+
+    /// <summary>Asks where to save an image taken out of a page (overwriting asks for confirmation).</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog, with its extension.</param>
+    /// <param name="extension">".jpg", ".jp2" or ".png": the only type offered.</param>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickImageSavePath(string suggestedFileName, string extension);
+
+    /// <summary>Asks where to write the form's data: JSON (.json) or XFDF (.xfdf); overwriting asks for confirmation.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickFormDataSavePath(string suggestedFileName);
+
+    /// <summary>Where to write extracted tables: an Excel workbook (.xlsx) or CSV (.csv); overwriting asks for confirmation; null when cancelled.</summary>
+    /// <param name="suggestedFileName">File name proposed in the dialog (without extension).</param>
+    /// <param name="initialDirectory">Folder shown first, or null.</param>
+    /// <param name="csv">CSV rather than Excel.</param>
+    string? PickTableSavePath(string suggestedFileName, string? initialDirectory, bool csv);
+
+    /// <summary>Where to save a Word document ("PDF sang Word"); null when cancelled.</summary>
+    /// <param name="suggestedFileName">The name proposed ("hợp đồng.docx").</param>
+    /// <param name="initialDirectory">Folder shown first, or null.</param>
+    string? PickWordSavePath(string suggestedFileName, string? initialDirectory);
+
+    /// <summary>Files of any kind to attach to a document; empty when cancelled.</summary>
+    IReadOnlyList<string> PickAttachmentFiles(string title);
+
+    /// <summary>Where to save an attachment (its own name and type proposed); overwriting asks for confirmation; null when cancelled.</summary>
+    string? PickAttachmentSavePath(string fileName);
+
+    /// <summary>Asks for a form data file to fill the form with (JSON, XFDF).</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickFormDataFile();
+
+    /// <summary>Asks for a shared workflow (.pdfflow) to import.</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickWorkflowFile();
+
+    /// <summary>Asks where to export a workflow (.pdfflow); overwriting asks for confirmation.</summary>
+    /// <returns>The chosen path, or null when cancelled.</returns>
+    string? PickWorkflowSavePath(string suggestedFileName);
+
+    /// <summary>Asks for a table to merge into the form (CSV, Excel workbook).</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickTableFile();
+
+    /// <summary>Asks for a certificate file with its private key (.pfx, .p12) to sign with.</summary>
+    /// <returns>The chosen file, or null when cancelled.</returns>
+    string? PickCertificateFile();
+
     /// <summary>Asks for a folder (where split files go).</summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="initialDirectory">Folder shown first (or its nearest existing parent), or null.</param>
@@ -150,4 +229,101 @@ public interface IPageDialogService
     bool ShowSheetLayout(ViewModels.Organizer.SheetLayoutViewModel viewModel);
 
     bool ShowSignature(ViewModels.Editing.SignatureViewModel viewModel);
+
+    /// <summary>A stamp dialog (watermark, background, header and footer, page numbers, removing stamps).</summary>
+    bool ShowStamp(ViewModels.Editing.StampDialogViewModel viewModel);
+
+    /// <summary>"Số Bates": numbering the pages of several files.</summary>
+    bool ShowBates(ViewModels.Editing.BatesViewModel viewModel);
+
+    /// <summary>"Làm phẳng chú thích": which comments, on which pages.</summary>
+    bool ShowFlatten(ViewModels.Annotating.FlattenViewModel viewModel);
+
+    /// <summary>"Trộn dữ liệu": the table, the file names and the output folder of a form merge.</summary>
+    bool ShowFormMerge(ViewModels.Forms.FormMergeViewModel viewModel);
+
+    /// <summary>"Mật khẩu &amp; quyền"; true when the user confirmed (or unlocked the document).</summary>
+    bool ShowSecurity(ViewModels.Security.SecurityViewModel viewModel);
+
+    /// <summary>"Tìm &amp; đánh dấu" (redaction by pattern); true when the user marked matches.</summary>
+    bool ShowRedactionSearch(ViewModels.Security.RedactionSearchViewModel viewModel);
+
+    /// <summary>"Áp dụng xóa vĩnh viễn"; true when the user confirmed.</summary>
+    bool ShowRedactionApply(ViewModels.Security.RedactionApplyViewModel viewModel);
+
+    /// <summary>"Làm sạch tài liệu"; true when the user confirmed.</summary>
+    bool ShowSanitize(ViewModels.Security.SanitizeViewModel viewModel);
+
+    /// <summary>"Ký số": the certificate and how the signature shows; true when the user confirmed.</summary>
+    bool ShowSign(ViewModels.Security.SignDialogViewModel viewModel);
+
+    /// <summary>"Nén": preset, sizes and a preview of one page before and after.</summary>
+    bool ShowCompress(ViewModels.Optimizing.CompressViewModel viewModel);
+
+    /// <summary>"Thang xám": converting colours or making the pages pictures.</summary>
+    bool ShowGrayscale(ViewModels.Optimizing.GrayscaleViewModel viewModel);
+
+    /// <summary>"PDF sang ảnh": format, resolution, pages and folder.</summary>
+    bool ShowToImages(ViewModels.Converting.ToImagesViewModel viewModel);
+
+    /// <summary>"Ảnh sang PDF": the pictures, the page size and the PDF to write.</summary>
+    bool ShowFromImages(ViewModels.Converting.FromImagesViewModel viewModel);
+
+    /// <summary>"PDF sang văn bản": format, page split, pages and folder.</summary>
+    bool ShowToText(ViewModels.Converting.ToTextViewModel viewModel);
+
+    /// <summary>"PDF sang Word": pages, tables, pictures.</summary>
+    bool ShowToWord(ViewModels.Converting.ToWordViewModel viewModel);
+
+    /// <summary>"Trình chiếu": the pages on the whole screen until it ends.</summary>
+    void ShowPresentation(ViewModels.Viewer.PresentationViewModel viewModel);
+
+    /// <summary>"Nhận dạng chữ (OCR)"; true when confirmed.</summary>
+    bool ShowOcr(ViewModels.Ocr.OcrViewModel viewModel);
+
+    bool ShowOfficeToPdf(ViewModels.Converting.OfficeToPdfViewModel viewModel);
+
+    bool ShowPdfA(ViewModels.Converting.PdfAViewModel viewModel);
+
+    /// <summary>"Trích ảnh": pages, smallest size, repeats and folder; true when confirmed.</summary>
+    bool ShowExtractImages(ViewModels.Extracting.ExtractImagesViewModel viewModel);
+
+    /// <summary>"Tệp đính kèm": listed, saved, opened, added and removed; true when changes were confirmed.</summary>
+    bool ShowAttachments(ViewModels.Extracting.AttachmentsViewModel viewModel);
+
+    /// <summary>"Phông chữ": the fonts of the document and whether they are embedded.</summary>
+    bool ShowFonts(ViewModels.Extracting.FontsViewModel viewModel);
+
+    /// <summary>"Tìm lệnh" (Ctrl+K): true when a command was chosen (<see cref="ViewModels.CommandPaletteViewModel.Chosen"/>).</summary>
+    bool ShowCommandPalette(ViewModels.CommandPaletteViewModel viewModel);
+
+    /// <summary>"Workflow": the library and the designer; true when a workflow was chosen to run.</summary>
+    bool ShowWorkflows(ViewModels.Automation.WorkflowsViewModel viewModel);
+
+    /// <summary>"Chạy lô": files run through a workflow, a table of how each went.</summary>
+    void ShowBatch(ViewModels.Automation.BatchViewModel viewModel);
+
+    /// <summary>"Phím tắt" (F1).</summary>
+    void ShowShortcuts(ViewModels.ShortcutsViewModel viewModel);
+
+    /// <summary>"Giới thiệu": version, details, licenses.</summary>
+    void ShowAbout(ViewModels.AboutViewModel viewModel);
+
+    /// <summary>"Bookmark": the bookmark tree edited or made from headings; true when applied.</summary>
+    bool ShowBookmarks(ViewModels.Structure.BookmarksEditorViewModel viewModel);
+
+    /// <summary>"Thuộc tính tài liệu": description and how the document opens; true when something changed.</summary>
+    bool ShowDocumentDescription(ViewModels.Structure.DocumentDescriptionViewModel viewModel);
+
+    /// <summary>"Nhãn trang": label ranges; true when applied.</summary>
+    bool ShowPageLabels(ViewModels.Structure.PageLabelsViewModel viewModel);
+
+    /// <summary>"Liên kết": links listed, removed, found in the text; true when applied.</summary>
+    bool ShowLinks(ViewModels.Structure.LinksViewModel viewModel);
+
+    /// <summary>"Trích bảng": the tables found, checked and written; true when something was written.</summary>
+    bool ShowTables(ViewModels.Extracting.TablesViewModel viewModel);
+
+    /// <summary>"So sánh tài liệu": two documents compared and shown side by side; true when it closed to open its report.</summary>
+    bool ShowCompare(ViewModels.Comparing.CompareViewModel viewModel);
 }

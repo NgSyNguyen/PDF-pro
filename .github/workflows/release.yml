@@ -1,0 +1,126 @@
+name: release
+
+# A release (SPEC Phase 13, docs/RELEASE.md): pushing a tag v1.2.3 (or v1.2.3-beta.1 for the beta channel) builds and
+# tests everything, publishes PDF_Pro self-contained for win-x64 and win-arm64 (ReadyToRun, with qpdf and Tesseract
+# next to it), packs it with Velopack (Setup.exe, a portable zip, full and delta update packages) and publishes the
+# GitHub release the installed copies update from. Code signing happens when the repository has the signing secrets.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version (1.2.3, or 1.2.3-beta.1 for the beta channel)
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      VPK_VERSION: 1.2.161
+      SIGNING_PFX: ${{ secrets.SIGNING_CERTIFICATE_PFX }}
+      SIGNING_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Version and channel
+        id: version
+        shell: pwsh
+        run: |
+          $version = if ('${{ github.event_name }}' -eq 'push') { '${{ github.ref_name }}'.Substring(1) } else { '${{ github.event.inputs.version }}' }
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') { throw "'$version' is not a version (1.2.3 or 1.2.3-beta.1)." }
+          $beta = $version.Contains('-')
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "channel=$(if ($beta) { 'beta' } else { 'win' })" >> $env:GITHUB_OUTPUT
+          "prerelease=$(if ($beta) { 'true' } else { 'false' })" >> $env:GITHUB_OUTPUT
+
+      - name: Fetch qpdf and Tesseract
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File tools/fetch-tools.ps1
+
+      - name: Build (Release, warnings are errors)
+        run: dotnet build PdfPro.slnx --configuration Release -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Test
+        run: dotnet test --solution PdfPro.slnx --configuration Release --no-build
+
+      - name: Publish win-x64 and win-arm64
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          foreach ($rid in 'win-x64', 'win-arm64') {
+            dotnet publish src/PdfPro.App -c Release -r $rid --self-contained -p:PublishReadyToRun=true -p:Version=$version -o "publish/$rid"
+            if ($LASTEXITCODE -ne 0) { throw "Publishing the app for $rid failed." }
+            # pdfpro.exe and PdfPro.exe are one name on Windows: the command line ships as a zip of its own.
+            dotnet publish src/PdfPro.Cli -c Release -r $rid --self-contained -p:PublishReadyToRun=true -p:Version=$version -o "cli/$rid"
+            if ($LASTEXITCODE -ne 0) { throw "Publishing pdfpro for $rid failed." }
+            Compress-Archive -Path "cli/$rid/*" -DestinationPath "cli/pdfpro-$version-$rid.zip"
+          }
+
+      - name: Signing certificate
+        if: env.SIGNING_PFX != ''
+        shell: pwsh
+        run: '[IO.File]::WriteAllBytes("$env:RUNNER_TEMP\signing.pfx", [Convert]::FromBase64String($env:SIGNING_PFX))'
+
+      - name: Pack and publish with Velopack
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Each tool's output is kept; when one fails, its last lines become an annotation of the run (readable without
+          # signing in, unlike the log), and the step stops.
+          function Invoke-Tool([string] $What, [string] $Exe, [string[]] $Arguments) {
+            $output = @(& $Exe @Arguments 2>&1 | ForEach-Object { "$_" })
+            $code = $LASTEXITCODE
+            $output | ForEach-Object { Write-Host $_ }
+            if ($code -ne 0) {
+              $tail = (($output | Select-Object -Last 20) -join "`n").Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+              Write-Host "::error title=$What failed (exit $code)::$tail"
+              throw "$What failed (exit $code)."
+            }
+          }
+
+          Invoke-Tool 'Installing vpk' dotnet @('tool', 'install', '-g', 'vpk', '--version', $env:VPK_VERSION)
+          $vpk = Join-Path $env:USERPROFILE '.dotnet\tools\vpk.exe'
+          $version = '${{ steps.version.outputs.version }}'
+          $repo = 'https://github.com/${{ github.repository }}'
+          $pre = if ('${{ steps.version.outputs.prerelease }}' -eq 'true') { @('--pre') } else { @() }
+          $sign = @()
+          if (Test-Path "$env:RUNNER_TEMP\signing.pfx") {
+            $sign = @('--signParams', "/f `"$env:RUNNER_TEMP\signing.pfx`" /p `"$env:SIGNING_PASSWORD`" /fd SHA256 /tr http://timestamp.digicert.com /td SHA256")
+          }
+          foreach ($rid in 'win-x64', 'win-arm64') {
+            $channel = '${{ steps.version.outputs.channel }}' + $(if ($rid -eq 'win-arm64') { '-arm64' } else { '' })
+            $out = "releases/$rid"
+            # The previous release of the channel, for delta updates (none before the first release).
+            Invoke-Tool "Downloading the previous $channel release" $vpk (@('download', 'github', '--repoUrl', $repo, '--token', $env:GITHUB_TOKEN, '--channel', $channel, '--outputDir', $out) + $pre)
+            # The pack id names the install folder (%LocalAppData%\PDF_Pro), which uninstalling deletes: it must not be
+            # the app's data folder (%LOCALAPPDATA%\PdfPro: settings, logs, unsaved sessions).
+            Invoke-Tool "Packing $rid" $vpk (@('pack', '--packId', 'PDF_Pro', '--packVersion', $version, '--packDir', "publish/$rid", '--mainExe', 'PdfPro.exe', '--icon', 'assets/icon/PdfPro.ico', '--packTitle', 'PDF_Pro', '--packAuthors', 'PDF_Pro', '--runtime', $rid, '--channel', $channel, '--outputDir', $out, '--releaseNotes', 'CHANGELOG.md') + $sign)
+            Invoke-Tool "Uploading $rid" $vpk (@('upload', 'github', '--repoUrl', $repo, '--token', $env:GITHUB_TOKEN, '--channel', $channel, '--outputDir', $out, '--tag', "v$version", '--releaseName', "PDF_Pro $version", '--publish', '--merge') + $pre)
+          }
+          Invoke-Tool 'Attaching pdfpro' gh (@('release', 'upload', "v$version") + @((Get-ChildItem cli/*.zip).FullName) + @('--repo', '${{ github.repository }}', '--clobber'))
+
+      - name: Remove the signing certificate
+        if: always()
+        shell: pwsh
+        run: Remove-Item "$env:RUNNER_TEMP\signing.pfx" -ErrorAction SilentlyContinue

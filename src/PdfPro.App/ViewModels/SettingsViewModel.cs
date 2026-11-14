@@ -10,6 +10,7 @@ using PdfPro.App.Services.Rendering;
 using PdfPro.Core.Text;
 using PdfPro.Infrastructure.Caching;
 using PdfPro.Infrastructure.Settings;
+using PdfPro.Operations.Converting;
 
 namespace PdfPro.App.ViewModels;
 
@@ -29,6 +30,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly RenderCache _renderCache;
     private readonly ThumbnailDiskCache _thumbnailCache;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly ILibreOfficeLocator? _libreOffice;
+    private readonly IFileDialogService? _files;
+    private readonly IVeraPdfLocator? _veraPdf;
+    private readonly PdfPro.Ocr.ITesseractLocator? _tesseract;
     private readonly bool _isInitialized;
 
     public SettingsViewModel(
@@ -38,7 +43,15 @@ public sealed partial class SettingsViewModel : ObservableObject
         ILocalizationService localization,
         RenderCache renderCache,
         ThumbnailDiskCache thumbnailCache,
-        ILogger<SettingsViewModel> logger)
+        ILogger<SettingsViewModel> logger,
+        ILibreOfficeLocator? libreOffice = null,
+        IFileDialogService? files = null,
+        IVeraPdfLocator? veraPdf = null,
+        PdfPro.Ocr.ITesseractLocator? tesseract = null,
+        Services.Automation.IHotFolderService? hotFolder = null,
+        Services.Automation.IStartupRegistration? startup = null,
+        Services.Automation.IWorkflowLibrary? workflows = null,
+        Services.IShellIntegration? shell = null)
     {
         _settings = settings;
         _theme = theme;
@@ -47,12 +60,21 @@ public sealed partial class SettingsViewModel : ObservableObject
         _renderCache = renderCache;
         _thumbnailCache = thumbnailCache;
         _logger = logger;
+        _libreOffice = libreOffice;
+        _files = files;
+        _veraPdf = veraPdf;
+        _tesseract = tesseract;
 
         ThemeOptions =
         [
             new(AppThemeMode.System, Strings.Settings_Theme_System),
             new(AppThemeMode.Light, Strings.Settings_Theme_Light),
             new(AppThemeMode.Dark, Strings.Settings_Theme_Dark),
+        ];
+        OcrDataOptions =
+        [
+            new(PdfPro.Core.Ocr.OcrDataKind.Best, Strings.Settings_OcrData_Best),
+            new(PdfPro.Core.Ocr.OcrDataKind.Fast, Strings.Settings_OcrData_Fast),
         ];
         LanguageOptions =
         [
@@ -64,7 +86,18 @@ public sealed partial class SettingsViewModel : ObservableObject
         SelectedLanguage = settings.Current.Language;
         IsRestartRequired = SelectedLanguage != localization.ActiveLanguage;
         RenderCacheMegabytes = settings.Current.RenderCacheMegabytes;
+        AnnotationAuthor = settings.Current.AnnotationAuthor;
+        LibreOfficePath = settings.Current.LibreOfficePath;
+        LibreOfficeStatus = DescribeLibreOffice(LibreOfficePath);
+        VeraPdfPath = settings.Current.VeraPdfPath;
+        VeraPdfStatus = DescribeVeraPdf(VeraPdfPath);
+        TesseractPath = settings.Current.TesseractPath;
+        SelectedOcrData = settings.Current.OcrData;
+        TesseractStatus = DescribeTesseract(TesseractPath, SelectedOcrData);
         DiskCacheSize = Strings.Settings_Measuring;
+        InitializeHotFolder(settings.Current, hotFolder, startup, workflows);
+        InitializeWorker(settings.Current);
+        InitializeRelease(settings.Current, shell);
         _isInitialized = true;
     }
 
@@ -92,6 +125,42 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>Memory for rendered pages; applied at once (the cache shrinks or grows) and saved.</summary>
     [ObservableProperty]
     public partial double? RenderCacheMegabytes { get; set; }
+
+    /// <summary>The name new annotations are signed with; blank: the Windows user name. Saved when it changes.</summary>
+    [ObservableProperty]
+    public partial string AnnotationAuthor { get; set; } = string.Empty;
+
+    /// <summary>Where LibreOffice is ("Office sang PDF"); blank: looked for. Saved when it changes.</summary>
+    [ObservableProperty]
+    public partial string LibreOfficePath { get; set; } = string.Empty;
+
+    /// <summary>"Đang dùng: C:\…\soffice.exe", or why LibreOffice is not there; null when not looked for.</summary>
+    [ObservableProperty]
+    public partial string? LibreOfficeStatus { get; private set; }
+
+    public bool CanPickLibreOffice => _files is not null;
+
+    /// <summary>Where veraPDF is (checking PDF/A copies); blank: looked for. Saved when it changes.</summary>
+    [ObservableProperty]
+    public partial string VeraPdfPath { get; set; } = string.Empty;
+
+    /// <summary>"Đang dùng: C:\…\verapdf", or what is missing; null when not looked for.</summary>
+    [ObservableProperty]
+    public partial string? VeraPdfStatus { get; private set; }
+
+    /// <summary>Where Tesseract is (OCR); blank: the copy in the tools folder, then where it is installed. Saved when it changes.</summary>
+    [ObservableProperty]
+    public partial string TesseractPath { get; set; } = string.Empty;
+
+    /// <summary>The trained data OCR reads with. Saved when it changes.</summary>
+    [ObservableProperty]
+    public partial PdfPro.Core.Ocr.OcrDataKind SelectedOcrData { get; set; }
+
+    public IReadOnlyList<SettingOption<PdfPro.Core.Ocr.OcrDataKind>> OcrDataOptions { get; }
+
+    /// <summary>"Đang dùng: …\tesseract.exe — Tiếng Việt, Tiếng Anh", or what is missing; null when not looked for.</summary>
+    [ObservableProperty]
+    public partial string? TesseractStatus { get; private set; }
 
     /// <summary>Size of the thumbnail cache on disk ("12 MB"); null until measured.</summary>
     [ObservableProperty]
@@ -155,6 +224,156 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             PendingSave = SaveAsync(s => s with { RenderCacheMegabytes = clamped });
         }
+    }
+
+    partial void OnAnnotationAuthorChanged(string value)
+    {
+        var name = TextNormalizer.ToNfc(value ?? string.Empty).Trim();
+        if (!_isInitialized || string.Equals(name, _settings.Current.AnnotationAuthor, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        PendingSave = SaveAsync(s => s with { AnnotationAuthor = name });
+    }
+
+    partial void OnLibreOfficePathChanged(string value)
+    {
+        var path = (value ?? string.Empty).Trim();
+        LibreOfficeStatus = DescribeLibreOffice(path);
+        if (!_isInitialized || string.Equals(path, _settings.Current.LibreOfficePath, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        PendingSave = SaveAsync(s => s with { LibreOfficePath = path });
+    }
+
+    /// <summary>"Chọn…": LibreOffice's installation folder (or its "program" folder).</summary>
+    [RelayCommand]
+    private void PickLibreOffice()
+    {
+        var current = LibreOfficePath.Trim();
+        var initial = current.Length == 0 ? null : Directory.Exists(current) ? current : Path.GetDirectoryName(current);
+        if (_files?.PickFolder(Strings.Settings_LibreOffice_Pick_Title, initial) is { } folder)
+        {
+            LibreOfficePath = folder;
+        }
+    }
+
+    partial void OnVeraPdfPathChanged(string value)
+    {
+        var path = (value ?? string.Empty).Trim();
+        VeraPdfStatus = DescribeVeraPdf(path);
+        if (!_isInitialized || string.Equals(path, _settings.Current.VeraPdfPath, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        PendingSave = SaveAsync(s => s with { VeraPdfPath = path });
+    }
+
+    /// <summary>"Chọn…": veraPDF's installation folder.</summary>
+    [RelayCommand]
+    private void PickVeraPdf()
+    {
+        var current = VeraPdfPath.Trim();
+        if (_files?.PickFolder(Strings.Settings_VeraPdf_Pick_Title, current.Length == 0 ? null : current) is { } folder)
+        {
+            VeraPdfPath = folder;
+        }
+    }
+
+    partial void OnTesseractPathChanged(string value)
+    {
+        var path = (value ?? string.Empty).Trim();
+        TesseractStatus = DescribeTesseract(path, SelectedOcrData);
+        if (!_isInitialized || string.Equals(path, _settings.Current.TesseractPath, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        PendingSave = SaveAsync(s => s with { TesseractPath = path });
+    }
+
+    partial void OnSelectedOcrDataChanged(PdfPro.Core.Ocr.OcrDataKind value)
+    {
+        TesseractStatus = DescribeTesseract((TesseractPath ?? string.Empty).Trim(), value);
+        if (!_isInitialized || value == _settings.Current.OcrData)
+        {
+            return;
+        }
+
+        PendingSave = SaveAsync(s => s with { OcrData = value });
+    }
+
+    /// <summary>"Chọn…": Tesseract's folder (the one holding tesseract.exe).</summary>
+    [RelayCommand]
+    private void PickTesseract()
+    {
+        var current = TesseractPath.Trim();
+        var initial = current.Length == 0 ? null : Directory.Exists(current) ? current : Path.GetDirectoryName(current);
+        if (_files?.PickFolder(Strings.Settings_Tesseract_Pick_Title, initial) is { } folder)
+        {
+            TesseractPath = folder;
+        }
+    }
+
+    /// <summary>What is found where <paramref name="path"/> says (or in the tools folder and where Tesseract is installed when blank).</summary>
+    private string? DescribeTesseract(string path, PdfPro.Core.Ocr.OcrDataKind data)
+    {
+        if (_tesseract is null)
+        {
+            return null;
+        }
+
+        if (_tesseract.Find(path.Length == 0 ? null : path, data) is not { } found)
+        {
+            return path.Length == 0 ? Strings.Settings_Tesseract_Missing : Strings.Settings_Tesseract_NotThere;
+        }
+
+        var languages = string.Join(", ", found.Languages.Select(ViewModels.Ocr.OcrViewModel.LanguageName));
+        var kind = found.Data switch
+        {
+            PdfPro.Core.Ocr.OcrDataKind.Best => Strings.Ocr_Data_Best,
+            PdfPro.Core.Ocr.OcrDataKind.Fast => Strings.Ocr_Data_Fast,
+            _ => Strings.Ocr_Data_Own,
+        };
+        return string.Format(CultureInfo.CurrentCulture, Strings.Settings_Tesseract_Found, found.Program, kind, languages);
+    }
+
+    /// <summary>What is found where <paramref name="path"/> says (or where veraPDF is installed when blank).</summary>
+    private string? DescribeVeraPdf(string path)
+    {
+        if (_veraPdf is null)
+        {
+            return null;
+        }
+
+        return _veraPdf.Find(path.Length == 0 ? null : path) switch
+        {
+            { Java: null } => Strings.Settings_VeraPdf_NoJava,
+            { } found => string.Format(CultureInfo.CurrentCulture, path.Length == 0 ? Strings.Settings_LibreOffice_Found : Strings.Settings_LibreOffice_Using, found.Folder),
+            null => path.Length == 0 ? Strings.Settings_VeraPdf_Missing : Strings.Settings_VeraPdf_NotThere,
+        };
+    }
+
+    /// <summary>What is found where <paramref name="path"/> says (or where LibreOffice is installed when blank).</summary>
+    private string? DescribeLibreOffice(string path)
+    {
+        if (_libreOffice is null)
+        {
+            return null;
+        }
+
+        var found = _libreOffice.Find(path.Length == 0 ? null : path);
+        return (found, path.Length == 0) switch
+        {
+            ({ } program, true) => string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Found, program),
+            ({ } program, false) => string.Format(CultureInfo.CurrentCulture, Strings.Settings_LibreOffice_Using, program),
+            (null, true) => Strings.Settings_LibreOffice_Missing,
+            (null, false) => Strings.Settings_LibreOffice_NotThere,
+        };
     }
 
     /// <summary>Drops rendered pages from memory and every thumbnail stored on disk.</summary>

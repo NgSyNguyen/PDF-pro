@@ -9,12 +9,13 @@ internal enum PdfiumHandleKind
     Page,
     TextPage,
     Bitmap,
+    Annotation,
 }
 
 /// <summary>Counts live native handles per kind so tests can prove nothing leaks.</summary>
 internal static class PdfiumHandleTracker
 {
-    private static readonly int[] Open = new int[4];
+    private static readonly int[] Open = new int[Enum.GetValues<PdfiumHandleKind>().Length];
 
     public static int OpenCount(PdfiumHandleKind kind) => Volatile.Read(ref Open[(int)kind]);
 
@@ -152,6 +153,33 @@ internal sealed class TextPageSafeHandle : PdfiumSafeHandle
     public FpdfTextpageT Native { get; }
 
     protected override void CloseNative() => fpdf_text.FPDFTextClosePage(Native);
+
+    protected override void OnClosed()
+    {
+        if (_pageReferenced)
+        {
+            _page.DangerousRelease();
+        }
+    }
+}
+
+/// <summary>An annotation of a page; keeps its page alive (SafeHandle ref count) like a text page does.</summary>
+internal sealed class AnnotationSafeHandle : PdfiumSafeHandle
+{
+    private readonly PageSafeHandle _page;
+    private readonly bool _pageReferenced;
+
+    public AnnotationSafeHandle(PdfiumGate gate, FpdfAnnotationT native, PageSafeHandle page)
+        : base(gate, native.__Instance, PdfiumHandleKind.Annotation)
+    {
+        Native = native;
+        _page = page;
+        page.DangerousAddRef(ref _pageReferenced);
+    }
+
+    public FpdfAnnotationT Native { get; }
+
+    protected override void CloseNative() => fpdf_annot.FPDFPageCloseAnnot(Native);
 
     protected override void OnClosed()
     {

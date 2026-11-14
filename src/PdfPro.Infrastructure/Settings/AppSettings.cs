@@ -35,6 +35,10 @@ public sealed record AppSettings
     public const int MinRenderCacheMegabytes = 128;
     public const int MaxRenderCacheMegabytes = 4096;
 
+    public const int DefaultWorkerMemoryMegabytes = 4096;
+    public const int MinWorkerMemoryMegabytes = 512;
+    public const int MaxWorkerMemoryMegabytes = 65536;
+
     public static AppSettings Default { get; } = new();
 
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
@@ -51,6 +55,90 @@ public sealed record AppSettings
 
     /// <summary>Memory budget for rendered pages, in megabytes.</summary>
     public int RenderCacheMegabytes { get; init; } = DefaultRenderCacheMegabytes;
+
+    /// <summary>
+    /// The name annotations are signed with (shown to the readers of the document); blank: the Windows user name.
+    /// Personal data: never written to the log.
+    /// </summary>
+    public string AnnotationAuthor { get; init; } = string.Empty;
+
+    /// <summary>The RFC 3161 time-stamping authority digital signatures are timestamped by.</summary>
+    public string TimestampServer { get; init; } = DefaultTimestampServer;
+
+    /// <summary>Digital signatures get a timestamp from <see cref="TimestampServer"/> (needs the network).</summary>
+    public bool UseTimestamp { get; init; } = true;
+
+    /// <summary>Signatures are PAdES (ETSI.CAdES.detached) rather than adbe.pkcs7.detached.</summary>
+    public bool UsePades { get; init; }
+
+    /// <summary>Signed files get their validation material (certificates, revocation lists) for long-term validation.</summary>
+    public bool UseLongTermValidation { get; init; }
+
+    /// <summary>
+    /// Where LibreOffice is ("Office sang PDF"): its soffice program, its "program" folder or its installation folder;
+    /// blank: looked for where it is usually installed.
+    /// </summary>
+    public string LibreOfficePath { get; init; } = string.Empty;
+
+    /// <summary>Where veraPDF is (checking PDF/A copies): its installation folder; blank: looked for where it is usually installed.</summary>
+    public string VeraPdfPath { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Where Tesseract is (OCR): its program or its folder; blank: the copy in the app's tools folder, then where it is
+    /// usually installed.
+    /// </summary>
+    public string TesseractPath { get; init; } = string.Empty;
+
+    /// <summary>Which trained data OCR reads with: the most accurate or the fast one.</summary>
+    public PdfPro.Core.Ocr.OcrDataKind OcrData { get; init; } = PdfPro.Core.Ocr.OcrDataKind.Best;
+
+    /// <summary>The languages OCR was last run with (proposed next time), main language first.</summary>
+    public IReadOnlyList<string> OcrLanguages { get; init; } = ["vie"];
+
+    /// <summary>How many pages OCR reads at once; 0: the number of processors less one.</summary>
+    public int OcrParallelism { get; init; }
+
+    /// <summary>The commands last run from the command palette (ribbon ids), most recent first.</summary>
+    public IReadOnlyList<string> RecentCommands { get; init; } = [];
+
+    /// <summary>The hot folder watches <see cref="HotFolderPath"/> while the app runs.</summary>
+    public bool HotFolderEnabled { get; init; }
+
+    /// <summary>The folder files are dropped into.</summary>
+    public string HotFolderPath { get; init; } = string.Empty;
+
+    /// <summary>The workflow run on them: a built-in one's id ("digitize") or a .pdfflow file.</summary>
+    public string HotFolderWorkflow { get; init; } = string.Empty;
+
+    /// <summary>Where the results go; empty = "_output" in the hot folder.</summary>
+    public string HotFolderOutput { get; init; } = string.Empty;
+
+    /// <summary>Minimizing the window while the hot folder runs puts it in the notification area.</summary>
+    public bool MinimizeToTray { get; init; } = true;
+
+    /// <summary>
+    /// Heavy operations a damaged or hostile file could crash (OCR, redaction, sanitizing, scan tools) run in the
+    /// worker process (SPEC Phase 13), so a crash costs only that operation.
+    /// </summary>
+    public bool IsolateOperations { get; init; } = true;
+
+    /// <summary>Look for a newer version when the app starts (an installed copy only; nothing is sent but the request).</summary>
+    public bool CheckForUpdates { get; init; } = true;
+
+    /// <summary>
+    /// "stable" or "beta" (pre-releases too); null until chosen in Settings: the channel of the running copy, so a beta
+    /// installed on a new computer keeps updating to the next beta.
+    /// </summary>
+    public string? UpdateChannel { get; init; }
+
+    /// <summary>The quick-start guide of the start page was put away ("Ẩn hướng dẫn").</summary>
+    public bool GuideHidden { get; init; }
+
+    /// <summary>Memory the worker process may use, in megabytes (Windows; applied when the app starts).</summary>
+    public int WorkerMemoryMegabytes { get; init; } = DefaultWorkerMemoryMegabytes;
+
+    /// <summary>A free public time-stamping authority (DigiCert).</summary>
+    public const string DefaultTimestampServer = "http://timestamp.digicert.com";
 }
 
 /// <summary>Most-recently-used list of documents (pure list operations; no file system access).</summary>

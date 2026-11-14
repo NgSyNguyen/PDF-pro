@@ -24,11 +24,16 @@ public abstract class WorkspaceTabViewModel : ObservableObject
 /// <summary>Start page: open button, drop zone, recent files.</summary>
 public sealed class HomeTabViewModel : WorkspaceTabViewModel
 {
-    public HomeTabViewModel(ICommand openFileCommand, ICommand openRecentFileCommand, ICommand mergeCommand)
+    /// <param name="openFileCommand">"Mở tệp".</param>
+    /// <param name="openRecentFileCommand">Opens a recent file (its full path as parameter).</param>
+    /// <param name="mergeCommand">"Gộp tệp PDF".</param>
+    /// <param name="officeToPdfCommand">"Chuyển Word sang PDF" (null: the button is not shown).</param>
+    public HomeTabViewModel(ICommand openFileCommand, ICommand openRecentFileCommand, ICommand mergeCommand, ICommand? officeToPdfCommand = null)
     {
         OpenFileCommand = openFileCommand;
         OpenRecentFileCommand = openRecentFileCommand;
         MergeCommand = mergeCommand;
+        OfficeToPdfCommand = officeToPdfCommand;
         RecentFiles.CollectionChanged += OnRecentFilesChanged;
     }
 
@@ -44,13 +49,38 @@ public sealed class HomeTabViewModel : WorkspaceTabViewModel
     /// <summary>"Gộp tệp PDF" without opening a document first.</summary>
     public ICommand MergeCommand { get; }
 
+    /// <summary>"Chuyển Word sang PDF" (Office sang PDF) without opening a document first; null when unavailable.</summary>
+    public ICommand? OfficeToPdfCommand { get; }
+
     public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = [];
+
+    /// <summary>The four steps of the quick-start guide (SPEC Phase 13).</summary>
+    public IReadOnlyList<GuideStep> GuideSteps { get; } =
+    [
+        new(1, Strings.Guide_Open_Title, Strings.Guide_Open_Text, SymbolRegular.FolderOpen24),
+        new(2, Strings.Guide_Pages_Title, Strings.Guide_Pages_Text, SymbolRegular.GridDots24),
+        new(3, Strings.Guide_Tools_Title, Strings.Guide_Tools_Text, SymbolRegular.Search24),
+        new(4, Strings.Guide_Save_Title, Strings.Guide_Save_Text, SymbolRegular.Save24),
+    ];
+
+    /// <summary>Whether the guide shows (until "Ẩn hướng dẫn"; "Hướng dẫn nhanh" brings it back).</summary>
+    public bool ShowsGuide
+    {
+        get;
+        set => SetProperty(ref field, value);
+    }
+
+    /// <summary>"Ẩn hướng dẫn"; set by the main window, which remembers the choice.</summary>
+    public ICommand? HideGuideCommand { get; set; }
 
     public bool HasNoRecentFiles => RecentFiles.Count == 0;
 
     private void OnRecentFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
         => OnPropertyChanged(nameof(HasNoRecentFiles));
 }
+
+/// <summary>A step of the quick-start guide.</summary>
+public sealed record GuideStep(int Number, string Title, string Text, SymbolRegular Icon);
 
 /// <summary>An entry of the recent files list.</summary>
 public sealed record RecentFileViewModel(string Path)
@@ -64,14 +94,27 @@ public enum SidebarPanel
 {
     Thumbnails,
     Bookmarks,
+    Search,
+    Comments,
+    Signatures,
 }
 
 /// <summary>Left sidebar: page thumbnails or the bookmark tree.</summary>
 public sealed partial class SidebarViewModel : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsThumbnailsSelected), nameof(IsBookmarksSelected))]
+    [NotifyPropertyChangedFor(nameof(IsThumbnailsSelected), nameof(IsBookmarksSelected), nameof(IsSearchSelected), nameof(IsCommentsSelected), nameof(IsSignaturesSelected), nameof(Title))]
     public partial SidebarPanel SelectedPanel { get; set; }
+
+    /// <summary>The open panel's name (the switch above it shows icons only).</summary>
+    public string Title => SelectedPanel switch
+    {
+        SidebarPanel.Bookmarks => Strings.Sidebar_Bookmarks,
+        SidebarPanel.Search => Strings.Sidebar_Search,
+        SidebarPanel.Comments => Strings.Sidebar_Comments,
+        SidebarPanel.Signatures => Strings.Sidebar_Signatures,
+        _ => Strings.Sidebar_Thumbnails,
+    };
 
     public bool IsThumbnailsSelected
     {
@@ -93,6 +136,42 @@ public sealed partial class SidebarViewModel : ObservableObject
             if (value)
             {
                 SelectedPanel = SidebarPanel.Bookmarks;
+            }
+        }
+    }
+
+    public bool IsSearchSelected
+    {
+        get => SelectedPanel == SidebarPanel.Search;
+        set
+        {
+            if (value)
+            {
+                SelectedPanel = SidebarPanel.Search;
+            }
+        }
+    }
+
+    public bool IsCommentsSelected
+    {
+        get => SelectedPanel == SidebarPanel.Comments;
+        set
+        {
+            if (value)
+            {
+                SelectedPanel = SidebarPanel.Comments;
+            }
+        }
+    }
+
+    public bool IsSignaturesSelected
+    {
+        get => SelectedPanel == SidebarPanel.Signatures;
+        set
+        {
+            if (value)
+            {
+                SelectedPanel = SidebarPanel.Signatures;
             }
         }
     }

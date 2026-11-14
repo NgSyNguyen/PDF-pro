@@ -22,19 +22,45 @@ public enum PdfFormType
 }
 
 /// <summary>Document-level facts used by the properties dialog and by operations (encryption, signatures…).</summary>
+/// <param name="FileVersion">"1.7", "2.0"…</param>
+/// <param name="SecurityHandlerRevision">/R of the standard security handler, or -1 when the file is not protected.</param>
+/// <param name="Permissions">What the password it was opened with allows (every permission bit with the owner password).</param>
+/// <param name="SignatureCount">Digital signatures in the file.</param>
+/// <param name="FormType">AcroForm, XFA or none.</param>
+/// <param name="HasJavaScript">The file has document-level JavaScript.</param>
+/// <param name="UserPermissions">What the file allows without the owner password (/P), whatever it was opened with.</param>
+/// <param name="CertificationPermission">
+/// What the certification signature allows (DocMDP): 1 no change, 2 forms and signing, 3 also annotations; 0 when the
+/// document is not certified.
+/// </param>
 public sealed record PdfDocumentFeatures(
     string FileVersion,
     int SecurityHandlerRevision,
     uint Permissions,
     int SignatureCount,
     PdfFormType FormType,
-    bool HasJavaScript)
+    bool HasJavaScript,
+    uint UserPermissions = uint.MaxValue,
+    int CertificationPermission = 0)
 {
+    /// <summary>Annotations may be added without breaking a certification (none, or one that allows them).</summary>
+    public bool CertificationAllowsAnnotations => CertificationPermission is 0 or 3;
+
+    /// <summary>Form fields may be filled in without breaking a certification (none, or one that allows forms).</summary>
+    public bool CertificationAllowsFormFilling => CertificationPermission is 0 or 2 or 3;
+
     private const uint PrintPermission = 1 << 2;
     private const uint CopyPermission = 1 << 4;
     private const uint AssemblePermission = 1 << 10;
 
     public bool IsEncrypted => SecurityHandlerRevision >= 0;
+
+    /// <summary>
+    /// A protected file that allows everything as opened: with its owner password — or a file whose author permits
+    /// everything, opened with its open password (PDFium reports both alike, bits 1–2 cleared). Changing the file
+    /// tells them apart: PDFsharp only modifies it with the owner password.
+    /// </summary>
+    public bool HasEveryPermission => IsEncrypted && (Permissions | 0b11) == uint.MaxValue;
 
     public bool HasDigitalSignatures => SignatureCount > 0;
 
@@ -44,6 +70,12 @@ public sealed record PdfDocumentFeatures(
 
     /// <summary>Pages may be inserted, rotated, deleted or taken into another document (bit 11, "assemble").</summary>
     public bool CanAssemble => (Permissions & AssemblePermission) != 0;
+}
+
+/// <summary>The characters of a page: painted ones, and invisible ones (text render mode 3, the hidden text of OCR).</summary>
+public readonly record struct PageTextCounts(int Visible, int Invisible)
+{
+    public bool HasText => Visible + Invisible > 0;
 }
 
 /// <summary>Target of a bookmark or link. Coordinates are in PDF user space; null means "keep current".</summary>
@@ -81,4 +113,10 @@ public sealed record PageRenderOptions
 
     /// <summary>Extra clockwise quarter turns on top of the page's own /Rotate (used by the page plan).</summary>
     public int ExtraQuarterTurns { get; init; }
+
+    /// <summary>
+    /// Leave what the page does not paint transparent (BGRA, alpha not premultiplied) instead of white; the bitmap
+    /// is BGRx otherwise.
+    /// </summary>
+    public bool Transparent { get; init; }
 }

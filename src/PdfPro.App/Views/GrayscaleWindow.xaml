@@ -1,0 +1,109 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.GrayscaleWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:optimizing="clr-namespace:PdfPro.App.ViewModels.Optimizing"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=optimizing:GrayscaleViewModel}"
+  Title="{loc:Tr Grayscale_Title}"
+  Width="540"
+  MinHeight="0"
+  AutomationProperties.AutomationId="GrayscaleWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr Grayscale_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock
+        FontWeight="SemiBold"
+        Text="{Binding FileName}"
+        TextTrimming="CharacterEllipsis" />
+      <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding PagesText}" />
+
+      <RadioButton
+        Margin="0,16,0,0"
+        AutomationProperties.AutomationId="GrayscaleConvert"
+        GroupName="GrayscaleMode"
+        IsChecked="{Binding IsConvert}">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="{loc:Tr Grayscale_Convert}" />
+          <TextBlock
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr Grayscale_Convert_Details}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </RadioButton>
+      <RadioButton
+        Margin="0,12,0,0"
+        AutomationProperties.AutomationId="GrayscaleRaster"
+        GroupName="GrayscaleMode"
+        IsChecked="{Binding IsRaster}">
+        <StackPanel>
+          <TextBlock FontWeight="SemiBold" Text="{loc:Tr Grayscale_Raster}" />
+          <TextBlock
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            Text="{loc:Tr Grayscale_Raster_Details}"
+            TextWrapping="Wrap" />
+        </StackPanel>
+      </RadioButton>
+
+      <TextBlock
+        Margin="0,16,0,4"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr Grayscale_Dpi}" />
+      <TextBox
+        Width="120"
+        HorizontalAlignment="Left"
+        AutomationProperties.AutomationId="GrayscaleDpi"
+        AutomationProperties.Name="{loc:Tr Grayscale_Dpi}"
+        Text="{Binding DpiText, UpdateSourceTrigger=PropertyChanged}" />
+      <TextBlock
+        Margin="0,12,0,0"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr Grayscale_Note}"
+        TextWrapping="Wrap" />
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="GrayscaleError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="GrayscaleApply"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr Grayscale_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="GrayscaleCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

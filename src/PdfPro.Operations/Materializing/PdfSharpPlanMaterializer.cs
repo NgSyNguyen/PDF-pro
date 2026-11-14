@@ -1,5 +1,6 @@
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
+using PdfPro.Operations.Annotating;
 using PdfPro.Pdfium;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
@@ -18,7 +19,8 @@ public static class MaterializeStages
 /// Writes a page plan with PDFsharp (SPEC "PagePlan — tài liệu ảo"). The base source is opened for modification
 /// and its page tree rearranged, so its document structure (metadata, bookmarks, named destinations, forms, links)
 /// is kept; pages of other sources are imported and their links reconnected; references to deleted pages are cut so
-/// those pages really leave the file. Sources PDFsharp cannot parse are first repaired by PDFium.
+/// those pages really leave the file; annotations added in the session are written with their appearances. Sources
+/// PDFsharp cannot parse are first repaired by PDFium.
 /// </summary>
 public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMaterializer
 {
@@ -118,17 +120,38 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
         AnnotationOwnership.EnsureUnique(baseDocument, pages);
         ForeignPages.Retarget(placed, foreignIds);
         DeadDestinations.Remove(baseDocument, removedPages, pages);
-        if (!plan.IsIdentity(request.BaseSourceId, basePageCount))
+        foreach (var (page, pageRef) in placed)
         {
-            // Labels ("i, ii, 1, 2…") describe the old page sequence; they would now be wrong.
+            // Annotations made in the session are in the source page's space, which the placed page keeps.
+            if (pageRef.Annotations.Count > 0)
+            {
+                AnnotationWriter.Write(baseDocument, page, pageRef.Annotations);
+            }
+        }
+
+        if (plan.HasFormValues)
+        {
+            // Values given in the session to the base document's fields; fields of other sources are not merged.
+            Forms.FormWriter.SetValues(baseDocument, [.. plan.FormValues.Values]);
+        }
+
+        if (!plan.KeepsPageOrder(request.BaseSourceId, basePageCount))
+        {
+            // Labels ("i, ii, 1, 2…") describe the old page sequence; they would now be wrong. Rotating, cropping,
+            // annotating or filling in pages keeps the sequence, and the labels.
             baseDocument.Internals.Catalog.Elements.Remove("/PageLabels");
         }
 
         baseDocument.Version = documents.Values.Max(d => d.Version);
         if (baseDocument.SecuritySettings.IsEncrypted)
         {
-            // Only reached when a password was given (merging protected files): the output is never encrypted.
+            // Only reached when a password was given (merging protected files): the protection is not carried over.
             baseDocument.SecurityHandler.SetEncryptionToNoneAndResetPasswords();
+        }
+
+        if (request.Security is { } security)
+        {
+            Security.EncryptionWriter.Protect(baseDocument, security);
         }
 
         finish?.Invoke(baseDocument, placed);
@@ -136,7 +159,7 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
         progress.Report(new OperationProgress(0, 0, MaterializeStages.Write));
         try
         {
-            baseDocument.Save(output, closeStream: false);
+            PdfWriting.Save(baseDocument, output);
         }
         catch (Exception ex) when (ex is not (IOException or OperationCanceledException or OutOfMemoryException))
         {
@@ -184,7 +207,7 @@ public sealed class PdfSharpPlanMaterializer(ISourceRepairer repairer) : IPlanMa
 
     private static PdfDocument Open(string sourceId, string path, PdfDocumentOpenMode mode, string? password)
     {
-        var document = password is null ? PdfReader.Open(path, mode) : PdfReader.Open(path, password, mode);
+        var document = password is null ? PdfSafeReader.Open(path, mode) : PdfSafeReader.Open(path, password, mode);
         if (document.SecuritySettings.IsEncrypted && password is null)
         {
             document.Dispose();

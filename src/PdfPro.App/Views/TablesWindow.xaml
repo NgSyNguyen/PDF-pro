@@ -1,0 +1,377 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.TablesWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:extracting="clr-namespace:PdfPro.App.ViewModels.Extracting"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=extracting:TablesViewModel}"
+  Title="{loc:Tr Tables_Title}"
+  Width="1240"
+  Height="840"
+  MinWidth="900"
+  MinHeight="600"
+  AutomationProperties.AutomationId="TablesWindow"
+  ExtendsContentIntoTitleBar="True"
+  ShowInTaskbar="False"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CloseCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="Secondary" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,10,0,4" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <ui:TitleBar Title="{loc:Tr Tables_Title}" ShowMinimize="False" />
+
+    <!-- The pages to search. -->
+    <StackPanel Grid.Row="1" Margin="24,4,24,0">
+      <TextBlock
+        FontWeight="SemiBold"
+        Text="{Binding FileName}"
+        TextTrimming="CharacterEllipsis" />
+      <WrapPanel Margin="0,8,0,0">
+        <TextBlock
+          Margin="0,0,8,0"
+          VerticalAlignment="Center"
+          Text="{loc:Tr Tables_Pages}" />
+        <ui:TextBox
+          Width="140"
+          Margin="0,0,8,0"
+          AutomationProperties.AutomationId="TablesPages"
+          AutomationProperties.Name="{loc:Tr Tables_Pages}"
+          PlaceholderText="{loc:Tr Tables_Pages_All}"
+          Text="{Binding PagesText, UpdateSourceTrigger=PropertyChanged}" />
+        <ui:Button
+          Margin="0,0,8,0"
+          AutomationProperties.AutomationId="TablesFind"
+          Command="{Binding FindCommand}"
+          Content="{loc:Tr Tables_Find}"
+          Icon="{ui:SymbolIcon Search24}" />
+        <ui:Button
+          Margin="0,0,16,0"
+          AutomationProperties.AutomationId="TablesStop"
+          Command="{Binding FindCancelCommand}"
+          Content="{loc:Tr Compare_Stop}"
+          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+        <StackPanel
+          VerticalAlignment="Center"
+          Orientation="Horizontal"
+          Visibility="{Binding ProgressText, Converter={StaticResource NullToCollapsed}}">
+          <ui:ProgressRing
+            Width="16"
+            Height="16"
+            Margin="0,0,8,0"
+            IsIndeterminate="True" />
+          <TextBlock AutomationProperties.AutomationId="TablesProgress" Text="{Binding ProgressText}" />
+        </StackPanel>
+        <TextBlock
+          VerticalAlignment="Center"
+          AutomationProperties.AutomationId="TablesStatus"
+          FontWeight="SemiBold"
+          Text="{Binding StatusText}" />
+      </WrapPanel>
+      <TextBlock
+        Margin="0,6,0,0"
+        AutomationProperties.AutomationId="TablesError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+    </StackPanel>
+
+    <Grid Grid.Row="2" Margin="24,12,24,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="280" />
+        <ColumnDefinition Width="16" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="16" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <!-- The tables found, and what to do with the one chosen. -->
+      <DockPanel>
+        <TextBlock
+          Margin="0,0,0,6"
+          DockPanel.Dock="Top"
+          FontWeight="SemiBold"
+          Text="{loc:Tr Tables_List}" />
+        <StackPanel DockPanel.Dock="Bottom">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Tables_Method}" />
+          <ComboBox
+            AutomationProperties.AutomationId="TablesMethod"
+            AutomationProperties.Name="{loc:Tr Tables_Method}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding Methods}"
+            SelectedValue="{Binding Method}"
+            SelectedValuePath="Value" />
+          <WrapPanel Margin="0,8,0,0">
+            <ui:Button
+              Margin="0,0,8,0"
+              AutomationProperties.AutomationId="TablesReread"
+              Command="{Binding RereadCommand}"
+              Content="{loc:Tr Tables_Reread}"
+              Icon="{ui:SymbolIcon ArrowClockwise24}" />
+            <ui:Button
+              AutomationProperties.AutomationId="TablesRemove"
+              Command="{Binding RemoveCommand}"
+              Content="{loc:Tr Tables_Remove}"
+              Icon="{ui:SymbolIcon Delete24}" />
+          </WrapPanel>
+          <TextBlock
+            Margin="0,8,0,0"
+            FontSize="12"
+            Style="{StaticResource Secondary}"
+            Text="{loc:Tr Tables_DrawHint}" />
+        </StackPanel>
+        <ListBox
+          AutomationProperties.AutomationId="TablesList"
+          AutomationProperties.Name="{loc:Tr Tables_List}"
+          ItemsSource="{Binding Tables}"
+          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+          SelectedItem="{Binding SelectedTable}">
+          <ListBox.ItemContainerStyle>
+            <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+              <Setter Property="AutomationProperties.AutomationId" Value="{Binding Number, StringFormat=TablesItem_{0}}" />
+              <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+            </Style>
+          </ListBox.ItemContainerStyle>
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="{x:Type extracting:TableItemViewModel}">
+              <DockPanel Margin="0,4">
+                <CheckBox
+                  MinWidth="0"
+                  Margin="0,0,8,0"
+                  VerticalAlignment="Center"
+                  AutomationProperties.Name="{Binding Title}"
+                  IsChecked="{Binding IsIncluded}" />
+                <StackPanel>
+                  <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                  <TextBlock
+                    FontSize="12"
+                    Style="{StaticResource Secondary}"
+                    Text="{Binding Details}" />
+                </StackPanel>
+              </DockPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+      <!-- The page, its tables boxed; a box drawn on it is read as a table. -->
+      <Grid Grid.Column="2">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <DockPanel Margin="0,0,0,6">
+          <Slider
+            Width="110"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="TablesZoom"
+            AutomationProperties.Name="{loc:Tr Compare_Zoom}"
+            DockPanel.Dock="Right"
+            Maximum="3"
+            Minimum="0.25"
+            ToolTip="{loc:Tr Compare_Zoom}"
+            Value="{Binding Zoom}" />
+          <ui:Button
+            Margin="0,0,4,0"
+            AutomationProperties.AutomationId="TablesPreviousPage"
+            AutomationProperties.Name="{loc:Tr Tables_PreviousPage}"
+            Command="{Binding PreviousPageCommand}"
+            Icon="{ui:SymbolIcon DocumentArrowLeft24}"
+            ToolTip="{loc:Tr Tables_PreviousPage}" />
+          <TextBlock
+            MinWidth="80"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="TablesPage"
+            Text="{Binding PageText}"
+            TextAlignment="Center" />
+          <ui:Button
+            Margin="4,0,0,0"
+            HorizontalAlignment="Left"
+            AutomationProperties.AutomationId="TablesNextPage"
+            AutomationProperties.Name="{loc:Tr Tables_NextPage}"
+            Command="{Binding NextPageCommand}"
+            Icon="{ui:SymbolIcon DocumentArrowRight24}"
+            ToolTip="{loc:Tr Tables_NextPage}" />
+        </DockPanel>
+        <Border
+          Grid.Row="1"
+          Background="{DynamicResource ControlFillColorSecondaryBrush}"
+          BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+          BorderThickness="1">
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Grid
+              x:Name="PageHost"
+              Width="{Binding PageWidth}"
+              Height="{Binding PageHeight}"
+              Margin="12"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Top"
+              AutomationProperties.AutomationId="TablesPageView"
+              Background="White"
+              Cursor="Cross"
+              MouseLeftButtonDown="OnPageMouseDown"
+              MouseLeftButtonUp="OnPageMouseUp"
+              MouseMove="OnPageMouseMove">
+              <Grid.LayoutTransform>
+                <ScaleTransform ScaleX="{Binding Zoom}" ScaleY="{Binding Zoom}" />
+              </Grid.LayoutTransform>
+              <Image
+                RenderOptions.BitmapScalingMode="HighQuality"
+                Source="{Binding PageImage}"
+                Stretch="Fill" />
+              <ItemsControl Focusable="False" ItemsSource="{Binding Boxes}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <Canvas />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                  <Style TargetType="ContentPresenter">
+                    <Setter Property="Canvas.Left" Value="{Binding X}" />
+                    <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                  </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type extracting:TableBox}">
+                    <Border
+                      Width="{Binding Width}"
+                      Height="{Binding Height}"
+                      IsHitTestVisible="False">
+                      <Border.Style>
+                        <Style TargetType="Border">
+                          <Setter Property="Background" Value="#140063B1" />
+                          <Setter Property="BorderBrush" Value="#990063B1" />
+                          <Setter Property="BorderThickness" Value="1" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                              <Setter Property="Background" Value="#260063B1" />
+                              <Setter Property="BorderBrush" Value="#FF0063B1" />
+                              <Setter Property="BorderThickness" Value="3" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Border.Style>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <Canvas IsHitTestVisible="False">
+                <Rectangle
+                  x:Name="DrawnBox"
+                  Fill="#20E07000"
+                  Stroke="#FFE07000"
+                  StrokeDashArray="4 2"
+                  StrokeThickness="1.5"
+                  Visibility="Collapsed" />
+              </Canvas>
+            </Grid>
+          </ScrollViewer>
+        </Border>
+      </Grid>
+
+      <!-- The cells of the table chosen, and how to write the tables. -->
+      <DockPanel Grid.Column="4">
+        <TextBlock
+          Margin="0,0,0,6"
+          DockPanel.Dock="Top"
+          FontWeight="SemiBold"
+          Text="{loc:Tr Tables_Preview}" />
+        <StackPanel DockPanel.Dock="Bottom">
+          <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Tables_Format}" />
+          <ComboBox
+            AutomationProperties.AutomationId="TablesFormat"
+            AutomationProperties.Name="{loc:Tr Tables_Format}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding Formats}"
+            SelectedValue="{Binding Format}"
+            SelectedValuePath="Value" />
+          <TextBlock
+            Style="{StaticResource FieldLabel}"
+            Text="{loc:Tr Tables_Numbers}"
+            Visibility="{Binding IsCsv, Converter={StaticResource InverseBoolToVisibility}}" />
+          <ComboBox
+            AutomationProperties.AutomationId="TablesNumbers"
+            AutomationProperties.Name="{loc:Tr Tables_Numbers}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding NumberReadings}"
+            SelectedValue="{Binding Numbers}"
+            SelectedValuePath="Value"
+            Visibility="{Binding IsCsv, Converter={StaticResource InverseBoolToVisibility}}" />
+          <TextBlock
+            Style="{StaticResource FieldLabel}"
+            Text="{loc:Tr Tables_Separator}"
+            Visibility="{Binding IsCsv, Converter={StaticResource BoolToVisibility}}" />
+          <ComboBox
+            AutomationProperties.AutomationId="TablesSeparator"
+            AutomationProperties.Name="{loc:Tr Tables_Separator}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding Separators}"
+            SelectedValue="{Binding Separator}"
+            SelectedValuePath="Value"
+            Visibility="{Binding IsCsv, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+        <DataGrid
+          AutoGenerateColumns="True"
+          AutomationProperties.AutomationId="TablesGrid"
+          AutomationProperties.Name="{loc:Tr Tables_Preview}"
+          CanUserAddRows="False"
+          CanUserDeleteRows="False"
+          HeadersVisibility="Column"
+          IsReadOnly="True"
+          ItemsSource="{Binding SelectedTable.Preview}" />
+      </DockPanel>
+    </Grid>
+
+    <DockPanel Grid.Row="3" Margin="24,12,24,24">
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+        <ui:Button
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="TablesExport"
+          Command="{Binding ExportCommand}"
+          Content="{loc:Tr Tables_Export}"
+          Icon="{ui:SymbolIcon ArrowExportUp24}" />
+        <ui:Button
+          Margin="0,0,8,0"
+          AutomationProperties.AutomationId="TablesOpenFolder"
+          Command="{Binding OpenFolderCommand}"
+          Content="{loc:Tr Tables_OpenFolder}"
+          Icon="{ui:SymbolIcon FolderOpen24}"
+          Visibility="{Binding HasWritten, Converter={StaticResource BoolToVisibility}}" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="TablesClose"
+          Command="{Binding CloseCommand}"
+          Content="{loc:Tr Common_Close}" />
+      </StackPanel>
+      <TextBlock
+        VerticalAlignment="Center"
+        AutomationProperties.AutomationId="TablesReport"
+        Text="{Binding ReportText}"
+        TextTrimming="CharacterEllipsis" />
+    </DockPanel>
+  </Grid>
+</ui:FluentWindow>

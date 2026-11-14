@@ -1,0 +1,197 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.OcrWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ocr="clr-namespace:PdfPro.App.ViewModels.Ocr"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:views="clr-namespace:PdfPro.App.Views"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=ocr:OcrViewModel}"
+  Title="{loc:Tr Ocr_Title}"
+  Width="580"
+  MinHeight="0"
+  AutomationProperties.AutomationId="OcrWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,12,0,4" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+    <Style x:Key="Details" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr Ocr_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock
+        FontWeight="SemiBold"
+        Text="{Binding FileName}"
+        TextTrimming="CharacterEllipsis" />
+      <TextBlock
+        Margin="0,2,0,0"
+        AutomationProperties.AutomationId="OcrEngine"
+        Style="{StaticResource Details}"
+        Text="{Binding EngineText}" />
+
+      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Ocr_Languages}" />
+      <ItemsControl AutomationProperties.AutomationId="OcrLanguages" ItemsSource="{Binding Languages}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type ocr:OcrLanguageOption}">
+            <CheckBox
+              Margin="0,0,16,4"
+              AutomationProperties.AutomationId="{Binding Code, StringFormat=OcrLanguage_{0}}"
+              Content="{Binding Label}"
+              IsChecked="{Binding IsChecked}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Style="{StaticResource Details}" Text="{loc:Tr Ocr_Languages_Details}" />
+
+      <views:PageTargetPanel Margin="0,16,0,0" DataContext="{Binding Target}" />
+
+      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Ocr_ExistingText}" />
+      <RadioButton
+        AutomationProperties.AutomationId="OcrSkip"
+        GroupName="OcrExistingText"
+        IsChecked="{Binding IsSkip}">
+        <StackPanel>
+          <TextBlock Text="{loc:Tr Ocr_Skip}" />
+          <TextBlock Style="{StaticResource Details}" Text="{loc:Tr Ocr_Skip_Details}" />
+        </StackPanel>
+      </RadioButton>
+      <RadioButton
+        Margin="0,6,0,0"
+        AutomationProperties.AutomationId="OcrReplace"
+        GroupName="OcrExistingText"
+        IsChecked="{Binding IsReplace}">
+        <StackPanel>
+          <TextBlock Text="{loc:Tr Ocr_Replace}" />
+          <TextBlock Style="{StaticResource Details}" Text="{loc:Tr Ocr_Replace_Details}" />
+        </StackPanel>
+      </RadioButton>
+      <RadioButton
+        Margin="0,6,0,0"
+        AutomationProperties.AutomationId="OcrAll"
+        GroupName="OcrExistingText"
+        IsChecked="{Binding IsAll}">
+        <StackPanel>
+          <TextBlock Text="{loc:Tr Ocr_All}" />
+          <TextBlock Style="{StaticResource Details}" Text="{loc:Tr Ocr_All_Details}" />
+        </StackPanel>
+      </RadioButton>
+
+      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Ocr_Scans}" />
+      <CheckBox
+        AutomationProperties.AutomationId="OcrAutoRotate"
+        Content="{loc:Tr Ocr_AutoRotate}"
+        IsChecked="{Binding AutoRotate}"
+        IsEnabled="{Binding CanAutoRotate}" />
+      <CheckBox
+        Margin="0,4,0,0"
+        AutomationProperties.AutomationId="OcrDeskew"
+        Content="{loc:Tr Ocr_Deskew}"
+        IsChecked="{Binding Deskew}" />
+      <CheckBox
+        Margin="0,4,0,0"
+        AutomationProperties.AutomationId="OcrStraighten"
+        IsChecked="{Binding StraightenPages}">
+        <StackPanel>
+          <TextBlock Text="{loc:Tr Ocr_Straighten}" />
+          <TextBlock Style="{StaticResource Details}" Text="{loc:Tr Ocr_Straighten_Details}" />
+        </StackPanel>
+      </CheckBox>
+
+      <Grid Margin="0,12,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="{loc:Tr Ocr_Parallelism}" />
+          <TextBlock Style="{StaticResource Details}" Text="{loc:Tr Ocr_Parallelism_Details}" />
+        </StackPanel>
+        <ui:NumberBox
+          Grid.Column="1"
+          MinWidth="120"
+          Margin="12,0,0,0"
+          AutomationProperties.AutomationId="OcrParallelism"
+          AutomationProperties.Name="{loc:Tr Ocr_Parallelism}"
+          ClearButtonEnabled="False"
+          MaxDecimalPlaces="0"
+          Maximum="{Binding MaxParallelism}"
+          Minimum="1"
+          SpinButtonPlacementMode="Inline"
+          Value="{Binding Parallelism, UpdateSourceTrigger=PropertyChanged}" />
+      </Grid>
+
+      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr Ocr_Save}" />
+      <WrapPanel>
+        <CheckBox
+          Margin="0,0,16,0"
+          AutomationProperties.AutomationId="OcrSaveText"
+          Content="{loc:Tr Ocr_SaveText}"
+          IsChecked="{Binding SaveText}" />
+        <CheckBox
+          AutomationProperties.AutomationId="OcrSaveHocr"
+          Content="{loc:Tr Ocr_SaveHocr}"
+          IsChecked="{Binding SaveHocr}" />
+      </WrapPanel>
+
+      <TextBlock
+        Margin="0,12,0,0"
+        Style="{StaticResource Details}"
+        Text="{loc:Tr Ocr_Note}" />
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="OcrError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="OcrApply"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr Ocr_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="OcrCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

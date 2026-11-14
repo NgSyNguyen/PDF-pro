@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="PdfPro.Infrastructure.Tests" />
+    <InternalsVisibleTo Include="PdfPro.Worker.Tests" />
   </ItemGroup>
 
 </Project>

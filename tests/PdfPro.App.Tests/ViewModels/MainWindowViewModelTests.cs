@@ -1,17 +1,21 @@
 using System.Globalization;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using PdfPro.App.Hosting;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Optimizing;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
+using PdfPro.App.Services.Security;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels;
 using PdfPro.Core.Geometry;
 using PdfPro.Infrastructure;
 using PdfPro.Infrastructure.Settings;
+using PdfPro.Operations.Optimizing;
 using PdfPro.Pdfium;
 
 namespace PdfPro.App.Tests.ViewModels;
@@ -28,11 +32,13 @@ public sealed partial class MainWindowViewModelTests : IDisposable
     private readonly IPrintDialogService _printDialogs = Substitute.For<IPrintDialogService>();
     private readonly IDocumentPrinter _printer = Substitute.For<IDocumentPrinter>();
     private readonly IDocumentSaver _saver = Substitute.For<IDocumentSaver>();
+    private readonly IBatesService _bates = Substitute.For<IBatesService>();
     private readonly IRecoveryService _recovery = Substitute.For<IRecoveryService>();
     private readonly IContentChanger _contentChanger = Substitute.For<IContentChanger>();
     private readonly IPageDialogService _pageDialogs = Substitute.For<IPageDialogService>();
     private readonly IMergeService _merge = Substitute.For<IMergeService>();
     private readonly FakeSettingsService _settings = new(AppSettings.Default);
+    private readonly FakeFormSource _forms = new();
     private readonly AppPaths _paths = new(@"C:\data\PdfPro", @"C:\app\tools");
     private readonly RenderCache _cache;
     private readonly IDocumentTabFactory _tabFactory;
@@ -51,7 +57,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _pageDialogs,
             _fileDialogs,
             Substitute.For<IPdfDocumentLoader>(),
-            NullLoggerFactory.Instance);
+            NullLoggerFactory.Instance,
+            forms: _forms);
     }
 
     public void Dispose()
@@ -92,11 +99,15 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "tools.settings", "tools.openLogFolder", "tools.throwTestException",
+            ["file.open", "file.save", "file.saveAs", "file.print", "file.present", "file.properties", "file.close", "app.settings", "app.exit", "help.shortcuts", "help.guide", "help.about", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette", "workflow.open", "batch.run",
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
-                "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature"],
+                "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature", "edit.content", "forms.design", "forms.exportData", "forms.importData", "forms.merge", "forms.reset", "forms.flatten", "structure.bookmarks", "structure.addBookmark", "structure.metadata", "structure.pageLabels", "structure.links", "structure.drawLink",
+                "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
+                "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
+                "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten",
+                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify", "convert.toImages", "convert.toText", "convert.toWord", "convert.fromImages", "convert.officeToPdf", "convert.toPdfA", "extract.tables", "extract.images", "extract.attachments", "extract.fonts", "ocr.run", "compare.documents", "scan.removeBlankPages", "scan.autoRotate", "scan.deskew", "scan.cleanBorders", "scan.splitByBlank", "optimize.compress", "optimize.grayscale", "optimize.linearize", "optimize.repair"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -425,13 +436,14 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         var document = viewModel.ActiveDocument.ShouldNotBeNull();
         document.Title.ShouldBe("a.pdf *");
         undo.Command.CanExecute(null).ShouldBeTrue();
-        undo.ToolTip.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Cmd_UndoWith, string.Format(CultureInfo.CurrentCulture, Strings.History_Rotate, 1)));
+        undo.ToolTip.ShouldBe(string.Format(CultureInfo.CurrentCulture, Strings.Cmd_UndoWith, string.Format(CultureInfo.CurrentCulture, Strings.History_Rotate, 1)) + " (Ctrl+Z)");
 
         viewModel.UndoCommand.Execute(null);
 
         document.IsDirty.ShouldBeFalse();
         viewModel.RedoCommand.CanExecute(null).ShouldBeTrue();
-        undo.ToolTip.ShouldBe(Strings.Cmd_Undo);
+        undo.ToolTip.ShouldBe(Strings.Cmd_Undo + " (Ctrl+Z)");
+        undo.Shortcut.ShouldBe("Ctrl+Z");
     }
 
     [Fact]
@@ -517,7 +529,97 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         return viewModel;
     }
 
-    private MainWindowViewModel Create(bool isDebugBuild)
+    [Fact]
+    public async Task AWorkflow_RunsOnTheOpenDocument_AndItsResultOpens()
+    {
+        var path = _fixture.CreateFile("công văn.pdf", File.ReadAllBytes(Samples.Basic));
+        var output = Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(path)!, "kết quả")).FullName;
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
+        _fileDialogs.PickFolder(Arg.Any<string>(), Arg.Any<string?>()).Returns(output);
+        var viewModel = Create(isDebugBuild: false);
+        await viewModel.OpenFilesAsync([path]);
+        _pageDialogs.ShowWorkflows(Arg.Do<PdfPro.App.ViewModels.Automation.WorkflowsViewModel>(w =>
+        {
+            w.NewCommand.Execute(null);
+            w.Editor!.OperationToAdd = w.Editor.Operations.Single(o => o.Id == "stamp.pageNumbers");
+            w.Editor.AddStepCommand.Execute(null);
+            w.RunOnDocumentCommand.Execute(null);
+        })).Returns(true);
+
+        await viewModel.WorkflowsCommand.ExecuteAsync(null);
+
+        var written = Path.Combine(output, "công văn.pdf");
+        File.Exists(written).ShouldBeTrue();
+        await _workspaces.Received(1).OpenAsync(written, Arg.Any<CancellationToken>());
+        File.ReadAllBytes(path).ShouldBe(File.ReadAllBytes(Samples.Basic), "the document's own file is never written");
+        _fileRunner.ShouldNotBeNull().Runs.ShouldBe(1, "the open document's run goes where batches run (the worker, when it is on)");
+    }
+
+    [Fact]
+    public async Task ThePalette_RunsTheChosenCommand_AndRemembersIt()
+    {
+        var viewModel = Create(isDebugBuild: false);
+        _pageDialogs.ShowCommandPalette(Arg.Do<CommandPaletteViewModel>(p =>
+        {
+            p.Results.ShouldNotContain(e => e.Id == "tools.commandPalette");
+            p.Results.Select(e => e.Command).Distinct().Count().ShouldBe(p.Results.Count, "a command in two places is listed once");
+            p.Query = Strings.Cmd_OpenLogFolder;
+            p.RunCommand.Execute(null);
+        })).Returns(true);
+
+        await viewModel.CommandPaletteCommand.ExecuteAsync(null);
+
+        _shell.Received(1).OpenFolder(_paths.LogsDirectory);
+        _settings.Current.RecentCommands.ShouldBe(["tools.openLogFolder"]);
+        viewModel.PaletteEntries().Single(e => e.Id == "file.open").Shortcut.ShouldBe("Ctrl+O");
+    }
+
+    [Fact]
+    public async Task TheQuickStartGuide_ShowsUntilPutAway_AndComesBackFromTheRibbon()
+    {
+        var viewModel = Create(isDebugBuild: false);
+        viewModel.Home.ShowsGuide.ShouldBeTrue("a first start shows the guide");
+
+        await ((IAsyncRelayCommand)viewModel.Home.HideGuideCommand!).ExecuteAsync(null);
+
+        viewModel.Home.ShowsGuide.ShouldBeFalse();
+        _settings.Current.GuideHidden.ShouldBeTrue();
+        Create(isDebugBuild: false).Home.ShowsGuide.ShouldBeFalse("the choice is remembered");
+
+        await viewModel.ShowGuideCommand.ExecuteAsync(null);
+
+        viewModel.Home.ShowsGuide.ShouldBeTrue();
+        viewModel.SelectedTab.ShouldBe(viewModel.Home);
+        _settings.Current.GuideHidden.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void F1_AndAbout_OpenTheirWindows()
+    {
+        var viewModel = Create(isDebugBuild: false);
+
+        viewModel.ShowShortcutsCommand.Execute(null);
+        Command(viewModel, "help.about").Command.Execute(null);
+
+        _pageDialogs.Received(1).ShowShortcuts(Arg.Is<ShortcutsViewModel>(s => s.Groups.Count > 0));
+        _pageDialogs.Received(1).ShowAbout(Arg.Is<AboutViewModel>(a => a.Version == "1.0.0"));
+    }
+
+    [Fact]
+    public void EveryRibbonShortcut_IsOnTheSheet_AndInTheTooltip()
+    {
+        var viewModel = Create(isDebugBuild: false);
+        var sheet = KeyboardShortcuts.Sheet().SelectMany(g => g.Entries).Select(e => e.Keys).ToList();
+
+        foreach (var command in AllCommands(viewModel).Where(c => c.Shortcut is not null))
+        {
+            command.ToolTip.ShouldContain(command.Shortcut!);
+            command.ToolTip.IndexOf(command.Shortcut!, StringComparison.Ordinal).ShouldBe(command.ToolTip.LastIndexOf(command.Shortcut!, StringComparison.Ordinal), "named once");
+            sheet.ShouldContain(keys => keys.Split(", ").Contains(command.Shortcut), $"{command.Id} {command.Shortcut}");
+        }
+    }
+
+    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true, PdfPro.App.Services.Updates.IUpdateService? updates = null, PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null, PdfPro.App.Services.Optimizing.IExportRunner? exports = null)
         => new(
             _dialogs,
             _lifetime,
@@ -536,5 +638,53 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             _contentChanger,
             _pageDialogs,
             _merge,
-            NullLogger<MainWindowViewModel>.Instance);
+            NullLogger<MainWindowViewModel>.Instance,
+            withBates ? _bates : null,
+            new SigningServices(_certificates, _timestamps, _forms, Revocation: _revocation),
+            new OptimizingServices(
+                new LinearizeOperation(new Qpdf(_tools, new QpdfOptions("qpdf"))),
+                new RepairOperation(TestOperations.PdfiumGate),
+                new CompressOperation(new Qpdf(_tools, new QpdfOptions("qpdf"))),
+                Grayscale: new GrayscaleOperation(TestOperations.PdfiumGate),
+                ToImages: new Operations.Converting.ToImagesOperation(TestOperations.PdfiumGate),
+                FromImages: new Operations.Converting.FromImagesOperation(),
+                ToText: new Operations.Converting.ToTextOperation(),
+                OfficeToPdf: new Operations.Converting.OfficeToPdfOperation(_tools, _libreOffice, _office),
+                LibreOffice: _libreOffice,
+                ToPdfA: new Operations.Converting.ToPdfAOperation(TestOperations.PdfiumGate, new Operations.Fonts.FontLibrary([])),
+                VeraPdf: new Operations.Converting.VeraPdfValidator(_tools, _veraPdf),
+                VeraPdfLocator: _veraPdf,
+                Office: _office,
+                ToWord: new Operations.Converting.ToWordOperation()),
+            Scan(),
+            Compare(),
+            Extracting(),
+            Automation(),
+            updates: updates,
+            exports: exports,
+            openGuard: openGuard);
+
+    private PdfPro.App.Services.Automation.AutomationServices Automation()
+    {
+        var catalog = TestOperations.All();
+        var runner = new PdfPro.Operations.Automation.WorkflowRunner(catalog, TestOperations.PdfiumGate);
+        _fileRunner = new RecordingFileRunner(runner);
+        return new(catalog, runner, new PdfPro.App.Services.Automation.WorkflowLibrary(Path.Combine(_paths.DataRoot, "workflows")), _fileRunner);
+    }
+
+    private RecordingFileRunner? _fileRunner;
+
+    /// <summary>The runner of files (the worker's, in the app), counting its runs.</summary>
+    private sealed class RecordingFileRunner(PdfPro.Operations.Automation.WorkflowRunner inner) : PdfPro.Operations.Automation.IWorkflowFileRunner
+    {
+        public int Runs { get; private set; }
+
+        public PdfPro.Operations.OperationCatalog Catalog => inner.Catalog;
+
+        public Task<PdfPro.Operations.Automation.WorkflowRunResult> RunAsync(PdfPro.Operations.Automation.Workflow workflow, PdfPro.Operations.Automation.WorkflowRunRequest request, IProgress<PdfPro.Operations.Automation.WorkflowProgress>? progress, CancellationToken cancellationToken)
+        {
+            Runs++;
+            return inner.RunAsync(workflow, request, progress, cancellationToken);
+        }
+    }
 }

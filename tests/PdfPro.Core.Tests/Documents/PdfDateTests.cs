@@ -42,4 +42,18 @@ public sealed class PdfDateTests
     [InlineData("D:20260115083000X")]
     public void TryParse_RejectsInvalidDates(string? text)
         => PdfDate.TryParse(text, out _).ShouldBeFalse();
+
+    [Theory]
+    [InlineData(7, 0, "D:20261027093005+07'00'")]
+    [InlineData(-5, -30, "D:20261027093005-05'30'")]
+    [InlineData(0, 0, "D:20261027093005Z")]
+    public void Format_WritesTheFullForm_ThatReadsBack(int hours, int minutes, string expected)
+    {
+        var value = new DateTimeOffset(2026, 10, 27, 9, 30, 5, new TimeSpan(hours, minutes, 0));
+
+        PdfDate.Format(value).ShouldBe(expected);
+        PdfDate.TryParse(PdfDate.Format(value), out var back).ShouldBeTrue();
+        back.ShouldBe(value);
+        back.Offset.ShouldBe(value.Offset);
+    }
 }
