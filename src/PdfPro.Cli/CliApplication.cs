@@ -511,7 +511,7 @@ public static class CliApplication
     {
         var inputs = Inputs();
         var to = new Option<string>("--to") { Description = CliStrings.Option_To, Required = true };
-        to.AcceptOnlyFromAmong("pdf", "png", "jpeg", "tiff", "text", "markdown", "pdfa", "pdfa1b", "grayscale", "web");
+        to.AcceptOnlyFromAmong("pdf", "png", "jpeg", "tiff", "text", "markdown", "word", "docx", "pdfa", "pdfa1b", "grayscale", "web");
         var dpi = new Option<int?>("--dpi") { Description = CliStrings.Option_Dpi };
         var command = new Command("convert", CliStrings.Command_Convert) { inputs, to, dpi };
         command.SetAction((parse, token) =>
@@ -529,6 +529,7 @@ public static class CliApplication
                 "tiff" => ("convert.toImages", Images("tiff")),
                 "text" => ("convert.toText", new JsonObject { ["format"] = "text" }),
                 "markdown" => ("convert.toText", new JsonObject { ["format"] = "markdown" }),
+                "word" or "docx" => ("convert.toWord", new JsonObject()),
                 "pdfa" => ("convert.toPdfA", new JsonObject { ["level"] = "a2B" }),
                 "pdfa1b" => ("convert.toPdfA", new JsonObject { ["level"] = "a1B" }),
                 "grayscale" => ("optimize.grayscale", new JsonObject()),

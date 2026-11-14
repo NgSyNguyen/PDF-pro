@@ -126,6 +126,10 @@ public static partial class TableExtractor
         return document.NumberOfPages;
     }
 
+    /// <summary>The tables of a page drawn with rules (0-based page of an open document), top to bottom.</summary>
+    /// <exception cref="InvalidDataException">The page cannot be read.</exception>
+    internal static IReadOnlyList<ExtractedTable> RuledTables(PdfDocument document, int page) => OnPage(document, page, TableMethod.Lattice);
+
     /// <summary>The tables of a whole page.</summary>
     private static List<ExtractedTable> OnPage(PdfDocument document, int page, TableMethod method = TableMethod.Auto)
     {

@@ -213,6 +213,25 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickWordSavePath(string suggestedFileName, string? initialDirectory)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = Strings.ToWord_SaveDialog_Title,
+            Filter = Strings.ToWord_SaveDialog_Filter,
+            FileName = suggestedFileName,
+            DefaultExt = ".docx",
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+        if (!string.IsNullOrEmpty(initialDirectory) && System.IO.Directory.Exists(initialDirectory))
+        {
+            dialog.InitialDirectory = initialDirectory;
+        }
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickTableSavePath(string suggestedFileName, string? initialDirectory, bool csv)
     {
         var dialog = new SaveFileDialog
@@ -508,6 +527,12 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new ToTextWindow(viewModel));
+    }
+
+    public bool ShowToWord(ViewModels.Converting.ToWordViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new ToWordWindow(viewModel));
     }
 
     public bool ShowBookmarks(ViewModels.Structure.BookmarksEditorViewModel viewModel)

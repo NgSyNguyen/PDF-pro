@@ -69,6 +69,7 @@ pdfpro rotate scan.pdf --degrees 90 --pages "1, 3-5"
 pdfpro compress *.pdf --preset ebook -o nho            # screen | ebook | print | archive; --dpi, --quality = tùy chỉnh
 pdfpro convert bao-cao.pdf --to png --dpi 150          # png | jpeg | tiff
 pdfpro convert van-ban.pdf --to markdown               # text | markdown
+pdfpro convert hop-dong.pdf --to word                  # Word (.docx) sửa được chữ (word | docx)
 pdfpro convert ho-so.pdf --to pdfa                     # pdfa (2b) | pdfa1b
 pdfpro convert ho-so.pdf --to grayscale                # thang xám | web (tối ưu xem trên web, cần qpdf)
 pdfpro convert anh1.jpg anh2.png --to pdf -o "album.pdf"   # ảnh → một PDF (JPEG giữ nguyên byte)

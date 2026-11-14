@@ -190,7 +190,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand), nameof(BookmarksCommand), nameof(AddBookmarkCommand), nameof(DocumentDescriptionCommand), nameof(PageLabelsCommand), nameof(LinksCommand), nameof(DrawLinkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToWordCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand), nameof(BookmarksCommand), nameof(AddBookmarkCommand), nameof(DocumentDescriptionCommand), nameof(PageLabelsCommand), nameof(LinksCommand), nameof(DrawLinkCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -910,6 +910,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("convert.toImages", Strings.Cmd_ToImages, SymbolRegular.Image24, ToImagesCommand, Strings.Cmd_ToImages_ToolTip),
                     new("convert.toText", Strings.Cmd_ToText, SymbolRegular.DocumentText24, ToTextCommand, Strings.Cmd_ToText_ToolTip),
+                    new("convert.toWord", Strings.Cmd_ToWord, SymbolRegular.DocumentEdit24, ToWordCommand, Strings.Cmd_ToWord_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Extract,
                 [

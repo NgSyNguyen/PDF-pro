@@ -109,6 +109,7 @@ public static class StandardOperations
             new ToImagesOperation(gate),
             new FromImagesOperation(),
             new ToTextOperation(),
+            new ToWordOperation(),
             new OfficeToPdfOperation(services.Tools, services.LibreOffice ?? new LibreOfficeLocator(), services.Office),
             new ToPdfAOperation(gate, services.Fonts),
             new OcrOperation(gate, ocr),

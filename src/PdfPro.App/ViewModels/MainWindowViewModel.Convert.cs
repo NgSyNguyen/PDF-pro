@@ -214,6 +214,85 @@ public sealed partial class MainWindowViewModel
     private bool CanConvertToText() => _optimizing?.ToText is not null && CanLinearize();
 
     /// <summary>
+    /// The dialog (pages, tables, pictures), where to save the .docx, then the Word document of the active document as
+    /// it is shown written in the background; pages that are only pictures are reported (OCR makes them editable); the
+    /// document opens in its program when asked.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanConvertToWord))]
+    private async Task ToWordAsync()
+    {
+        if (_optimizing is not { ToWord: { } toWord } || ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        if (document.IsReadOnly || document.Workspace.Protection is not null)
+        {
+            await _messages.ShowErrorAsync(Strings.ToWord_Error_Title, Strings.Optimize_Error_Protected);
+            return;
+        }
+
+        if (!await ApplyPendingEditsAsync(document) || !Tabs.Contains(document))
+        {
+            return;
+        }
+
+        IReadOnlyList<int> selected = document.IsOrganizing && document.Organizer is { } organizer ? organizer.SelectedIndices : [];
+        var dialog = new ToWordViewModel(document.FileName, document.Viewer.PageCount, selected);
+        if (!_pageDialogs.ShowToWord(dialog) || dialog.Result is not { } choice)
+        {
+            return;
+        }
+
+        var output = _fileDialogs.PickWordSavePath(Path.GetFileNameWithoutExtension(document.FileName) + ".docx", Path.GetDirectoryName(document.FilePath));
+        if (output is null)
+        {
+            return;
+        }
+
+        var (input, workingFolder) = await DocumentFileAsync(document, "word");
+        try
+        {
+            if (input is null)
+            {
+                await _messages.ShowErrorAsync(Strings.ToWord_Error_Title, Strings.Optimize_Error_Unreadable);
+                return;
+            }
+
+            ToWordResult? result = null;
+            var done = await RunOptimizingAsync(
+                Format(Strings.ToWord_Progress, document.FileName),
+                async (progress, token) => result = await Exports.RunAsync<ToWordResult>(toWord, new ExportCall([input], output), choice.Parameters, progress, token),
+                Format(Strings.ToWord_Done, Path.GetFileName(output)),
+                Strings.ToWord_Error_Title);
+            if (!done || result is null)
+            {
+                return;
+            }
+
+            _logger.LogInformation("A document was converted to Word: {PageCount} pages, {Paragraphs} paragraphs, {Tables} tables, {Pictures} pictures, {Scans} pages without text", result.PageCount, result.Paragraphs, result.Tables, result.Pictures, result.PagesWithoutText.Count);
+            if (result.PagesWithoutText.Count > 0)
+            {
+                await _messages.ShowInfoAsync(Strings.ToWord_Title, Format(Strings.ToWord_PagesWithoutText, PageRanges.Format(result.PagesWithoutText)));
+            }
+
+            if (choice.OpenWhenDone)
+            {
+                _shell.OpenFile(output);
+            }
+        }
+        finally
+        {
+            if (workingFolder is not null)
+            {
+                TryDeleteFolder(workingFolder);
+            }
+        }
+    }
+
+    private bool CanConvertToWord() => _optimizing?.ToWord is not null && CanLinearize();
+
+    /// <summary>
     /// Finds what converts — the office applications installed (Microsoft Office, WPS Office), LibreOffice (where
     /// Settings say, else where it is installed) — and, with none, says how to get one; then the dialog
     /// (documents, folder), then each document converted in the background, one after the other; documents that fail

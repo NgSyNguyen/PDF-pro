@@ -2488,4 +2488,23 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="OfficeToPdf_App_PowerPoint" xml:space="preserve"><value>Microsoft PowerPoint</value></data>
   <data name="OfficeToPdf_App_Wps" xml:space="preserve"><value>WPS Office</value></data>
   <data name="OfficeToPdf_App_Other" xml:space="preserve"><value>chương trình đăng ký là Microsoft Office</value></data>
+  <data name="Cmd_ToWord" xml:space="preserve"><value>Sang Word</value></data>
+  <data name="Cmd_ToWord_ToolTip" xml:space="preserve"><value>Chuyển PDF thành tài liệu Word (.docx) sửa được chữ: giữ đoạn, tiêu đề, chữ đậm/nghiêng, bảng có đường kẻ và ảnh</value></data>
+  <data name="ToWord_Title" xml:space="preserve"><value>PDF sang Word</value></data>
+  <data name="ToWord_Tables" xml:space="preserve"><value>Bảng có đường kẻ thành bảng Word</value></data>
+  <data name="ToWord_Tables_Details" xml:space="preserve"><value>Bảng chỉ căn cột theo chữ (không kẻ ô) vẫn là các đoạn văn.</value></data>
+  <data name="ToWord_Pictures" xml:space="preserve"><value>Giữ ảnh của trang</value></data>
+  <data name="ToWord_OpenWhenDone" xml:space="preserve"><value>Mở tệp Word khi xong</value></data>
+  <data name="ToWord_Note" xml:space="preserve"><value>Chữ trong tệp Word sửa được như văn bản thường. Bố cục phức tạp (nhiều cột, chữ đè lên ảnh, khung, chú thích) có thể khác bản PDF. Trang chỉ là ảnh (bản quét) được giữ là ảnh: chạy Công cụ › OCR trước để sửa được chữ.</value></data>
+  <data name="ToWord_Run" xml:space="preserve"><value>Chuyển sang Word</value></data>
+  <data name="ToWord_SaveDialog_Title" xml:space="preserve"><value>Lưu tài liệu Word</value></data>
+  <data name="ToWord_SaveDialog_Filter" xml:space="preserve"><value>Tài liệu Word (*.docx)|*.docx</value></data>
+  <data name="ToWord_Progress" xml:space="preserve"><value>Đang chuyển "{0}" sang Word…</value></data>
+  <data name="ToWord_Done" xml:space="preserve"><value>Đã ghi "{0}"</value></data>
+  <data name="ToWord_Error_Title" xml:space="preserve"><value>Không chuyển được sang Word</value></data>
+  <data name="ToWord_PagesWithoutText" xml:space="preserve"><value>Trang {0} chỉ có ảnh (bản quét): trong tệp Word chúng vẫn là ảnh. Muốn sửa được chữ, hãy chạy Công cụ › OCR rồi chuyển lại.</value></data>
+  <data name="Stage_ToWord" xml:space="preserve"><value>Đang chuyển sang Word</value></data>
+  <data name="Op_convert_toWord" xml:space="preserve"><value>Sang Word</value></data>
+  <data name="Param_tables" xml:space="preserve"><value>Bảng có đường kẻ thành bảng Word</value></data>
+  <data name="Param_pictures" xml:space="preserve"><value>Giữ ảnh</value></data>
 </root>

@@ -53,6 +53,9 @@ public interface IExitGuard
 public interface IShellLauncher
 {
     void OpenFolder(string path);
+
+    /// <summary>Opens a file the app wrote (a Word document) in the program Windows opens it with.</summary>
+    void OpenFile(string path);
 }
 
 /// <summary>Opens PDF files for the UI: asks for passwords and explains failures to the user.</summary>
@@ -168,6 +171,11 @@ public interface IFileDialogService
     /// <param name="csv">CSV rather than Excel.</param>
     string? PickTableSavePath(string suggestedFileName, string? initialDirectory, bool csv);
 
+    /// <summary>Where to save a Word document ("PDF sang Word"); null when cancelled.</summary>
+    /// <param name="suggestedFileName">The name proposed ("hợp đồng.docx").</param>
+    /// <param name="initialDirectory">Folder shown first, or null.</param>
+    string? PickWordSavePath(string suggestedFileName, string? initialDirectory);
+
     /// <summary>Files of any kind to attach to a document; empty when cancelled.</summary>
     IReadOnlyList<string> PickAttachmentFiles(string title);
 
@@ -263,6 +271,9 @@ public interface IPageDialogService
 
     /// <summary>"PDF sang văn bản": format, page split, pages and folder.</summary>
     bool ShowToText(ViewModels.Converting.ToTextViewModel viewModel);
+
+    /// <summary>"PDF sang Word": pages, tables, pictures.</summary>
+    bool ShowToWord(ViewModels.Converting.ToWordViewModel viewModel);
 
     /// <summary>"Nhận dạng chữ (OCR)"; true when confirmed.</summary>
     bool ShowOcr(ViewModels.Ocr.OcrViewModel viewModel);

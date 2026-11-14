@@ -246,9 +246,11 @@ public sealed class ToTextOperation : PdfOperation<ToTextParams>, IExportOperati
     }
 
     /// <summary>The blocks of a page in reading order; empty for a page without text.</summary>
-    internal static IReadOnlyList<TextBlock> Blocks(Page page)
+    internal static IReadOnlyList<TextBlock> Blocks(Page page) => Blocks(page.Letters);
+
+    /// <summary>The blocks of some letters of a page in reading order; empty without text.</summary>
+    internal static IReadOnlyList<TextBlock> Blocks(IReadOnlyList<Letter> letters)
     {
-        var letters = page.Letters;
         if (!letters.Any(l => !string.IsNullOrWhiteSpace(l.Value)))
         {
             return [];
@@ -379,7 +381,7 @@ public sealed class ToTextOperation : PdfOperation<ToTextParams>, IExportOperati
     }
 
     /// <exception cref="InvalidDataException">The page cannot be read.</exception>
-    private static Page ReadPage(PigDocument document, int pageIndex)
+    internal static Page ReadPage(PigDocument document, int pageIndex)
     {
         try
         {
@@ -391,7 +393,7 @@ public sealed class ToTextOperation : PdfOperation<ToTextParams>, IExportOperati
         }
     }
 
-    private static PigDocument Open(string input, string? password)
+    internal static PigDocument Open(string input, string? password)
     {
         var options = new PigOptions { UseLenientParsing = true, SkipMissingFonts = true, UseActualText = true };
         if (!string.IsNullOrEmpty(password))

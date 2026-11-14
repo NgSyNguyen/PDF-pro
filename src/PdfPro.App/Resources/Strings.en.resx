@@ -2488,4 +2488,23 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="OfficeToPdf_App_PowerPoint" xml:space="preserve"><value>Microsoft PowerPoint</value></data>
   <data name="OfficeToPdf_App_Wps" xml:space="preserve"><value>WPS Office</value></data>
   <data name="OfficeToPdf_App_Other" xml:space="preserve"><value>the program registered as Microsoft Office</value></data>
+  <data name="Cmd_ToWord" xml:space="preserve"><value>To Word</value></data>
+  <data name="Cmd_ToWord_ToolTip" xml:space="preserve"><value>Turn the PDF into a Word document (.docx) whose text can be edited: paragraphs, headings, bold/italic, ruled tables and pictures</value></data>
+  <data name="ToWord_Title" xml:space="preserve"><value>PDF to Word</value></data>
+  <data name="ToWord_Tables" xml:space="preserve"><value>Ruled tables become Word tables</value></data>
+  <data name="ToWord_Tables_Details" xml:space="preserve"><value>Tables lined up by their text alone (no rules) stay paragraphs.</value></data>
+  <data name="ToWord_Pictures" xml:space="preserve"><value>Keep the pages' pictures</value></data>
+  <data name="ToWord_OpenWhenDone" xml:space="preserve"><value>Open the Word document when done</value></data>
+  <data name="ToWord_Note" xml:space="preserve"><value>The text of the Word document can be edited like any text. Complex layouts (columns, text over pictures, frames, comments) may differ from the PDF. Pages that are only pictures (scans) stay pictures: run Tools › OCR first to edit their text.</value></data>
+  <data name="ToWord_Run" xml:space="preserve"><value>Convert to Word</value></data>
+  <data name="ToWord_SaveDialog_Title" xml:space="preserve"><value>Save the Word document</value></data>
+  <data name="ToWord_SaveDialog_Filter" xml:space="preserve"><value>Word documents (*.docx)|*.docx</value></data>
+  <data name="ToWord_Progress" xml:space="preserve"><value>Converting "{0}" to Word…</value></data>
+  <data name="ToWord_Done" xml:space="preserve"><value>Wrote "{0}"</value></data>
+  <data name="ToWord_Error_Title" xml:space="preserve"><value>Could not convert to Word</value></data>
+  <data name="ToWord_PagesWithoutText" xml:space="preserve"><value>Pages {0} are only pictures (scans): they stay pictures in the Word document. To edit their text, run Tools › OCR and convert again.</value></data>
+  <data name="Stage_ToWord" xml:space="preserve"><value>Converting to Word</value></data>
+  <data name="Op_convert_toWord" xml:space="preserve"><value>To Word</value></data>
+  <data name="Param_tables" xml:space="preserve"><value>Ruled tables become Word tables</value></data>
+  <data name="Param_pictures" xml:space="preserve"><value>Keep the pictures</value></data>
 </root>

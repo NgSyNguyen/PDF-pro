@@ -158,6 +158,32 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         text.IndexOf("CỘNG HÒA", StringComparison.Ordinal).ShouldBeLessThan(text.IndexOf("Độc lập", StringComparison.Ordinal), "the national heading reads in order");
     }
 
+    /// <summary>"PDF sang Word": an editable .docx with the administrative heading side by side.</summary>
+    [Fact]
+    public void ADocument_BecomesAnEditableWordDocument()
+    {
+        RequireEnabled();
+        var path = _folder.Copy("vanban-vi.pdf");
+        var docx = Path.Combine(_folder.Documents, "quyết định.docx");
+        using var app = AppUnderTest.Start(_folder, path);
+        app.WaitForTab("vanban-vi.pdf", Long);
+
+        app.Ribbon("convert", "convert.toWord");
+        var dialog = app.WaitForWindow(Text("ToWord_Title"));
+        app.SetChecked("ToWordOpenWhenDone", false, dialog);
+        app.Invoke("ToWordRun", dialog);
+        app.UseFileDialog(Text("ToWord_SaveDialog_Title"), docx);
+        var elapsed = AppUnderTest.WaitUntil(() => File.Exists(docx), Long, "the Word document");
+        app.WaitForStatus(Format("ToWord_Done", "quyết định.docx"), Long);
+        output.WriteLine($"14 pages to Word: {elapsed.TotalMilliseconds:N0} ms");
+
+        using var zip = System.IO.Compression.ZipFile.OpenRead(docx);
+        using var reader = new StreamReader(zip.GetEntry("word/document.xml")!.Open());
+        var xml = reader.ReadToEnd().Normalize(System.Text.NormalizationForm.FormC);
+        xml.ShouldContain("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM");
+        xml.IndexOf("ỦY BAN NHÂN DÂN", StringComparison.Ordinal).ShouldBeLessThan(xml.IndexOf("CỘNG HÒA", StringComparison.Ordinal), "the two halves of the heading, left then right");
+    }
+
     [Fact]
     public void AScanOfFiftyPages_IsCompressedForEBooks_ToLessThan15MB_AtAReadableResolution()
     {

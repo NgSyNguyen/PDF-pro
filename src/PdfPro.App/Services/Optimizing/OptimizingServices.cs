@@ -18,6 +18,7 @@ namespace PdfPro.App.Services.Optimizing;
 /// <param name="VeraPdf">Checks PDF/A copies with veraPDF when it is installed (null: never).</param>
 /// <param name="VeraPdfLocator">Finds veraPDF for <paramref name="VeraPdf"/>.</param>
 /// <param name="Office">Finds the office applications (Microsoft Office, WPS Office) that convert office documents.</param>
+/// <param name="ToWord">"PDF sang Word" (null: the command is off).</param>
 public sealed record OptimizingServices(
     LinearizeOperation Linearize,
     RepairOperation Repair,
@@ -32,4 +33,5 @@ public sealed record OptimizingServices(
     Operations.Converting.ToPdfAOperation? ToPdfA = null,
     Operations.Converting.VeraPdfValidator? VeraPdf = null,
     Operations.Converting.IVeraPdfLocator? VeraPdfLocator = null,
-    Operations.Converting.IOfficeAutomation? Office = null);
+    Operations.Converting.IOfficeAutomation? Office = null,
+    Operations.Converting.ToWordOperation? ToWord = null);

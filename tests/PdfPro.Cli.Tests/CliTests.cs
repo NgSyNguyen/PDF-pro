@@ -253,6 +253,14 @@ public sealed class CliTests(CliFixture fixture) : IDisposable
         var back = await RunAsync("convert", jpegs[0], jpegs[1], "--to", "pdf", "-o", "lại.pdf", "-q");
         back.Code.ShouldBe(ExitCodes.Success);
         Pages(Path.Combine(_folder, "lại.pdf")).ShouldBe(2);
+
+        var word = await RunAsync("convert", CliFixture.Sample("vanban-vi.pdf"), "--to", "word", "-o", "Word", "-q");
+        word.Code.ShouldBe(ExitCodes.Success);
+        var docx = word.Output.Trim();
+        Path.GetFileName(docx).ShouldBe("vanban-vi.docx");
+        using var zip = System.IO.Compression.ZipFile.OpenRead(docx);
+        using var reader = new StreamReader(zip.GetEntry("word/document.xml")!.Open());
+        TextNormalizer.ToNfc(await reader.ReadToEndAsync(Token)).ShouldContain("CỘNG HÒA");
     }
 
     [Fact]

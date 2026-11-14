@@ -5,6 +5,9 @@ theo [Semantic Versioning](https://semver.org/lang/vi/). Mục đầu tiên là 
 
 ## [Chưa phát hành]
 
+- **PDF sang Word**: tài liệu .docx sửa được chữ — đoạn văn theo thứ tự đọc, tiêu đề, chữ đậm/nghiêng/màu, căn lề, phần đầu
+  văn bản hành chính hai cột đứng cạnh nhau, bảng có đường kẻ thành bảng Word, ảnh giữ nguyên; bỏ số trang lặp của PDF.
+  Ribbon Chuyển đổi › Sang Word; dòng lệnh `pdfpro convert x.pdf --to word`.
 - **Excel, PowerPoint sang PDF bằng Microsoft Office hoặc WPS Office có trên máy** (như Word): máy không có LibreOffice
   vẫn chuyển được bảng tính, bản trình chiếu.
 

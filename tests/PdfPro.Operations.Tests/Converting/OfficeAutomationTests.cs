@@ -274,7 +274,9 @@ public sealed class OfficeAutomationTests : IDisposable
     public async Task AnInstalledSpreadsheetApplication_ConvertsAVietnameseWorkbook_AndQuits()
     {
         var input = _temp.Combine("bảng lương.xlsx");
-        await File.WriteAllBytesAsync(input, OfficeFiles.Xlsx(["Họ và tên", "Số tiền"], ["Nguyễn Văn Ấn", "1.234.000"]), Token);
+        // One column: a spreadsheet application cuts a cell's text short where the next cell has some, and WPS does not
+        // always take the column widths of a hand-written workbook.
+        await File.WriteAllBytesAsync(input, OfficeFiles.Xlsx(["Họ và tên"], ["Nguyễn Văn Ấn"], ["1.234.000"]), Token);
 
         var text = await ConvertWithTheInstalledApplicationAsync(OfficeDocumentFamily.Spreadsheet, input);
 
