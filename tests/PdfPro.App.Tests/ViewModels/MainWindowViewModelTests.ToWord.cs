@@ -69,6 +69,32 @@ public sealed partial class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task Present_ShowsTheDocumentFromThePageBeingRead_AndTheViewerGoesWhereItEnded()
+    {
+        var path = _fixture.CreateFile("trình chiếu.pdf", File.ReadAllBytes(Samples.Basic));
+        _workspaces.OpenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(call => _fixture.OpenAsync(FakePdfDocument.WithPages(6), call.ArgAt<string>(0)));
+        var viewModel = Create(isDebugBuild: false);
+        viewModel.PresentCommand.CanExecute(null).ShouldBeFalse("no document");
+        await viewModel.OpenFilesAsync([path]);
+        var viewer = viewModel.ActiveDocument.ShouldNotBeNull().Viewer;
+        viewer.NavigateTo(2);
+        _pageDialogs.When(d => d.ShowPresentation(Arg.Any<PdfPro.App.ViewModels.Viewer.PresentationViewModel>())).Do(call =>
+        {
+            var presentation = call.Arg<PdfPro.App.ViewModels.Viewer.PresentationViewModel>();
+            presentation.PageIndex.ShouldBe(2);
+            presentation.PageCount.ShouldBe(6);
+            presentation.LastCommand.Execute(null);
+        });
+
+        viewModel.PresentCommand.CanExecute(null).ShouldBeTrue();
+        viewModel.PresentCommand.Execute(null);
+
+        _pageDialogs.Received(1).ShowPresentation(Arg.Any<PdfPro.App.ViewModels.Viewer.PresentationViewModel>());
+        viewer.CurrentPageIndex.ShouldBe(5, "the viewer shows the page the presentation ended on");
+        PdfPro.App.ViewModels.KeyboardShortcuts.OfCommands["file.present"].ShouldBe("F5");
+    }
+
+    [Fact]
     public void TheWordDialog_ChecksItsPages_AndGivesItsChoice()
     {
         var dialog = new ToWordViewModel("hợp đồng.pdf", 5, []);

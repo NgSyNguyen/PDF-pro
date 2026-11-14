@@ -2507,4 +2507,9 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Op_convert_toWord" xml:space="preserve"><value>To Word</value></data>
   <data name="Param_tables" xml:space="preserve"><value>Ruled tables become Word tables</value></data>
   <data name="Param_pictures" xml:space="preserve"><value>Keep the pictures</value></data>
+  <data name="Cmd_Present" xml:space="preserve"><value>Present</value></data>
+  <data name="Cmd_Present_ToolTip" xml:space="preserve"><value>Show the document on the whole screen, a page at a time, from the page being read: → or a click for the next page, ← to go back, Esc to stop</value></data>
+  <data name="Present_Title" xml:space="preserve"><value>Presentation</value></data>
+  <data name="Shortcuts_PresentKeys" xml:space="preserve"><value>→ ← Space, Esc (presenting)</value></data>
+  <data name="Shortcuts_Present" xml:space="preserve"><value>Next page, previous page, stop presenting</value></data>
 </root>

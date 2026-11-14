@@ -30,6 +30,8 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
 
     private IReadOnlyList<PdfSize> _pageSizes;
     private readonly PageRenderScheduler _scheduler;
+    private readonly IPageImageRenderer _renderer;
+    private readonly ILogger _logger;
     private IReadOnlyList<PageLabelRange> _pageLabels = [];
     private readonly IDebouncer _zoomSettle;
     private readonly IDebouncer _scrollSettle;
@@ -47,6 +49,8 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
         _pageSizes = document.PageSizes;
         Pages = document.Pages.Select((p, i) => { var page = new PageViewModel(p.Key, i); page.MoveTo(i, p.QuarterTurns); return page; }).ToArray();
         _scheduler = new PageRenderScheduler(document, Pages, renderer, cache, ui, logger);
+        _renderer = renderer;
+        _logger = logger;
         _zoomSettle = debouncers.Create();
         _scrollSettle = debouncers.Create();
         Zoom = 1.0;
@@ -58,6 +62,9 @@ public sealed partial class DocumentViewerViewModel : ObservableObject, IDisposa
 
     /// <summary>The document as the page plan shows it.</summary>
     public VirtualDocument Document { get; private set; }
+
+    /// <summary>"Trình chiếu" of the document as it is shown, from the page being read.</summary>
+    public PresentationViewModel CreatePresentation() => new(Document, _renderer, CurrentPageIndex, _logger);
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PageCount), nameof(PageCountText), nameof(CurrentPageText))]

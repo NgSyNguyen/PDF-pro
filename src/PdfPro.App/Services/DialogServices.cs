@@ -535,6 +535,12 @@ internal sealed class PageDialogService : IPageDialogService
         return Show(new ToWordWindow(viewModel));
     }
 
+    public void ShowPresentation(ViewModels.Viewer.PresentationViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        Show(new PresentationWindow(viewModel));
+    }
+
     public bool ShowBookmarks(ViewModels.Structure.BookmarksEditorViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);

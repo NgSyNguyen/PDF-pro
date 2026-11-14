@@ -2507,4 +2507,9 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Op_convert_toWord" xml:space="preserve"><value>Sang Word</value></data>
   <data name="Param_tables" xml:space="preserve"><value>Bảng có đường kẻ thành bảng Word</value></data>
   <data name="Param_pictures" xml:space="preserve"><value>Giữ ảnh</value></data>
+  <data name="Cmd_Present" xml:space="preserve"><value>Trình chiếu</value></data>
+  <data name="Cmd_Present_ToolTip" xml:space="preserve"><value>Xem tài liệu toàn màn hình từng trang, từ trang đang đọc: → hoặc bấm chuột để sang trang, ← để lùi, Esc để thoát</value></data>
+  <data name="Present_Title" xml:space="preserve"><value>Trình chiếu</value></data>
+  <data name="Shortcuts_PresentKeys" xml:space="preserve"><value>→ ← Space, Esc (khi trình chiếu)</value></data>
+  <data name="Shortcuts_Present" xml:space="preserve"><value>Sang trang, lùi trang, thoát trình chiếu</value></data>
 </root>

@@ -275,6 +275,9 @@ public interface IPageDialogService
     /// <summary>"PDF sang Word": pages, tables, pictures.</summary>
     bool ShowToWord(ViewModels.Converting.ToWordViewModel viewModel);
 
+    /// <summary>"Trình chiếu": the pages on the whole screen until it ends.</summary>
+    void ShowPresentation(ViewModels.Viewer.PresentationViewModel viewModel);
+
     /// <summary>"Nhận dạng chữ (OCR)"; true when confirmed.</summary>
     bool ShowOcr(ViewModels.Ocr.OcrViewModel viewModel);
 

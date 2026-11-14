@@ -190,7 +190,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToWordCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand), nameof(BookmarksCommand), nameof(AddBookmarkCommand), nameof(DocumentDescriptionCommand), nameof(PageLabelsCommand), nameof(LinksCommand), nameof(DrawLinkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(PresentCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToWordCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand), nameof(BookmarksCommand), nameof(AddBookmarkCommand), nameof(DocumentDescriptionCommand), nameof(PageLabelsCommand), nameof(LinksCommand), nameof(DrawLinkCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -537,6 +537,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private bool CanPrint() => HasActiveDocument && !StatusBar.IsTaskRunning;
 
+    /// <summary>"Trình chiếu" (F5): the document on the whole screen from the page being read; the viewer then shows the page it ended on.</summary>
+    [RelayCommand(CanExecute = nameof(CanPresent))]
+    private void Present()
+    {
+        if (ActiveDocument is not { Viewer.PageCount: > 0 } document)
+        {
+            return;
+        }
+
+        var presentation = document.Viewer.CreatePresentation();
+        _pageDialogs.ShowPresentation(presentation);
+        document.Viewer.NavigateTo(presentation.PageIndex);
+    }
+
+    private bool CanPresent() => ActiveDocument is { Viewer.PageCount: > 0 };
+
     private static string PrintProgressText(int done, int total)
         => string.Format(CultureInfo.CurrentCulture, Strings.Print_Progress, Math.Min(done + 1, total), total);
 
@@ -765,6 +781,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("file.save", Strings.Cmd_Save, SymbolRegular.Save24, SaveCommand),
                     new("file.saveAs", Strings.Cmd_SaveAs, SymbolRegular.SaveEdit24, SaveAsCommand),
                     new("file.print", Strings.Cmd_Print, SymbolRegular.Print24, PrintCommand),
+                    new("file.present", Strings.Cmd_Present, SymbolRegular.SlideMultiple24, PresentCommand, Strings.Cmd_Present_ToolTip),
                     new("file.properties", Strings.Cmd_Properties, SymbolRegular.DocumentData24, ShowPropertiesCommand),
                     new("file.close", Strings.Cmd_Close, SymbolRegular.Dismiss24, CloseActiveDocumentCommand),
                 ]),

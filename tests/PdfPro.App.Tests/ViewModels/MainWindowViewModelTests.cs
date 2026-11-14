@@ -99,7 +99,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.save", "file.saveAs", "file.print", "file.properties", "file.close", "app.settings", "app.exit", "help.shortcuts", "help.guide", "help.about", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette", "workflow.open", "batch.run",
+            ["file.open", "file.save", "file.saveAs", "file.print", "file.present", "file.properties", "file.close", "app.settings", "app.exit", "help.shortcuts", "help.guide", "help.about", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette", "workflow.open", "batch.run",
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",

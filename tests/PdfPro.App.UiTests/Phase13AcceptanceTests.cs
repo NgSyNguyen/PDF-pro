@@ -10,6 +10,9 @@ namespace PdfPro.App.UiTests;
 public sealed class Phase13AcceptanceTests : IDisposable
 {
     private const int VkF1 = 0x70;
+    private const int VkF5 = 0x74;
+    private const int VkRight = 0x27;
+    private const int VkEscape = 0x1B;
 
     private readonly UiTestFolder _folder = new();
 
@@ -45,6 +48,34 @@ public sealed class Phase13AcceptanceTests : IDisposable
         app.Text("MergeOutput", dialog).ShouldStartWith(Path.GetDirectoryName(second)!, customMessage: "the result is proposed next to the files");
         app.DocumentTabs().ShouldNotContain(t => t.StartsWith("trang", StringComparison.Ordinal), "the files are merged, not opened");
         app.Invoke("MergeCancel", dialog);
+    }
+
+    /// <summary>
+    /// F5 shows the document on the whole screen from the page being read; → turns the page, Esc ends, and the viewer
+    /// shows the page the presentation ended on. With PDFPRO_SCREENSHOTS, the screen is kept in the test's output.
+    /// </summary>
+    [Fact]
+    public void F5_PresentsTheDocument_PageByPage()
+    {
+        RequireEnabled();
+        var path = _folder.Copy("vanban-vi.pdf");
+        using var app = AppUnderTest.Start(_folder, path);
+        app.WaitForTab("vanban-vi.pdf", TimeSpan.FromSeconds(30));
+
+        app.PressKey(VkF5);
+        var show = app.WaitForWindow(Text("Present_Title"));
+        AppUnderTest.WaitUntil(() => app.Name("PresentationPage", show) == "1 / 14", TimeSpan.FromSeconds(10), "the first page");
+        app.PressKey(VkRight, show);
+        AppUnderTest.WaitUntil(() => app.Name("PresentationPage", show) == "2 / 14", TimeSpan.FromSeconds(10), "the second page");
+        if (Environment.GetEnvironmentVariable("PDFPRO_SCREENSHOTS") == "1")
+        {
+            System.Threading.Thread.Sleep(2500);
+            AppUnderTest.SaveScreenshot(show, Path.Combine(RepositoryRoot, "docs", "screenshots", "presentation.png"));
+        }
+
+        app.PressKey(VkEscape, show);
+        AppUnderTest.WaitUntil(() => !app.HasWindow(Text("Present_Title")), TimeSpan.FromSeconds(10), "the presentation to end");
+        app.Text("PageNumberBox").ShouldStartWith("2", customMessage: "the viewer is on the page the presentation ended on");
     }
 
     /// <summary>F1 shows every shortcut; "Giới thiệu" shows the version and the licenses shipped next to the app.</summary>

@@ -52,6 +52,7 @@
     <KeyBinding Key="F" Command="{Binding ShowSearchCommand}" Modifiers="Control" />
     <KeyBinding Key="K" Command="{Binding CommandPaletteCommand}" Modifiers="Control" />
     <KeyBinding Key="F1" Command="{Binding ShowShortcutsCommand}" />
+    <KeyBinding Key="F5" Command="{Binding PresentCommand}" />
     <KeyBinding Key="F3" Command="{Binding FindNextCommand}" />
     <KeyBinding Key="F3" Command="{Binding FindPreviousCommand}" Modifiers="Shift" />
   </ui:FluentWindow.InputBindings>

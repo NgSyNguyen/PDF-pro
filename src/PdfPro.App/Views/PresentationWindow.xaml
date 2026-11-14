@@ -1,0 +1,65 @@
+<Window
+  x:Class="PdfPro.App.Views.PresentationWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:viewer="clr-namespace:PdfPro.App.ViewModels.Viewer"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=viewer:PresentationViewModel}"
+  Title="{loc:Tr Present_Title}"
+  AutomationProperties.AutomationId="PresentationWindow"
+  Background="Black"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  Topmost="True"
+  WindowStartupLocation="CenterOwner"
+  WindowState="Maximized"
+  WindowStyle="None">
+  <Window.InputBindings>
+    <KeyBinding Key="Right" Command="{Binding NextCommand}" />
+    <KeyBinding Key="Down" Command="{Binding NextCommand}" />
+    <KeyBinding Key="Space" Command="{Binding NextCommand}" />
+    <KeyBinding Key="PageDown" Command="{Binding NextCommand}" />
+    <KeyBinding Key="Return" Command="{Binding NextCommand}" />
+    <KeyBinding Key="N" Command="{Binding NextCommand}" />
+    <KeyBinding Key="Left" Command="{Binding PreviousCommand}" />
+    <KeyBinding Key="Up" Command="{Binding PreviousCommand}" />
+    <KeyBinding Key="PageUp" Command="{Binding PreviousCommand}" />
+    <KeyBinding Key="Back" Command="{Binding PreviousCommand}" />
+    <KeyBinding Key="P" Command="{Binding PreviousCommand}" />
+    <KeyBinding Key="Home" Command="{Binding FirstCommand}" />
+    <KeyBinding Key="End" Command="{Binding LastCommand}" />
+    <KeyBinding Key="Escape" Command="{Binding CloseCommand}" />
+    <MouseBinding Command="{Binding NextCommand}" MouseAction="LeftClick" />
+    <MouseBinding Command="{Binding PreviousCommand}" MouseAction="RightClick" />
+  </Window.InputBindings>
+
+  <Grid>
+    <Image
+      AutomationProperties.AutomationId="PresentationPage"
+      AutomationProperties.Name="{Binding CounterText}"
+      HorizontalAlignment="Center"
+      VerticalAlignment="Center"
+      RenderOptions.BitmapScalingMode="HighQuality"
+      Source="{Binding Image}"
+      Stretch="Uniform" />
+    <Border
+      x:Name="Counter"
+      Margin="0,0,24,24"
+      Padding="12,6"
+      HorizontalAlignment="Right"
+      VerticalAlignment="Bottom"
+      Background="#B0000000"
+      CornerRadius="6"
+      IsHitTestVisible="False"
+      Opacity="0">
+      <TextBlock
+        AutomationProperties.AutomationId="PresentationCounter"
+        FontSize="18"
+        Foreground="White"
+        Text="{Binding CounterText}" />
+    </Border>
+  </Grid>
+</Window>
