@@ -172,6 +172,11 @@ public sealed class WorkerWorkflowRunner(WorkflowRunner inApp, Func<IWorkerClien
             return new LibreOfficeNotFoundException();
         }
 
+        if (type == typeof(WordProcessorNotFoundException).FullName)
+        {
+            return new WordProcessorNotFoundException();
+        }
+
         if (type == typeof(OperationValidationException).FullName)
         {
             return new InvalidOperationException(message);

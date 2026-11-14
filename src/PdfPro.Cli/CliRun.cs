@@ -279,12 +279,13 @@ public static class CliRun
     }
 
     private static bool IsToolMissing(Exception? error)
-        => error is ExternalToolNotFoundException or LibreOfficeNotFoundException or OcrException { Failure: OcrFailure.NotInstalled or OcrFailure.LanguageMissing };
+        => error is ExternalToolNotFoundException or LibreOfficeNotFoundException or WordProcessorNotFoundException or OcrException { Failure: OcrFailure.NotInstalled or OcrFailure.LanguageMissing };
 
     private static string ToolName(Exception? error) => error switch
     {
         OcrException => "Tesseract",
         LibreOfficeNotFoundException => "LibreOffice",
+        WordProcessorNotFoundException => "Microsoft Word / WPS Office",
         ExternalToolNotFoundException missing => missing.Message,
         _ => string.Empty,
     };
