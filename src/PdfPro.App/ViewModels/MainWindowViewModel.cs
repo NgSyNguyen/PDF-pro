@@ -80,8 +80,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IClipboardService? clipboard = null,
         Services.Updates.IUpdateService? updates = null,
         Services.Optimizing.IExportRunner? exports = null,
-        PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null)
+        PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null,
+        Services.Speech.ITextToSpeech? speech = null)
     {
+        _speech = speech;
         ArgumentNullException.ThrowIfNull(buildInfo);
         _exports = exports;
         _openGuard = openGuard;
@@ -190,7 +192,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActiveDocument), nameof(HasActiveDocument), nameof(IsOrganizing), nameof(ShowsViewerStatus))]
-    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(PresentCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToWordCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand), nameof(BookmarksCommand), nameof(AddBookmarkCommand), nameof(DocumentDescriptionCommand), nameof(PageLabelsCommand), nameof(LinksCommand), nameof(DrawLinkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseActiveDocumentCommand), nameof(ShowPropertiesCommand), nameof(PrintCommand), nameof(PresentCommand), nameof(ReadAloudCommand), nameof(SaveCommand), nameof(SaveAsCommand), nameof(ShowSearchCommand), nameof(ShowCommentsCommand), nameof(ShowSignaturesCommand), nameof(ProtectCommand), nameof(SignCommand), nameof(LinearizeCommand), nameof(CompressCommand), nameof(GrayscaleCommand), nameof(ToImagesCommand), nameof(ToTextCommand), nameof(ToWordCommand), nameof(ToPdfACommand), nameof(ExtractTablesCommand), nameof(ExtractImagesCommand), nameof(AttachmentsCommand), nameof(FontsCommand), nameof(BookmarksCommand), nameof(AddBookmarkCommand), nameof(DocumentDescriptionCommand), nameof(PageLabelsCommand), nameof(LinksCommand), nameof(DrawLinkCommand))]
     public partial WorkspaceTabViewModel? SelectedTab { get; set; }
 
     /// <summary>The selected document tab, or null when the home tab is selected.</summary>
@@ -782,6 +784,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     new("file.saveAs", Strings.Cmd_SaveAs, SymbolRegular.SaveEdit24, SaveAsCommand),
                     new("file.print", Strings.Cmd_Print, SymbolRegular.Print24, PrintCommand),
                     new("file.present", Strings.Cmd_Present, SymbolRegular.SlideMultiple24, PresentCommand, Strings.Cmd_Present_ToolTip),
+                    new("file.readAloud", Strings.Cmd_ReadAloud, SymbolRegular.ReadAloud24, ReadAloudCommand, Strings.Cmd_ReadAloud_ToolTip),
                     new("file.properties", Strings.Cmd_Properties, SymbolRegular.DocumentData24, ShowPropertiesCommand),
                     new("file.close", Strings.Cmd_Close, SymbolRegular.Dismiss24, CloseActiveDocumentCommand),
                 ]),

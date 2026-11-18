@@ -66,6 +66,7 @@ internal static class AppHost
         services.AddSingleton<IAppLifetime, AppLifetime>();
         services.AddSingleton<IShellLauncher, ShellLauncher>();
         services.AddSingleton<IClipboardService, WpfClipboardService>();
+        services.AddSingleton<Services.Speech.ITextToSpeech, Services.Speech.WindowsTextToSpeech>();
         services.AddSingleton<IShellIntegration, ShellIntegration>();
         services.AddSingleton<Services.Updates.IUpdateService, Services.Updates.VelopackUpdateService>();
         services.AddSingleton<IMessageService, MessageService>();

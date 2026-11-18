@@ -136,6 +136,50 @@ public sealed class PageTextTests
         copied.IsNormalized(NormalizationForm.FormC).ShouldBeTrue();
     }
 
+    [Fact]
+    public void Sentences_EndAfterAFullStop_AndWithAParagraph()
+    {
+        var text = Page(
+            ("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", 50, 740),
+            ("Điều 1. Phạm vi điều chỉnh của văn bản này", 50, 700),
+            ("áp dụng cho mọi cơ quan. Văn bản số 1.234 (bản", 50, 688),
+            ("chính) có hiệu lực!", 50, 676),
+            ("Điều 3. Hiệu lực \"thi hành.\" Hết", 70, 652));
+
+        text.Sentences().Select(r => text.CopyText(r)).ShouldBe(
+        [
+            "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
+            "Điều 1.",
+            "Phạm vi điều chỉnh của văn bản này áp dụng cho mọi cơ quan.",
+            "Văn bản số 1.234 (bản chính) có hiệu lực!",
+            "Điều 3.",
+            "Hiệu lực \"thi hành.\"",
+            "Hết",
+        ]);
+    }
+
+    [Fact]
+    public void Sentences_StartWhereAsked_AndLongOnesAreCutAtACommaOrASpace()
+    {
+        var text = Page(("Một câu ngắn. Sau đó là các mục: thứ nhất, thứ hai, thứ ba và thứ tư cùng thứ năm", 50, 700));
+
+        text.Sentences(start: 14).Select(r => text.CopyText(r)).ShouldBe(["Sau đó là các mục: thứ nhất, thứ hai, thứ ba và thứ tư cùng thứ năm"]);
+        var pieces = text.Sentences(start: 14, maxLength: 30).Select(r => text.CopyText(r)).ToList();
+        pieces.ShouldAllBe(p => p.Length <= 30 && p.Length > 0 && p == p.Trim());
+        pieces[0].ShouldBe("Sau đó là các mục: thứ nhất,");
+        string.Join(' ', pieces).ShouldBe("Sau đó là các mục: thứ nhất, thứ hai, thứ ba và thứ tư cùng thứ năm");
+        PageText.Empty.Sentences().ShouldBeEmpty();
+        text.Sentences(start: text.Count).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Sentences_KeepAWordBrokenAtALineEnd_InOne()
+    {
+        var text = Page(("Văn bản được gửi tới hộp thư điện tử e-", 50, 700), ("mail của cơ quan. Hết.", 50, 688));
+
+        text.Sentences().Select(r => text.CopyText(r)).ShouldBe(["Văn bản được gửi tới hộp thư điện tử email của cơ quan.", "Hết."]);
+    }
+
     /// <summary>
     /// Lines drawn left to right from (left, bottom), each character <see cref="CharWidth"/> wide; spaces are drawn, and a
     /// generated "\r\n" follows every line but the last, as PDFium's extractor gives it. Combining marks share the box of

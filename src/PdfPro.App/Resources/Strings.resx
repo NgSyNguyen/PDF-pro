@@ -2512,4 +2512,23 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Present_Title" xml:space="preserve"><value>Trình chiếu</value></data>
   <data name="Shortcuts_PresentKeys" xml:space="preserve"><value>→ ← Space, Esc (khi trình chiếu)</value></data>
   <data name="Shortcuts_Present" xml:space="preserve"><value>Sang trang, lùi trang, thoát trình chiếu</value></data>
+  <data name="Cmd_ReadAloud" xml:space="preserve"><value>Đọc to</value></data>
+  <data name="Cmd_ReadAloud_ToolTip" xml:space="preserve"><value>Đọc tài liệu bằng giọng nói của Windows, từ chữ đang chọn hoặc từ đầu trang đang xem tới hết; câu đang đọc được tô sáng. Bấm lần nữa để dừng</value></data>
+  <data name="Shortcuts_ReadAloud" xml:space="preserve"><value>Đọc to, dừng đọc</value></data>
+  <data name="ReadAloud_Title" xml:space="preserve"><value>Đọc to</value></data>
+  <data name="ReadAloud_Status" xml:space="preserve"><value>Đang đọc to — trang {0}/{1}</value></data>
+  <data name="ReadAloud_Stop" xml:space="preserve"><value>Dừng đọc</value></data>
+  <data name="ReadAloud_NoVoices" xml:space="preserve"><value>Windows trên máy này không có giọng đọc nào nên PDF_Pro chưa đọc to được. Hãy thêm giọng đọc trong Cài đặt Windows › Thời gian và ngôn ngữ › Giọng nói › Thêm giọng nói (chọn Tiếng Việt), rồi thử lại.</value></data>
+  <data name="ReadAloud_NoVietnameseVoice" xml:space="preserve"><value>Windows chưa có giọng đọc tiếng Việt. Để thêm: Cài đặt Windows › Thời gian và ngôn ngữ › Giọng nói › Thêm giọng nói › Tiếng Việt, rồi thử lại. Bạn cũng có thể chọn giọng khác trong Cài đặt của PDF_Pro › Đọc to.</value></data>
+  <data name="ReadAloud_UseVoice" xml:space="preserve"><value>Đọc bằng giọng {0}</value></data>
+  <data name="ReadAloud_NoText" xml:space="preserve"><value>Không có chữ để đọc từ chỗ này tới cuối tài liệu. Trang chỉ là ảnh quét thì hãy nhận dạng chữ (Công cụ › OCR) trước.</value></data>
+  <data name="ReadAloud_Failed" xml:space="preserve"><value>Windows không đọc to được tài liệu này. Chi tiết đã được ghi vào nhật ký.</value></data>
+  <data name="Settings_Speech" xml:space="preserve"><value>Đọc to</value></data>
+  <data name="Settings_Speech_Hint" xml:space="preserve"><value>Giọng và tốc độ khi đọc tài liệu (Tệp › Đọc to, Ctrl+Shift+B).</value></data>
+  <data name="Settings_Speech_Voice" xml:space="preserve"><value>Giọng đọc</value></data>
+  <data name="Settings_Speech_AutoVoice" xml:space="preserve"><value>Tự động (giọng tiếng Việt)</value></data>
+  <data name="Settings_Speech_Rate" xml:space="preserve"><value>Tốc độ</value></data>
+  <data name="Settings_Speech_RateValue" xml:space="preserve"><value>{0:0.##}×</value></data>
+  <data name="Settings_Speech_NoVoices" xml:space="preserve"><value>Windows chưa có giọng đọc: thêm trong Cài đặt Windows › Thời gian và ngôn ngữ › Giọng nói › Thêm giọng nói.</value></data>
+  <data name="Settings_Speech_NoVietnamese" xml:space="preserve"><value>Chưa có giọng tiếng Việt: thêm trong Cài đặt Windows › Thời gian và ngôn ngữ › Giọng nói › Thêm giọng nói › Tiếng Việt.</value></data>
 </root>

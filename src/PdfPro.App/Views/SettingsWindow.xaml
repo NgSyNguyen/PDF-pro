@@ -193,6 +193,50 @@
         <ui:ToggleSwitch AutomationProperties.AutomationId="SettingsIsolateOperations" AutomationProperties.Name="{loc:Tr Settings_Worker}" IsChecked="{Binding IsolateOperations}" />
       </ui:CardControl>
 
+      <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon ReadAloud24}">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <TextBlock FontWeight="SemiBold" Text="{loc:Tr Settings_Speech}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{loc:Tr Settings_Speech_Hint}"
+              TextWrapping="Wrap" />
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+              <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="{loc:Tr Settings_Speech_Rate}" />
+              <Slider
+                Width="180"
+                VerticalAlignment="Center"
+                AutomationProperties.AutomationId="SettingsSpeechRate"
+                AutomationProperties.Name="{loc:Tr Settings_Speech_Rate}"
+                IsSnapToTickEnabled="True"
+                LargeChange="0.25"
+                Maximum="{Binding MaxSpeechRate}"
+                Minimum="{Binding MinSpeechRate}"
+                SmallChange="0.05"
+                TickFrequency="0.05"
+                Value="{Binding SpeechRate}" />
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding SpeechRateText}" />
+            </StackPanel>
+            <TextBlock
+              Margin="0,4,0,0"
+              AutomationProperties.AutomationId="SettingsSpeechStatus"
+              FontSize="12"
+              Text="{Binding SpeechStatus}"
+              TextWrapping="Wrap"
+              Visibility="{Binding SpeechStatus, Converter={StaticResource NullToCollapsed}}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ComboBox
+          MinWidth="220"
+          AutomationProperties.AutomationId="SettingsSpeechVoice"
+          AutomationProperties.Name="{loc:Tr Settings_Speech_Voice}"
+          DisplayMemberPath="Label"
+          ItemsSource="{Binding SpeechVoiceOptions}"
+          SelectedValue="{Binding SelectedSpeechVoice}"
+          SelectedValuePath="Value" />
+      </ui:CardControl>
+
       <ui:CardControl Margin="0,0,0,8" Icon="{ui:SymbolIcon DocumentPdf24}">
         <ui:CardControl.Header>
           <StackPanel>

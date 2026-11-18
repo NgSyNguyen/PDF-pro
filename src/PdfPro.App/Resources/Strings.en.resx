@@ -2512,4 +2512,23 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Present_Title" xml:space="preserve"><value>Presentation</value></data>
   <data name="Shortcuts_PresentKeys" xml:space="preserve"><value>→ ← Space, Esc (presenting)</value></data>
   <data name="Shortcuts_Present" xml:space="preserve"><value>Next page, previous page, stop presenting</value></data>
+  <data name="Cmd_ReadAloud" xml:space="preserve"><value>Read aloud</value></data>
+  <data name="Cmd_ReadAloud_ToolTip" xml:space="preserve"><value>Read the document with a Windows voice, from the selected text or the top of the page you are reading to the end; the sentence being read is highlighted. Press again to stop</value></data>
+  <data name="Shortcuts_ReadAloud" xml:space="preserve"><value>Read aloud, stop reading</value></data>
+  <data name="ReadAloud_Title" xml:space="preserve"><value>Read aloud</value></data>
+  <data name="ReadAloud_Status" xml:space="preserve"><value>Reading aloud — page {0} of {1}</value></data>
+  <data name="ReadAloud_Stop" xml:space="preserve"><value>Stop reading</value></data>
+  <data name="ReadAloud_NoVoices" xml:space="preserve"><value>Windows has no voice on this computer, so PDF_Pro cannot read aloud yet. Add a voice in Windows Settings › Time &amp; language › Speech › Add voices, then try again.</value></data>
+  <data name="ReadAloud_NoVietnameseVoice" xml:space="preserve"><value>Windows has no Vietnamese voice yet. To add one: Windows Settings › Time &amp; language › Speech › Add voices › Vietnamese, then try again. You can also choose another voice in PDF_Pro's Settings › Read aloud.</value></data>
+  <data name="ReadAloud_UseVoice" xml:space="preserve"><value>Read with {0}</value></data>
+  <data name="ReadAloud_NoText" xml:space="preserve"><value>There is no text to read from here to the end of the document. Pages that are only scanned pictures need their text recognised first (Tools › OCR).</value></data>
+  <data name="ReadAloud_Failed" xml:space="preserve"><value>Windows could not read this document aloud. The details are in the log.</value></data>
+  <data name="Settings_Speech" xml:space="preserve"><value>Read aloud</value></data>
+  <data name="Settings_Speech_Hint" xml:space="preserve"><value>The voice and the pace documents are read at (File › Read aloud, Ctrl+Shift+B).</value></data>
+  <data name="Settings_Speech_Voice" xml:space="preserve"><value>Voice</value></data>
+  <data name="Settings_Speech_AutoVoice" xml:space="preserve"><value>Automatic (a Vietnamese voice)</value></data>
+  <data name="Settings_Speech_Rate" xml:space="preserve"><value>Pace</value></data>
+  <data name="Settings_Speech_RateValue" xml:space="preserve"><value>{0:0.##}×</value></data>
+  <data name="Settings_Speech_NoVoices" xml:space="preserve"><value>Windows has no voice yet: add one in Windows Settings › Time &amp; language › Speech › Add voices.</value></data>
+  <data name="Settings_Speech_NoVietnamese" xml:space="preserve"><value>No Vietnamese voice yet: add one in Windows Settings › Time &amp; language › Speech › Add voices › Vietnamese.</value></data>
 </root>

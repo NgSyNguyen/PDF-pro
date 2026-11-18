@@ -22,7 +22,7 @@ toàn trên máy, không gửi tài liệu hay dữ liệu sử dụng đi đâu
 
 | Nhóm | Có gì |
 |---|---|
-| Xem & tổ chức | Trình xem PDFium nhanh, tab, thumbnail, bookmark, in, trình chiếu (F5); sắp xếp/xoay/xóa/chèn/trích trang, cắt lề, đổi khổ; gộp, tách, N-up, sổ gập — mọi thao tác hoàn tác được, tệp gốc chỉ ghi khi lưu |
+| Xem & tổ chức | Trình xem PDFium nhanh, tab, thumbnail, bookmark, in, trình chiếu (F5), đọc to bằng giọng tiếng Việt của Windows (Ctrl+Shift+B); sắp xếp/xoay/xóa/chèn/trích trang, cắt lề, đổi khổ; gộp, tách, N-up, sổ gập — mọi thao tác hoàn tác được, tệp gốc chỉ ghi khi lưu |
 | Chỉnh sửa | Chữ, ảnh, hình, chữ ký tay, hình mờ, đầu/chân trang, số trang, Bates; sửa chữ và ảnh có sẵn; chú thích đầy đủ, bình luận, làm phẳng |
 | Biểu mẫu | Điền, thiết kế, nhận diện trường, nhập/xuất JSON/XFDF, trộn từ CSV/Excel |
 | Bảo mật | Mật khẩu + quyền AES-256, xóa vĩnh viễn có kiểm lại, làm sạch, ký số và kiểm tra chữ ký |

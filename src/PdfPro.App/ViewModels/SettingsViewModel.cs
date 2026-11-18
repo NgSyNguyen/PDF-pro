@@ -51,7 +51,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         Services.Automation.IHotFolderService? hotFolder = null,
         Services.Automation.IStartupRegistration? startup = null,
         Services.Automation.IWorkflowLibrary? workflows = null,
-        Services.IShellIntegration? shell = null)
+        Services.IShellIntegration? shell = null,
+        Services.Speech.ITextToSpeech? speech = null)
     {
         _settings = settings;
         _theme = theme;
@@ -98,6 +99,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         InitializeHotFolder(settings.Current, hotFolder, startup, workflows);
         InitializeWorker(settings.Current);
         InitializeRelease(settings.Current, shell);
+        InitializeSpeech(settings.Current, speech);
         _isInitialized = true;
     }
 

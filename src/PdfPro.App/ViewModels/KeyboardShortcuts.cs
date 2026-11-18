@@ -17,6 +17,7 @@ public static class KeyboardShortcuts
         ["file.saveAs"] = "Ctrl+Shift+S",
         ["file.print"] = "Ctrl+P",
         ["file.present"] = "F5",
+        ["file.readAloud"] = "Ctrl+Shift+B",
         ["file.properties"] = "Ctrl+D",
         ["file.close"] = "Ctrl+W",
         ["edit.undo"] = "Ctrl+Z",
@@ -53,6 +54,7 @@ public static class KeyboardShortcuts
             new("Home, End", Strings.Shortcuts_FirstLastPage),
             new("F5", Strings.Cmd_Present),
             new(Strings.Shortcuts_PresentKeys, Strings.Shortcuts_Present),
+            new("Ctrl+Shift+B", Strings.Shortcuts_ReadAloud),
         ]),
         new(Strings.Shortcuts_Group_Edit,
         [

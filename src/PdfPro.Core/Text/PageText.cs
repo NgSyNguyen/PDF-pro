@@ -275,6 +275,81 @@ public sealed class PageText
         return TextNormalizer.ToNfc(builder.ToString());
     }
 
+    /// <summary>
+    /// The sentences from character <paramref name="start"/> on, as they are read aloud: a sentence ends after ". ! ? …"
+    /// (closing quotes or brackets included) before a space or a line end, and where a paragraph ends (as
+    /// <see cref="CopyText"/> sees one); one longer than <paramref name="maxLength"/> characters is cut after a comma,
+    /// semicolon or colon, or else between words. No range starts or ends with a space or a line end.
+    /// </summary>
+    public IReadOnlyList<TextRange> Sentences(int start = 0, int maxLength = 300)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxLength, 20);
+        var ends = new bool[Count]; // a sentence ends after this character
+        var boxes = _lines.Select(LineBox).ToArray();
+        var drawn = boxes.Where(b => !b.IsEmpty).ToArray();
+        var left = drawn.Select(b => b.Left).DefaultIfEmpty(0).Min();
+        var right = drawn.Select(b => b.Right).DefaultIfEmpty(0).Max();
+        for (var line = 0; line + 1 < _lines.Length; line++)
+        {
+            var text = GetText(_lines[line]).TrimEnd();
+            var hyphen = text.Length > 0 && (text[^1] is '-' or '­' || Chars[_lines[line].End - 1].IsHyphen);
+            if (!hyphen && EndsParagraph(text, boxes[line], boxes[line + 1], left, right))
+            {
+                ends[_lines[line].End - 1] = true;
+            }
+        }
+
+        for (var i = 0; i < Count; i++)
+        {
+            if (Chars[i].Text is not ("." or "!" or "?" or "…"))
+            {
+                continue;
+            }
+
+            var j = i + 1;
+            while (j < Count && Chars[j].Text is "\"" or "”" or "’" or "'" or ")" or "]" or "»")
+            {
+                j++;
+            }
+
+            if (j == Count || Chars[j].IsWhiteSpace)
+            {
+                ends[j - 1] = true;
+            }
+        }
+
+        var sentences = new List<TextRange>();
+        var at = Math.Clamp(start, 0, Count);
+        while (at < Count)
+        {
+            while (at < Count && Chars[at].IsWhiteSpace)
+            {
+                at++;
+            }
+
+            if (at == Count)
+            {
+                break;
+            }
+
+            var first = at;
+            while (at < Count - 1 && !ends[at])
+            {
+                at++;
+            }
+
+            var end = ++at;
+            while (end > first && Chars[end - 1].IsWhiteSpace)
+            {
+                end--;
+            }
+
+            Cut(new TextRange(first, end), maxLength, sentences);
+        }
+
+        return sentences;
+    }
+
     /// <summary>The line holding character <paramref name="index"/>, or -1 for a line end.</summary>
     public int LineIndexOf(int index) => index >= 0 && index < Count ? _lineOfChar[index] : -1;
 
@@ -296,6 +371,51 @@ public sealed class PageText
         }
 
         return left <= right ? new PdfRect(left, bottom, right, top) : default;
+    }
+
+    /// <summary>Adds <paramref name="sentence"/> to <paramref name="sentences"/>, in pieces of at most <paramref name="maxLength"/> characters.</summary>
+    private void Cut(TextRange sentence, int maxLength, List<TextRange> sentences)
+    {
+        var first = sentence.Start;
+        while (sentence.End - first > maxLength)
+        {
+            var limit = first + maxLength;
+            var cut = -1;
+            for (var i = limit - 1; i > first + (maxLength / 3) && cut < 0; i--)
+            {
+                if (Chars[i].Text is "," or ";" or ":" && i + 1 < Count && Chars[i + 1].IsWhiteSpace)
+                {
+                    cut = i + 1;
+                }
+            }
+
+            for (var i = limit; i > first + (maxLength / 3) && cut < 0; i--)
+            {
+                if (Chars[i].IsWhiteSpace)
+                {
+                    cut = i;
+                }
+            }
+
+            cut = cut < 0 ? limit : cut;
+            var end = cut;
+            while (end > first && Chars[end - 1].IsWhiteSpace)
+            {
+                end--;
+            }
+
+            sentences.Add(new TextRange(first, end));
+            first = cut;
+            while (first < sentence.End && Chars[first].IsWhiteSpace)
+            {
+                first++;
+            }
+        }
+
+        if (sentence.End > first)
+        {
+            sentences.Add(new TextRange(first, sentence.End));
+        }
     }
 
     private static bool EndsParagraph(string previousText, PdfRect previous, PdfRect next, double left, double right)

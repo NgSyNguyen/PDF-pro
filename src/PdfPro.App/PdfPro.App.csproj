@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <!-- Windows Forms only for the notification area icon (NotifyIcon); its namespaces are not imported globally. -->
     <UseWindowsForms>true</UseWindowsForms>

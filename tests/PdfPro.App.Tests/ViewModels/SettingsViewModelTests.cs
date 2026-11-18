@@ -210,6 +210,31 @@ public sealed class SettingsViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task TheVoiceAndPaceOfReadingAloud_AreSaved_ThePaceInRange()
+    {
+        var viewModel = CreateViewModel(speech: new FakeSpeech(FakeSpeech.English, FakeSpeech.Vietnamese));
+        viewModel.SpeechVoiceOptions.Select(o => o.Value).ShouldBe([string.Empty, "voice-en", "voice-vi"]);
+        viewModel.SelectedSpeechVoice.ShouldBe(string.Empty, "a Vietnamese voice by default");
+        viewModel.SpeechStatus.ShouldBeNull();
+
+        viewModel.SelectedSpeechVoice = "voice-en";
+        await viewModel.PendingSave;
+        viewModel.SpeechRate = 7;
+        await viewModel.PendingSave;
+
+        _settings.Current.SpeechVoice.ShouldBe("voice-en");
+        viewModel.SpeechRate.ShouldBe(AppSettings.MaxSpeechRate);
+        _settings.Current.SpeechRate.ShouldBe(AppSettings.MaxSpeechRate);
+        viewModel.SpeechRateText.ShouldContain("3");
+
+        viewModel.SelectedSpeechVoice = string.Empty;
+        await viewModel.PendingSave;
+        _settings.Current.SpeechVoice.ShouldBeNull();
+        CreateViewModel(speech: new FakeSpeech(FakeSpeech.English)).SpeechStatus.ShouldBe(Strings.Settings_Speech_NoVietnamese);
+        CreateViewModel().SpeechStatus.ShouldBe(Strings.Settings_Speech_NoVoices);
+    }
+
+    [Fact]
     public async Task Updates_AndTheExplorerMenu_AreSavedAndApplied()
     {
         var shell = Substitute.For<PdfPro.App.Services.IShellIntegration>();
@@ -366,6 +391,6 @@ public sealed class SettingsViewModelTests : IDisposable
         viewModel.TesseractStatus.ShouldBe(Strings.Settings_Tesseract_NotThere);
     }
 
-    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null, IVeraPdfLocator? veraPdf = null, PdfPro.Ocr.ITesseractLocator? tesseract = null, PdfPro.App.Services.IShellIntegration? shell = null)
-        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files, veraPdf, tesseract, shell: shell);
+    private SettingsViewModel CreateViewModel(ILibreOfficeLocator? libreOffice = null, IFileDialogService? files = null, IVeraPdfLocator? veraPdf = null, PdfPro.Ocr.ITesseractLocator? tesseract = null, PdfPro.App.Services.IShellIntegration? shell = null, PdfPro.App.Services.Speech.ITextToSpeech? speech = null)
+        => new(_settings, _theme, _lifetime, _localization, _renderCache, _thumbnailCache, NullLogger<SettingsViewModel>.Instance, libreOffice, files, veraPdf, tesseract, shell: shell, speech: speech);
 }

@@ -142,6 +142,9 @@ public sealed class SettingsService : ISettingsService
             settings.WorkerMemoryMegabytes,
             AppSettings.MinWorkerMemoryMegabytes,
             AppSettings.MaxWorkerMemoryMegabytes),
+        SpeechRate = double.IsFinite(settings.SpeechRate)
+            ? Math.Clamp(settings.SpeechRate, AppSettings.MinSpeechRate, AppSettings.MaxSpeechRate)
+            : AppSettings.DefaultSpeechRate,
     };
 
     private void MoveAside(string reason)

@@ -163,6 +163,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         Editor = new PageEditorViewModel(() => Workspace.Pages, services.ScreenFonts, services.ScreenImages ?? new ScreenImages(), logger);
         TextSelection = new TextSelectionViewModel(viewer, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
         Search = new SearchViewModel(viewer, TextLayers, TextSelection, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
+        ReadAloud = new ReadAloudViewModel(viewer, TextLayers, TextSelection, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
         Annotations = new AnnotationToolsViewModel(viewer, TextSelection, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), logger)
         {
             Fonts = Editor.Fonts,
@@ -257,6 +258,9 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
     /// <summary>"Tìm kiếm" (Ctrl+F, F3, Shift+F3).</summary>
     public SearchViewModel Search { get; }
+
+    /// <summary>"Đọc to" (Ctrl+Shift+B): the document read by a voice of Windows from the selection or the page being read.</summary>
+    public ReadAloudViewModel ReadAloud { get; }
 
     /// <summary>Annotating: marking text, notes, selecting, moving and deleting annotations of the session.</summary>
     public AnnotationToolsViewModel Annotations { get; }
@@ -452,6 +456,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
 
         SignaturePlacement.Cancel();
         Signatures.Cancel();
+        ReadAloud.Stop();
         Workspace.PagesChanged -= OnPagesChanged;
         Workspace.StatusChanged -= OnStatusChanged;
         Viewer.PropertyChanged -= OnViewerPropertyChanged;

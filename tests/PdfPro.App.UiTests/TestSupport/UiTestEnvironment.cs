@@ -32,7 +32,7 @@ internal static class UiTestEnvironment
             var configuration = AppContext.BaseDirectory.Contains($"{Path.DirectorySeparatorChar}Debug{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
                 ? "Debug"
                 : "Release";
-            return Path.Combine(RepositoryRoot, "src", "PdfPro.App", "bin", configuration, "net10.0-windows", "PdfPro.exe");
+            return Path.Combine(RepositoryRoot, "src", "PdfPro.App", "bin", configuration, "net10.0-windows10.0.19041.0", "PdfPro.exe");
         }
     }
 

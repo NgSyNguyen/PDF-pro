@@ -99,7 +99,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         var commands = AllCommands(Create(isDebugBuild: true)).ToList();
 
         commands.Where(c => c.IsAvailable).Select(c => c.Id).ShouldBe(
-            ["file.open", "file.save", "file.saveAs", "file.print", "file.present", "file.properties", "file.close", "app.settings", "app.exit", "help.shortcuts", "help.guide", "help.about", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette", "workflow.open", "batch.run",
+            ["file.open", "file.save", "file.saveAs", "file.print", "file.present", "file.readAloud", "file.properties", "file.close", "app.settings", "app.exit", "help.shortcuts", "help.guide", "help.about", "tools.settings", "tools.openLogFolder", "tools.throwTestException", "tools.commandPalette", "workflow.open", "batch.run",
                 "edit.undo", "edit.redo", "organize.mode", "organize.rotateLeft", "organize.rotateRight", "organize.delete", "organize.duplicate",
                 "organize.insertBlank", "organize.insertFromFile", "organize.extract", "organize.crop", "organize.pageSize",
                 "organize.split", "organize.markSplit", "organize.clearSplitMarks",
@@ -619,7 +619,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         }
     }
 
-    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true, PdfPro.App.Services.Updates.IUpdateService? updates = null, PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null, PdfPro.App.Services.Optimizing.IExportRunner? exports = null)
+    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true, PdfPro.App.Services.Updates.IUpdateService? updates = null, PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null, PdfPro.App.Services.Optimizing.IExportRunner? exports = null, PdfPro.App.Services.Speech.ITextToSpeech? speech = null)
         => new(
             _dialogs,
             _lifetime,
@@ -662,7 +662,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             Automation(),
             updates: updates,
             exports: exports,
-            openGuard: openGuard);
+            openGuard: openGuard,
+            speech: speech);
 
     private PdfPro.App.Services.Automation.AutomationServices Automation()
     {

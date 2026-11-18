@@ -561,6 +561,34 @@
       </DockPanel>
     </Border>
 
+    <!-- "Đọc to": what is being read, and "Dừng đọc". -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="ReadAloudBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding ReadAloud}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsReading, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <ui:Button
+          AutomationProperties.AutomationId="ReadAloudStop"
+          Command="{Binding StopCommand}"
+          Content="{loc:Tr ReadAloud_Stop}"
+          DockPanel.Dock="Right"
+          Icon="{ui:SymbolIcon Stop24}" />
+        <StackPanel Orientation="Horizontal">
+          <ui:SymbolIcon Margin="0,0,8,0" Symbol="ReadAloud24" />
+          <TextBlock
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="ReadAloudStatus"
+            Text="{Binding StatusText}"
+            TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
     <!-- "Xóa thông tin": the marking tools, the search by pattern, the count, "Áp dụng" and "Xong". -->
     <Border
       Margin="0,0,0,6"

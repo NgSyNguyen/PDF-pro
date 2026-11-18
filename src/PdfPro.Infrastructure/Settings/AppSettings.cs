@@ -39,6 +39,10 @@ public sealed record AppSettings
     public const int MinWorkerMemoryMegabytes = 512;
     public const int MaxWorkerMemoryMegabytes = 65536;
 
+    public const double DefaultSpeechRate = 1.0;
+    public const double MinSpeechRate = 0.5;
+    public const double MaxSpeechRate = 3.0;
+
     public static AppSettings Default { get; } = new();
 
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
@@ -136,6 +140,12 @@ public sealed record AppSettings
 
     /// <summary>Memory the worker process may use, in megabytes (Windows; applied when the app starts).</summary>
     public int WorkerMemoryMegabytes { get; init; } = DefaultWorkerMemoryMegabytes;
+
+    /// <summary>The Windows voice of "Đọc to" (its id); null: a Vietnamese voice of Windows.</summary>
+    public string? SpeechVoice { get; init; }
+
+    /// <summary>How fast "Đọc to" speaks: 1 is the voice's normal pace (0.5 to 3).</summary>
+    public double SpeechRate { get; init; } = DefaultSpeechRate;
 
     /// <summary>A free public time-stamping authority (DigiCert).</summary>
     public const string DefaultTimestampServer = "http://timestamp.digicert.com";

@@ -5,6 +5,10 @@ theo [Semantic Versioning](https://semver.org/lang/vi/). Mục đầu tiên là 
 
 ## [Chưa phát hành]
 
+- **Đọc to** (Tệp › Đọc to, Ctrl+Shift+B): tài liệu được đọc bằng giọng nói tiếng Việt của Windows, từ chữ đang chọn
+  hoặc trang đang xem tới hết, câu đang đọc được tô sáng; bấm lần nữa để dừng. Chọn giọng và tốc độ trong Cài đặt ›
+  Đọc to. Ứng dụng giờ cần Windows 10 bản 2004 trở lên.
+
 - **PDF cũ gõ bằng phông TCVN3 (.VnTime…) hoặc VNI (VNI-Times…) đọc ra tiếng Việt đúng**: chọn, chép (Ctrl+C), tìm
   kiếm, xuất văn bản, sang Word và so sánh không còn ra chữ lỗi mã như "Céng hoµ x· héi" hay "Coäng hoøa".
 
