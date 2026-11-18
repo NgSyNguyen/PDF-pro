@@ -144,7 +144,7 @@ public sealed class ToTextOperation : PdfOperation<ToTextParams>, IExportOperati
             }
             else
             {
-                text.AppendJoin(NewLine, block.TextLines.Select(l => Clean(l.Text)));
+                text.AppendJoin(NewLine, block.TextLines.Select(l => Clean(LegacyText.Of(l))));
             }
         }
 
@@ -275,7 +275,7 @@ public sealed class ToTextOperation : PdfOperation<ToTextParams>, IExportOperati
 
     private static void AppendMarkdown(StringBuilder text, TextBlock block, double body)
     {
-        var lines = block.TextLines.Select(l => Clean(l.Text)).Where(l => l.Length > 0).ToList();
+        var lines = block.TextLines.Select(l => Clean(LegacyText.Of(l))).Where(l => l.Length > 0).ToList();
         var size = Median([.. block.TextLines.SelectMany(l => l.Words).SelectMany(w => w.Letters).Where(l => !string.IsNullOrWhiteSpace(l.Value)).Select(l => l.PointSize)]);
         var heading = body > 0 && lines.Count <= 3 ? (size >= body * TitleRatio ? "# " : size >= body * HeadingRatio ? "## " : null) : null;
         if (heading is not null)

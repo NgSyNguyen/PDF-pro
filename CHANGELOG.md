@@ -5,6 +5,9 @@ theo [Semantic Versioning](https://semver.org/lang/vi/). Mục đầu tiên là 
 
 ## [Chưa phát hành]
 
+- **PDF cũ gõ bằng phông TCVN3 (.VnTime…) hoặc VNI (VNI-Times…) đọc ra tiếng Việt đúng**: chọn, chép (Ctrl+C), tìm
+  kiếm, xuất văn bản, sang Word và so sánh không còn ra chữ lỗi mã như "Céng hoµ x· héi" hay "Coäng hoøa".
+
 - **Trình chiếu (F5)**: tài liệu toàn màn hình từng trang từ trang đang đọc; → / bấm chuột sang trang, ← lùi, Esc thoát.
 - **PDF sang Word**: tài liệu .docx sửa được chữ — đoạn văn theo thứ tự đọc, tiêu đề, chữ đậm/nghiêng/màu, căn lề, phần đầu
   văn bản hành chính hai cột đứng cạnh nhau, bảng có đường kẻ thành bảng Word, ảnh giữ nguyên; bỏ số trang lặp của PDF.

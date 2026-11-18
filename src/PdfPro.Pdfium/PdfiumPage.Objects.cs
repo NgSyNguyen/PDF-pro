@@ -144,7 +144,8 @@ public sealed partial class PdfiumPage
         return new string(result);
     }
 
-    private static unsafe string FontName(FpdfFontT font)
+    /// <summary>A font's /BaseFont ("ABCDEF+TimesNewRomanPSMT"); empty when it has none.</summary>
+    internal static unsafe string FontName(FpdfFontT font)
     {
         var length = (long)fpdf_edit.FPDFFontGetBaseFontName(font, null, 0);
         if (length <= 1 || length > 1024)

@@ -4,6 +4,7 @@ using PdfPro.Core.Documents;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfPro.Core.Splitting;
+using LegacyVietnamese = PdfPro.Core.Text.LegacyVietnamese;
 using PdfPro.Core.Word;
 using PdfPro.Operations.Extracting;
 using PdfPro.Operations.Optimizing;
@@ -415,12 +416,13 @@ public sealed class ToWordOperation : PdfOperation<ToWordParams>, IExportOperati
                 // A colour PdfPig cannot turn into RGB: black.
             }
 
-            return (FamilyOf(name), Math.Round(letter.PointSize * 2) / 2, bold, italic, color);
+            // A TCVN3 or VNI font becomes the Unicode font it looks like: its text is turned into Unicode.
+            return (LegacyVietnamese.UnicodeFont(name) ?? FamilyOf(name), Math.Round(letter.PointSize * 2) / 2, bold, italic, color);
         }
 
         /// <summary>The shape of a running line: its text with every digit as '#' ("Trang #/#").</summary>
         private static string Shape(IEnumerable<TextLine> lines)
-            => string.Concat(string.Join(' ', lines.Select(l => l.Text)).Normalize(NormalizationForm.FormC).Where(c => !char.IsWhiteSpace(c)).Select(c => char.IsDigit(c) ? '#' : c));
+            => string.Concat(string.Join(' ', lines.Select(LegacyText.Of)).Normalize(NormalizationForm.FormC).Where(c => !char.IsWhiteSpace(c)).Select(c => char.IsDigit(c) ? '#' : c));
 
         /// <summary>The paragraphs of a block, between the page's text edges; the bottom of its last line.</summary>
         private double AddBlock(TextBlock block, double previousBottom)
@@ -582,7 +584,7 @@ public sealed class ToWordOperation : PdfOperation<ToWordParams>, IExportOperati
                         current = style;
                     }
 
-                    text.Append(word.Text);
+                    text.Append(LegacyText.Of(word));
                     first = false;
                 }
             }

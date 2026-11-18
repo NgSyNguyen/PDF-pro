@@ -55,7 +55,7 @@ internal static partial class DocumentWords
                     foreach (var line in block.TextLines)
                     {
                         var words = line.Words
-                            .Select(w => (Text: Clean(w.Text), Box: new PdfRect(w.BoundingBox.Left, w.BoundingBox.Bottom, w.BoundingBox.Right, w.BoundingBox.Top)))
+                            .Select(w => (Text: Clean(Converting.LegacyText.Of(w)), Box: new PdfRect(w.BoundingBox.Left, w.BoundingBox.Bottom, w.BoundingBox.Right, w.BoundingBox.Top)))
                             .Where(w => w.Text.Length > 0)
                             .ToList();
                         if (words.Count > 0)

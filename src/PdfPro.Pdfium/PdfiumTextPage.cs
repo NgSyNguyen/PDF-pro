@@ -59,6 +59,9 @@ public sealed class PdfiumTextPage : IDisposable
         }
 
         var chars = new TextChar[count];
+        var fonts = new LegacyFont[count];
+        var owner = IntPtr.Zero;
+        var font = LegacyFont.None;
         using var box = new FS_RECTF_();
         for (var i = 0; i < count; i++)
         {
@@ -69,9 +72,57 @@ public sealed class PdfiumTextPage : IDisposable
                 ? new PdfRect(box.Left, box.Bottom, box.Right, box.Top)
                 : default;
             chars[i] = new TextChar(CharText(code), rect, generated, hyphen);
+            if (!generated)
+            {
+                // The font of the text object drawing the character (looked up once per object).
+                var item = fpdf_text.FPDFTextGetTextObject(native, i);
+                var handle = item?.__Instance ?? IntPtr.Zero;
+                if (handle != owner)
+                {
+                    owner = handle;
+                    font = handle == IntPtr.Zero || fpdf_edit.FPDFTextObjGetFont(item) is not { } pdfFont || pdfFont.__Instance == IntPtr.Zero
+                        ? LegacyFont.None
+                        : LegacyVietnamese.Detect(PdfiumPage.FontName(pdfFont));
+                }
+
+                fonts[i] = font;
+            }
         }
 
-        return new PageText(chars);
+        return new PageText(fonts.Any(f => f.IsLegacy) ? Unicode(chars, fonts) : chars);
+    }
+
+    /// <summary>
+    /// The characters drawn with a TCVN3 or VNI font turned into Vietnamese, run by run (a VNI mark follows its letter);
+    /// each keeps its box, a VNI mark becoming the combining mark of the letter before it.
+    /// </summary>
+    private static TextChar[] Unicode(TextChar[] chars, LegacyFont[] fonts)
+    {
+        var start = 0;
+        while (start < chars.Length)
+        {
+            if (!fonts[start].IsLegacy)
+            {
+                start++;
+                continue;
+            }
+
+            var end = start;
+            while (end < chars.Length && fonts[end] == fonts[start] && !chars[end].IsGenerated)
+            {
+                end++;
+            }
+
+            var converted = LegacyVietnamese.Convert([.. chars[start..end].Select(c => c.Text)], fonts[start]);
+            for (var i = start; i < end; i++)
+            {
+                chars[i] = chars[i] with { Text = converted[i - start] };
+            }
+
+            start = end;
+        }
+
+        return chars;
     }
 
     /// <summary>
