@@ -139,6 +139,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddTextCommand = new ActiveDocumentCommand(d => d.AddTextCommand);
         ToggleContentEditingCommand = new ActiveDocumentCommand(d => d.ToggleContentEditingCommand);
         ToggleRedactionCommand = new ActiveDocumentCommand(d => d.ToggleRedactionCommand);
+        ToggleMeasureCommand = new ActiveDocumentCommand(d => d.ToggleMeasureCommand);
         SanitizeCommand = new ActiveDocumentCommand(d => d.SanitizeCommand);
         OcrCommand = new ActiveDocumentCommand(d => d.OcrCommand);
         SplitByBlankPagesCommand = new ActiveDocumentCommand(d => d.SplitByBlankPagesCommand);
@@ -257,6 +258,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     /// <summary>"Xóa thông tin": the redaction mode of the active document.</summary>
     public ActiveDocumentCommand ToggleRedactionCommand { get; }
+
+    /// <summary>"Đo": the measuring tool of the active document.</summary>
+    public ActiveDocumentCommand ToggleMeasureCommand { get; }
 
     public ActiveDocumentCommand SanitizeCommand { get; }
 
@@ -603,7 +607,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             UndoCommand, RedoCommand, RotateLeftCommand, RotateRightCommand, DeletePagesCommand, DuplicatePagesCommand,
             OrganizeModeCommand, InsertBlankPagesCommand, InsertPagesFromFileCommand, ExtractPagesCommand, CropPagesCommand, ChangePageSizeCommand,
             MarkSplitCommand, ClearSplitMarksCommand, SplitCommand, InterleaveCommand, NUpCommand, BookletCommand, TileCommand,
-            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand, SanitizeCommand, OcrCommand, SplitByBlankPagesCommand,
+            AddTextCommand, AddShapeCommand, AddImageCommand, AddSignatureCommand, ToggleContentEditingCommand, ToggleFormDesignCommand, ToggleRedactionCommand, ToggleMeasureCommand, SanitizeCommand, OcrCommand, SplitByBlankPagesCommand,
             ExportFormDataCommand, ImportFormDataCommand, MergeFormDataCommand, FlattenFormCommand, ResetFormCommand,
             StampWatermarkCommand, StampBackgroundCommand, StampHeaderFooterCommand, StampPageNumbersCommand, RemoveStampsCommand,
             FindNextCommand, FindPreviousCommand,
@@ -916,6 +920,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("annotate.comments", Strings.Cmd_Comments, SymbolRegular.CommentMultiple24, ShowCommentsCommand, Strings.Cmd_Comments_ToolTip),
                     new("annotate.flatten", Strings.Cmd_FlattenAnnotations, SymbolRegular.Layer24, FlattenAnnotationsCommand, Strings.Cmd_FlattenAnnotations_ToolTip),
+                ]),
+                new(Strings.Ribbon_Group_Measure,
+                [
+                    new("annotate.measure", Strings.Cmd_Measure, SymbolRegular.Ruler24, ToggleMeasureCommand, Strings.Cmd_Measure_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Search,
                 [

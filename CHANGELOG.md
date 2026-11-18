@@ -5,6 +5,10 @@ theo [Semantic Versioning](https://semver.org/lang/vi/). Mục đầu tiên là 
 
 ## [Chưa phát hành]
 
+- **Đo** (Chú thích › Đo): đo khoảng cách (kèm góc), chiều dài đường gấp khúc và diện tích trên trang, theo mm, cm,
+  m, in, ft hoặc pt với tỉ lệ bản vẽ (1 : 100); giữ Shift để thẳng theo góc 45°; "Lưu vào trang" ghi các phép đo thành
+  chú thích có nhãn giá trị.
+
 - **Trang web sang PDF** (Chuyển đổi › Từ trang web): nhập địa chỉ trang web hoặc chọn tệp HTML, chọn khổ giấy (A4,
   A3, A5, Letter, Legal), khổ ngang, lề, in màu nền — trang được in như Microsoft Edge in ra. Mở tệp .html bằng PDF_Pro
   thì nó thành PDF cạnh tệp gốc rồi mở. Cần Microsoft Edge WebView2 Runtime (có sẵn trên Windows 11).

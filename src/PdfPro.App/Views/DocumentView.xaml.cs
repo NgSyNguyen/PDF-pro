@@ -50,6 +50,12 @@ public partial class DocumentView : UserControl
             return;
         }
 
+        if (Document is { Measure.IsActive: true } measuring && HandleMeasureKey(measuring.Measure, e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (Document is { FormDesigner.IsActive: true } designing && HandleDesignerKey(designing.FormDesigner, e.Key))
         {
             e.Handled = true;
@@ -303,6 +309,14 @@ public partial class DocumentView : UserControl
             return;
         }
 
+        if (Document is { Measure.IsActive: true } measuring)
+        {
+            var at = e.GetPosition(Surface);
+            measuring.Measure.Press(new ViewPoint(at.X, at.Y), e.ClickCount, Keyboard.Modifiers.HasFlag(ModifierKeys.Shift));
+            Focus(); // Esc and Backspace reach the tool
+            return;
+        }
+
         if (Document is { FormDesigner.IsActive: true } designing)
         {
             var at = e.GetPosition(Surface);
@@ -381,6 +395,14 @@ public partial class DocumentView : UserControl
                 signing.SignaturePlacement.DragTo(new ViewPoint(at.X, at.Y));
             }
 
+            Surface.Cursor = Cursors.Cross;
+            return;
+        }
+
+        if (Document is { Measure.IsActive: true } measuring)
+        {
+            var measuredAt = e.GetPosition(Surface);
+            measuring.Measure.MoveTo(new ViewPoint(measuredAt.X, measuredAt.Y), Keyboard.Modifiers.HasFlag(ModifierKeys.Shift));
             Surface.Cursor = Cursors.Cross;
             return;
         }
@@ -543,6 +565,13 @@ public partial class DocumentView : UserControl
             Surface.ReleaseMouseCapture();
         }
     }
+
+    private static bool HandleMeasureKey(MeasureViewModel measure, Key key) => key switch
+    {
+        Key.Escape => measure.Escape(),
+        Key.Back => measure.RemoveLastPoint(),
+        _ => false,
+    };
 
     private static bool HandleRedactionKey(RedactionViewModel redaction, Key key)
     {

@@ -55,9 +55,10 @@ public sealed partial class DocumentTabViewModel
         if (otherMode)
         {
             SignaturePlacement.Cancel();
+            Measure.IsActive = false;
         }
 
-        Forms.IsActive = !otherMode && !SignaturePlacement.IsActive;
+        Forms.IsActive = !otherMode && !SignaturePlacement.IsActive && !Measure.IsActive;
     }
 
     /// <summary>The content editing mode is on (the ribbon button shows it pressed).</summary>

@@ -78,6 +78,30 @@ public sealed class Phase13AcceptanceTests : IDisposable
         app.Text("PageNumberBox").ShouldStartWith("2", customMessage: "the viewer is on the page the presentation ended on");
     }
 
+    /// <summary>"Đo": the ribbon shows the tool's bar on the real app; its tools and unit change; "Xong" puts it away.</summary>
+    [Fact]
+    public void TheMeasuringTool_ShowsItsBar_AndGoesAwayWhenDone()
+    {
+        RequireEnabled();
+        var path = _folder.Copy("basic-vi.pdf");
+        using var app = AppUnderTest.Start(_folder, path);
+        app.WaitForTab("basic-vi.pdf", TimeSpan.FromSeconds(30));
+
+        app.Ribbon("annotate", "annotate.measure");
+        app.Find("MeasureDone").ShouldNotBeNull("the bar shows (a Border has no automation peer: its button is looked for)");
+        app.Select("MeasureTool_Area");
+        app.Find("MeasureTool_Area").Patterns.SelectionItem.Pattern.IsSelected.Value.ShouldBeTrue();
+        app.IsEnabled("MeasureSave").ShouldBeFalse("nothing measured yet");
+        if (Environment.GetEnvironmentVariable("PDFPRO_SCREENSHOTS") == "1")
+        {
+            System.Threading.Thread.Sleep(1500);
+            AppUnderTest.SaveScreenshot(app.Main, Path.Combine(Path.GetTempPath(), "pdfpro-measure-bar.png"));
+        }
+
+        app.Invoke("MeasureDone");
+        AppUnderTest.WaitUntil(() => app.TryFind("MeasureDone") is null, TimeSpan.FromSeconds(10), "the bar to go");
+    }
+
     /// <summary>F1 shows every shortcut; "Giới thiệu" shows the version and the licenses shipped next to the app.</summary>
     [Fact]
     public void F1_ShowsTheShortcuts_AndAboutShowsTheVersionAndTheLicenses()

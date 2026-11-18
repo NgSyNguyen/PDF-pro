@@ -2571,4 +2571,29 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="WebToPdf_Done" xml:space="preserve"><value>Saved {0}</value></data>
   <data name="WebToPdf_Failed" xml:space="preserve"><value>{0} of {1} web pages became PDFs; these did not:</value></data>
   <data name="Open_Web_Done" xml:space="preserve"><value>Converted to PDF; the PDF is next to the HTML file</value></data>
+  <data name="Cmd_Measure" xml:space="preserve"><value>Measure</value></data>
+  <data name="Cmd_Measure_ToolTip" xml:space="preserve"><value>Measure distances, lengths along a line and areas on the page, in mm, cm, m, in… at a drawing's scale (1 : 100); save the results on the page as comments</value></data>
+  <data name="Ribbon_Group_Measure" xml:space="preserve"><value>Measure</value></data>
+  <data name="Measure_Tool_Distance" xml:space="preserve"><value>Distance (click two points)</value></data>
+  <data name="Measure_Tool_Perimeter" xml:space="preserve"><value>Length along a line</value></data>
+  <data name="Measure_Tool_Area" xml:space="preserve"><value>Area</value></data>
+  <data name="Measure_Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Measure_Unit_Millimetre" xml:space="preserve"><value>mm</value></data>
+  <data name="Measure_Unit_Centimetre" xml:space="preserve"><value>cm</value></data>
+  <data name="Measure_Unit_Metre" xml:space="preserve"><value>m</value></data>
+  <data name="Measure_Unit_Inch" xml:space="preserve"><value>in (inch)</value></data>
+  <data name="Measure_Unit_Foot" xml:space="preserve"><value>ft (foot)</value></data>
+  <data name="Measure_Unit_Point" xml:space="preserve"><value>pt (point)</value></data>
+  <data name="Measure_Scale" xml:space="preserve"><value>Scale 1 :</value></data>
+  <data name="Measure_Save" xml:space="preserve"><value>Save on the page</value></data>
+  <data name="Measure_Save_ToolTip" xml:space="preserve"><value>Write the measurements on the pages as comments (lines, polygons and labels with their values) — one undoable step</value></data>
+  <data name="Measure_Clear" xml:space="preserve"><value>Clear measurements</value></data>
+  <data name="Measure_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Measure_Hint_Distance" xml:space="preserve"><value>Click the start and the end; hold Shift for 45° steps; Esc to drop</value></data>
+  <data name="Measure_Hint_Perimeter" xml:space="preserve"><value>Click each point, double-click to finish; Backspace takes back a point; Esc to drop</value></data>
+  <data name="Measure_Hint_Area" xml:space="preserve"><value>Click each corner, click the first one again or double-click to finish; Esc to drop</value></data>
+  <data name="Measure_Result_Distance" xml:space="preserve"><value>Distance: {0} · angle {1}°</value></data>
+  <data name="Measure_Result_Perimeter" xml:space="preserve"><value>Length: {0}</value></data>
+  <data name="Measure_Result_Area" xml:space="preserve"><value>Area: {0}</value></data>
+  <data name="Measure_Label_Area" xml:space="preserve"><value>{0} · perimeter {1}</value></data>
 </root>

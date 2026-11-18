@@ -164,6 +164,12 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         TextSelection = new TextSelectionViewModel(viewer, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
         Search = new SearchViewModel(viewer, TextLayers, TextSelection, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
         ReadAloud = new ReadAloudViewModel(viewer, TextLayers, TextSelection, Editor.GeometryOf, Editor.GetGeometryAsync, logger);
+        Measure = new MeasureViewModel(viewer, Editor.GeometryOf)
+        {
+            AddAnnotations = pages => Apply(_operations.Get<PdfPro.Operations.Annotating.AddAnnotationsOperation>(), new PdfPro.Operations.Annotating.AddAnnotationsParams(pages)),
+            Author = services.AnnotationAuthor ?? (() => Environment.UserName),
+        };
+        Measure.PropertyChanged += OnMeasurePropertyChanged;
         Annotations = new AnnotationToolsViewModel(viewer, TextSelection, TextLayers, Editor.GeometryOf, Editor.GetGeometryAsync, Apply, _operations, services.AnnotationAuthor ?? (() => Environment.UserName), logger)
         {
             Fonts = Editor.Fonts,
@@ -457,6 +463,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         SignaturePlacement.Cancel();
         Signatures.Cancel();
         ReadAloud.Stop();
+        Measure.IsActive = false;
         Workspace.PagesChanged -= OnPagesChanged;
         Workspace.StatusChanged -= OnStatusChanged;
         Viewer.PropertyChanged -= OnViewerPropertyChanged;
@@ -1189,6 +1196,7 @@ public sealed partial class DocumentTabViewModel : WorkspaceTabViewModel, IAsync
         ContentEditor.Refresh();
         FormDesigner.Refresh();
         Redaction.OnPagesChanged();
+        Measure.OnPagesChanged();
         if (samePages)
         {
             Forms.RefreshValues(); // a field was filled (or the filling undone): the inputs stay, keeping the focus

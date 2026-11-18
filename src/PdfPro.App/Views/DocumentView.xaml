@@ -71,6 +71,8 @@
         <controls:AnnotationLayer Annotations="{Binding DataContext.Annotations, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- "Thiết kế biểu mẫu": the fields' frames, names and handles; only draws. -->
         <controls:FormDesignLayer Designer="{Binding DataContext.FormDesigner, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
+        <!-- "Đo": the measurements and the one being made; only draws. -->
+        <controls:MeasureLayer Tool="{Binding DataContext.Measure, RelativeSource={RelativeSource AncestorType=UserControl}}" PageKey="{Binding Key}" />
         <!-- "Xóa thông tin": the marks waiting to be applied and the box being dragged; only draws. -->
         <controls:RedactionLayer PageKey="{Binding Key}" Redaction="{Binding DataContext.Redaction, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         <!-- "Ký số": the box of the signature being dragged; only draws. -->
@@ -557,6 +559,101 @@
             AutomationProperties.AutomationId="SignaturePlacementHint"
             Text="{Binding Hint}"
             TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- "Đo": distance, length or area, the unit and scale, the value, "Lưu vào trang", "Xóa" and "Xong". -->
+    <Border
+      Margin="0,0,0,6"
+      Padding="8,6"
+      AutomationProperties.AutomationId="MeasureBar"
+      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+      CornerRadius="4"
+      DataContext="{Binding Measure}"
+      DockPanel.Dock="Top"
+      Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="MeasureSave"
+            Command="{Binding SaveCommand}"
+            Content="{loc:Tr Measure_Save}"
+            Icon="{ui:SymbolIcon CommentAdd24}"
+            ToolTip="{loc:Tr Measure_Save_ToolTip}" />
+          <ui:Button
+            Margin="0,0,6,0"
+            AutomationProperties.AutomationId="MeasureClear"
+            Command="{Binding ClearCommand}"
+            Content="{loc:Tr Measure_Clear}"
+            Icon="{ui:SymbolIcon Delete24}" />
+          <ui:Button
+            AutomationProperties.AutomationId="MeasureDone"
+            Command="{Binding DataContext.ToggleMeasureCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{loc:Tr Measure_Done}" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <RadioButton
+            AutomationProperties.AutomationId="MeasureTool_Distance"
+            AutomationProperties.Name="{loc:Tr Measure_Tool_Distance}"
+            GroupName="MeasureTools"
+            IsChecked="{Binding IsDistanceTool}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Measure_Tool_Distance}">
+            <ui:SymbolIcon Symbol="Ruler24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="MeasureTool_Perimeter"
+            AutomationProperties.Name="{loc:Tr Measure_Tool_Perimeter}"
+            GroupName="MeasureTools"
+            IsChecked="{Binding IsPerimeterTool}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Measure_Tool_Perimeter}">
+            <ui:SymbolIcon Symbol="Timeline24" />
+          </RadioButton>
+          <RadioButton
+            AutomationProperties.AutomationId="MeasureTool_Area"
+            AutomationProperties.Name="{loc:Tr Measure_Tool_Area}"
+            GroupName="MeasureTools"
+            IsChecked="{Binding IsAreaTool}"
+            Style="{StaticResource EditorToolButton}"
+            ToolTip="{loc:Tr Measure_Tool_Area}">
+            <ui:SymbolIcon Symbol="Square24" />
+          </RadioButton>
+          <ComboBox
+            MinWidth="90"
+            Margin="10,0,0,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="MeasureUnit"
+            AutomationProperties.Name="{loc:Tr Measure_Unit}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding UnitOptions}"
+            SelectedValue="{Binding Unit}"
+            SelectedValuePath="Value" />
+          <TextBlock
+            Margin="10,0,4,0"
+            VerticalAlignment="Center"
+            Text="{loc:Tr Measure_Scale}" />
+          <ui:NumberBox
+            Width="110"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="MeasureScale"
+            AutomationProperties.Name="{loc:Tr Measure_Scale}"
+            ClearButtonEnabled="False"
+            MaxDecimalPlaces="2"
+            Maximum="1000000"
+            Minimum="0.01"
+            SpinButtonPlacementMode="Hidden"
+            Value="{Binding Scale, UpdateSourceTrigger=LostFocus}" />
+          <TextBlock
+            Margin="12,0,0,0"
+            VerticalAlignment="Center"
+            AutomationProperties.AutomationId="MeasureResult"
+            FontWeight="SemiBold"
+            Text="{Binding Status}"
+            TextTrimming="CharacterEllipsis"
+            ToolTip="{Binding Hint}" />
         </StackPanel>
       </DockPanel>
     </Border>

@@ -106,7 +106,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "organize.merge", "organize.interleave", "layout.nup", "layout.booklet", "layout.tile", "edit.addText", "edit.addShape", "edit.addImage", "edit.handSignature", "edit.content", "forms.design", "forms.exportData", "forms.importData", "forms.merge", "forms.reset", "forms.flatten", "structure.bookmarks", "structure.addBookmark", "structure.metadata", "structure.pageLabels", "structure.links", "structure.drawLink",
                 "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
                 "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
-                "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten",
+                "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten", "annotate.measure",
                 "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify", "convert.toImages", "convert.toText", "convert.toWord", "convert.fromImages", "convert.officeToPdf", "convert.fromWeb", "convert.toPdfA", "extract.tables", "extract.images", "extract.attachments", "extract.fonts", "ocr.run", "compare.documents", "scan.removeBlankPages", "scan.autoRotate", "scan.deskew", "scan.cleanBorders", "scan.splitByBlank", "optimize.compress", "optimize.grayscale", "optimize.linearize", "optimize.repair"],
             ignoreOrder: true);
 

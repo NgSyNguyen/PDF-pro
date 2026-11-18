@@ -2571,4 +2571,29 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="WebToPdf_Done" xml:space="preserve"><value>Đã lưu {0}</value></data>
   <data name="WebToPdf_Failed" xml:space="preserve"><value>{0}/{1} trang web đã thành PDF; các trang sau thì không:</value></data>
   <data name="Open_Web_Done" xml:space="preserve"><value>Đã chuyển trang web sang PDF; bản PDF nằm cạnh tệp HTML</value></data>
+  <data name="Cmd_Measure" xml:space="preserve"><value>Đo</value></data>
+  <data name="Cmd_Measure_ToolTip" xml:space="preserve"><value>Đo khoảng cách, chiều dài đường gấp khúc và diện tích trên trang, theo mm, cm, m, in… và tỉ lệ bản vẽ (1 : 100); lưu kết quả vào trang thành chú thích</value></data>
+  <data name="Ribbon_Group_Measure" xml:space="preserve"><value>Đo</value></data>
+  <data name="Measure_Tool_Distance" xml:space="preserve"><value>Khoảng cách (bấm hai điểm)</value></data>
+  <data name="Measure_Tool_Perimeter" xml:space="preserve"><value>Chiều dài đường gấp khúc</value></data>
+  <data name="Measure_Tool_Area" xml:space="preserve"><value>Diện tích</value></data>
+  <data name="Measure_Unit" xml:space="preserve"><value>Đơn vị</value></data>
+  <data name="Measure_Unit_Millimetre" xml:space="preserve"><value>mm</value></data>
+  <data name="Measure_Unit_Centimetre" xml:space="preserve"><value>cm</value></data>
+  <data name="Measure_Unit_Metre" xml:space="preserve"><value>m</value></data>
+  <data name="Measure_Unit_Inch" xml:space="preserve"><value>in (inch)</value></data>
+  <data name="Measure_Unit_Foot" xml:space="preserve"><value>ft (foot)</value></data>
+  <data name="Measure_Unit_Point" xml:space="preserve"><value>pt (điểm)</value></data>
+  <data name="Measure_Scale" xml:space="preserve"><value>Tỉ lệ 1 :</value></data>
+  <data name="Measure_Save" xml:space="preserve"><value>Lưu vào trang</value></data>
+  <data name="Measure_Save_ToolTip" xml:space="preserve"><value>Ghi các phép đo vào trang thành chú thích (đường, đa giác và nhãn ghi giá trị) — một bước hoàn tác</value></data>
+  <data name="Measure_Clear" xml:space="preserve"><value>Xóa các phép đo</value></data>
+  <data name="Measure_Done" xml:space="preserve"><value>Xong</value></data>
+  <data name="Measure_Hint_Distance" xml:space="preserve"><value>Bấm điểm đầu rồi điểm cuối; giữ Shift để thẳng theo góc 45°; Esc để bỏ</value></data>
+  <data name="Measure_Hint_Perimeter" xml:space="preserve"><value>Bấm từng điểm, bấm đúp để xong; Backspace bỏ điểm cuối; Esc để bỏ</value></data>
+  <data name="Measure_Hint_Area" xml:space="preserve"><value>Bấm từng góc, bấm lại góc đầu hoặc bấm đúp để xong; Esc để bỏ</value></data>
+  <data name="Measure_Result_Distance" xml:space="preserve"><value>Khoảng cách: {0} · góc {1}°</value></data>
+  <data name="Measure_Result_Perimeter" xml:space="preserve"><value>Chiều dài: {0}</value></data>
+  <data name="Measure_Result_Area" xml:space="preserve"><value>Diện tích: {0}</value></data>
+  <data name="Measure_Label_Area" xml:space="preserve"><value>{0} · chu vi {1}</value></data>
 </root>
