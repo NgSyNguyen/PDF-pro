@@ -2478,7 +2478,7 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Welcome_OfficeToPdf_ToolTip" xml:space="preserve"><value>Chuyển tài liệu Word, Excel, PowerPoint sang PDF, không cần mở tài liệu nào trước</value></data>
   <data name="OfficeToPdf_Failure_Protected" xml:space="preserve"><value>tài liệu có mật khẩu: mở nó, gỡ mật khẩu, lưu rồi thử lại</value></data>
   <data name="OfficeToPdf_Failure_NeedsLibreOffice" xml:space="preserve"><value>máy chưa có chương trình mở được loại tệp này (Microsoft Office, WPS Office hoặc LibreOffice)</value></data>
-  <data name="Open_Dialog_FilterWithOffice" xml:space="preserve"><value>Tệp PDF và tài liệu Office (*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|Tệp PDF (*.pdf)|*.pdf|Tài liệu Word, Excel, PowerPoint (*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|Tất cả tệp (*.*)|*.*</value></data>
+  <data name="Open_Dialog_FilterWithOffice" xml:space="preserve"><value>Tệp PDF, tài liệu Office và trang web (*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp;*.html;*.htm;*.xhtml;*.mht;*.mhtml)|*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp;*.html;*.htm;*.xhtml;*.mht;*.mhtml|Tệp PDF (*.pdf)|*.pdf|Tài liệu Word, Excel, PowerPoint (*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|Trang web (*.html;*.htm;*.xhtml;*.mht;*.mhtml)|*.html;*.htm;*.xhtml;*.mht;*.mhtml|Tất cả tệp (*.*)|*.*</value></data>
   <data name="Open_Office_Done" xml:space="preserve"><value>Đã chuyển sang PDF; bản PDF nằm cạnh tài liệu gốc</value></data>
   <data name="OfficeToPdf_ConvertersLine" xml:space="preserve"><value>Chuyển bằng — Word: {0}; Excel: {1}; PowerPoint: {2}.</value></data>
   <data name="OfficeToPdf_Converter_LibreOffice" xml:space="preserve"><value>LibreOffice</value></data>
@@ -2531,4 +2531,44 @@ Khối chữ đã được viết lại bằng phông Unicode đóng gói (Noto)
   <data name="Settings_Speech_RateValue" xml:space="preserve"><value>{0:0.##}×</value></data>
   <data name="Settings_Speech_NoVoices" xml:space="preserve"><value>Windows chưa có giọng đọc: thêm trong Cài đặt Windows › Thời gian và ngôn ngữ › Giọng nói › Thêm giọng nói.</value></data>
   <data name="Settings_Speech_NoVietnamese" xml:space="preserve"><value>Chưa có giọng tiếng Việt: thêm trong Cài đặt Windows › Thời gian và ngôn ngữ › Giọng nói › Thêm giọng nói › Tiếng Việt.</value></data>
+  <data name="Cmd_FromWeb" xml:space="preserve"><value>Từ trang web</value></data>
+  <data name="Cmd_FromWeb_ToolTip" xml:space="preserve"><value>Lưu một trang web (địa chỉ https://…) hoặc tệp HTML thành PDF như trình duyệt in ra: chọn khổ giấy, khổ ngang, lề, in màu nền</value></data>
+  <data name="WebToPdf_Title" xml:space="preserve"><value>Trang web sang PDF</value></data>
+  <data name="WebToPdf_Address" xml:space="preserve"><value>Địa chỉ trang web hoặc tệp HTML</value></data>
+  <data name="WebToPdf_Address_Placeholder" xml:space="preserve"><value>https://www.example.com hoặc C:\…\trang.html</value></data>
+  <data name="WebToPdf_PickFile" xml:space="preserve"><value>Chọn tệp HTML…</value></data>
+  <data name="WebToPdf_PickFile_Title" xml:space="preserve"><value>Chọn trang web để chuyển sang PDF</value></data>
+  <data name="WebToPdf_PickFile_Filter" xml:space="preserve"><value>Trang web (*.html;*.htm;*.xhtml;*.mht;*.mhtml)|*.html;*.htm;*.xhtml;*.mht;*.mhtml|Tất cả tệp (*.*)|*.*</value></data>
+  <data name="WebToPdf_Paper" xml:space="preserve"><value>Khổ giấy</value></data>
+  <data name="WebToPdf_Paper_A4" xml:space="preserve"><value>A4 (210 × 297 mm)</value></data>
+  <data name="WebToPdf_Paper_A3" xml:space="preserve"><value>A3 (297 × 420 mm)</value></data>
+  <data name="WebToPdf_Paper_A5" xml:space="preserve"><value>A5 (148 × 210 mm)</value></data>
+  <data name="WebToPdf_Paper_Letter" xml:space="preserve"><value>Letter (216 × 279 mm)</value></data>
+  <data name="WebToPdf_Paper_Legal" xml:space="preserve"><value>Legal (216 × 356 mm)</value></data>
+  <data name="WebToPdf_Landscape" xml:space="preserve"><value>Khổ ngang</value></data>
+  <data name="WebToPdf_Margins" xml:space="preserve"><value>Lề</value></data>
+  <data name="WebToPdf_Margins_None" xml:space="preserve"><value>Không lề</value></data>
+  <data name="WebToPdf_Margins_Narrow" xml:space="preserve"><value>Hẹp (6 mm)</value></data>
+  <data name="WebToPdf_Margins_Normal" xml:space="preserve"><value>Thường (12 mm)</value></data>
+  <data name="WebToPdf_Margins_Wide" xml:space="preserve"><value>Rộng (25 mm)</value></data>
+  <data name="WebToPdf_Backgrounds" xml:space="preserve"><value>In màu nền và ảnh nền</value></data>
+  <data name="WebToPdf_HeaderAndFooter" xml:space="preserve"><value>In tiêu đề, ngày, địa chỉ và số trang ở đầu và cuối mỗi trang</value></data>
+  <data name="WebToPdf_OpenWhenDone" xml:space="preserve"><value>Mở tệp PDF khi xong</value></data>
+  <data name="WebToPdf_Note" xml:space="preserve"><value>Trang được tải và in như Microsoft Edge in ra (WebView2), ở chế độ riêng tư: PDF_Pro không dùng cookie hay phiên đăng nhập của trình duyệt, nên trang cần đăng nhập sẽ in ra trang đăng nhập. Hãy lưu trang đó thành tệp HTML từ trình duyệt rồi chọn tệp.</value></data>
+  <data name="WebToPdf_Run" xml:space="preserve"><value>Chuyển sang PDF</value></data>
+  <data name="WebToPdf_Error_Address" xml:space="preserve"><value>Hãy nhập địa chỉ trang web (ví dụ https://www.example.com) hoặc chọn một tệp HTML trên máy này.</value></data>
+  <data name="WebToPdf_Error_NoFile" xml:space="preserve"><value>Không thấy tệp {0}.</value></data>
+  <data name="WebToPdf_Error_Title" xml:space="preserve"><value>Không chuyển được trang web</value></data>
+  <data name="WebToPdf_Error_NoRuntime" xml:space="preserve"><value>Máy chưa có Microsoft Edge WebView2 Runtime — thành phần miễn phí của Microsoft dùng để tải và in trang web. Hãy tải bản "Evergreen" tại https://developer.microsoft.com/microsoft-edge/webview2/, cài đặt rồi thử lại.</value></data>
+  <data name="WebToPdf_Error_Unreachable" xml:space="preserve"><value>Không mở được trang: hãy kiểm tra địa chỉ và kết nối mạng.</value></data>
+  <data name="WebToPdf_Error_Certificate" xml:space="preserve"><value>Trang không có chứng chỉ bảo mật hợp lệ nên không được mở.</value></data>
+  <data name="WebToPdf_Error_Http" xml:space="preserve"><value>Máy chủ trả về lỗi {0} cho trang này.</value></data>
+  <data name="WebToPdf_Error_TimedOut" xml:space="preserve"><value>Trang tải quá lâu (hơn 60 giây).</value></data>
+  <data name="WebToPdf_Error_PrintFailed" xml:space="preserve"><value>Trang đã tải nhưng không in được thành PDF.</value></data>
+  <data name="WebToPdf_Error_Write" xml:space="preserve"><value>Không ghi được tệp PDF vào thư mục đã chọn.</value></data>
+  <data name="WebToPdf_Progress" xml:space="preserve"><value>Đang chuyển trang web sang PDF…</value></data>
+  <data name="WebToPdf_ProgressMany" xml:space="preserve"><value>Đang chuyển {0} trang web sang PDF…</value></data>
+  <data name="WebToPdf_Done" xml:space="preserve"><value>Đã lưu {0}</value></data>
+  <data name="WebToPdf_Failed" xml:space="preserve"><value>{0}/{1} trang web đã thành PDF; các trang sau thì không:</value></data>
+  <data name="Open_Web_Done" xml:space="preserve"><value>Đã chuyển trang web sang PDF; bản PDF nằm cạnh tệp HTML</value></data>
 </root>

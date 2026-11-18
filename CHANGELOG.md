@@ -5,6 +5,10 @@ theo [Semantic Versioning](https://semver.org/lang/vi/). Mục đầu tiên là 
 
 ## [Chưa phát hành]
 
+- **Trang web sang PDF** (Chuyển đổi › Từ trang web): nhập địa chỉ trang web hoặc chọn tệp HTML, chọn khổ giấy (A4,
+  A3, A5, Letter, Legal), khổ ngang, lề, in màu nền — trang được in như Microsoft Edge in ra. Mở tệp .html bằng PDF_Pro
+  thì nó thành PDF cạnh tệp gốc rồi mở. Cần Microsoft Edge WebView2 Runtime (có sẵn trên Windows 11).
+
 - **Đọc to** (Tệp › Đọc to, Ctrl+Shift+B): tài liệu được đọc bằng giọng nói tiếng Việt của Windows, từ chữ đang chọn
   hoặc trang đang xem tới hết, câu đang đọc được tô sáng; bấm lần nữa để dừng. Chọn giọng và tốc độ trong Cài đặt ›
   Đọc to. Ứng dụng giờ cần Windows 10 bản 2004 trở lên.

@@ -176,6 +176,9 @@ public interface IFileDialogService
     /// <param name="initialDirectory">Folder shown first, or null.</param>
     string? PickWordSavePath(string suggestedFileName, string? initialDirectory);
 
+    /// <summary>An HTML file to print into a PDF ("Trang web sang PDF"); null when cancelled.</summary>
+    string? PickHtmlFile();
+
     /// <summary>Files of any kind to attach to a document; empty when cancelled.</summary>
     IReadOnlyList<string> PickAttachmentFiles(string title);
 
@@ -274,6 +277,9 @@ public interface IPageDialogService
 
     /// <summary>"PDF sang Word": pages, tables, pictures.</summary>
     bool ShowToWord(ViewModels.Converting.ToWordViewModel viewModel);
+
+    /// <summary>"Trang web sang PDF": the page, paper, margins, backgrounds.</summary>
+    bool ShowWebToPdf(ViewModels.Converting.WebToPdfViewModel viewModel);
 
     /// <summary>"Trình chiếu": the pages on the whole screen until it ends.</summary>
     void ShowPresentation(ViewModels.Viewer.PresentationViewModel viewModel);

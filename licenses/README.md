@@ -9,6 +9,7 @@ this folder) says which component is under which license.
 | `CommunityToolkit.Mvvm.txt` | MIT, as published by the .NET Community Toolkit |
 | `WPF-UI.txt`, `WPF-UI-ThirdPartyNotices.txt` | MIT, as published by WPF-UI, and the notices it carries |
 | `gong-wpf-dragdrop.txt` | BSD-3-Clause, as published by gong-wpf-dragdrop |
+| `Microsoft.Web.WebView2.txt` | BSD-3-Clause, as published with the WebView2 SDK |
 | `SkiaSharp.txt` | MIT, as published by SkiaSharp |
 | `OFL-*.txt` | SIL Open Font License 1.1 of each bundled font, with its copyright line |
 

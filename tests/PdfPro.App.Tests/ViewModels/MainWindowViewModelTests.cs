@@ -107,7 +107,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
                 "stamp.watermark", "stamp.background", "stamp.headerFooter", "stamp.pageNumbers", "stamp.remove", "stamp.bates", "search.find",
                 "annotate.highlight", "annotate.underline", "annotate.strikeout", "annotate.squiggly", "annotate.note",
                 "annotate.textBox", "annotate.ink", "annotate.shapes", "annotate.stamp", "annotate.comments", "annotate.flatten",
-                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify", "convert.toImages", "convert.toText", "convert.toWord", "convert.fromImages", "convert.officeToPdf", "convert.toPdfA", "extract.tables", "extract.images", "extract.attachments", "extract.fonts", "ocr.run", "compare.documents", "scan.removeBlankPages", "scan.autoRotate", "scan.deskew", "scan.cleanBorders", "scan.splitByBlank", "optimize.compress", "optimize.grayscale", "optimize.linearize", "optimize.repair"],
+                "security.encrypt", "security.redact", "security.sanitize", "security.sign", "security.signBatch", "security.verify", "convert.toImages", "convert.toText", "convert.toWord", "convert.fromImages", "convert.officeToPdf", "convert.fromWeb", "convert.toPdfA", "extract.tables", "extract.images", "extract.attachments", "extract.fonts", "ocr.run", "compare.documents", "scan.removeBlankPages", "scan.autoRotate", "scan.deskew", "scan.cleanBorders", "scan.splitByBlank", "optimize.compress", "optimize.grayscale", "optimize.linearize", "optimize.repair"],
             ignoreOrder: true);
 
         commands.Where(c => !c.IsAvailable).ShouldAllBe(c =>
@@ -619,7 +619,7 @@ public sealed partial class MainWindowViewModelTests : IDisposable
         }
     }
 
-    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true, PdfPro.App.Services.Updates.IUpdateService? updates = null, PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null, PdfPro.App.Services.Optimizing.IExportRunner? exports = null, PdfPro.App.Services.Speech.ITextToSpeech? speech = null)
+    private MainWindowViewModel Create(bool isDebugBuild, bool withBates = true, PdfPro.App.Services.Updates.IUpdateService? updates = null, PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null, PdfPro.App.Services.Optimizing.IExportRunner? exports = null, PdfPro.App.Services.Speech.ITextToSpeech? speech = null, PdfPro.App.Services.Web.IWebPagePrinter? web = null)
         => new(
             _dialogs,
             _lifetime,
@@ -663,7 +663,8 @@ public sealed partial class MainWindowViewModelTests : IDisposable
             updates: updates,
             exports: exports,
             openGuard: openGuard,
-            speech: speech);
+            speech: speech,
+            web: web);
 
     private PdfPro.App.Services.Automation.AutomationServices Automation()
     {

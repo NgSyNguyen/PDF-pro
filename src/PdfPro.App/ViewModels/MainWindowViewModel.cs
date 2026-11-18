@@ -81,9 +81,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Services.Updates.IUpdateService? updates = null,
         Services.Optimizing.IExportRunner? exports = null,
         PdfPro.Infrastructure.Instances.IOpenDocumentGuard? openGuard = null,
-        Services.Speech.ITextToSpeech? speech = null)
+        Services.Speech.ITextToSpeech? speech = null,
+        Services.Web.IWebPagePrinter? web = null)
     {
         _speech = speech;
+        _web = web;
         ArgumentNullException.ThrowIfNull(buildInfo);
         _exports = exports;
         _openGuard = openGuard;
@@ -348,6 +350,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
             var converted = await ConvertToOpenAsync(office);
             files = [.. files.Select(p => (Original: p, Full: Path.GetFullPath(p)))
                 .Where(p => !office.Contains(p.Full, StringComparer.OrdinalIgnoreCase) || converted.ContainsKey(p.Full))
+                .Select(p => converted.TryGetValue(p.Full, out var pdf) ? pdf : p.Original)];
+        }
+
+        var pages = pdfOnly || _web is null
+            ? []
+            : files.Select(Path.GetFullPath).Where(p => Core.Web.WebAddress.IsHtmlFile(p) && File.Exists(p)).ToList();
+        if (pages.Count > 0)
+        {
+            var converted = await ConvertWebToOpenAsync(pages);
+            files = [.. files.Select(p => (Original: p, Full: Path.GetFullPath(p)))
+                .Where(p => !pages.Contains(p.Full, StringComparer.OrdinalIgnoreCase) || converted.ContainsKey(p.Full))
                 .Select(p => converted.TryGetValue(p.Full, out var pdf) ? pdf : p.Original)];
         }
 
@@ -943,6 +956,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 [
                     new("convert.fromImages", Strings.Cmd_FromImages, SymbolRegular.ImageMultiple24, FromImagesCommand, Strings.Cmd_FromImages_ToolTip),
                     new("convert.officeToPdf", Strings.Cmd_FromOffice, SymbolRegular.DocumentPdf24, OfficeToPdfCommand, Strings.Cmd_FromOffice_ToolTip),
+                    new("convert.fromWeb", Strings.Cmd_FromWeb, SymbolRegular.Globe24, WebToPdfCommand, Strings.Cmd_FromWeb_ToolTip),
                 ]),
                 new(Strings.Ribbon_Group_Optimize,
                 [

@@ -213,6 +213,18 @@ internal sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
     }
 
+    public string? PickHtmlFile()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.WebToPdf_PickFile_Title,
+            Filter = Strings.WebToPdf_PickFile_Filter,
+            CheckFileExists = true,
+        };
+
+        return dialog.ShowDialog(Application.Current?.MainWindow) == true ? dialog.FileName : null;
+    }
+
     public string? PickWordSavePath(string suggestedFileName, string? initialDirectory)
     {
         var dialog = new SaveFileDialog
@@ -533,6 +545,12 @@ internal sealed class PageDialogService : IPageDialogService
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         return Show(new ToWordWindow(viewModel));
+    }
+
+    public bool ShowWebToPdf(ViewModels.Converting.WebToPdfViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        return Show(new WebToPdfWindow(viewModel));
     }
 
     public void ShowPresentation(ViewModels.Viewer.PresentationViewModel viewModel)

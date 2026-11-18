@@ -158,6 +158,58 @@ public sealed class Phase9AcceptanceTests(ITestOutputHelper output) : IDisposabl
         text.IndexOf("CỘNG HÒA", StringComparison.Ordinal).ShouldBeLessThan(text.IndexOf("Độc lập", StringComparison.Ordinal), "the national heading reads in order");
     }
 
+    /// <summary>"Trang web sang PDF": an HTML page printed by WebView2 on A4 sideways, with its Vietnamese text.</summary>
+    [Fact]
+    public void AWebPage_BecomesAPdf_FromTheRibbon()
+    {
+        RequireEnabled();
+        var page = WriteWebPage("trang tin.html");
+        var pdf = Path.Combine(_folder.Documents, "trang tin.pdf");
+        using var app = AppUnderTest.Start(_folder);
+
+        app.Ribbon("convert", "convert.fromWeb");
+        var dialog = app.WaitForWindow(Text("WebToPdf_Title"));
+        app.SetText("WebToPdfAddress", page, dialog);
+        app.SetChecked("WebToPdfLandscape", true, dialog);
+        app.Invoke("WebToPdfRun", dialog);
+        app.UseFileDialog(Text("Save_Dialog_Title"), pdf);
+        var elapsed = app.WaitForTab("trang tin.pdf", Long);
+        output.WriteLine($"a web page to PDF: {elapsed.TotalSeconds:N1} s");
+
+        var first = PdfFile.Pages(pdf)[0];
+        first.Width.ShouldBeInRange(840, 843, "A4 sideways");
+        first.Height.ShouldBeInRange(594, 596);
+        string.Join('\n', PdfFile.PageTexts(pdf)).Normalize(System.Text.NormalizationForm.FormC).ShouldContain("CỘNGHÒAXÃHỘICHỦNGHĨAVIỆTNAM");
+    }
+
+    /// <summary>An HTML file opened like a PDF becomes an A4 PDF next to it, which opens.</summary>
+    [Fact]
+    public void AnHtmlFile_OpenedLikeAPdf_BecomesAPdfBesideIt()
+    {
+        RequireEnabled();
+        var page = WriteWebPage("thông báo.html");
+        using var app = AppUnderTest.Start(_folder, page);
+
+        app.WaitForTab("thông báo.pdf", Long);
+        app.WaitForStatus(Text("Open_Web_Done"), Long);
+
+        var pdf = Path.Combine(_folder.Documents, "thông báo.pdf");
+        PdfFile.Pages(pdf)[0].Width.ShouldBeInRange(594, 596, "A4");
+        string.Join('\n', PdfFile.PageTexts(pdf)).Normalize(System.Text.NormalizationForm.FormC).ShouldContain("1.234.000");
+    }
+
+    private string WriteWebPage(string name)
+    {
+        var path = Path.Combine(_folder.Documents, name);
+        File.WriteAllText(
+            path,
+            "<!doctype html><html lang=\"vi\"><head><meta charset=\"utf-8\"><title>Thông báo</title></head><body>"
+                + "<h1>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h1><p style=\"background:#dde\">Độc lập - Tự do - Hạnh phúc</p>"
+                + "<table border=\"1\"><tr><th>Mục</th><th>Số tiền</th></tr><tr><td>Chi phí</td><td>1.234.000</td></tr></table></body></html>",
+            System.Text.Encoding.UTF8);
+        return path;
+    }
+
     /// <summary>"PDF sang Word": an editable .docx with the administrative heading side by side.</summary>
     [Fact]
     public void ADocument_BecomesAnEditableWordDocument()

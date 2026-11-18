@@ -2478,7 +2478,7 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Welcome_OfficeToPdf_ToolTip" xml:space="preserve"><value>Convert Word, Excel and PowerPoint documents to PDF, without opening a document first</value></data>
   <data name="OfficeToPdf_Failure_Protected" xml:space="preserve"><value>the document has a password: open it, remove the password, save it and try again</value></data>
   <data name="OfficeToPdf_Failure_NeedsLibreOffice" xml:space="preserve"><value>no program on this computer opens this kind of file (Microsoft Office, WPS Office or LibreOffice)</value></data>
-  <data name="Open_Dialog_FilterWithOffice" xml:space="preserve"><value>PDF files and Office documents (*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|PDF files (*.pdf)|*.pdf|Word, Excel and PowerPoint documents (*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|All files (*.*)|*.*</value></data>
+  <data name="Open_Dialog_FilterWithOffice" xml:space="preserve"><value>PDF files, Office documents and web pages (*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp;*.html;*.htm;*.xhtml;*.mht;*.mhtml)|*.pdf;*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp;*.html;*.htm;*.xhtml;*.mht;*.mhtml|PDF files (*.pdf)|*.pdf|Word, Excel, PowerPoint documents (*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp)|*.docx;*.doc;*.odt;*.rtf;*.xlsx;*.xls;*.ods;*.pptx;*.ppt;*.odp|Web pages (*.html;*.htm;*.xhtml;*.mht;*.mhtml)|*.html;*.htm;*.xhtml;*.mht;*.mhtml|All files (*.*)|*.*</value></data>
   <data name="Open_Office_Done" xml:space="preserve"><value>Converted to PDF; the PDF is next to the original document</value></data>
   <data name="OfficeToPdf_ConvertersLine" xml:space="preserve"><value>Converted with — Word: {0}; Excel: {1}; PowerPoint: {2}.</value></data>
   <data name="OfficeToPdf_Converter_LibreOffice" xml:space="preserve"><value>LibreOffice</value></data>
@@ -2531,4 +2531,44 @@ The text block was rewritten with a bundled Unicode font (Noto) of the same size
   <data name="Settings_Speech_RateValue" xml:space="preserve"><value>{0:0.##}×</value></data>
   <data name="Settings_Speech_NoVoices" xml:space="preserve"><value>Windows has no voice yet: add one in Windows Settings › Time &amp; language › Speech › Add voices.</value></data>
   <data name="Settings_Speech_NoVietnamese" xml:space="preserve"><value>No Vietnamese voice yet: add one in Windows Settings › Time &amp; language › Speech › Add voices › Vietnamese.</value></data>
+  <data name="Cmd_FromWeb" xml:space="preserve"><value>From web page</value></data>
+  <data name="Cmd_FromWeb_ToolTip" xml:space="preserve"><value>Save a web page (an https://… address) or an HTML file as a PDF, as the browser prints it: paper size, landscape, margins, backgrounds</value></data>
+  <data name="WebToPdf_Title" xml:space="preserve"><value>Web page to PDF</value></data>
+  <data name="WebToPdf_Address" xml:space="preserve"><value>Web address or HTML file</value></data>
+  <data name="WebToPdf_Address_Placeholder" xml:space="preserve"><value>https://www.example.com or C:\…\page.html</value></data>
+  <data name="WebToPdf_PickFile" xml:space="preserve"><value>Choose an HTML file…</value></data>
+  <data name="WebToPdf_PickFile_Title" xml:space="preserve"><value>Choose a web page to turn into a PDF</value></data>
+  <data name="WebToPdf_PickFile_Filter" xml:space="preserve"><value>Web pages (*.html;*.htm;*.xhtml;*.mht;*.mhtml)|*.html;*.htm;*.xhtml;*.mht;*.mhtml|All files (*.*)|*.*</value></data>
+  <data name="WebToPdf_Paper" xml:space="preserve"><value>Paper</value></data>
+  <data name="WebToPdf_Paper_A4" xml:space="preserve"><value>A4 (210 × 297 mm)</value></data>
+  <data name="WebToPdf_Paper_A3" xml:space="preserve"><value>A3 (297 × 420 mm)</value></data>
+  <data name="WebToPdf_Paper_A5" xml:space="preserve"><value>A5 (148 × 210 mm)</value></data>
+  <data name="WebToPdf_Paper_Letter" xml:space="preserve"><value>Letter (8.5 × 11 in)</value></data>
+  <data name="WebToPdf_Paper_Legal" xml:space="preserve"><value>Legal (8.5 × 14 in)</value></data>
+  <data name="WebToPdf_Landscape" xml:space="preserve"><value>Landscape</value></data>
+  <data name="WebToPdf_Margins" xml:space="preserve"><value>Margins</value></data>
+  <data name="WebToPdf_Margins_None" xml:space="preserve"><value>None</value></data>
+  <data name="WebToPdf_Margins_Narrow" xml:space="preserve"><value>Narrow (6 mm)</value></data>
+  <data name="WebToPdf_Margins_Normal" xml:space="preserve"><value>Normal (12 mm)</value></data>
+  <data name="WebToPdf_Margins_Wide" xml:space="preserve"><value>Wide (25 mm)</value></data>
+  <data name="WebToPdf_Backgrounds" xml:space="preserve"><value>Print background colours and pictures</value></data>
+  <data name="WebToPdf_HeaderAndFooter" xml:space="preserve"><value>Print the title, date, address and page number at the top and bottom of each page</value></data>
+  <data name="WebToPdf_OpenWhenDone" xml:space="preserve"><value>Open the PDF when done</value></data>
+  <data name="WebToPdf_Note" xml:space="preserve"><value>The page is loaded and printed as Microsoft Edge prints it (WebView2), in private mode: PDF_Pro does not use the browser's cookies or sign-ins, so a page that needs signing in prints its sign-in page. Save such a page as an HTML file from the browser and choose the file.</value></data>
+  <data name="WebToPdf_Run" xml:space="preserve"><value>Convert to PDF</value></data>
+  <data name="WebToPdf_Error_Address" xml:space="preserve"><value>Type a web address (such as https://www.example.com) or choose an HTML file of this computer.</value></data>
+  <data name="WebToPdf_Error_NoFile" xml:space="preserve"><value>The file {0} is not there.</value></data>
+  <data name="WebToPdf_Error_Title" xml:space="preserve"><value>The web page could not be converted</value></data>
+  <data name="WebToPdf_Error_NoRuntime" xml:space="preserve"><value>The Microsoft Edge WebView2 Runtime — Microsoft's free component that loads and prints web pages — is not installed. Download the "Evergreen" runtime from https://developer.microsoft.com/microsoft-edge/webview2/, install it and try again.</value></data>
+  <data name="WebToPdf_Error_Unreachable" xml:space="preserve"><value>The page could not be opened: check the address and the network connection.</value></data>
+  <data name="WebToPdf_Error_Certificate" xml:space="preserve"><value>The page has no valid security certificate, so it was not opened.</value></data>
+  <data name="WebToPdf_Error_Http" xml:space="preserve"><value>The server answered error {0} for this page.</value></data>
+  <data name="WebToPdf_Error_TimedOut" xml:space="preserve"><value>The page took too long to load (over 60 seconds).</value></data>
+  <data name="WebToPdf_Error_PrintFailed" xml:space="preserve"><value>The page loaded but could not be printed to PDF.</value></data>
+  <data name="WebToPdf_Error_Write" xml:space="preserve"><value>The PDF could not be written to the folder chosen.</value></data>
+  <data name="WebToPdf_Progress" xml:space="preserve"><value>Converting the web page to PDF…</value></data>
+  <data name="WebToPdf_ProgressMany" xml:space="preserve"><value>Converting {0} web pages to PDF…</value></data>
+  <data name="WebToPdf_Done" xml:space="preserve"><value>Saved {0}</value></data>
+  <data name="WebToPdf_Failed" xml:space="preserve"><value>{0} of {1} web pages became PDFs; these did not:</value></data>
+  <data name="Open_Web_Done" xml:space="preserve"><value>Converted to PDF; the PDF is next to the HTML file</value></data>
 </root>

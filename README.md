@@ -27,6 +27,7 @@ toàn trên máy, không gửi tài liệu hay dữ liệu sử dụng đi đâu
 | Biểu mẫu | Điền, thiết kế, nhận diện trường, nhập/xuất JSON/XFDF, trộn từ CSV/Excel |
 | Bảo mật | Mật khẩu + quyền AES-256, xóa vĩnh viễn có kiểm lại, làm sạch, ký số và kiểm tra chữ ký |
 | Tiếng Việt | Tìm kiếm không dấu/có dấu, chuẩn hóa NFC, phông Unicode đóng gói; PDF cũ dùng phông TCVN3 (.VnTime) hoặc VNI đọc ra đúng tiếng Việt khi chọn, chép, tìm, xuất |
+| Trang web | Trang web (địa chỉ https://…) hoặc tệp HTML thành PDF như Edge in ra: khổ A4/A3/A5/Letter/Legal, ngang, lề, màu nền; mở thẳng tệp .html |
 | Tối ưu & chuyển đổi | Nén, tối ưu web, sửa tệp hỏng, thang xám, PDF/A, **PDF sang Word (.docx sửa được chữ)**, sang ảnh/văn bản/Markdown, ảnh sang PDF, Word/Excel/PowerPoint sang PDF (bằng Microsoft Office hoặc WPS Office có trên máy, hoặc LibreOffice); mở thẳng tệp Office là ra PDF |
 | OCR & bản quét | OCR tiếng Việt (Tesseract), xóa trang trắng, xoay đúng chiều, làm thẳng, xóa viền đen |
 | Phân tích | So sánh hai tài liệu, trích bảng sang Excel/CSV, trích ảnh, tệp đính kèm, phông chữ |

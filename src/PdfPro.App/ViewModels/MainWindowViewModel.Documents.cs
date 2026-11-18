@@ -424,6 +424,7 @@ public sealed partial class MainWindowViewModel : IExitGuard
         LinksCommand.NotifyCanExecuteChanged();
         DrawLinkCommand.NotifyCanExecuteChanged();
         OfficeToPdfCommand.NotifyCanExecuteChanged();
+        WebToPdfCommand.NotifyCanExecuteChanged();
         ToPdfACommand.NotifyCanExecuteChanged();
     }
 
