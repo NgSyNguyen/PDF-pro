@@ -59,7 +59,7 @@ public sealed partial class MainWindowViewModelTests
         var target = Path.Combine(Path.GetDirectoryName(path)!, "trích.pdf");
         _fileDialogs.PickSavePath(Arg.Any<string>(), Arg.Any<string?>()).Returns(target);
         var exporting = new TaskCompletionSource();
-        AnyExport().Returns(exporting.Task);
+        AnyExtraction().Returns(exporting.Task);
 
         Command(viewModel, "organize.extract").Command.Execute(null);
 
@@ -70,9 +70,24 @@ public sealed partial class MainWindowViewModelTests
         exporting.SetResult();
         await WaitUntilAsync(() => !viewModel.StatusBar.IsTaskRunning);
 
-        await _saver.Received(1).ExportAsync(document.Workspace, Arg.Is<IReadOnlyList<int>>(p => p.SequenceEqual(new[] { 0, 2 })), target, Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
+        await _saver.Received(1).ExtractAsync(document.Workspace, Arg.Is<IReadOnlyList<int>>(p => p.SequenceEqual(new[] { 0, 2 })), target, Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
         viewModel.StatusBar.TaskText.ShouldBe(Format(Strings.Extract_Done, 2, "trích.pdf"));
         document.IsDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ExtractPages_OfAProtectionWithoutItsPasswords_AsksForThem_AndWritesNothingWhenGivenUp()
+    {
+        var (viewModel, path) = await CreateWithFileAsync("a.pdf");
+        var document = viewModel.ActiveDocument!;
+        document.Apply(PdfPro.App.Tests.TestSupport.TestOperations.Catalog().Get<PdfPro.Operations.Security.SetProtectionOperation>(), new PdfPro.Operations.Security.SetProtectionParams(Unknown)).ShouldBeTrue();
+        _fileDialogs.PickSavePath(Arg.Any<string>(), Arg.Any<string?>()).Returns(Path.Combine(Path.GetDirectoryName(path)!, "trích.pdf"));
+        _pageDialogs.ShowSecurity(Arg.Any<PdfPro.App.ViewModels.Security.SecurityViewModel>()).Returns(false);
+
+        (await viewModel.ExtractPagesAsync(document, [0])).ShouldBeFalse();
+
+        _pageDialogs.Received(1).ShowSecurity(Arg.Is<PdfPro.App.ViewModels.Security.SecurityViewModel>(d => d.NeedsPasswords));
+        await _saver.DidNotReceiveWithAnyArgs().ExtractAsync(default!, default!, default!, default!, TestToken);
     }
 
     [Fact]
@@ -83,7 +98,7 @@ public sealed partial class MainWindowViewModelTests
 
         (await viewModel.ExtractPagesAsync(viewModel.ActiveDocument!, [0])).ShouldBeFalse();
 
-        await _saver.DidNotReceiveWithAnyArgs().ExportAsync(default!, default!, default!, default!, TestToken);
+        await _saver.DidNotReceiveWithAnyArgs().ExtractAsync(default!, default!, default!, default!, TestToken);
     }
 
     [Fact]
@@ -95,7 +110,7 @@ public sealed partial class MainWindowViewModelTests
         (await viewModel.ExtractPagesAsync(viewModel.ActiveDocument!, [0])).ShouldBeFalse();
 
         await _messages.Received(1).ShowErrorAsync(Strings.Extract_Error_Title, Strings.Extract_Error_OwnFile);
-        await _saver.DidNotReceiveWithAnyArgs().ExportAsync(default!, default!, default!, default!, TestToken);
+        await _saver.DidNotReceiveWithAnyArgs().ExtractAsync(default!, default!, default!, default!, TestToken);
     }
 
     [Fact]
@@ -117,7 +132,7 @@ public sealed partial class MainWindowViewModelTests
     {
         var (viewModel, path) = await CreateWithFileAsync("a.pdf");
         _fileDialogs.PickSavePath(Arg.Any<string>(), Arg.Any<string?>()).Returns(Path.Combine(Path.GetDirectoryName(path)!, "x.pdf"));
-        AnyExport().ThrowsAsync(new DocumentSaveException(SaveFailure.DiskFull));
+        AnyExtraction().ThrowsAsync(new DocumentSaveException(SaveFailure.DiskFull));
 
         (await viewModel.ExtractPagesAsync(viewModel.ActiveDocument!, [1])).ShouldBeFalse();
 
@@ -131,11 +146,49 @@ public sealed partial class MainWindowViewModelTests
     {
         var (viewModel, path) = await CreateWithFileAsync("a.pdf");
         _fileDialogs.PickSavePath(Arg.Any<string>(), Arg.Any<string?>()).Returns(Path.Combine(Path.GetDirectoryName(path)!, "x.pdf"));
-        AnyExport().Returns(call => Task.FromCanceled(new CancellationToken(canceled: true)));
+        AnyExtraction().Returns(call => Task.FromCanceled(new CancellationToken(canceled: true)));
 
         (await viewModel.ExtractPagesAsync(viewModel.ActiveDocument!, [1])).ShouldBeFalse();
 
         viewModel.StatusBar.TaskText.ShouldBe(Strings.Extract_Cancelled);
+    }
+
+    [Fact]
+    public async Task BackgroundWorkOfATab_RunsInTheStatusBar_OneTaskAtATime_AndCanBeCancelled()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        var started = new TaskCompletionSource();
+        var request = new BackgroundWorkRequest("Đang tìm dấu…", async (progress, token) =>
+        {
+            progress.Report(new OperationProgress(1, 4));
+            started.SetResult();
+            await Task.Delay(Timeout.Infinite, token);
+        });
+
+        var running = viewModel.RunBackgroundWorkAsync(request);
+        await started.Task;
+
+        viewModel.StatusBar.IsTaskRunning.ShouldBeTrue();
+        viewModel.StatusBar.TaskText.ShouldBe("Đang tìm dấu…");
+        viewModel.SaveAsCommand.CanExecute(null).ShouldBeFalse("one task at a time");
+        viewModel.StatusBar.CancelTaskCommand.Execute(null);
+        await running;
+        (await request.Completion).ShouldBeFalse("cancelled");
+        viewModel.StatusBar.IsTaskRunning.ShouldBeFalse();
+        viewModel.StatusBar.TaskText.ShouldBe(Strings.Status_Cancelled);
+    }
+
+    [Fact]
+    public async Task BackgroundWorkOfATab_ThatFails_FailsTheTabsWait_AndFreesTheStatusBar()
+    {
+        var (viewModel, _) = await CreateWithFileAsync("a.pdf");
+        var request = new BackgroundWorkRequest("Đang tìm dấu…", (_, _) => throw new InvalidDataException("hỏng"));
+
+        await viewModel.RunBackgroundWorkAsync(request);
+
+        await Should.ThrowAsync<InvalidDataException>(() => request.Completion);
+        viewModel.StatusBar.IsTaskRunning.ShouldBeFalse();
+        viewModel.SaveAsCommand.CanExecute(null).ShouldBeTrue();
     }
 
     [Fact]
@@ -145,7 +198,7 @@ public sealed partial class MainWindowViewModelTests
         var document = viewModel.ActiveDocument!;
         _fileDialogs.PickSavePath(Arg.Any<string>(), Arg.Any<string?>()).Returns(Path.Combine(Path.GetDirectoryName(path)!, "x.pdf"));
         var exporting = new TaskCompletionSource();
-        AnyExport().Returns(exporting.Task);
+        AnyExtraction().Returns(exporting.Task);
         var extraction = viewModel.ExtractPagesAsync(document, [0]);
 
         var closing = viewModel.CloseTabCommand.ExecuteAsync(document);
@@ -269,8 +322,8 @@ public sealed partial class MainWindowViewModelTests
     private Task AnyContentChange()
         => _contentChanger.ApplyAsync(Arg.Any<DocumentWorkspace>(), Arg.Any<Core.Organizing.IContentOperation>(), Arg.Any<object>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
 
-    private Task AnyExport()
-        => _saver.ExportAsync(Arg.Any<DocumentWorkspace>(), Arg.Any<IReadOnlyList<int>>(), Arg.Any<string>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
+    private Task AnyExtraction()
+        => _saver.ExtractAsync(Arg.Any<DocumentWorkspace>(), Arg.Any<IReadOnlyList<int>>(), Arg.Any<string>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {

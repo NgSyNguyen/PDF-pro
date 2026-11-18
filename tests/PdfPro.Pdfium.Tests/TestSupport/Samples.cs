@@ -15,6 +15,8 @@ internal static class Samples
 
     public static string RotatedCropBox => Path("rotated-cropbox.pdf");
 
+    public static string LinksAnnots => Path("links-annots.pdf");
+
     public static string GoldenDirectory => System.IO.Path.Combine(RepositoryRoot, "tests", "PdfPro.Pdfium.Tests", "Golden");
 
     private static string Path(string fileName)

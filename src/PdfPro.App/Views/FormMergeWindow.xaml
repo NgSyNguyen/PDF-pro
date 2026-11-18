@@ -1,0 +1,169 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.FormMergeWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:forms="clr-namespace:PdfPro.App.ViewModels.Forms"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=forms:FormMergeViewModel}"
+  Title="{loc:Tr FormMerge_Title}"
+  Width="560"
+  MinHeight="0"
+  AutomationProperties.AutomationId="FormMergeWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr FormMerge_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock Text="{loc:Tr FormMerge_Message}" TextWrapping="Wrap" />
+
+      <TextBlock
+        Margin="0,16,0,4"
+        FontWeight="SemiBold"
+        Text="{loc:Tr FormMerge_Data}" />
+      <DockPanel>
+        <ui:Button
+          x:Name="BrowseData"
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="FormMergeBrowseData"
+          Command="{Binding BrowseDataCommand}"
+          Content="{loc:Tr FormMerge_Browse}"
+          DockPanel.Dock="Right" />
+        <TextBox
+          AutomationProperties.AutomationId="FormMergeDataPath"
+          AutomationProperties.Name="{loc:Tr FormMerge_Data}"
+          IsReadOnly="True"
+          Text="{Binding DataPath, Mode=OneWay}" />
+      </DockPanel>
+      <ui:ProgressRing
+        Width="20"
+        Height="20"
+        Margin="0,8,0,0"
+        HorizontalAlignment="Left"
+        IsIndeterminate="True"
+        Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+
+      <StackPanel Visibility="{Binding HasTable, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock
+          Margin="0,8,0,4"
+          AutomationProperties.AutomationId="FormMergeSummary"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{Binding Summary}"
+          TextWrapping="Wrap" />
+        <Border
+          MaxHeight="150"
+          Padding="8,4"
+          BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+          BorderThickness="1"
+          CornerRadius="4">
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl AutomationProperties.AutomationId="FormMergeColumns" ItemsSource="{Binding Columns}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type forms:FormMergeColumn}">
+                  <StackPanel Margin="0,2" Orientation="Horizontal">
+                    <ui:SymbolIcon
+                      Margin="0,0,6,0"
+                      Symbol="Checkmark16"
+                      Visibility="{Binding IsMatched, Converter={StaticResource BoolToVisibility}}" />
+                    <ui:SymbolIcon
+                      Margin="0,0,6,0"
+                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                      Symbol="Dismiss16"
+                      Visibility="{Binding IsMatched, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <TextBlock Text="{Binding Label}" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Border>
+
+        <TextBlock
+          Margin="0,12,0,4"
+          FontWeight="SemiBold"
+          Text="{loc:Tr FormMerge_NameColumn}" />
+        <ComboBox
+          AutomationProperties.AutomationId="FormMergeNameColumn"
+          AutomationProperties.Name="{loc:Tr FormMerge_NameColumn}"
+          DisplayMemberPath="Label"
+          ItemsSource="{Binding NameColumns}"
+          SelectedValue="{Binding NameColumn}"
+          SelectedValuePath="Value" />
+      </StackPanel>
+
+      <TextBlock
+        Margin="0,12,0,4"
+        FontWeight="SemiBold"
+        Text="{loc:Tr FormMerge_Folder}" />
+      <DockPanel>
+        <ui:Button
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="FormMergeBrowseFolder"
+          Command="{Binding BrowseFolderCommand}"
+          Content="{loc:Tr FormMerge_Browse}"
+          DockPanel.Dock="Right" />
+        <TextBox
+          AutomationProperties.AutomationId="FormMergeFolder"
+          AutomationProperties.Name="{loc:Tr FormMerge_Folder}"
+          Text="{Binding OutputFolder, UpdateSourceTrigger=PropertyChanged}" />
+      </DockPanel>
+      <CheckBox
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="FormMergeOverwrite"
+        Content="{loc:Tr FormMerge_Overwrite}"
+        IsChecked="{Binding Overwrite}" />
+      <CheckBox
+        Margin="0,4,0,0"
+        AutomationProperties.AutomationId="FormMergeFlatten"
+        Content="{loc:Tr FormMerge_Flatten}"
+        IsChecked="{Binding Flatten}" />
+      <CheckBox
+        Margin="0,4,0,0"
+        AutomationProperties.AutomationId="FormMergeOpenFolder"
+        Content="{loc:Tr FormMerge_OpenFolder}"
+        IsChecked="{Binding OpenFolderWhenDone}" />
+
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="FormMergeError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding Error}"
+        TextWrapping="Wrap"
+        Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="FormMergeOk"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr FormMerge_Run}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="FormMergeCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

@@ -151,6 +151,46 @@ public sealed class ContentChangerTests : IDisposable
     }
 
     [Fact]
+    public async Task Apply_AnIsolatedOperation_RunsInTheWorker_InsteadOfHere()
+    {
+        var workspace = await RotatedWorkspaceAsync();
+        var isolation = Substitute.For<IOperationIsolation>();
+        isolation.Isolates(_operation).Returns(true);
+        isolation.ApplyAsync(_operation, Arg.Any<string>(), Arg.Any<Stream>(), Arg.Any<object>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<Stream>(2).WriteAsync(FakeContentOperation.Output, call.ArgAt<CancellationToken>(5)).AsTask());
+        var changer = new ContentChanger(_materializer, _loader, NullLogger<ContentChanger>.Instance, isolation);
+
+        await changer.ApplyAsync(workspace, _operation, new ChangePageSizeParams("1", 420, 595), new SyncProgress(_ => { }), TestToken);
+
+        _operation.Input.ShouldBeNull("the operation did not run in the app");
+        (await File.ReadAllBytesAsync(Path.Combine(workspace.Session.Directory, "revisions", "r0001.pdf"), TestToken)).ShouldBe(FakeContentOperation.Output);
+        workspace.Session.State.BaseSourceId.ShouldBe("r1");
+    }
+
+    [Theory]
+    [InlineData(WorkerFailure.Crashed, ContentChangeFailure.WorkerStopped)]
+    [InlineData(WorkerFailure.NotStarted, ContentChangeFailure.WorkerStopped)]
+    [InlineData(WorkerFailure.TimedOut, ContentChangeFailure.WorkerTimedOut)]
+    public async Task Apply_AWorkerThatDies_LeavesTheDocumentAsItWas(WorkerFailure failure, ContentChangeFailure expected)
+    {
+        var workspace = await RotatedWorkspaceAsync();
+        var before = workspace.Session.State;
+        var isolation = Substitute.For<IOperationIsolation>();
+        isolation.Isolates(_operation).Returns(true);
+        isolation.ApplyAsync(_operation, Arg.Any<string>(), Arg.Any<Stream>(), Arg.Any<object>(), Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new WorkerException(failure));
+        var changer = new ContentChanger(_materializer, _loader, NullLogger<ContentChanger>.Instance, isolation);
+
+        var error = await Should.ThrowAsync<ContentChangeException>(
+            () => changer.ApplyAsync(workspace, _operation, new ChangePageSizeParams("1", 420, 595), new SyncProgress(_ => { }), TestToken));
+
+        error.Failure.ShouldBe(expected);
+        workspace.Session.State.ShouldBe(before);
+        workspace.CanEdit.ShouldBeTrue();
+        RevisionFiles(workspace).ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Apply_RevisionWithAnotherPageCount_IsNotUsed()
     {
         var workspace = await RotatedWorkspaceAsync();

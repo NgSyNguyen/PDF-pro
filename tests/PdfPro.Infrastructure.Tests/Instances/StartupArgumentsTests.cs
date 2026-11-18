@@ -23,6 +23,25 @@ public sealed class StartupArgumentsTests
     }
 
     [Fact]
+    public void Merge_IsReadAsAnOption_AndTravelsBeforeTheFilesOfTheHandOver()
+    {
+        var parsed = StartupArguments.Parse(["--merge", "hồ sơ 2.pdf"], CurrentDirectory);
+
+        parsed.Merge.ShouldBeTrue();
+        parsed.Files.ShouldBe([@"C:\Users\test\Documents\hồ sơ 2.pdf"]);
+        var message = parsed.HandOverMessage();
+        message.ShouldBe(["--merge", @"C:\Users\test\Documents\hồ sơ 2.pdf"]);
+        var (merge, files) = StartupArguments.ReadHandOver(message);
+        merge.ShouldBeTrue();
+        files.ShouldBe([@"C:\Users\test\Documents\hồ sơ 2.pdf"]);
+
+        var opening = StartupArguments.Parse(["a.pdf"], CurrentDirectory);
+        opening.Merge.ShouldBeFalse();
+        opening.HandOverMessage().ShouldBe([@"C:\Users\test\Documents\a.pdf"]);
+        StartupArguments.ReadHandOver(opening.HandOverMessage()).Merge.ShouldBeFalse();
+    }
+
+    [Fact]
     public void NoArguments_MeansNoFiles()
     {
         var parsed = StartupArguments.Parse([], CurrentDirectory);

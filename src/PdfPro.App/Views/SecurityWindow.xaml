@@ -1,0 +1,306 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.SecurityWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:security="clr-namespace:PdfPro.App.ViewModels.Security"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=security:SecurityViewModel}"
+  Title="{loc:Tr Security_Title}"
+  Width="540"
+  MinHeight="0"
+  AutomationProperties.AutomationId="SecurityWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="Meter" TargetType="ProgressBar">
+      <Setter Property="Height" Value="4" />
+      <Setter Property="Margin" Value="0,4,0,0" />
+      <Setter Property="Minimum" Value="0" />
+      <Setter Property="Maximum" Value="5" />
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr Security_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <!-- A view-only protected document: its permissions, and the owner password that opens it for editing. -->
+    <StackPanel Margin="24,4,24,24" Visibility="{Binding IsViewOnly, Converter={StaticResource BoolToVisibility}}">
+      <StackPanel Orientation="Horizontal">
+        <ui:SymbolIcon
+          Margin="0,0,12,0"
+          VerticalAlignment="Top"
+          FontSize="28"
+          Symbol="LockClosed24" />
+        <TextBlock
+          MaxWidth="440"
+          Text="{loc:Tr Security_ViewOnly_Message}"
+          TextWrapping="Wrap" />
+      </StackPanel>
+      <TextBlock
+        Margin="40,12,0,0"
+        AutomationProperties.AutomationId="SecurityFilePermissions"
+        Text="{Binding FilePermissionsText}" />
+      <TextBlock Margin="0,16,0,4" Text="{loc:Tr Security_OwnerPassword}" />
+      <ui:PasswordBox
+        x:Name="UnlockInput"
+        AutomationProperties.AutomationId="SecurityUnlockPassword"
+        AutomationProperties.Name="{loc:Tr Security_OwnerPassword}"
+        PasswordChanged="OnUnlockChanged" />
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="SecurityUnlockError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding Error}"
+        TextWrapping="Wrap"
+        Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="SecurityUnlock"
+          Command="{Binding UnlockCommand}"
+          Content="{loc:Tr Security_Unlock}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Close}" />
+      </StackPanel>
+    </StackPanel>
+
+    <!-- An editable document: no protection, or passwords, encryption and permissions. -->
+    <StackPanel Margin="24,4,24,24" Visibility="{Binding IsEditable, Converter={StaticResource BoolToVisibility}}">
+      <ui:InfoBar
+        Margin="0,0,0,12"
+        IsClosable="False"
+        IsOpen="{Binding NeedsPasswords}"
+        Message="{loc:Tr Security_NeedsPasswords}"
+        Severity="Warning"
+        Visibility="{Binding NeedsPasswords, Converter={StaticResource BoolToVisibility}}" />
+
+      <RadioButton
+        AutomationProperties.AutomationId="SecurityNone"
+        Content="{loc:Tr Security_None}"
+        GroupName="Protection"
+        IsChecked="{Binding IsUnprotected}" />
+      <RadioButton
+        x:Name="ProtectChoice"
+        Margin="0,4,0,0"
+        AutomationProperties.AutomationId="SecurityProtect"
+        Content="{loc:Tr Security_Protect}"
+        GroupName="Protection"
+        IsChecked="{Binding Protect}" />
+
+      <StackPanel Margin="28,8,0,0" IsEnabled="{Binding Protect}">
+        <CheckBox
+          AutomationProperties.AutomationId="SecurityRequireOpen"
+          Content="{loc:Tr Security_RequireOpen}"
+          IsChecked="{Binding RequireOpenPassword}" />
+        <Grid Margin="28,6,0,0" IsEnabled="{Binding RequireOpenPassword}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Margin="0,0,0,4" Text="{loc:Tr Security_OpenPassword}" />
+            <ui:PasswordBox
+              x:Name="OpenInput"
+              AutomationProperties.AutomationId="SecurityOpenPassword"
+              AutomationProperties.Name="{loc:Tr Security_OpenPassword}"
+              PasswordChanged="OnOpenChanged" />
+            <ProgressBar Style="{StaticResource Meter}" Value="{Binding OpenStrength.Level, Mode=OneWay}" />
+            <TextBlock
+              Margin="0,2,0,0"
+              FontSize="12"
+              AutomationProperties.AutomationId="SecurityOpenStrength"
+              Text="{Binding OpenStrength.Text}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{Binding OpenStrength.Advice}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Margin="0,0,0,4" Text="{loc:Tr Security_Confirm}" />
+            <ui:PasswordBox
+              x:Name="OpenConfirmInput"
+              AutomationProperties.AutomationId="SecurityOpenConfirm"
+              AutomationProperties.Name="{loc:Tr Security_Confirm}"
+              PasswordChanged="OnOpenConfirmChanged" />
+          </StackPanel>
+        </Grid>
+
+        <TextBlock
+          Margin="0,12,0,0"
+          FontWeight="SemiBold"
+          Text="{loc:Tr Security_OwnerSection}" />
+        <TextBlock
+          Margin="0,2,0,0"
+          FontSize="12"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{loc:Tr Security_OwnerHint}"
+          TextWrapping="Wrap" />
+        <Grid Margin="0,6,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Margin="0,0,0,4" Text="{loc:Tr Security_OwnerPassword}" />
+            <ui:PasswordBox
+              x:Name="OwnerInput"
+              AutomationProperties.AutomationId="SecurityOwnerPassword"
+              AutomationProperties.Name="{loc:Tr Security_OwnerPassword}"
+              PasswordChanged="OnOwnerChanged" />
+            <ProgressBar Style="{StaticResource Meter}" Value="{Binding OwnerStrength.Level, Mode=OneWay}" />
+            <TextBlock
+              Margin="0,2,0,0"
+              FontSize="12"
+              AutomationProperties.AutomationId="SecurityOwnerStrength"
+              Text="{Binding OwnerStrength.Text}" />
+            <TextBlock
+              FontSize="12"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{Binding OwnerStrength.Advice}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Margin="0,0,0,4" Text="{loc:Tr Security_Confirm}" />
+            <ui:PasswordBox
+              x:Name="OwnerConfirmInput"
+              AutomationProperties.AutomationId="SecurityOwnerConfirm"
+              AutomationProperties.Name="{loc:Tr Security_Confirm}"
+              PasswordChanged="OnOwnerConfirmChanged" />
+          </StackPanel>
+        </Grid>
+        <TextBlock
+          Margin="0,4,0,0"
+          FontSize="12"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{loc:Tr Security_KeepPasswords}"
+          TextWrapping="Wrap"
+          Visibility="{Binding KeepsKnownOwnerPassword, Converter={StaticResource BoolToVisibility}}" />
+
+        <Grid Margin="0,12,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="6" />
+            <RowDefinition />
+          </Grid.RowDefinitions>
+          <TextBlock VerticalAlignment="Center" Text="{loc:Tr Security_Encryption}" />
+          <ComboBox
+            Grid.Column="2"
+            AutomationProperties.AutomationId="SecurityAlgorithm"
+            AutomationProperties.Name="{loc:Tr Security_Encryption}"
+            DisplayMemberPath="Text"
+            ItemsSource="{Binding Algorithms}"
+            SelectedValue="{Binding Algorithm}"
+            SelectedValuePath="Value" />
+          <TextBlock
+            Grid.Row="2"
+            VerticalAlignment="Center"
+            Text="{loc:Tr Security_Printing}" />
+          <ComboBox
+            Grid.Row="2"
+            Grid.Column="2"
+            AutomationProperties.AutomationId="SecurityPrint"
+            AutomationProperties.Name="{loc:Tr Security_Printing}"
+            DisplayMemberPath="Text"
+            ItemsSource="{Binding PrintChoices}"
+            SelectedValue="{Binding Print}"
+            SelectedValuePath="Value" />
+        </Grid>
+
+        <TextBlock
+          Margin="0,12,0,0"
+          FontWeight="SemiBold"
+          Text="{loc:Tr Security_Permissions}" />
+        <CheckBox
+          Margin="0,4,0,0"
+          AutomationProperties.AutomationId="SecurityAllowCopy"
+          Content="{loc:Tr Security_AllowCopy}"
+          IsChecked="{Binding AllowCopy}" />
+        <CheckBox
+          Margin="0,2,0,0"
+          AutomationProperties.AutomationId="SecurityAllowModify"
+          Content="{loc:Tr Security_AllowModify}"
+          IsChecked="{Binding AllowModify}" />
+        <CheckBox
+          Margin="0,2,0,0"
+          AutomationProperties.AutomationId="SecurityAllowAnnotate"
+          Content="{loc:Tr Security_AllowAnnotate}"
+          IsChecked="{Binding AllowAnnotate}" />
+        <CheckBox
+          Margin="0,2,0,0"
+          AutomationProperties.AutomationId="SecurityAllowFillForms"
+          Content="{loc:Tr Security_AllowFillForms}"
+          IsChecked="{Binding AllowFillForms}" />
+        <CheckBox
+          Margin="0,2,0,0"
+          AutomationProperties.AutomationId="SecurityAllowAssemble"
+          Content="{loc:Tr Security_AllowAssemble}"
+          IsChecked="{Binding AllowAssemble}" />
+      </StackPanel>
+
+      <TextBlock
+        Margin="0,12,0,0"
+        FontSize="12"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr Security_AppliedOnSave}"
+        TextWrapping="Wrap" />
+
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="SecurityError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding Error}"
+        TextWrapping="Wrap"
+        Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="SecurityOk"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr Security_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="SecurityCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

@@ -1,4 +1,5 @@
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Imaging;
 using PdfPro.Core.Operations;
 using PdfPro.Core.Organizing;
 using PdfPro.Pdfium;
@@ -7,7 +8,8 @@ namespace PdfPro.Operations.Splitting;
 
 /// <summary>
 /// Finds blank pages (separator sheets, empty backs of a two-sided scan): the page is rendered in grey at low
-/// resolution, 5% of each side is left out (punch holes, scanner edges), and the share of dark pixels is measured.
+/// resolution and the share of dark pixels is measured by <see cref="InkCoverage"/> — 5% of each side left out (punch
+/// holes, scanner edges), and so are dark bands along the edges (black scanner borders, the shadow of a book's spine).
 /// Rendering is the slow part, so <see cref="MeasureAsync"/> keeps the shares and <see cref="IsBlank"/> applies any
 /// threshold to them instantly.
 /// </summary>
@@ -24,11 +26,6 @@ public static class BlankPageDetector
 
     /// <summary>Render resolution in pixels per point (0.75 = 54 DPI): enough for text strokes, blurs scanner dust.</summary>
     internal const double Scale = 0.75;
-
-    /// <summary>A pixel darker than this (0–255 luminance) is ink.</summary>
-    internal const int DarkLevel = 160;
-
-    private const double MarginShare = 0.05;
 
     /// <summary>The share of dark pixels (in %) of every page of the document; blank pages of the plan give 0.</summary>
     public static async Task<IReadOnlyList<double>> MeasureAsync(SplitDocument document, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
@@ -63,17 +60,14 @@ public static class BlankPageDetector
                 (int)Math.Floor(kept.Top * Scale),
                 (int)Math.Ceiling(kept.Width * Scale),
                 (int)Math.Ceiling(kept.Height * Scale)));
-        var marginX = (int)Math.Round(area.Width * MarginShare);
-        var marginY = (int)Math.Round(area.Height * MarginShare);
-        var inner = new PixelRect(area.X + marginX, area.Y + marginY, area.Width - (2 * marginX), area.Height - (2 * marginY));
-        if (inner.IsEmpty)
+        if (area.IsEmpty)
         {
             return 0;
         }
 
-        var options = new PageRenderOptions { Scale = Scale, Flags = PdfRenderFlags.Grayscale | PdfRenderFlags.Annotations, Region = inner };
+        var options = new PageRenderOptions { Scale = Scale, Flags = PdfRenderFlags.Grayscale | PdfRenderFlags.Annotations, Region = area };
         using var bitmap = await document.RenderPageAsync(pageIndex, options, PdfiumPriority.Low, cancellationToken).ConfigureAwait(false);
-        return DarkShare(bitmap.Pixels, bitmap.Width, bitmap.Height, bitmap.Stride);
+        return InkCoverage.DarkPercent(GrayImage.FromBgra(bitmap.Width, bitmap.Height, bitmap.Pixels, bitmap.Stride));
     }
 
     /// <summary>True when a page with <paramref name="darkPercent"/> ink is blank at <paramref name="thresholdPercent"/>.</summary>
@@ -84,31 +78,5 @@ public static class BlankPageDetector
     {
         ArgumentNullException.ThrowIfNull(darkPercents);
         return Enumerable.Range(0, darkPercents.Count).Where(i => IsBlank(darkPercents[i], thresholdPercent)).ToHashSet();
-    }
-
-    /// <summary>Share (in %) of BGRx pixels darker than <see cref="DarkLevel"/>.</summary>
-    internal static double DarkShare(ReadOnlySpan<byte> pixels, int width, int height, int stride)
-    {
-        if (width <= 0 || height <= 0)
-        {
-            return 0;
-        }
-
-        long dark = 0;
-        for (var y = 0; y < height; y++)
-        {
-            var row = pixels.Slice(y * stride, width * 4);
-            for (var x = 0; x < row.Length; x += 4)
-            {
-                // ITU-R BT.601 luminance in integer arithmetic.
-                var luminance = ((row[x] * 29) + (row[x + 1] * 150) + (row[x + 2] * 77)) >> 8;
-                if (luminance < DarkLevel)
-                {
-                    dark++;
-                }
-            }
-        }
-
-        return dark * 100.0 / ((long)width * height);
     }
 }

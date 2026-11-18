@@ -4,6 +4,7 @@ using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Splitting;
 
@@ -92,7 +93,7 @@ public static class PageSizeEstimator
     {
         try
         {
-            return PdfReader.Open(path, PdfDocumentOpenMode.Import);
+            return PdfSafeReader.Open(path, PdfDocumentOpenMode.Import);
         }
         catch (Exception ex) when (ex is not (OutOfMemoryException or OperationCanceledException))
         {

@@ -107,6 +107,7 @@ public sealed record HeaderFooterParams(
 /// <param name="FirstPage">The 1-based page that gets the first number; earlier pages get none.</param>
 /// <param name="StartNumber">The number written on <paramref name="FirstPage"/>.</param>
 /// <param name="Pages">Page range; null or empty means all pages.</param>
+/// <param name="FileName">The name for {filename}; null means the input file's name.</param>
 public sealed record PageNumbersParams(
     [property: Required] string Pattern = "{page}",
     PageNumberStyle Style = PageNumberStyle.Arabic,
@@ -116,7 +117,8 @@ public sealed record PageNumbersParams(
     [property: Range(0.0, 2000.0)] double MarginY = 24,
     [property: Range(1, int.MaxValue)] int FirstPage = 1,
     [property: Range(-1_000_000, 1_000_000)] int StartNumber = 1,
-    string? Pages = null)
+    string? Pages = null,
+    string? FileName = null)
 {
     public static TextStyle DefaultStyle { get; } = new(FontFamilies.NotoSans, 10, RgbColor.Black);
 }

@@ -1,0 +1,74 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.SanitizeWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:security="clr-namespace:PdfPro.App.ViewModels.Security"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=security:SanitizeViewModel}"
+  Title="{loc:Tr Sanitize_Title}"
+  Width="520"
+  MinHeight="0"
+  AutomationProperties.AutomationId="SanitizeWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr Sanitize_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock Text="{loc:Tr Sanitize_Intro}" TextWrapping="Wrap" />
+      <ui:InfoBar
+        Margin="0,12,0,0"
+        IsClosable="False"
+        IsOpen="{Binding IsSigned}"
+        Message="{loc:Tr Sanitize_Signed}"
+        Severity="Warning"
+        Visibility="{Binding IsSigned, Converter={StaticResource BoolToVisibility}}" />
+
+      <StackPanel Margin="0,12,0,0">
+        <CheckBox AutomationProperties.AutomationId="SanitizeMetadata" Content="{loc:Tr Sanitize_Metadata}" IsChecked="{Binding Metadata}" />
+        <CheckBox Margin="0,6,0,0" AutomationProperties.AutomationId="SanitizeScripts" Content="{loc:Tr Sanitize_Scripts}" IsChecked="{Binding Scripts}" />
+        <CheckBox Margin="0,6,0,0" AutomationProperties.AutomationId="SanitizeAttachments" Content="{loc:Tr Sanitize_Attachments}" IsChecked="{Binding Attachments}" />
+        <CheckBox Margin="0,6,0,0" AutomationProperties.AutomationId="SanitizeRiskyActions" Content="{loc:Tr Sanitize_RiskyActions}" IsChecked="{Binding RiskyActions}" />
+        <CheckBox Margin="0,6,0,0" AutomationProperties.AutomationId="SanitizeExternalLinks" Content="{loc:Tr Sanitize_ExternalLinks}" IsChecked="{Binding ExternalLinks}" />
+        <CheckBox Margin="0,6,0,0" AutomationProperties.AutomationId="SanitizeHiddenLayers" Content="{loc:Tr Sanitize_HiddenLayers}" IsChecked="{Binding HiddenLayers}" />
+        <CheckBox Margin="0,6,0,0" AutomationProperties.AutomationId="SanitizeOutside" Content="{loc:Tr Sanitize_OutsideVisibleArea}" IsChecked="{Binding OutsideVisibleArea}" />
+        <CheckBox Margin="0,6,0,0" AutomationProperties.AutomationId="SanitizeThumbnails" Content="{loc:Tr Sanitize_Thumbnails}" IsChecked="{Binding Thumbnails}" />
+        <CheckBox Margin="0,6,0,0" AutomationProperties.AutomationId="SanitizePrivateData" Content="{loc:Tr Sanitize_PrivateData}" IsChecked="{Binding PrivateData}" />
+      </StackPanel>
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="SanitizeOk"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr Sanitize_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="SanitizeCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

@@ -1,0 +1,184 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.ToImagesWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:converting="clr-namespace:PdfPro.App.ViewModels.Converting"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:views="clr-namespace:PdfPro.App.Views"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=converting:ToImagesViewModel}"
+  Title="{loc:Tr ToImages_Title}"
+  Width="560"
+  MinHeight="0"
+  AutomationProperties.AutomationId="ToImagesWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <ui:FluentWindow.Resources>
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,12,0,4" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+  </ui:FluentWindow.Resources>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr ToImages_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock
+        FontWeight="SemiBold"
+        Text="{Binding FileName}"
+        TextTrimming="CharacterEllipsis" />
+
+      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr ToImages_Format}" />
+      <WrapPanel>
+        <RadioButton
+          MinWidth="0"
+          Margin="0,0,20,0"
+          AutomationProperties.AutomationId="ToImagesPng"
+          Content="{loc:Tr ToImages_Format_Png}"
+          GroupName="ToImagesFormat"
+          IsChecked="{Binding IsPng}" />
+        <RadioButton
+          MinWidth="0"
+          Margin="0,0,20,0"
+          AutomationProperties.AutomationId="ToImagesJpeg"
+          Content="{loc:Tr ToImages_Format_Jpeg}"
+          GroupName="ToImagesFormat"
+          IsChecked="{Binding IsJpeg}" />
+        <RadioButton
+          MinWidth="0"
+          AutomationProperties.AutomationId="ToImagesTiff"
+          Content="{loc:Tr ToImages_Format_Tiff}"
+          GroupName="ToImagesFormat"
+          IsChecked="{Binding IsTiff}" />
+      </WrapPanel>
+
+      <!-- PNG -->
+      <CheckBox
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="ToImagesTransparent"
+        Content="{loc:Tr ToImages_Transparent}"
+        IsChecked="{Binding Transparent}"
+        Visibility="{Binding IsPng, Converter={StaticResource BoolToVisibility}}" />
+
+      <!-- JPEG -->
+      <StackPanel Visibility="{Binding IsJpeg, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr ToImages_Quality}" />
+        <TextBox
+          Width="120"
+          HorizontalAlignment="Left"
+          AutomationProperties.AutomationId="ToImagesQuality"
+          AutomationProperties.Name="{loc:Tr ToImages_Quality}"
+          Text="{Binding QualityText, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- TIFF -->
+      <StackPanel Visibility="{Binding IsTiff, Converter={StaticResource BoolToVisibility}}">
+        <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr ToImages_Tiff_Colors}" />
+        <ComboBox
+          Width="260"
+          HorizontalAlignment="Left"
+          AutomationProperties.AutomationId="ToImagesTiffColor"
+          AutomationProperties.Name="{loc:Tr ToImages_Tiff_Colors}"
+          DisplayMemberPath="Label"
+          ItemsSource="{Binding TiffColors}"
+          SelectedValue="{Binding TiffColor}"
+          SelectedValuePath="Value" />
+        <CheckBox
+          Margin="0,8,0,0"
+          AutomationProperties.AutomationId="ToImagesOneTiff"
+          Content="{loc:Tr ToImages_OneTiff}"
+          IsChecked="{Binding OneTiff}" />
+      </StackPanel>
+
+      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr ToImages_Dpi}" />
+      <StackPanel Orientation="Horizontal">
+        <ComboBox
+          Width="120"
+          AutomationProperties.AutomationId="ToImagesDpi"
+          AutomationProperties.Name="{loc:Tr ToImages_Dpi}"
+          IsEditable="True"
+          ItemsSource="{Binding DpiChoices}"
+          Text="{Binding DpiText, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock
+          Margin="12,0,0,0"
+          VerticalAlignment="Center"
+          AutomationProperties.AutomationId="ToImagesSize"
+          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+          Text="{Binding SizeText}" />
+      </StackPanel>
+
+      <views:PageTargetPanel Margin="0,16,0,0" DataContext="{Binding Target}" />
+
+      <TextBlock Style="{StaticResource FieldLabel}" Text="{loc:Tr ToImages_Folder}" />
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox
+          AutomationProperties.AutomationId="ToImagesFolder"
+          AutomationProperties.Name="{loc:Tr ToImages_Folder}"
+          Text="{Binding OutputFolder, UpdateSourceTrigger=PropertyChanged}" />
+        <ui:Button
+          Grid.Column="1"
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="ToImagesPickFolder"
+          Command="{Binding PickFolderCommand}"
+          Content="{loc:Tr Split_Folder_Pick}" />
+      </Grid>
+      <WrapPanel Margin="0,8,0,0">
+        <CheckBox
+          Margin="0,0,16,0"
+          AutomationProperties.AutomationId="ToImagesOverwrite"
+          Content="{loc:Tr Split_Overwrite}"
+          IsChecked="{Binding Overwrite}" />
+        <CheckBox
+          AutomationProperties.AutomationId="ToImagesOpenFolder"
+          Content="{loc:Tr Split_OpenFolder}"
+          IsChecked="{Binding OpenFolderWhenDone}" />
+      </WrapPanel>
+
+      <TextBlock
+        Margin="0,12,0,0"
+        AutomationProperties.AutomationId="ToImagesError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="ToImagesApply"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr ToImages_Apply}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="ToImagesCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

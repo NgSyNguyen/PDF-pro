@@ -4,9 +4,12 @@ using NSubstitute.ExceptionExtensions;
 using PdfPro.App.Resources;
 using PdfPro.App.Services;
 using PdfPro.App.Services.Documents;
+using PdfPro.App.Services.Forms;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Tests.TestSupport;
 using PdfPro.App.ViewModels;
+using PdfPro.Core.Forms;
+using PdfPro.Core.Geometry;
 using PdfPro.Core.Operations;
 using PdfPro.Infrastructure.Sessions;
 
@@ -140,6 +143,31 @@ public sealed partial class MainWindowViewModelTests
     }
 
     [Fact]
+    public async Task Save_OfChangesASignedFileCannotTake_AsksOnce_ThenOverwritesWhenTheUserInsists()
+    {
+        var document = FakePdfDocument.WithPages(3);
+        document.Features = FakePdfDocument.PlainFeatures with { SignatureCount = 1 };
+        var (viewModel, path) = await CreateDirtyAsync(document);
+        _saver.KeepsSignatures(Arg.Any<DocumentWorkspace>()).Returns(call => !call.Arg<DocumentWorkspace>().SignaturesMayBreak);
+        var attempts = 0;
+        AnySave().Returns(call =>
+        {
+            attempts++;
+            return call.Arg<DocumentWorkspace>().SignaturesMayBreak
+                ? Task.CompletedTask
+                : Task.FromException(new DocumentSaveException(SaveFailure.SignaturesWouldBreak));
+        });
+        _messages.AskAsync(Strings.Save_Signed_Title, Arg.Any<string>(), Strings.Save_SaveAsButton, Strings.Save_OverwriteAnyway, Strings.Common_Cancel).Returns(DialogChoice.Secondary);
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        attempts.ShouldBe(2, "tried in place, then written anew once the user accepted");
+        await _messages.Received(1).AskAsync(Strings.Save_Signed_Title, Format(Strings.Save_Error_SignaturesWouldBreak, Path.GetFileName(path)), Strings.Save_SaveAsButton, Strings.Save_OverwriteAnyway, Strings.Common_Cancel);
+        viewModel.ActiveDocument!.Workspace.SignaturesMayBreak.ShouldBeTrue();
+        await _saver.Received(2).SaveAsync(Arg.Any<DocumentWorkspace>(), path, Arg.Any<IProgress<OperationProgress>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Save_FileChangedByAnotherProgram_WarnsBeforeOverwriting()
     {
         var (viewModel, path) = await CreateDirtyAsync();
@@ -171,6 +199,44 @@ public sealed partial class MainWindowViewModelTests
 
         _fileDialogs.Received(1).PickSavePath("a.pdf", Arg.Any<string?>());
         await DidNotSave();
+    }
+
+    [Theory]
+    [InlineData(DialogChoice.Primary, 1)]
+    [InlineData(DialogChoice.Cancel, 0)]
+    public async Task Save_RequiredFieldsStillEmpty_AreListedFirst(DialogChoice choice, int saves)
+    {
+        _forms.Form = new FormSnapshot(
+            FormType.AcroForm,
+            [
+                new FormField("hoTen", FormFieldKind.Text, null, [], FormFieldFlags.Required, [], [new FormWidget(0, new PdfRect(10, 10, 100, 30))], "Họ và tên"),
+                new FormField("ngaySinh", FormFieldKind.Text, "01/01/2000", [], FormFieldFlags.Required, [], [new FormWidget(0, new PdfRect(10, 40, 100, 60))]),
+            ]);
+        var (viewModel, _) = await CreateDirtyAsync();
+        var message = Format(Strings.Forms_Required_Message, 1, "• Họ và tên");
+        _messages.AskAsync(Strings.Forms_Required_Title, message, Strings.Forms_Required_Save, null, Strings.Forms_Required_Back).Returns(choice);
+        SaverMarksSaved();
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        await _messages.Received(1).AskAsync(Strings.Forms_Required_Title, message, Strings.Forms_Required_Save, null, Strings.Forms_Required_Back);
+        await _saver.ReceivedWithAnyArgs(saves).SaveAsync(default!, default!, default!, TestToken);
+    }
+
+    [Fact]
+    public async Task Save_FilledRequiredFields_AreNotAskedAbout()
+    {
+        _forms.Form = new FormSnapshot(
+            FormType.AcroForm,
+            [new FormField("hoTen", FormFieldKind.Text, null, [], FormFieldFlags.Required, [], [new FormWidget(0, new PdfRect(10, 10, 100, 30))])]);
+        var (viewModel, _) = await CreateDirtyAsync();
+        viewModel.ActiveDocument!.Forms.WidgetsOn(viewModel.ActiveDocument.Workspace.Pages.Pages[0].Key)[0].Text = "Lê Văn Bình";
+        SaverMarksSaved();
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        await _messages.DidNotReceive().AskAsync(Strings.Forms_Required_Title, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>());
+        await _saver.ReceivedWithAnyArgs(1).SaveAsync(default!, default!, default!, TestToken);
     }
 
     [Fact]

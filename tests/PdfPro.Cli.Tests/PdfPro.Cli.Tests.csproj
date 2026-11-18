@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- pdfpro run in-process: its commands, exit codes, JSON and results on the samples. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PdfPro.Cli\PdfPro.Cli.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A second, independent reader of what pdfpro writes. -->
+    <PackageReference Include="PdfPig" />
+  </ItemGroup>
+
+</Project>

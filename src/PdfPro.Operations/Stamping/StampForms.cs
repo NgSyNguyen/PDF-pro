@@ -4,6 +4,7 @@ using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.Operations.Stamping;
 
@@ -82,7 +83,7 @@ internal static class StampForms
         };
         foreach (var stream in streams)
         {
-            joined.Write(stream.Stream?.UnfilteredValue ?? []);
+            joined.Write(StreamData.Bytes(stream));
             joined.WriteByte((byte)'\n');
         }
 

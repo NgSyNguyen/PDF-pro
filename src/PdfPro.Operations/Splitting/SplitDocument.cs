@@ -1,4 +1,5 @@
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Security;
 using PdfPro.Pdfium;
 
 namespace PdfPro.Operations.Splitting;
@@ -25,6 +26,12 @@ public sealed record SplitDocument
 
     /// <summary>Folder for intermediate files.</summary>
     public required string WorkingDirectory { get; init; }
+
+    /// <summary>
+    /// The protection every file is written with — a protected document's parts stay protected with its passwords and
+    /// permissions — or null.
+    /// </summary>
+    public DocumentSecurity? Security { get; init; }
 
     /// <summary>The PDFium document and page index behind position <paramref name="index"/>; null for a blank page.</summary>
     internal (IPdfDocument Document, int PageIndex)? SourceOf(int index)

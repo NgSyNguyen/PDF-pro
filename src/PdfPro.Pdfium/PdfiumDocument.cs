@@ -1,6 +1,9 @@
 using PDFiumCore;
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Documents;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 using PdfPro.Pdfium.Native;
 
 namespace PdfPro.Pdfium;
@@ -9,7 +12,7 @@ namespace PdfPro.Pdfium;
 /// An open PDF document. Gate-affine: every member must be used on the PDFium thread (inside
 /// <see cref="PdfiumGate.RunAsync{T}"/>); <see cref="PdfDocumentHandle"/> is the async, thread-safe facade.
 /// </summary>
-public sealed class PdfiumDocument : IDisposable
+public sealed partial class PdfiumDocument : IDisposable
 {
     /// <summary>Largest bitmap one render may allocate (≈ 400 MB in BGRx).</summary>
     public const long MaxBitmapPixels = 100_000_000;
@@ -52,8 +55,21 @@ public sealed class PdfiumDocument : IDisposable
     {
         ArgumentNullException.ThrowIfNull(gate);
         gate.VerifyAccess();
+        return Open(gate, PdfFileSource.Open(path), password);
+    }
 
-        PdfFileSource? source = PdfFileSource.Open(path);
+    /// <summary>Opens a document held in memory (the bytes must not change while it is open). Must run on the PDFium thread.</summary>
+    /// <exception cref="PdfDocumentException">The document is damaged or needs a (different) password.</exception>
+    public static PdfiumDocument Open(PdfiumGate gate, byte[] bytes, string? password = null)
+    {
+        ArgumentNullException.ThrowIfNull(gate);
+        gate.VerifyAccess();
+        return Open(gate, PdfFileSource.FromBytes(bytes), password);
+    }
+
+    private static PdfiumDocument Open(PdfiumGate gate, PdfFileSource opened, string? password)
+    {
+        PdfFileSource? source = opened;
         try
         {
             var passwordSupplied = !string.IsNullOrEmpty(password);
@@ -118,6 +134,25 @@ public sealed class PdfiumDocument : IDisposable
         return text.GetText();
     }
 
+    /// <summary>How many characters of a page are painted and how many are invisible (the hidden text of OCR).</summary>
+    public PageTextCounts GetPageTextCounts(int pageIndex)
+    {
+        using var text = GetCachedPage(pageIndex).LoadText();
+        return text.CountCharacters();
+    }
+
+    /// <summary>The characters of a page with their boxes (not normalized).</summary>
+    public PageText GetPageTextLayer(int pageIndex)
+    {
+        using var text = GetCachedPage(pageIndex).LoadText();
+        return text.GetLayer();
+    }
+
+    /// <summary>The annotations of a page in /Annots order (not normalized).</summary>
+    public IReadOnlyList<FileAnnotation> GetPageAnnotations(int pageIndex) => GetCachedPage(pageIndex).GetAnnotations();
+
+    public IReadOnlyList<PageObjectInfo> GetPageObjects(int pageIndex) => GetCachedPage(pageIndex).GetObjects();
+
     public PdfDocumentMetadata GetMetadata()
     {
         var native = Native;
@@ -154,7 +189,9 @@ public sealed class PdfiumDocument : IDisposable
                 3 => PdfFormType.XfaForeground,
                 _ => PdfFormType.None,
             },
-            fpdf_javascript.FPDFDocGetJavaScriptActionCount(native) > 0);
+            fpdf_javascript.FPDFDocGetJavaScriptActionCount(native) > 0,
+            (uint)(fpdfview.FPDF_GetDocUserPermissions(native) & 0xFFFFFFFF),
+            CertificationPermission());
     }
 
     /// <summary>The outline tree. Cycles and absurd depths in hostile files are cut off.</summary>
@@ -196,7 +233,7 @@ public sealed class PdfiumDocument : IDisposable
             throw new ArgumentOutOfRangeException(nameof(options), region.Area, "The requested bitmap is too large; render a region instead.");
         }
 
-        var bitmap = fpdfview.FPDFBitmapCreate(region.Width, region.Height, 0);
+        var bitmap = fpdfview.FPDFBitmapCreate(region.Width, region.Height, options.Transparent ? 1 : 0);
         if (bitmap is null || bitmap.__Instance == IntPtr.Zero)
         {
             throw new InsufficientMemoryException("PDFium could not allocate the page bitmap.");
@@ -205,8 +242,13 @@ public sealed class PdfiumDocument : IDisposable
         var handle = new BitmapSafeHandle(_gate, bitmap);
         try
         {
-            fpdfview.FPDFBitmapFillRect(bitmap, 0, 0, region.Width, region.Height, 0xFFFFFFFF);
+            fpdfview.FPDFBitmapFillRect(bitmap, 0, 0, region.Width, region.Height, options.Transparent ? 0x00FFFFFF : 0xFFFFFFFF);
             fpdfview.FPDF_RenderPageBitmap(bitmap, page.Native, -region.X, -region.Y, pageWidth, pageHeight, quarterTurns, ToNativeFlags(options.Flags));
+            if (options.Flags.HasFlag(PdfRenderFlags.Annotations) && FormHandle() is { } form)
+            {
+                // Form fields are drawn by the form-fill layer, not by FPDF_RenderPageBitmap.
+                fpdf_formfill.FPDF_FFLDraw(form, bitmap, page.Native, -region.X, -region.Y, pageWidth, pageHeight, quarterTurns, ToNativeFlags(options.Flags));
+            }
             return new PageBitmap(
                 handle,
                 fpdfview.FPDFBitmapGetBuffer(bitmap),
@@ -261,6 +303,7 @@ public sealed class PdfiumDocument : IDisposable
         }
 
         _pageCache.Clear();
+        CloseForm();
         _sizeBuffer.Dispose();
         _handle.Dispose();
     }

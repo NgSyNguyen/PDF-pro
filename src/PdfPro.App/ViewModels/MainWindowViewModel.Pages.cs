@@ -26,7 +26,8 @@ public sealed partial class MainWindowViewModel
 
     /// <summary>
     /// Writes pages of a document to a new file chosen by the user, with progress and cancel in the status bar. The
-    /// document's own file cannot be the target. Returns true once the file is written.
+    /// document's own file cannot be the target. The pages of a protected document keep its protection (its passwords are
+    /// asked for when not all known). Returns true once the file is written.
     /// </summary>
     internal async Task<bool> ExtractPagesAsync(DocumentTabViewModel document, IReadOnlyList<int> pageIndices)
     {
@@ -56,11 +57,16 @@ public sealed partial class MainWindowViewModel
             return false;
         }
 
+        if (!EnsureProtectionPasswords(document))
+        {
+            return false;
+        }
+
         await WaitForBackgroundWorkAsync(cancelPrint: false);
         var fileName = Path.GetFileName(target);
         var task = StatusBar.StartTask(Format(Strings.Extract_Progress, fileName));
         var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, Format(Strings.Extract_Progress, fileName)));
-        var export = _saver.ExportAsync(document.Workspace, pageIndices, target, progress, task.Token);
+        var export = _saver.ExtractAsync(document.Workspace, pageIndices, target, progress, task.Token);
         _activeSave = export;
         NotifySaveCommands();
         SaveFailure? failure = null;
@@ -109,7 +115,24 @@ public sealed partial class MainWindowViewModel
         }
 
         var task = StatusBar.StartTask(Format(Strings.Content_Progress, request.Description));
-        var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, Format(Strings.Content_Progress, request.Description)));
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        TimeSpan? operationStarted = null;
+        var progress = new Progress<OperationProgress>(p =>
+        {
+            var text = Format(Strings.Content_Progress, request.Description);
+
+            // The changer reports writing the pages as the first half and the operation as the second.
+            if (request.ShowsTimeLeft && p.Fraction >= 0.5)
+            {
+                operationStarted ??= clock.Elapsed;
+                if (RemainingTime.Estimate(clock.Elapsed - operationStarted.Value, (p.Fraction * 2) - 1) is { } left)
+                {
+                    text = Format(Strings.Content_ProgressTimeLeft, request.Description, RemainingTime.Describe(left));
+                }
+            }
+
+            task.Report(p.Fraction, text);
+        });
         var change = _contentChanger.ApplyAsync(document.Workspace, request.Operation, request.Parameters, progress, task.Token);
         _activeSave = change;
         NotifySaveCommands();
@@ -133,10 +156,12 @@ public sealed partial class MainWindowViewModel
         catch (ContentChangeException ex)
         {
             task.Complete(Format(Strings.Content_FailedStatus, request.Description));
-            error = ex.Failure switch
+            error = (ex.InnerException is { } inner ? request.Explain?.Invoke(inner) : null) ?? ex.Failure switch
             {
                 ContentChangeFailure.SourceUnreadable => Strings.Content_Error_SourceUnreadable,
                 ContentChangeFailure.DiskFull => Strings.Content_Error_DiskFull,
+                ContentChangeFailure.WorkerStopped => Strings.Content_Error_WorkerStopped,
+                ContentChangeFailure.WorkerTimedOut => Strings.Content_Error_WorkerTimedOut,
                 _ => Strings.Content_Error_Failed,
             };
         }
@@ -169,12 +194,21 @@ public sealed partial class MainWindowViewModel
             return false;
         }
 
+        // The parts of a protected document keep its protection: its passwords are needed (asked for when not all known).
+        if (!EnsureProtectionPasswords(document))
+        {
+            return false;
+        }
+
+        var split = document.Workspace.Protection is { } protection
+            ? request.Document with { Security = document.Workspace.Passwords.SecurityOf(protection) }
+            : request.Document;
         var choice = request.Choice;
         var folderName = Path.GetFileName(choice.OutputFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         var task = StatusBar.StartTask(Format(Strings.Split_Progress, document.FileName));
         var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, Format(Strings.Split_Progress, document.FileName)));
         IReadOnlyCollection<string> protectedPaths = document.FilePath.Length > 0 ? [document.FilePath] : [];
-        var write = request.Operation.WriteAsync(request.Document, choice.Segments, choice.Parameters, choice.OutputFolder, protectedPaths, progress, task.Token);
+        var write = request.Operation.WriteAsync(split, choice.Segments, choice.Parameters, choice.OutputFolder, protectedPaths, progress, task.Token);
         _activeSave = write;
         NotifySaveCommands();
         string error;
@@ -241,7 +275,25 @@ public sealed partial class MainWindowViewModel
             }
         }
 
-        var dialog = new MergeViewModel(_merge, _fileDialogs, initial, suggested);
+        await RunMergeAsync(new MergeViewModel(_merge, _fileDialogs, initial, suggested));
+    }
+
+    /// <summary>
+    /// Explorer's "Gộp bằng PDF_Pro": the merge dialog with these files already in it (read, asking for passwords as
+    /// needed), then the merge as from the ribbon. The window comes to the front first.
+    /// </summary>
+    internal async Task MergeFilesAsync(IReadOnlyList<string> files)
+    {
+        ArgumentNullException.ThrowIfNull(files);
+        await WaitForBackgroundWorkAsync(cancelPrint: false);
+        var dialog = new MergeViewModel(_merge, _fileDialogs, [], null);
+        await dialog.AddPathsAsync(files);
+        await RunMergeAsync(dialog);
+    }
+
+    /// <summary>The merge dialog, then the merge in the background with progress and cancel; the result opens when asked.</summary>
+    private async Task RunMergeAsync(MergeViewModel dialog)
+    {
         if (!_pageDialogs.ShowMerge(dialog) || dialog.Result is not { } result)
         {
             return;
@@ -307,7 +359,8 @@ public sealed partial class MainWindowViewModel
 
     /// <summary>
     /// The open document as a file to merge: its own file when nothing is unsaved, otherwise a copy of what it shows
-    /// written into its session folder. Null when it cannot be read (the merge then starts without it).
+    /// written into its session folder — always the copy for a protected document, whose password is known already (the
+    /// merged file has none; the dialog says so). Null when it cannot be read (the merge then starts without it).
     /// </summary>
     private async Task<MergeItemViewModel?> OpenDocumentForMergeAsync(DocumentTabViewModel document)
     {
@@ -316,7 +369,7 @@ public sealed partial class MainWindowViewModel
         {
             string path;
             string displayName;
-            if (!document.IsDirty && File.Exists(document.FilePath) && !document.Workspace.HasChangedOnDisk())
+            if (!document.IsDirty && File.Exists(document.FilePath) && !document.Workspace.HasChangedOnDisk() && document.Workspace.Protection is null)
             {
                 path = document.FilePath;
                 displayName = document.FileName;
@@ -338,7 +391,9 @@ public sealed partial class MainWindowViewModel
                 displayName = Format(Strings.Merge_CurrentDocument, document.FileName);
             }
 
-            return await _merge.AddAsync(path, document.FileName) is { } source ? new MergeItemViewModel(source, displayName, name) : null;
+            return await _merge.AddAsync(path, document.FileName) is { } source
+                ? new MergeItemViewModel(source, displayName, name) { WasProtected = document.Workspace.Protection is not null }
+                : null;
         }
         catch (Exception ex) when (ex is DocumentSaveException or OperationCanceledException or IOException or UnauthorizedAccessException)
         {
@@ -433,6 +488,67 @@ public sealed partial class MainWindowViewModel
         return true;
     }
 
+    /// <summary>
+    /// Runs work a tab asked for in the status bar — its text, progress and cancel button — one task at a time (saving
+    /// waits for it), then tells the tab: done, cancelled, or failed with the work's error.
+    /// </summary>
+    internal async Task RunBackgroundWorkAsync(BackgroundWorkRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        await WaitForBackgroundWorkAsync(cancelPrint: false);
+        var task = StatusBar.StartTask(request.Text);
+        var progress = new Progress<OperationProgress>(p => task.Report(p.Fraction, request.Text));
+        var work = Start(request, progress, task.Token);
+        _activeSave = work;
+        NotifySaveCommands();
+        try
+        {
+            await work;
+            task.Complete(Strings.Status_Ready);
+            request.Done(completed: true);
+        }
+        catch (OperationCanceledException)
+        {
+            task.Complete(Strings.Status_Cancelled);
+            request.Done(completed: false);
+        }
+        catch (Exception ex)
+        {
+            task.Complete(Strings.Status_Ready);
+            request.Failed(ex);
+        }
+        finally
+        {
+            _activeSave = null;
+            NotifySaveCommands();
+        }
+    }
+
+    /// <summary>The work started on the UI thread (it reads the document there and awaits its own background parts).</summary>
+    private static Task Start(BackgroundWorkRequest request, IProgress<OperationProgress> progress, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return request.Work(progress, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return Task.FromException(ex);
+        }
+    }
+
+    private async void OnBackgroundWorkRequested(object? sender, BackgroundWorkRequest request)
+    {
+        if (sender is DocumentTabViewModel document && Tabs.Contains(document))
+        {
+            await RunBackgroundWorkAsync(request);
+        }
+        else
+        {
+            request.Done(completed: false);
+        }
+    }
+
     private async void OnLayoutRequested(object? sender, LayoutRequest request)
     {
         if (sender is DocumentTabViewModel document && Tabs.Contains(document))
@@ -474,6 +590,7 @@ public sealed partial class MainWindowViewModel
         SaveFailure.DiskFull => Strings.Save_Error_DiskFull,
         SaveFailure.SourceUnreadable => Strings.Save_Error_SourceUnreadable,
         SaveFailure.VerificationFailed => Strings.Save_Error_Verification,
+        SaveFailure.SignaturesWouldBreak => Strings.Save_Error_SignaturesWouldBreak,
         _ => Strings.Save_Error_Failed,
     };
 }

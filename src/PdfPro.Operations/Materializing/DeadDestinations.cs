@@ -9,9 +9,6 @@ namespace PdfPro.Operations.Materializing;
 /// </summary>
 internal static class DeadDestinations
 {
-    private const int MaxOutlineDepth = 64;
-    private const int MaxOutlineItems = 100_000;
-
     public static void Remove(PdfDocument document, IReadOnlySet<PdfObject> removedPages, IEnumerable<PdfPage> pages)
     {
         if (removedPages.Count == 0)
@@ -42,21 +39,9 @@ internal static class DeadDestinations
 
         if (AsDictionary(catalog.Elements["/Outlines"]) is { } outlines)
         {
-            var budget = MaxOutlineItems;
+            var budget = OutlineItems.MaxItems;
             PruneOutline(outlines, names, depth: 0, ref budget);
-            var visible = Recount(outlines, depth: 0);
-            if (outlines.Elements["/First"] is null)
-            {
-                catalog.Elements.Remove("/Outlines");
-            }
-            else if (visible > 0)
-            {
-                outlines.Elements.SetInteger("/Count", visible);
-            }
-            else
-            {
-                outlines.Elements.Remove("/Count");
-            }
+            OutlineItems.Finish(document, outlines);
         }
 
         var openAction = catalog.Elements["/OpenAction"];
@@ -67,25 +52,12 @@ internal static class DeadDestinations
         }
     }
 
-    /// <summary>The child items of an outline node (cycle-safe).</summary>
-    private static List<PdfDictionary> Children(PdfDictionary parent)
-    {
-        var children = new List<PdfDictionary>();
-        var seen = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
-        for (var item = AsDictionary(parent.Elements["/First"]); item is not null && seen.Add(item); item = AsDictionary(item.Elements["/Next"]))
-        {
-            children.Add(item);
-        }
-
-        return children;
-    }
-
     private static void PruneOutline(PdfDictionary parent, NamedDestinations names, int depth, ref int budget)
     {
         var kept = new List<PdfDictionary>();
-        foreach (var child in Children(parent))
+        foreach (var child in OutlineItems.Children(parent))
         {
-            if (--budget < 0 || depth >= MaxOutlineDepth)
+            if (--budget < 0 || depth >= OutlineItems.MaxDepth)
             {
                 kept.Add(child); // pathological outline: leave the rest untouched
                 continue;
@@ -105,72 +77,6 @@ internal static class DeadDestinations
             }
         }
 
-        Relink(parent, kept);
-    }
-
-    private static void Relink(PdfDictionary parent, List<PdfDictionary> kept)
-    {
-        if (kept.Count == 0)
-        {
-            parent.Elements.Remove("/First");
-            parent.Elements.Remove("/Last");
-            parent.Elements.Remove("/Count");
-            return;
-        }
-
-        parent.Elements["/First"] = kept[0].Reference!;
-        parent.Elements["/Last"] = kept[^1].Reference!;
-        for (var i = 0; i < kept.Count; i++)
-        {
-            var item = kept[i];
-            if (i == 0)
-            {
-                item.Elements.Remove("/Prev");
-            }
-            else
-            {
-                item.Elements["/Prev"] = kept[i - 1].Reference!;
-            }
-
-            if (i == kept.Count - 1)
-            {
-                item.Elements.Remove("/Next");
-            }
-            else
-            {
-                item.Elements["/Next"] = kept[i + 1].Reference!;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Sets /Count on every item below <paramref name="parent"/> (positive when open, negative when closed) and returns
-    /// how many descendants are visible when <paramref name="parent"/> is open.
-    /// </summary>
-    private static int Recount(PdfDictionary parent, int depth)
-    {
-        if (depth >= MaxOutlineDepth)
-        {
-            return 0;
-        }
-
-        var visible = 0;
-        foreach (var child in Children(parent))
-        {
-            var isOpen = child.Elements.GetInteger("/Count") > 0;
-            var below = Recount(child, depth + 1);
-            if (below == 0)
-            {
-                child.Elements.Remove("/Count");
-            }
-            else
-            {
-                child.Elements.SetInteger("/Count", isOpen ? below : -below);
-            }
-
-            visible += 1 + (isOpen ? below : 0);
-        }
-
-        return visible;
+        OutlineItems.Relink(parent, kept);
     }
 }

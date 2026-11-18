@@ -1,0 +1,149 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.WebToPdfWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:converting="clr-namespace:PdfPro.App.ViewModels.Converting"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=converting:WebToPdfViewModel}"
+  Title="{loc:Tr WebToPdf_Title}"
+  Width="560"
+  MinHeight="0"
+  AutomationProperties.AutomationId="WebToPdfWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  SizeToContent="Height"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <StackPanel>
+    <ui:TitleBar
+      Title="{loc:Tr WebToPdf_Title}"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,24">
+      <TextBlock Text="{loc:Tr WebToPdf_Address}" />
+      <DockPanel Margin="0,6,0,0">
+        <ui:Button
+          Margin="8,0,0,0"
+          AutomationProperties.AutomationId="WebToPdfPickFile"
+          Command="{Binding PickFileCommand}"
+          Content="{loc:Tr WebToPdf_PickFile}"
+          DockPanel.Dock="Right"
+          Icon="{ui:SymbolIcon FolderOpen24}" />
+        <ui:TextBox
+          x:Name="AddressBox"
+          AutomationProperties.AutomationId="WebToPdfAddress"
+          AutomationProperties.Name="{loc:Tr WebToPdf_Address}"
+          PlaceholderText="{loc:Tr WebToPdf_Address_Placeholder}"
+          Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" />
+      </DockPanel>
+      <TextBlock
+        Margin="0,6,0,0"
+        AutomationProperties.AutomationId="WebToPdfError"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding ErrorText}"
+        TextWrapping="Wrap"
+        Visibility="{Binding ErrorText, Converter={StaticResource NullToCollapsed}}" />
+
+      <Grid Margin="0,16,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock
+          Margin="0,0,12,8"
+          VerticalAlignment="Center"
+          Text="{loc:Tr WebToPdf_Paper}" />
+        <StackPanel
+          Grid.Column="1"
+          Margin="0,0,0,8"
+          Orientation="Horizontal">
+          <ComboBox
+            MinWidth="200"
+            AutomationProperties.AutomationId="WebToPdfPaper"
+            AutomationProperties.Name="{loc:Tr WebToPdf_Paper}"
+            DisplayMemberPath="Label"
+            ItemsSource="{Binding PaperOptions}"
+            SelectedValue="{Binding Paper}"
+            SelectedValuePath="Value" />
+          <CheckBox
+            Margin="16,0,0,0"
+            AutomationProperties.AutomationId="WebToPdfLandscape"
+            Content="{loc:Tr WebToPdf_Landscape}"
+            IsChecked="{Binding Landscape}" />
+        </StackPanel>
+        <TextBlock
+          Grid.Row="1"
+          Margin="0,0,12,0"
+          VerticalAlignment="Center"
+          Text="{loc:Tr WebToPdf_Margins}" />
+        <ComboBox
+          Grid.Row="1"
+          Grid.Column="1"
+          MinWidth="200"
+          HorizontalAlignment="Left"
+          AutomationProperties.AutomationId="WebToPdfMargins"
+          AutomationProperties.Name="{loc:Tr WebToPdf_Margins}"
+          DisplayMemberPath="Label"
+          ItemsSource="{Binding MarginOptions}"
+          SelectedValue="{Binding Margins}"
+          SelectedValuePath="Value" />
+      </Grid>
+
+      <CheckBox
+        Margin="0,16,0,0"
+        AutomationProperties.AutomationId="WebToPdfBackgrounds"
+        Content="{loc:Tr WebToPdf_Backgrounds}"
+        IsChecked="{Binding Backgrounds}" />
+      <CheckBox
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="WebToPdfHeaderAndFooter"
+        Content="{loc:Tr WebToPdf_HeaderAndFooter}"
+        IsChecked="{Binding HeaderAndFooter}" />
+      <CheckBox
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="WebToPdfOpenWhenDone"
+        Content="{loc:Tr WebToPdf_OpenWhenDone}"
+        IsChecked="{Binding OpenWhenDone}" />
+
+      <TextBlock
+        Margin="0,16,0,0"
+        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+        Text="{loc:Tr WebToPdf_Note}"
+        TextWrapping="Wrap" />
+
+      <StackPanel
+        Margin="0,20,0,0"
+        HorizontalAlignment="Right"
+        Orientation="Horizontal">
+        <ui:Button
+          MinWidth="96"
+          Margin="0,0,8,0"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="WebToPdfRun"
+          Command="{Binding ApplyCommand}"
+          Content="{loc:Tr WebToPdf_Run}"
+          IsDefault="True" />
+        <ui:Button
+          MinWidth="96"
+          AutomationProperties.AutomationId="WebToPdfCancel"
+          Command="{Binding CancelCommand}"
+          Content="{loc:Tr Common_Cancel}"
+          IsCancel="True" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</ui:FluentWindow>

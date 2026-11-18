@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Performance measurements (SPEC Phase 13): BenchmarkDotNet, run by hand; never shipped. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>PdfPro.Benchmarks</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\PdfPro.Ocr\PdfPro.Ocr.csproj" />
+    <ProjectReference Include="..\..\src\PdfPro.Operations\PdfPro.Operations.csproj" />
+  </ItemGroup>
+
+</Project>

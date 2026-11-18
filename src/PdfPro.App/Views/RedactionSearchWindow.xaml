@@ -1,0 +1,162 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.RedactionSearchWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:security="clr-namespace:PdfPro.App.ViewModels.Security"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=security:RedactionSearchViewModel}"
+  Title="{loc:Tr RedactionSearch_Title}"
+  Width="620"
+  Height="600"
+  AutomationProperties.AutomationId="RedactionSearchWindow"
+  ExtendsContentIntoTitleBar="True"
+  ShowInTaskbar="False"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <DockPanel>
+    <ui:TitleBar
+      Title="{loc:Tr RedactionSearch_Title}"
+      DockPanel.Dock="Top"
+      ShowMaximize="False"
+      ShowMinimize="False" />
+
+    <StackPanel Margin="24,4,24,0" DockPanel.Dock="Top">
+      <TextBlock Text="{loc:Tr RedactionSearch_Message}" TextWrapping="Wrap" />
+      <WrapPanel Margin="0,10,0,0">
+        <CheckBox
+          x:Name="FirstPattern"
+          Margin="0,0,16,4"
+          AutomationProperties.AutomationId="RedactionNationalId"
+          Content="{loc:Tr Redaction_Kind_NationalId}"
+          IsChecked="{Binding NationalId}" />
+        <CheckBox
+          Margin="0,0,16,4"
+          AutomationProperties.AutomationId="RedactionPhone"
+          Content="{loc:Tr Redaction_Kind_Phone}"
+          IsChecked="{Binding Phone}" />
+        <CheckBox
+          Margin="0,0,16,4"
+          AutomationProperties.AutomationId="RedactionEmail"
+          Content="{loc:Tr Redaction_Kind_Email}"
+          IsChecked="{Binding Email}" />
+        <CheckBox
+          Margin="0,0,16,4"
+          AutomationProperties.AutomationId="RedactionBankAccount"
+          Content="{loc:Tr Redaction_Kind_BankAccount}"
+          IsChecked="{Binding BankAccount}" />
+        <CheckBox
+          Margin="0,0,16,4"
+          AutomationProperties.AutomationId="RedactionDate"
+          Content="{loc:Tr Redaction_Kind_Date}"
+          IsChecked="{Binding Date}" />
+      </WrapPanel>
+      <Grid Margin="0,6,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="8" />
+          <ColumnDefinition />
+          <ColumnDefinition Width="8" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock VerticalAlignment="Center" Text="{loc:Tr RedactionSearch_Custom}" />
+        <ui:TextBox
+          Grid.Column="2"
+          AutomationProperties.AutomationId="RedactionCustom"
+          AutomationProperties.Name="{loc:Tr RedactionSearch_Custom}"
+          PlaceholderText="{loc:Tr RedactionSearch_CustomHint}"
+          Text="{Binding CustomExpression, UpdateSourceTrigger=PropertyChanged}" />
+        <ui:Button
+          Grid.Column="4"
+          MinWidth="96"
+          Appearance="Primary"
+          AutomationProperties.AutomationId="RedactionSearch"
+          Command="{Binding SearchCommand}"
+          Content="{loc:Tr RedactionSearch_Search}"
+          IsDefault="True" />
+      </Grid>
+      <TextBlock
+        Margin="0,8,0,0"
+        AutomationProperties.AutomationId="RedactionSearchStatus"
+        Text="{Binding Status}" />
+      <TextBlock
+        Margin="0,4,0,0"
+        Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+        Text="{Binding Error}"
+        TextWrapping="Wrap"
+        Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+    </StackPanel>
+
+    <StackPanel
+      Margin="24,12,24,24"
+      HorizontalAlignment="Right"
+      DockPanel.Dock="Bottom"
+      Orientation="Horizontal">
+      <ui:Button
+        MinWidth="96"
+        Margin="0,0,8,0"
+        Appearance="Primary"
+        AutomationProperties.AutomationId="RedactionMarkFound"
+        Command="{Binding MarkCommand}"
+        Content="{loc:Tr RedactionSearch_Mark}" />
+      <ui:Button
+        MinWidth="96"
+        Command="{Binding CancelCommand}"
+        Content="{loc:Tr Common_Cancel}" />
+    </StackPanel>
+
+    <StackPanel
+      Margin="24,8,24,0"
+      DockPanel.Dock="Bottom"
+      Orientation="Horizontal">
+      <ui:Button
+        Margin="0,0,8,0"
+        AutomationProperties.AutomationId="RedactionCheckAll"
+        Command="{Binding CheckAllCommand}"
+        Content="{loc:Tr RedactionSearch_CheckAll}" />
+      <ui:Button
+        AutomationProperties.AutomationId="RedactionCheckNone"
+        Command="{Binding CheckNoneCommand}"
+        Content="{loc:Tr RedactionSearch_CheckNone}" />
+    </StackPanel>
+
+    <ListView
+      Margin="24,8,24,0"
+      AutomationProperties.AutomationId="RedactionHits"
+      ItemsSource="{Binding Hits}">
+      <ListView.ItemTemplate>
+        <DataTemplate DataType="{x:Type security:RedactionHitViewModel}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="70" />
+              <ColumnDefinition Width="130" />
+              <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsChecked}" />
+            <TextBlock
+              Grid.Column="1"
+              VerticalAlignment="Center"
+              Text="{Binding PageLabel}" />
+            <TextBlock
+              Grid.Column="2"
+              VerticalAlignment="Center"
+              Text="{Binding Kind}" />
+            <TextBlock
+              Grid.Column="3"
+              VerticalAlignment="Center"
+              Text="{Binding Text}"
+              TextTrimming="CharacterEllipsis" />
+          </Grid>
+        </DataTemplate>
+      </ListView.ItemTemplate>
+    </ListView>
+  </DockPanel>
+</ui:FluentWindow>

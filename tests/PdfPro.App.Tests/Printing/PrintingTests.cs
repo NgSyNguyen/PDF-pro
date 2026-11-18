@@ -7,7 +7,10 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PdfPro.App.Services.Printing;
 using PdfPro.App.Services.Rendering;
 using PdfPro.App.Tests.TestSupport;
+using PdfPro.Core.Annotations;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Organizing;
+using PdfPro.Core.Overlay;
 using PdfPro.Core.Printing;
 using PdfPro.Pdfium;
 
@@ -129,6 +132,34 @@ public sealed class PrintingTests : IDisposable
     }
 
     [Fact]
+    public void Paginator_PrintsTheAnnotationsMadeInTheSession_WhereTheyAre()
+    {
+        var red = new RgbColor(220, 0, 0);
+        var square = new ShapeAnnotation("s", red, 1, "Lan", DateTimeOffset.Now, DateTimeOffset.Now, string.Empty, NoteShape.Square, new PdfRect(100, 100, 200, 150), 2, red);
+        var plan = PagePlan.Identity(SourceIds.Original, _document.PageCount, RandomPageKeys.Instance).WithAnnotations(0, [square]);
+
+        var printed = Sta.Run(() =>
+        {
+            var paginator = new PdfPrintPaginator(VirtualDocuments.Of(plan, _document), _renderer, [0, 1], LetterSheet, NullLogger.Instance, CancellationToken.None);
+            var annotated = Geometries(VisualTreeHelper.GetDrawing(paginator.GetPage(0).Visual), Matrix.Identity)
+                .Where(g => g.Drawing.Brush is SolidColorBrush { Color: var color } && color == Color.FromRgb(220, 0, 0))
+                .Select(g => Rect.Transform(g.Drawing.Geometry.Bounds, g.Transform))
+                .ToArray();
+            var plain = Geometries(VisualTreeHelper.GetDrawing(paginator.GetPage(1).Visual), Matrix.Identity).Count();
+            return (annotated, plain);
+        });
+
+        // A4 portrait on Letter portrait: not turned. The square's outline is drawn inside its box (2 points wide).
+        var placement = PrintLayout.Fit(A4, LetterSheet.PrintableArea);
+        var scale = placement.Scale;
+        var rect = printed.annotated.ShouldHaveSingleItem();
+        rect.X.ShouldBe(placement.Bounds.X + (101 * scale), 0.5);
+        rect.Y.ShouldBe(placement.Bounds.Y + ((842 - 149) * scale), 0.5, "PDF y goes up, the sheet's down");
+        rect.Width.ShouldBe(98 * scale, 0.5);
+        printed.plain.ShouldBe(0, "a page without annotations prints only its image");
+    }
+
+    [Fact]
     public void Paginator_AfterCancellation_ReturnsBlankSheetsWithoutRendering()
     {
         using var cancellation = new CancellationTokenSource();
@@ -226,6 +257,28 @@ public sealed class PrintingTests : IDisposable
     }
 
     /// <summary>Where the page image was drawn on the sheet, or null for a blank sheet.</summary>
+    /// <summary>The shapes of a drawing with the transforms of the groups around them.</summary>
+    private static IEnumerable<(GeometryDrawing Drawing, Matrix Transform)> Geometries(Drawing? drawing, Matrix transform)
+    {
+        switch (drawing)
+        {
+            case DrawingGroup group:
+                var combined = (group.Transform?.Value ?? Matrix.Identity) * transform;
+                foreach (var child in group.Children)
+                {
+                    foreach (var found in Geometries(child, combined))
+                    {
+                        yield return found;
+                    }
+                }
+
+                break;
+            case GeometryDrawing geometry:
+                yield return (geometry, transform);
+                break;
+        }
+    }
+
     private static Rect? ImageRect(Visual visual)
     {
         var drawing = VisualTreeHelper.GetDrawing(visual);

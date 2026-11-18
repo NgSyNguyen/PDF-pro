@@ -101,7 +101,7 @@ public sealed class AcceptanceTests(ITestOutputHelper output) : IDisposable
         restarted.WaitForTab("basic-vi.pdf *", Long);
 
         restarted.Find("RibbonTab_edit").AsTabItem().Select();
-        restarted.Find("edit.undo").HelpText.ShouldBe(Format("Cmd_UndoWith", Format("History_Duplicate", 1)));
+        restarted.Find("edit.undo").HelpText.ShouldBe($"{Format("Cmd_UndoWith", Format("History_Duplicate", 1))} (Ctrl+Z)", "the tooltip names its shortcut");
         restarted.Invoke("edit.undo");
         restarted.Invoke("edit.undo");
         restarted.WaitForTab("basic-vi.pdf");

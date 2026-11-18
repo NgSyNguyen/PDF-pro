@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using PdfPro.App.Resources;
 using PdfPro.Core.Documents;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Security;
 using PdfPro.Core.Text;
 using PdfPro.Pdfium;
 
@@ -26,6 +27,7 @@ public sealed partial class DocumentPropertiesViewModel : ObservableObject
     private readonly IPdfDocument _document;
     private readonly IReadOnlyList<PdfSize> _pageSizes;
     private readonly string _filePath;
+    private readonly ProtectionSetting? _protection;
     private readonly ILogger _logger;
     private PdfDocumentMetadata? _metadata;
     private long? _fileSize;
@@ -35,7 +37,12 @@ public sealed partial class DocumentPropertiesViewModel : ObservableObject
     /// <param name="pageSizes">The pages as the page plan shows them.</param>
     /// <param name="filePath">The file the document is saved to.</param>
     /// <param name="logger">Logs read failures.</param>
-    public DocumentPropertiesViewModel(IPdfDocument document, IReadOnlyList<PdfSize> pageSizes, string filePath, ILogger<DocumentPropertiesViewModel> logger)
+    /// <param name="document">The document as shown.</param>
+    /// <param name="pageSizes">Its page sizes.</param>
+    /// <param name="filePath">Its file.</param>
+    /// <param name="logger">Log.</param>
+    /// <param name="protection">The protection it is saved with, when its file is open for editing (no longer encrypted in the session).</param>
+    public DocumentPropertiesViewModel(IPdfDocument document, IReadOnlyList<PdfSize> pageSizes, string filePath, ILogger<DocumentPropertiesViewModel> logger, ProtectionSetting? protection = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(pageSizes);
@@ -44,6 +51,7 @@ public sealed partial class DocumentPropertiesViewModel : ObservableObject
         _pageSizes = pageSizes;
         _filePath = filePath;
         _logger = logger;
+        _protection = protection;
         Sections = BuildSections();
     }
 
@@ -156,7 +164,14 @@ public sealed partial class DocumentPropertiesViewModel : ObservableObject
             [
                 new(Strings.DocProps_Encryption, features.IsEncrypted
                     ? string.Format(culture, Strings.DocProps_EncryptedDetails, Allowed(features.CanPrint), Allowed(features.CanCopyContent))
-                    : Strings.DocProps_No),
+                    : _protection is { } protection
+                        ? string.Format(
+                            culture,
+                            Strings.DocProps_EncryptedOnSave,
+                            protection.Algorithm == EncryptionAlgorithm.Aes128 ? Strings.DocProps_Aes128 : Strings.DocProps_Aes256,
+                            Allowed(protection.Permissions.HasFlag(DocumentPermissions.Print)),
+                            Allowed(protection.Permissions.HasFlag(DocumentPermissions.Copy)))
+                        : Strings.DocProps_No),
                 new(Strings.DocProps_Signatures, features.HasDigitalSignatures
                     ? string.Format(culture, Strings.DocProps_SignatureCount, features.SignatureCount)
                     : Strings.DocProps_No),

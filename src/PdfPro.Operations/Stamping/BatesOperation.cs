@@ -4,6 +4,7 @@ using PdfPro.Core.Splitting;
 using PdfPro.Core.Stamping;
 using PdfPro.Operations.Organizing;
 using PdfSharp.Pdf.IO;
+using PdfPro.Operations.Materializing;
 
 namespace PdfPro.Operations.Stamping;
 
@@ -76,7 +77,7 @@ public sealed class BatesOperation : PdfOperation<BatesParams>
         {
             try
             {
-                using var document = PdfReader.Open(inputs[i], PdfDocumentOpenMode.Import);
+                using var document = PdfSafeReader.Open(inputs[i], PdfDocumentOpenMode.Import);
                 counts[i] = document.PageCount;
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -119,7 +120,7 @@ public sealed class BatesOperation : PdfOperation<BatesParams>
                     var zone = new TextZone(parameters.Anchor, page => format.Label(range.NumberOf(page)));
                     TextZones.Stamp(document, [.. Enumerable.Range(0, counts[i])], [zone], style, parameters.MarginX, parameters.MarginY, StampContent.BatesLayer, fileProgress, Stage, cancellationToken);
                     using var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                    document.Save(stream, closeStream: false);
+                    Materializing.PdfWriting.Save(document, stream);
                     stream.Flush(flushToDisk: true);
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException and not BatesFileException)

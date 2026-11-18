@@ -6,6 +6,7 @@ using PdfPro.Operations.Materializing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.Operations.Layout;
 
@@ -87,7 +88,7 @@ internal static class PageForms
             byte[] bytes;
             try
             {
-                bytes = stream.Stream?.UnfilteredValue ?? [];
+                bytes = StreamData.Bytes(stream);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The worker process (SPEC Phase 13): runs the operations a hostile or badly damaged file could crash (OCR, repair,
+    redaction…) apart from the app, which starts it on a named pipe and starts it again when it dies.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>PdfPro.Worker</RootNamespace>
+    <AssemblyName>PdfPro.Worker</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Its tests run in Linux containers too: Skia's native library for Linux. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
+    <ProjectReference Include="..\PdfPro.Ocr\PdfPro.Ocr.csproj" />
+    <ProjectReference Include="..\PdfPro.Operations\PdfPro.Operations.csproj" />
+  </ItemGroup>
+
+</Project>

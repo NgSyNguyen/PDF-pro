@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PdfPro.Core.ExternalTools;
 using PdfPro.Infrastructure.Caching;
 using PdfPro.Infrastructure.ExternalTools;
 using PdfPro.Infrastructure.Sessions;

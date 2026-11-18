@@ -6,6 +6,7 @@ namespace PdfPro.Pdfium.Native;
 /// <summary>
 /// Feeds PDFium from a .NET <see cref="FileStream"/> through FPDF_LoadCustomDocument: any path works (long paths,
 /// Unicode), other programs may read or rename the file while it is open, but nobody can overwrite it underneath us.
+/// A document held in memory is fed the same way.
 /// </summary>
 /// <remarks>
 /// PDFiumCore declares the C <c>unsigned long</c> fields/arguments as 64-bit, but on Windows they are 32-bit,
@@ -13,11 +14,11 @@ namespace PdfPro.Pdfium.Native;
 /// </remarks>
 internal sealed unsafe class PdfFileSource : IDisposable
 {
-    private readonly FileStream _stream;
+    private readonly Stream _stream;
     private readonly Func_int___IntPtr_ulong_bytePtr_ulong _getBlock;
     private int _disposed;
 
-    private PdfFileSource(FileStream stream)
+    private PdfFileSource(Stream stream)
     {
         _stream = stream;
         _getBlock = GetBlock;
@@ -67,6 +68,16 @@ internal sealed unsafe class PdfFileSource : IDisposable
         }
 
         return new PdfFileSource(stream);
+    }
+
+    /// <summary>A document held in memory (read only; the bytes must not change while it is open).</summary>
+    /// <exception cref="PdfDocumentException">The document is larger than PDFium reads.</exception>
+    public static PdfFileSource FromBytes(byte[] bytes)
+    {
+        ArgumentNullException.ThrowIfNull(bytes);
+        return bytes.LongLength > uint.MaxValue
+            ? throw new PdfFileAccessException(PdfOpenFailure.FileTooLarge)
+            : new PdfFileSource(new MemoryStream(bytes, writable: false));
     }
 
     public void Dispose()

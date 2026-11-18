@@ -1,4 +1,7 @@
+using PdfPro.Core.Annotations;
+using PdfPro.Core.Editing;
 using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 
 namespace PdfPro.Pdfium;
 
@@ -26,6 +29,19 @@ public interface IPdfDocument : IAsyncDisposable
     Task<PdfDocumentMetadata> GetMetadataAsync(CancellationToken cancellationToken = default);
 
     Task<string> GetPageTextAsync(int pageIndex, CancellationToken cancellationToken = default);
+
+    /// <summary>The characters of a page with their boxes in its PDF user space, for selecting, copying and searching.</summary>
+    Task<PageText> GetPageTextLayerAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default);
+
+    /// <summary>The annotations already in a page, in /Annots order, for the comments list.</summary>
+    Task<IReadOnlyList<FileAnnotation>> GetPageAnnotationsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default);
+
+    /// <summary>The page's top-level drawings (text, paths, images…) in drawing order, for editing.</summary>
+    Task<IReadOnlyList<PageObjectInfo>> GetPageObjectsAsync(int pageIndex, PdfiumPriority priority = PdfiumPriority.Normal, CancellationToken cancellationToken = default);
+
+    /// <summary>An image of a page as stored (JPEG as is, other images as PNG); <paramref name="image"/> as listed.</summary>
+    /// <exception cref="InvalidDataException">The image is not there any more or cannot be read.</exception>
+    Task<ExtractedImage> ExtractImageAsync(int pageIndex, PageObjectInfo image, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Opens documents; the seam that lets view models be tested without PDFium.</summary>

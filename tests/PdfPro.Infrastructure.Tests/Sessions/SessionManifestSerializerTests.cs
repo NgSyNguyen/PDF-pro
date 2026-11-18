@@ -1,5 +1,10 @@
+using PdfPro.Core.Annotations;
+using PdfPro.Core.Editing;
+using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Overlay;
+using PdfPro.Core.Security;
 using PdfPro.Core.Sessions;
 using PdfPro.Infrastructure.IO;
 using PdfPro.Infrastructure.Sessions;
@@ -10,6 +15,7 @@ public sealed class SessionManifestSerializerTests
 {
     private const string RotateId = "test.rotate";
     private const string InsertId = "test.insert";
+    private const string EditId = "test.edit";
 
     [Fact]
     public void RoundTrip_RestoresTheSnapshotExactly()
@@ -94,6 +100,119 @@ public sealed class SessionManifestSerializerTests
     }
 
     [Fact]
+    public void RoundTrip_KeepsAnnotationsWithTheirConversation()
+    {
+        var created = new DateTimeOffset(2026, 10, 27, 9, 30, 0, TimeSpan.FromHours(7));
+        AnnotationItem[] annotations =
+        [
+            new MarkupAnnotation("h1", new RgbColor(255, 230, 0), 0.6, "Lan", created, created, "Số liệu sai", MarkupKind.Highlight, [TextQuad.Of(new PdfRect(72, 700, 300, 712))], "Số: 12/2026")
+            {
+                Replies = [new AnnotationReply("h1-r1", "Minh", created.AddHours(1), "Đã sửa")],
+                Reviews = [new AnnotationReview("h1-s1", "Minh", created.AddHours(2), ReviewState.Accepted)],
+            },
+            new InkAnnotation("i1", RgbColor.Red, 1, "Lan", created, created, "", 2, [[new PdfPoint(10, 10), new PdfPoint(20, 30)]]),
+        ];
+        var plan = PagePlan.Identity("s0", 3, RandomPageKeys.Instance).WithAnnotations(1, annotations);
+        var state = new SessionState(plan, "s0", 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [new SessionSource("s0", "sources/s0.pdf", SessionSourceKind.Original, 3)],
+            State = state,
+            HistoryBase = state,
+            Undo = [],
+            Redo = [],
+        };
+
+        var json = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot, DateTimeOffset.UtcNow));
+        var restored = SessionManifestSerializer.ToSnapshot(SessionManifestSerializer.Deserialize(json), ParameterType).State.Plan;
+
+        restored[0].Annotations.ShouldBeEmpty();
+        restored[1].Annotations.Select(a => a.GetType()).ShouldBe([typeof(MarkupAnnotation), typeof(InkAnnotation)]);
+        var highlight = (MarkupAnnotation)restored[1].Annotations[0];
+        highlight.Quads.ShouldBe(annotations[0].ShouldBeOfType<MarkupAnnotation>().Quads);
+        highlight.Contents.ShouldBe("Số liệu sai");
+        highlight.Created.ShouldBe(created);
+        highlight.Replies.ShouldHaveSingleItem().Contents.ShouldBe("Đã sửa");
+        highlight.State.ShouldBe(ReviewState.Accepted);
+        restored.HasSameContent(plan).ShouldBeFalse("annotations are read back as new instances…");
+        restored.Select(p => p.PageKey).ShouldBe(plan.Select(p => p.PageKey), "…of the same pages");
+        json.ShouldNotContain("\"annotations\":null", Case.Sensitive, "pages without annotations write nothing");
+    }
+
+    [Fact]
+    public void RoundTrip_KeepsContentEditsOfEveryKind()
+    {
+        var session = EditedSession();
+        var target = new PageObjectRef(1, 7, PageObjectKind.Text, new PdfRect(72.5, 700, 300, 712.25));
+        ContentEdit[] edits =
+        [
+            new ReplaceTextEdit(target, "Ủy ban nhân dân", TextOverflow.Wrap),
+            new MoveObjectEdit(target with { Index = 8, Kind = PageObjectKind.Image }, 12.5, -3),
+            new DeleteObjectEdit(target with { Index = 9, Kind = PageObjectKind.Path }),
+        ];
+        Execute(session, EditId, new TestEdits(edits), p => p, []);
+
+        var json = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(session.CreateSnapshot(), DateTimeOffset.UtcNow));
+        var restored = SessionManifestSerializer.ToSnapshot(SessionManifestSerializer.Deserialize(json), ParameterType);
+
+        var record = restored.Undo[^1].Parameters.ShouldBeOfType<TestEdits>();
+        record.Edits.ShouldBe(edits, "every kind of edit and its target come back as they were");
+    }
+
+    [Fact]
+    public void RoundTrip_KeepsTheValuesGivenToTheForm()
+    {
+        var plan = PagePlan.Identity("s0", 2, RandomPageKeys.Instance)
+            .WithFormValues([new FormValue("ho_ten", "Nguyễn Văn An"), new FormValue("so_thich", "Đọc sách", ["Đọc sách", "Âm nhạc"])]);
+        var state = new SessionState(plan, "s0", 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [new SessionSource("s0", "sources/s0.pdf", SessionSourceKind.Original, 2)],
+            State = state,
+            HistoryBase = state,
+            Undo = [],
+            Redo = [],
+        };
+
+        var json = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot, DateTimeOffset.UtcNow));
+        var restored = SessionManifestSerializer.ToSnapshot(SessionManifestSerializer.Deserialize(json), ParameterType).State.Plan;
+
+        restored.FormValues.Values.ShouldBe(plan.FormValues.Values, ignoreOrder: true);
+        restored.HasSameContent(plan).ShouldBeTrue();
+        var plain = new SessionState(PagePlan.Identity("s0", 2, RandomPageKeys.Instance), "s0", 0);
+        var empty = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot with { State = plain, HistoryBase = plain }, DateTimeOffset.UtcNow));
+        empty.ShouldNotContain("formValues", Case.Sensitive, "nothing is written without values");
+    }
+
+    [Fact]
+    public void RoundTrip_KeepsTheProtection_WithoutAnyPassword()
+    {
+        var protection = new ProtectionSetting(Guid.NewGuid(), EncryptionAlgorithm.Aes128, DocumentPermissions.Print | DocumentPermissions.FillForms, HasOpenPassword: true);
+        var state = new SessionState(PagePlan.Identity("s0", 2, RandomPageKeys.Instance).WithProtection(protection), "s0", 0);
+        var snapshot = new SessionSnapshot
+        {
+            SessionId = Guid.NewGuid(),
+            Sources = [new SessionSource("s0", "sources/s0.pdf", SessionSourceKind.Original, 2)],
+            State = state,
+            HistoryBase = state,
+            Undo = [],
+            Redo = [],
+        };
+
+        var json = SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot, DateTimeOffset.UtcNow));
+        var restored = SessionManifestSerializer.ToSnapshot(SessionManifestSerializer.Deserialize(json), ParameterType).State.Plan;
+
+        restored.Protection.ShouldBe(protection);
+        json.ShouldNotContain("ownerPassword", Case.Insensitive, "a protection carries no password");
+        json.ShouldNotContain("userPassword", Case.Insensitive);
+        var plain = new SessionState(PagePlan.Identity("s0", 2, RandomPageKeys.Instance), "s0", 0);
+        SessionManifestSerializer.Serialize(SessionManifestSerializer.ToManifest(snapshot with { State = plain, HistoryBase = plain }, DateTimeOffset.UtcNow))
+            .ShouldNotContain("protection", Case.Sensitive, "nothing is written without a protection");
+    }
+
+    [Fact]
     public void Deserialize_RejectsInvalidJsonAndNewerSchemas()
     {
         Should.Throw<SessionManifestException>(() => SessionManifestSerializer.Deserialize("{ broken"));
@@ -160,6 +279,7 @@ public sealed class SessionManifestSerializerTests
     {
         RotateId => typeof(TestRotate),
         InsertId => typeof(TestInsert),
+        EditId => typeof(TestEdits),
         _ => null,
     };
 
@@ -169,4 +289,6 @@ public sealed class SessionManifestSerializerTests
     private sealed record TestRotate(string Pages, int Degrees);
 
     private sealed record TestInsert(string SourceId, int Page);
+
+    private sealed record TestEdits(IReadOnlyList<ContentEdit> Edits);
 }

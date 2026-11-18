@@ -7,7 +7,7 @@ using WpfUiMessageBoxResult = Wpf.Ui.Controls.MessageBoxResult;
 
 namespace PdfPro.App.Services;
 
-internal sealed class ErrorDialogService(IShellLauncher shell, AppPaths paths) : IErrorDialogService
+internal sealed class ErrorDialogService(IShellLauncher shell, AppPaths paths, IClipboardService clipboard) : IErrorDialogService
 {
     public Task ShowUnexpectedErrorAsync(string incidentId)
     {
@@ -39,6 +39,7 @@ internal sealed class ErrorDialogService(IShellLauncher shell, AppPaths paths) :
                 MaxWidth = 440,
             },
             PrimaryButtonText = Strings.Error_OpenLogFolder,
+            SecondaryButtonText = Strings.Error_CopyDetails,
             CloseButtonText = Strings.Common_Close,
         };
 
@@ -51,6 +52,11 @@ internal sealed class ErrorDialogService(IShellLauncher shell, AppPaths paths) :
         if (result == WpfUiMessageBoxResult.Primary)
         {
             shell.OpenFolder(paths.LogsDirectory);
+        }
+        else if (result == WpfUiMessageBoxResult.Secondary)
+        {
+            // The version, Windows, .NET and the incident id only: no path, no document content.
+            clipboard.SetText(AppDiagnostics.Describe(Hosting.AppBuildInfo.Current, incidentId));
         }
     }
 }

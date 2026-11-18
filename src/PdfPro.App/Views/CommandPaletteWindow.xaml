@@ -1,0 +1,99 @@
+<ui:FluentWindow
+  x:Class="PdfPro.App.Views.CommandPaletteWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:loc="clr-namespace:PdfPro.App.Localization"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+  xmlns:vm="clr-namespace:PdfPro.App.ViewModels"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance Type=vm:CommandPaletteViewModel}"
+  Title="{loc:Tr Palette_Title}"
+  Width="640"
+  Height="460"
+  AutomationProperties.AutomationId="CommandPaletteWindow"
+  ExtendsContentIntoTitleBar="True"
+  ResizeMode="NoResize"
+  ShowInTaskbar="False"
+  WindowBackdropType="Mica"
+  WindowStartupLocation="CenterOwner">
+  <ui:FluentWindow.InputBindings>
+    <KeyBinding Key="Escape" Command="{Binding CloseCommand}" />
+  </ui:FluentWindow.InputBindings>
+
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <ui:TextBox
+      x:Name="QueryBox"
+      AutomationProperties.AutomationId="CommandPaletteQuery"
+      AutomationProperties.Name="{loc:Tr Palette_Placeholder}"
+      Icon="{ui:SymbolIcon Search24}"
+      PlaceholderText="{loc:Tr Palette_Placeholder}"
+      Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}">
+      <ui:TextBox.InputBindings>
+        <KeyBinding Key="Down" Command="{Binding MoveDownCommand}" />
+        <KeyBinding Key="Up" Command="{Binding MoveUpCommand}" />
+        <KeyBinding Key="Enter" Command="{Binding RunCommand}" />
+        <KeyBinding Key="Escape" Command="{Binding CloseCommand}" />
+      </ui:TextBox.InputBindings>
+    </ui:TextBox>
+
+    <ListBox
+      x:Name="ResultList"
+      Grid.Row="1"
+      Margin="0,12,0,0"
+      AutomationProperties.AutomationId="CommandPaletteResults"
+      ItemsSource="{Binding Results}"
+      MouseDoubleClick="OnResultDoubleClick"
+      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+      SelectedItem="{Binding Selected}">
+      <ListBox.ItemTemplate>
+        <DataTemplate DataType="{x:Type vm:PaletteEntry}">
+          <Grid Opacity="{Binding CanRun, Converter={StaticResource PaletteOpacity}}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ui:SymbolIcon Margin="0,0,12,0" VerticalAlignment="Center" Symbol="{Binding Icon}" />
+            <StackPanel Grid.Column="1">
+              <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+              <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="{Binding Category}"
+                TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+            <TextBlock
+              Grid.Column="2"
+              Margin="12,0,0,0"
+              VerticalAlignment="Center"
+              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+              Text="{Binding Shortcut}" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <TextBlock
+      Grid.Row="1"
+      Margin="0,24,0,0"
+      HorizontalAlignment="Center"
+      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+      Text="{loc:Tr Palette_NoResult}"
+      Visibility="{Binding HasNoResult, Converter={StaticResource BoolToVisibility}}" />
+
+    <TextBlock
+      Grid.Row="2"
+      Margin="0,12,0,0"
+      FontSize="11"
+      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+      Text="{loc:Tr Palette_Hint}" />
+  </Grid>
+</ui:FluentWindow>

@@ -124,6 +124,17 @@ internal sealed partial class AppUnderTest : IDisposable
 
     public bool IsEnabled(string automationId, AutomationElement? root = null) => Find(automationId, root).IsEnabled;
 
+    /// <summary>How many items a list shows (those realized, for a virtualized list).</summary>
+    public int ItemCount(string automationId, AutomationElement? root = null)
+        => Find(automationId, root).FindAllChildren(cf => cf.ByControlType(ControlType.ListItem)).Length;
+
+    /// <summary>
+    /// The rows of a data grid, through its Grid pattern: all of them, also those virtualized out of view (its children
+    /// are DataItems, which <see cref="ItemCount"/> does not count).
+    /// </summary>
+    public int RowCount(string automationId, AutomationElement? root = null)
+        => Find(automationId, root).Patterns.Grid.Pattern.RowCount.Value;
+
     /// <summary>Types into a text box (through its value, not the keyboard).</summary>
     public void SetText(string automationId, string text, AutomationElement? root = null)
     {
@@ -169,13 +180,19 @@ internal sealed partial class AppUnderTest : IDisposable
     public TimeSpan WaitForStatus(string prefix, TimeSpan? timeout = null)
         => WaitUntil(() => Name("StatusTask").StartsWith(prefix, StringComparison.Ordinal), timeout ?? DefaultTimeout, $"the status '{prefix}…' (now '{Name("StatusTask")}')");
 
-    /// <summary>Presses a key in the app (WM_KEYDOWN/WM_KEYUP posted to the main window; WPF routes it to the focus).</summary>
-    public void PressKey(int virtualKey)
+    /// <summary>
+    /// Presses a key in the app: WM_KEYDOWN/WM_KEYUP posted to <paramref name="window"/> (the main window by default),
+    /// where WPF routes it to the focused element. The real keyboard is never used.
+    /// </summary>
+    public void PressKey(int virtualKey, AutomationElement? window = null)
     {
-        var window = Main.Properties.NativeWindowHandle.Value;
-        PostMessage(window, WmKeyDown, virtualKey, 1);
-        PostMessage(window, WmKeyUp, virtualKey, unchecked((nint)0xC0000001));
+        var handle = (window ?? Main).Properties.NativeWindowHandle.Value;
+        PostMessage(handle, WmKeyDown, virtualKey, 1);
+        PostMessage(handle, WmKeyUp, virtualKey, unchecked((nint)0xC0000001));
     }
+
+    /// <summary>Presses Enter in <paramref name="window"/> (the main window by default), as <see cref="PressKey"/>.</summary>
+    public void PressEnter(AutomationElement? window = null) => PressKey(VirtualKeyEnter, window);
 
     /// <summary>The names of the document tabs ("a.pdf *").</summary>
     public string[] DocumentTabs()
@@ -194,13 +211,17 @@ internal sealed partial class AppUnderTest : IDisposable
         return watch.Elapsed;
     }
 
-    /// <summary>Uses the Windows file dialog titled <paramref name="title"/>: types the path and confirms.</summary>
+    /// <summary>
+    /// Uses the Windows file or folder dialog titled <paramref name="title"/>: types the path and confirms (a folder
+    /// picker's box is "Folder:", id 1152).
+    /// </summary>
     public void UseFileDialog(string title, string path)
     {
         var dialog = WaitForWindow(title);
         var nameBox = WaitFor(
             () => dialog.FindFirstDescendant(cf => cf.ByAutomationId("1148").And(cf.ByClassName("Edit")))
-                ?? dialog.FindFirstDescendant(cf => cf.ByAutomationId("1001").And(cf.ByClassName("Edit"))),
+                ?? dialog.FindFirstDescendant(cf => cf.ByAutomationId("1001").And(cf.ByClassName("Edit")))
+                ?? dialog.FindFirstDescendant(cf => cf.ByAutomationId("1152").And(cf.ByClassName("Edit"))),
             DefaultTimeout,
             "the file name box");
         SendMessage(nameBox.Properties.NativeWindowHandle.Value, WmSetText, 0, path);

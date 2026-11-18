@@ -6,6 +6,7 @@ using PdfPro.Operations.Organizing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using static PdfPro.Operations.Materializing.PdfGraph;
+using PdfPro.Operations.Optimizing;
 
 namespace PdfPro.Operations.Stamping;
 
@@ -25,12 +26,21 @@ public sealed partial class RemoveStampsOperation : DocumentContentOperation<Rem
 
     /// <summary>How many pages carry each kind of PDF_Pro stamp (kinds absent from the file are not listed).</summary>
     /// <exception cref="InvalidDataException">The file cannot be read.</exception>
-    public static IReadOnlyDictionary<StampKind, int> Scan(string path)
+    public static IReadOnlyDictionary<StampKind, int> Scan(string path) => Scan(path, null, CancellationToken.None);
+
+    /// <summary>As <see cref="Scan(string)"/>, page by page with progress, and cancellable between pages.</summary>
+    /// <exception cref="InvalidDataException">The file cannot be read.</exception>
+    /// <exception cref="OperationCanceledException">Cancelled.</exception>
+    public static IReadOnlyDictionary<StampKind, int> Scan(string path, IProgress<OperationProgress>? progress, CancellationToken cancellationToken)
     {
         using var document = OpenForChange(path);
         var counts = new Dictionary<StampKind, int>();
-        foreach (var page in document.Pages)
+        var count = document.PageCount;
+        for (var index = 0; index < count; index++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(new OperationProgress(index, count, "Stage_ScanStamps"));
+            var page = document.Pages[index];
             foreach (var kind in PageStamper.ContentStreams(page).Select(KindOf).OfType<StampKind>().Distinct())
             {
                 counts[kind] = counts.GetValueOrDefault(kind) + 1;
@@ -89,7 +99,7 @@ public sealed partial class RemoveStampsOperation : DocumentContentOperation<Rem
 
         foreach (var stream in removed)
         {
-            var text = Encoding.ASCII.GetString(AsDictionary(stream)?.Stream?.UnfilteredValue ?? []);
+            var text = Encoding.ASCII.GetString(AsDictionary(stream) is { } dictionary ? StreamData.Bytes(dictionary) : []);
             foreach (Match match in ResourceName().Matches(text))
             {
                 var key = match.Groups["kind"].Value switch { "X" => "/XObject", "OC" => "/Properties", _ => "/ExtGState" };

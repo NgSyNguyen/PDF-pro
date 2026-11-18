@@ -8,6 +8,20 @@ namespace PdfPro.Core.Documents;
 /// </summary>
 public static class PdfDate
 {
+    /// <summary>The full form, "D:20261027153000+07'00'" (UTC as "Z").</summary>
+    public static string Format(DateTimeOffset value)
+    {
+        var date = value.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+        if (value.Offset == TimeSpan.Zero)
+        {
+            return $"D:{date}Z";
+        }
+
+        var offset = value.Offset.Duration();
+        var sign = value.Offset < TimeSpan.Zero ? '-' : '+';
+        return string.Create(CultureInfo.InvariantCulture, $"D:{date}{sign}{offset.Hours:00}'{offset.Minutes:00}'");
+    }
+
     public static bool TryParse(string? value, out DateTimeOffset result)
     {
         result = default;

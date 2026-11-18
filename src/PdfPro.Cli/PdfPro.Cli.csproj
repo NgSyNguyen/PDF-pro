@@ -5,15 +5,27 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>PdfPro.Cli</RootNamespace>
     <AssemblyName>pdfpro</AssemblyName>
+    <ApplicationIcon>..\..\assets\icon\PdfPro.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.CommandLine" />
+    <!-- pdfpro also runs on Linux servers (and its tests in Linux containers): Skia's native library for Linux. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PdfPro.Infrastructure\PdfPro.Infrastructure.csproj" />
+    <ProjectReference Include="..\PdfPro.Ocr\PdfPro.Ocr.csproj" />
     <ProjectReference Include="..\PdfPro.Operations\PdfPro.Operations.csproj" />
+  </ItemGroup>
+
+  <!-- External tools fetched by tools/fetch-tools.ps1 (never committed) go next to pdfpro.exe too, in tools\. -->
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)..\..\tools\qpdf\bin\qpdf.exe')">
+    <Content Include="..\..\tools\qpdf\**\*" LinkBase="tools\qpdf" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)..\..\tools\tesseract\tesseract.exe')">
+    <Content Include="..\..\tools\tesseract\**\*" LinkBase="tools\tesseract" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -18,6 +18,19 @@ public sealed class StampingTests
         StampTemplate.Parse(string.Empty).Render(Values).ShouldBe(string.Empty);
     }
 
+    [Theory]
+    [InlineData("Trang 3/10")]
+    [InlineData("{page} chưa thay")]
+    [InlineData("}{ {{ }}")]
+    [InlineData("")]
+    public void Escape_WritesTheTextAsItIs(string literal)
+    {
+        var template = StampTemplate.Parse(StampTemplate.Escape(literal));
+
+        template.Render(Values).ShouldBe(literal);
+        template.DependsOnPage.ShouldBeFalse();
+    }
+
     [Fact]
     public void Template_KnowsWhetherItChangesPerPage()
     {

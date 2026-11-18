@@ -1,4 +1,6 @@
 using PDFiumCore;
+using PdfPro.Core.Geometry;
+using PdfPro.Core.Text;
 using PdfPro.Pdfium.Native;
 
 namespace PdfPro.Pdfium;
@@ -42,9 +44,133 @@ public sealed class PdfiumTextPage : IDisposable
         return new string(chars);
     }
 
+    /// <summary>
+    /// Every character with its box in the page's PDF user space (the loose box: the font's ascent to descent, so a
+    /// line's characters share their top and bottom) and whether the extractor generated it (spaces and line ends
+    /// between words and lines) or it is a hyphen ending a line. Not normalized.
+    /// </summary>
+    public PageText GetLayer()
+    {
+        var native = Native;
+        var count = fpdf_text.FPDFTextCountChars(native);
+        if (count <= 0)
+        {
+            return PageText.Empty;
+        }
+
+        var chars = new TextChar[count];
+        var fonts = new LegacyFont[count];
+        var owner = IntPtr.Zero;
+        var font = LegacyFont.None;
+        using var box = new FS_RECTF_();
+        for (var i = 0; i < count; i++)
+        {
+            var code = fpdf_text.FPDFTextGetUnicode(native, i);
+            var generated = fpdf_text.FPDFTextIsGenerated(native, i) == 1;
+            var hyphen = fpdf_text.FPDFTextIsHyphen(native, i) == 1;
+            var rect = !generated && fpdf_text.FPDFTextGetLooseCharBox(native, i, box) != 0
+                ? new PdfRect(box.Left, box.Bottom, box.Right, box.Top)
+                : default;
+            chars[i] = new TextChar(CharText(code), rect, generated, hyphen);
+            if (!generated)
+            {
+                // The font of the text object drawing the character (looked up once per object).
+                var item = fpdf_text.FPDFTextGetTextObject(native, i);
+                var handle = item?.__Instance ?? IntPtr.Zero;
+                if (handle != owner)
+                {
+                    owner = handle;
+                    font = handle == IntPtr.Zero || fpdf_edit.FPDFTextObjGetFont(item) is not { } pdfFont || pdfFont.__Instance == IntPtr.Zero
+                        ? LegacyFont.None
+                        : LegacyVietnamese.Detect(PdfiumPage.FontName(pdfFont));
+                }
+
+                fonts[i] = font;
+            }
+        }
+
+        return new PageText(fonts.Any(f => f.IsLegacy) ? Unicode(chars, fonts) : chars);
+    }
+
+    /// <summary>
+    /// The characters drawn with a TCVN3 or VNI font turned into Vietnamese, run by run (a VNI mark follows its letter);
+    /// each keeps its box, a VNI mark becoming the combining mark of the letter before it.
+    /// </summary>
+    private static TextChar[] Unicode(TextChar[] chars, LegacyFont[] fonts)
+    {
+        var start = 0;
+        while (start < chars.Length)
+        {
+            if (!fonts[start].IsLegacy)
+            {
+                start++;
+                continue;
+            }
+
+            var end = start;
+            while (end < chars.Length && fonts[end] == fonts[start] && !chars[end].IsGenerated)
+            {
+                end++;
+            }
+
+            var converted = LegacyVietnamese.Convert([.. chars[start..end].Select(c => c.Text)], fonts[start]);
+            for (var i = start; i < end; i++)
+            {
+                chars[i] = chars[i] with { Text = converted[i - start] };
+            }
+
+            start = end;
+        }
+
+        return chars;
+    }
+
+    /// <summary>
+    /// How many characters are painted and how many are not (text render mode 3: the hidden text OCR puts over a scan);
+    /// spaces and the characters the extractor generates between words are not counted.
+    /// </summary>
+    public PageTextCounts CountCharacters()
+    {
+        var native = Native;
+        var count = fpdf_text.FPDFTextCountChars(native);
+        var (visible, invisible) = (0, 0);
+        for (var i = 0; i < count; i++)
+        {
+            var code = fpdf_text.FPDFTextGetUnicode(native, i);
+            if (fpdf_text.FPDFTextIsGenerated(native, i) == 1 || code > 0xFFFF || char.IsWhiteSpace((char)code) || char.IsControl((char)code))
+            {
+                continue;
+            }
+
+            var owner = fpdf_text.FPDFTextGetTextObject(native, i);
+            if (owner is not null && owner.__Instance != IntPtr.Zero
+                && fpdf_edit.FPDFTextObjGetTextRenderMode(owner) == FPDF_TEXT_RENDERMODE.FPDF_TEXTRENDERMODE_INVISIBLE)
+            {
+                invisible++;
+            }
+            else
+            {
+                visible++;
+            }
+        }
+
+        return new PageTextCounts(visible, invisible);
+    }
+
     public void Dispose() => _handle.Dispose();
 
-    private FpdfTextpageT Native
+    /// <summary>
+    /// A character code as text. PDFium keeps UTF-16 units on Windows, so a character outside the basic plane arrives as
+    /// two surrogate halves, kept as they are (together they form the character again).
+    /// </summary>
+    private static string CharText(uint code) => code switch
+    {
+        <= 0xFFFF => ((char)code).ToString(),
+        <= 0x10FFFF => char.ConvertFromUtf32((int)code),
+        _ => "\uFFFD",
+    };
+
+    internal FpdfTextpageT Native
     {
         get
         {

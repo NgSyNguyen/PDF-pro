@@ -1,5 +1,8 @@
+using PdfPro.Core.Annotations;
+using PdfPro.Core.Forms;
 using PdfPro.Core.Geometry;
 using PdfPro.Core.Organizing;
+using PdfPro.Core.Overlay;
 
 namespace PdfPro.Core.Tests.Organizing;
 
@@ -15,6 +18,51 @@ public sealed class PagePlanTests
         _plan.ShouldAllBe(p => p.SourceId == "s0" && p.RotationDelta == 0 && p.CropBoxOverride == null);
         _plan.Select(p => p.PageKey).Distinct().Count().ShouldBe(5);
         _plan.IsIdentity("s0", 5).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AddsOnlyAnnotations_WhenTheyAreTheOnlyChange()
+    {
+        var note = new NoteAnnotation("n", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, "", new PdfPoint(10, 10));
+        var annotated = _plan.WithAnnotations(2, [note]);
+
+        _plan.AddsOnlyAnnotations("s0", 5).ShouldBeFalse("nothing is added");
+        annotated.AddsOnlyAnnotations("s0", 5).ShouldBeTrue();
+        annotated.IsIdentity("s0", 5).ShouldBeFalse();
+        annotated.AddsOnlyAnnotations("s0", 6).ShouldBeFalse();
+        annotated.AddsOnlyAnnotations("s1", 5).ShouldBeFalse();
+        annotated.Rotate([0], 90).AddsOnlyAnnotations("s0", 5).ShouldBeFalse();
+        annotated.Move([4], 0).AddsOnlyAnnotations("s0", 5).ShouldBeFalse();
+        annotated.WithFormValues([new FormValue("Ten", "An")]).AddsOnlyAnnotations("s0", 5).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ChangesOnlyCommentsOrFormValues_WhenTheyAreTheOnlyChanges()
+    {
+        var note = new NoteAnnotation("n", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, "", new PdfPoint(10, 10));
+        var filled = _plan.WithFormValues([new FormValue("Ten", "An")]);
+
+        _plan.ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeFalse("nothing changed");
+        filled.ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeTrue();
+        filled.WithAnnotations(2, [note]).ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeTrue();
+        filled.AddsOnlyAnnotations("s0", 5).ShouldBeFalse();
+        filled.Rotate([0], 90).ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeFalse("a turned page is written anew");
+        filled.Delete([1]).ChangesOnlyCommentsOrFormValues("s0", 5).ShouldBeFalse();
+        filled.ChangesOnlyCommentsOrFormValues("s1", 5).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void KeepsPageOrder_WhenNoPageIsMovedRemovedAddedOrRepeated()
+    {
+        var note = new NoteAnnotation("n", new RgbColor(255, 230, 0), 1, "Lan", DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, "", new PdfPoint(10, 10));
+
+        _plan.KeepsPageOrder("s0", 5).ShouldBeTrue();
+        _plan.Rotate([0], 90).WithAnnotations(2, [note]).WithFormValues([new FormValue("Ten", "An")]).KeepsPageOrder("s0", 5).ShouldBeTrue("rotation, annotations and form values keep the sequence");
+        _plan.KeepsPageOrder("s0", 6).ShouldBeFalse();
+        _plan.KeepsPageOrder("s1", 5).ShouldBeFalse();
+        _plan.Move([4], 0).KeepsPageOrder("s0", 5).ShouldBeFalse();
+        _plan.Delete([2]).KeepsPageOrder("s0", 5).ShouldBeFalse();
+        _plan.Duplicate([1], new SequentialKeys(100)).KeepsPageOrder("s0", 5).ShouldBeFalse();
     }
 
     [Fact]

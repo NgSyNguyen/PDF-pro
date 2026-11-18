@@ -27,8 +27,12 @@ public sealed partial class RibbonCommandViewModel : ObservableObject
         Icon = icon;
         IsAvailable = command is not null;
         Command = command ?? UnavailableCommand.Instance;
-        ToolTip = IsAvailable ? toolTip ?? label : $"{label} — {Strings.Cmd_NotAvailableYet}";
+        _toolTip = IsAvailable ? toolTip ?? label : $"{label} — {Strings.Cmd_NotAvailableYet}";
+        Shortcut = KeyboardShortcuts.OfCommands.GetValueOrDefault(id);
+        ToolTip = WithShortcut(_toolTip);
     }
+
+    private string _toolTip;
 
     /// <summary>Stable identifier ("file.open"), used by tests and later by the command palette.</summary>
     public string Id { get; }
@@ -41,18 +45,27 @@ public sealed partial class RibbonCommandViewModel : ObservableObject
 
     public bool IsAvailable { get; }
 
+    /// <summary>The command's keyboard shortcut ("Ctrl+O"), or null; in the tooltip and given to UI Automation.</summary>
+    public string? Shortcut { get; }
+
+    /// <summary>What the button does, with its shortcut.</summary>
     [ObservableProperty]
     public partial string ToolTip { get; private set; }
 
-    /// <summary>Changes the tooltip of an available command (e.g. "Hoàn tác: Xoay 1 trang").</summary>
+    /// <summary>Changes the tooltip of an available command (e.g. "Hoàn tác: Xoay 1 trang"); the shortcut stays.</summary>
     public void SetToolTip(string toolTip)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(toolTip);
         if (IsAvailable)
         {
-            ToolTip = toolTip;
+            _toolTip = toolTip;
+            ToolTip = WithShortcut(toolTip);
         }
     }
+
+    /// <summary>The tooltip with its shortcut, unless the tooltip already names it.</summary>
+    private string WithShortcut(string toolTip)
+        => Shortcut is { } keys && !toolTip.Contains(keys, StringComparison.Ordinal) ? $"{toolTip} ({keys})" : toolTip;
 }
 
 /// <summary>Command of a feature that ships in a later phase: never executable.</summary>

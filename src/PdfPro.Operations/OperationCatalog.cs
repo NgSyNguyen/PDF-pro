@@ -27,6 +27,10 @@ public sealed class OperationCatalog
 
     public IPdfOperation? Find(string id) => _operations.GetValueOrDefault(id);
 
+    /// <summary>What every operation is (id, group, kind, parameter fields, inputs, output), by id.</summary>
+    public IReadOnlyList<Automation.OperationDescriptor> Describe()
+        => [.. _operations.Values.OrderBy(o => o.Id, StringComparer.Ordinal).Select(Automation.OperationDescriptors.Describe)];
+
     public IPlanOperation? FindPlanOperation(string id) => Find(id) as IPlanOperation;
 
     /// <summary>The operation of type <typeparamref name="T"/>.</summary>
